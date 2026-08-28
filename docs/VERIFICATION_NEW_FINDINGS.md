@@ -1259,6 +1259,7 @@ finding read **as filed** rather than from its register note.
 | **R2-750** | **HIGH** | **project API has no `location` field, so all 7 projects lack coordinates and the attendance geofence is inert — R2-474's fix has nothing to measure against** | off-main subset (R2-475) |
 | **R2-751** | **HIGH** | **`POST /face/punch` has no company check — any authenticated user can write attendance evidence into another tenant (2nd write-path tenancy gap after R2-049)** | off-main subset (R2-593) |
 | **R2-752** | **MEDIUM** | **6 write controls still fail silently (2.5%, down from 48%) — including payment-request Request Approval and Mark as Paid** | off-main subset (R2-590) |
+| **R2-753** | **HIGH** | **date-only fields shift a day by browser timezone; a holiday entered as 15 Aug stores as 14 Aug (proved live). 9 sites, only 1 normalised** | off-main subset (R2-220) |
 
 ## FINDING R2-743 — 🔴 CRITICAL: the BI export feed writes user-controlled text straight into CSV cells, so the one export built for external consumption is the one still formula-injectable
 
@@ -2108,3 +2109,70 @@ implementation for exactly these two finance controls.
 `scripts/verification/okelse.py` is checked in and can run in CI as a ratchet — fail the build if the
 silent count rises above the current 6, then drive it to 0. That gates the class rather than these six
 instances, which is what R2-137 has been missing.
+
+## FINDING R2-753 — 🟠 HIGH: every date-only field is shifted a day by the browser's timezone, and R2-220's fix corrected the time while preserving the wrong date
+
+R2-220 is REGRESSED. Its fix is present, annotated, and *reasoned* — and it does not work, because it
+normalises the wrong half of the value.
+
+### Proved live, 2026-08-28, in ZZ R8 Throwaway
+Reproduced through the exact expression `settings/page.tsx:967` sends, evaluated in the founder's own
+browser (`Asia/Calcutta`, `getTimezoneOffset() = -330`):
+
+| step | value |
+|---|---|
+| user enters | **2026-08-15** |
+| `new Date("2026-08-15T00:00:00").toISOString()` | `2026-08-14T18:30:00.000Z` |
+| server stores (`POST /hr/holidays`, 201) | `2026-08-14T00:00:00Z` |
+| reads back as | **14 August** |
+
+A holiday entered as 15 August persists and re-renders as 14 August — the finding's exact claim, still
+true. (Probe row deleted; confirmed 0 remaining in the database.)
+
+### Why the fix misses
+`hr.py:1661-1663` is deliberate and its comment states the goal: *"pin the calendar date at UTC
+midnight so a tz-offset input cannot shift the holiday to the previous day."*
+
+```python
+def _utc_midnight(dt: datetime) -> datetime:
+    return datetime(dt.year, dt.month, dt.day, tzinfo=timezone.utc)
+```
+
+It takes `dt.year/month/day` **of the value it receives** — which has already been shifted back across
+midnight by the browser. It converts `14 Aug 18:30Z` into `14 Aug 00:00Z`: the time component is
+normalised, the date is preserved, and the date was the part that was wrong. The fix makes the stored
+value *tidier* without making it *correct*, which is why it reads as fixed on inspection.
+
+### The class
+`new Date(x + "T00:00:00").toISOString()` — local midnight rendered as UTC — appears at **9 sites**:
+
+| file:line | field |
+|---|---|
+| `settings/page.tsx:967` | holiday date — **proved wrong above** |
+| `d/crm/page.tsx:243` | quotation/lead date |
+| `d/finance/page.tsx:463`, `:544` | `payment_date` (two transaction paths) |
+| `d/finance/page.tsx:768` | Tally `sync_window_start_date` |
+| `d/finance/page.tsx:87` | date parsing for display |
+| `d/payroll-attendance/page.tsx:125`, `:126`, `:1186` | weekday name, `isoDateTime`, date parse |
+
+Only the holiday path has any server-side normalisation at all — `_utc_midnight` is referenced at
+exactly three places, all in `hr.py` (`:60` definition, `:1663` create, `:1679` update). No other
+date-only write is normalised anywhere.
+
+**Severity differs by field, and the distinction matters for prioritisation:**
+- **Holidays are wrong outright.** The stored value is compared as a calendar date to decide payroll
+  working days, so a holiday on the wrong day changes what employees are paid.
+- **`payment_date` and similar round-trip harmlessly for an IST viewer** — stored 5:30 early, rendered
+  back in IST as the intended day. They go wrong only where the *server* groups by date, which is
+  where the Tally sync window (a `>=` boundary) and any monthly grouping sit.
+
+### Fix
+Send a date-only value as a date, not a shifted instant: `body: { date: hDate }` (the `YYYY-MM-DD`
+string already in state) rather than `new Date(hDate + "T00:00:00").toISOString()`. Then parse it
+server-side as a calendar date. Keep `_utc_midnight` for defence in depth, but it cannot be the fix on
+its own — by the time it runs, the day is already lost.
+
+### Gate this needs
+A test that posts a holiday for a fixed date from a `+05:30` context and asserts the stored date is the
+same calendar day. The current R2-220 pin asserts the stored time is midnight, which passes on the
+wrong day — that is exactly why this survived as FIX_VERIFIED.
