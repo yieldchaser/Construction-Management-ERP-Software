@@ -1256,6 +1256,7 @@ finding read **as filed** rather than from its register note.
 | **R2-747** | **HIGH** | **invoice HSN/SAC column renders empty — quotation conversion drops the field and no validator requires it** | worklist row 3 (R2-399) |
 | **R2-748** | **MEDIUM** | **invoice PDF and the shared party-name resolver use opposite precedence — one party, two printed names (latent: 0 live instances)** | worklist row 21 (R2-131) |
 | **R2-749** | **HIGH** | **project P&L misallocates 3 of 6 heads — equipment bills never reach Plant & Machinery, Overhead hardcoded 0.0 (R2-327 partial)** | off-main subset (R2-327) |
+| **R2-750** | **HIGH** | **project API has no `location` field, so all 7 projects lack coordinates and the attendance geofence is inert — R2-474's fix has nothing to measure against** | off-main subset (R2-475) |
 
 ## FINDING R2-743 — 🔴 CRITICAL: the BI export feed writes user-controlled text straight into CSV cells, so the one export built for external consumption is the one still formula-injectable
 
@@ -1908,3 +1909,76 @@ A test asserting the six heads partition the cost base — that summing the cost
 non-cancelled expense bills plus wastage, deployment and fuel, with no invoice_type counted twice or
 dropped. The existing RC-022 pin covers the subcon double-count only, which is why the other two
 defects stayed green.
+
+## FINDING R2-750 — 🟠 HIGH: the primary project API cannot set site coordinates at all, so the attendance geofence is inert for every project in production
+
+R2-475 filed the symptom — "a project with no site coordinates passes every geofence check". That row
+is REGRESSED (the `else: within_geofence = True` branch is unchanged at `hr.py:341-343`). This finding
+is the *root cause* underneath it, which R2-475 did not name and which fixing R2-475 alone would not
+resolve: **there is no supported way to give a project coordinates.**
+
+### Two creation paths, neither usable
+| endpoint | sets `location`? |
+|---|---|
+| `POST /apis/v3/projects/` (`projects.py:321`) — the path the console uses | **no field exists** |
+| `POST /apis/v3/planning/projects` (`planning.py:856`) | `payload.location or "19.0760,72.8777"` |
+
+`ProjectCreate` (`projects.py:206-224`) lists 18 fields — `company_id`, `name`, `code`, `address`,
+`city`, `state`, `stage`, `category`, `project_value`, dates, `orientation`, `dimension`,
+`scope_of_work`, `attendance_radius_meters`, `branch_id`, `member_ids`, `custom_fields` — and
+**`location` is not among them**. Neither is it in `ProjectUpdate`. So the endpoint that creates real
+projects cannot set coordinates on creation and offers no way to add them later.
+
+Note what *is* there: `attendance_radius_meters`, defaulting to 500. The API lets you configure a
+radius around a point it gives you no way to specify.
+
+### Measured in production, 2026-08-28
+```
+projects_total      7
+no_location         7      ← every project
+default_mumbai      0
+```
+Every project in the database has a null or empty `location`. None carries even the planning-route
+default, confirming all real projects come through the `projects.py` path.
+
+### Consequence: the geofence never runs
+`hr.py:334-343` resolves the site coordinates and then:
+
+```python
+if site_lat is not None:
+    distance_m = round(haversine_distance_m(...), 2)
+    within_geofence = distance_m <= radius
+else:
+    # No site coords configured → allow punch without GPS enforcement
+    within_geofence = True
+```
+
+With `location` null on all 7 projects, `site_lat` is always `None`, so `within_geofence` is
+unconditionally `True`, `distance_from_site_m` is stored as `NULL`, and the punch is written with
+`location_verified=True` and status `"Present"`.
+
+**This makes R2-474's fix inert.** That row is correctly CONFIRMED on code — the server genuinely
+computes the geofence now instead of trusting a client checkbox — but there is no project in
+production against which it can compute anything. Correct code, zero effect. The same "correct but
+inert" shape as the RLS rollout, and worth treating the same way: not a broken fix, but not a
+protection anyone should rely on yet.
+
+### Severity
+HIGH. It does not corrupt money, but attendance drives payroll, and "GPS Verified" is an assurance
+shown to whoever reviews the muster. Every punch currently carries that mark without a measurement
+behind it, which is the same class of harm R2-474 was filed for — restated one layer down.
+
+### Fix
+Add `location` to `ProjectCreate` and `ProjectUpdate` and surface it in the project form, so a site
+can be given real coordinates. Then make the no-coordinates case honest rather than permissive:
+`location_verified` should be `False` (or a distinct `unverifiable` state) when `site_lat is None`,
+not `True` — a punch that could not be measured is not a punch that was verified.
+
+Do **not** keep `planning.py:868`'s `"19.0760,72.8777"` fallback as the answer. Defaulting a Gujarat
+site to a Mumbai coordinate produces a geofence that is confidently wrong rather than absent, which is
+worse; it belongs in the same family as the invented-default sites swept by R2-719.
+
+### Gate this needs
+A test asserting that a punch against a project with `location` null is NOT recorded as
+`location_verified=True`, plus a round-trip test that a coordinate supplied to the project API is
+readable back. Neither is expressible today, because the field does not exist.
