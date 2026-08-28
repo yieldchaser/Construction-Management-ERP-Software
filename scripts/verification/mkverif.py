@@ -117,6 +117,51 @@ EVIDENCE_CLOSE = {"R2-001", "R2-118", "R2-428"}
 # Verdicts reached by hand, one finding at a time. E1 = code read, E3 = live product.
 # NOT_IN_PROD is a FIFTH verdict, added deliberately - see the header note in the emitted file.
 VERDICTS = {
+    "R2-033": ("CONFIRMED", "Off-main row and the only one of the 48 annotated rows with no test "
+               "file of its own - but the defect is the same line as R2-201 / R2-352 / R2-431, "
+               "all verified this round. hr.py:855-860 no longer pays default_days when "
+               "att_count + approved_leave_days is zero: it assigns days_present = "
+               "float(default_days) if effective_assume else 0.0, with the company setting "
+               "defaulting OFF, and returns attendance_source 'assumed' so an assumed month is "
+               "badged rather than presented as measured - which was this finding's specific "
+               "objection. Gated by the R2-201/R2-352 suites."),
+    "R2-052": ("CONFIRMED", "Off-main row, fix present on main. PaymentRequest."
+               "party_company_user_id is now ForeignKey('company_team.id') on the model, not "
+               "users.id, so a payment request can name a party that has no platform login - the "
+               "external vendor case the finding said was impossible - and the stored reference "
+               "is the same entity every other party lookup uses."),
+    "R2-075": ("CONFIRMED", "Off-main row. The counts are UNCHANGED - 24 registered handlers "
+               "against 82 frontend viewSlug entries, exactly the numbers the finding reported - "
+               "but the defect it filed was not the count, it was that 'both the View and the "
+               "Download path present that as a successful, empty result'. That is fixed: "
+               "reports.py:1455-1463 now raises 404 'Report {slug} is not implemented.' for an "
+               "unregistered slug, under a comment stating the principle - 'Fail loudly so an "
+               "unimplemented report can never masquerade as an empty one'. OBSERVATION, not "
+               "filed: the catalogue still advertises 82 reports of which 24 exist, so a user can "
+               "still click 58 entries that 404. That is now honest rather than deceptive, which "
+               "is what the finding asked for, but the catalogue remains oversized."),
+    "R2-076": ("CONFIRMED", "Off-main row, fixed at BOTH layers the finding named. The outer "
+               "swallow it quoted (try: rows = handler(...) except Exception: rows = []) is gone: "
+               "reports.py:1464-1475 logs the traceback via logger.exception and returns a "
+               "_REPORT_FAILED sentinel, which the caller converts into an entry in the response's "
+               "errors[] rather than publishing an empty report as data. The finding also said "
+               "'and the same pattern inside the individual handlers' - checked with a self-tested "
+               "AST pass (validated against a synthetic silent swallow and a synthetic logged "
+               "one): of 24 _rep_* handlers, ZERO swallow broadly without logging or a failure "
+               "marker."),
+    "R2-312": ("CONFIRMED", "Off-main row, same family and same fix as R2-076 - the finding's "
+               "claim was that sixteen report handlers swallow every exception and return an "
+               "empty list, so a Party Ledger for a company with nine invoices reads as no "
+               "transactions. The AST pass over reports.py finds 0 of 24 handlers swallowing "
+               "silently, and the dispatch surfaces a failed handler through errors[] instead of "
+               "as empty rows. A crashing report is now distinguishable from an empty one, for "
+               "the user and for monitoring."),
+    "R2-560": ("CONFIRMED", "Off-main row, same family as R2-076/R2-312 and closed by the same "
+               "change - the finding named the two party reports returning rows: [] behind a bare "
+               "'except Exception: return []' on a company that had six parties and Rs 2.71 lakh "
+               "of bills. No handler in reports.py now swallows without logging or marking "
+               "failure (0 of 24, self-tested AST pass), and the dispatch reports a generation "
+               "failure explicitly."),
     "R2-358": ("REGRESSED", "Off-main row. Clause (b) is LIVE and is the same defect confirmed "
                "under R2-049: the finding states 'Equipment.code is unique across every company "
                "in the database', and production pg_constraint still shows equipment_code_key "
