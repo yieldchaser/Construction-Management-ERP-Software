@@ -1764,3 +1764,45 @@ already treated as authoritative for the other half of the same block.
 A test with one `CompanyTeam` carrying a `user_id` and a `library_party_id` whose names differ,
 asserting the invoice PDF and `resolve_party_name` return the SAME string. No current test constructs
 that row, which is why the two orderings have coexisted.
+
+---
+
+## R3 PRIORITISATION NOTE — the orphan-lineage rows are the high-yield subset
+
+Recorded 2026-08-28 while verifying worklist row 28 (R2-599). Not a finding; a re-ordering decision
+with its evidence, so the reasoning is auditable.
+
+R2-727 established that 91 closed register rows cite a fix commit that is not on main's lineage, and
+concluded "at least one fix was never reproduced". That sweep flagged the rows but did not open them,
+so it could not say **which** of the 91 are still broken.
+
+**R2-599 is the first of those rows opened individually, and its fix is confirmed absent from
+production.** Its commit `bef6c73` is contained by exactly one branch —
+`claude/siteflow-audit-round10-cont-f6961b`, the orphan — and the defect reproduces verbatim in the
+shipped tree (`dpr.py:94` resolves a task by id alone and mutates it at `:97-100`). It is recorded
+FIX_VERIFIED, the register's strongest status.
+
+### Why this changes the order of work
+
+| | count |
+|---|---|
+| Orphan-lineage rows (R2-727) | **91** — 45 CRITICAL, 28 HIGH, 18 MEDIUM |
+| Of those, sitting in the R3 worklist as never-individually-opened | **89** |
+| Opened so far | 1 (R2-599) |
+| Still broken | 1 of 1 |
+
+One sample is not a rate, and the true rate is certainly below 100% — R2-232's register addendum
+records a case where the orphaned fix's *content* landed independently on main via another commit, so
+some of the 89 are genuinely fixed. But the prior for this subset is plainly far above the ~1-in-70
+measured across ordinary rows, because every one of them is a row whose recorded evidence points at
+code that main never received.
+
+The R3 worklist is ordered CRITICAL-first then by file cluster — chosen for reading efficiency, before
+this subset was known to be checkable. **The remaining 88 orphan rows are now worked first**, then the
+worklist resumes its original order. Each needs the same two steps R2-599 got: confirm the cited
+commit is absent from `origin/main` (`git merge-base --is-ancestor`, never `git rev-parse`, per trap
+9), then read the live tree to see whether the fix arrived by another route.
+
+Rows whose fix content did land independently are CONFIRMED with the substitute commit named. Rows
+where it did not are REGRESSED, and — as with R2-599 — need their register status corrected rather
+than a duplicate finding number.
