@@ -1255,6 +1255,7 @@ finding read **as filed** rather than from its register note.
 | **R2-746** | **CRITICAL** | **company switch never re-mints the session — team invites land in the previous company; proved live in the founder's own session** | verifying R2-418 E3 |
 | **R2-747** | **HIGH** | **invoice HSN/SAC column renders empty — quotation conversion drops the field and no validator requires it** | worklist row 3 (R2-399) |
 | **R2-748** | **MEDIUM** | **invoice PDF and the shared party-name resolver use opposite precedence — one party, two printed names (latent: 0 live instances)** | worklist row 21 (R2-131) |
+| **R2-749** | **HIGH** | **project P&L misallocates 3 of 6 heads — equipment bills never reach Plant & Machinery, Overhead hardcoded 0.0 (R2-327 partial)** | off-main subset (R2-327) |
 
 ## FINDING R2-743 — 🔴 CRITICAL: the BI export feed writes user-controlled text straight into CSV cells, so the one export built for external consumption is the one still formula-injectable
 
@@ -1838,3 +1839,72 @@ here and each row needs reading:
 
 The remaining 31 zero-annotation rows (17 CRITICAL) stay the highest-priority queue, followed by the
 50 annotated off-main rows as a lighter confirm.
+
+## FINDING R2-749 — 🟠 HIGH: the project P&L still misallocates three of its six heads — equipment bills never reach Plant & Machinery and Overhead is hardcoded to zero
+
+R2-327 is **PARTIALLY** fixed and is recorded FIX_VERIFIED (suite RC-022, commit `e918b72`, which is
+not on `origin/main`). Its headline defect — subcontractor cost double-counted — genuinely is fixed,
+by `R2-243`'s change on main: `finance.py:543-548` now excludes `subcon` from the material bucket
+under an explicit comment, so the cost heads no longer sum to 189% of true cost.
+
+**The finding named two further defects in the same response, and both survive verbatim.** They were
+not summarised in the register row, which is why closing against the summary passed them.
+
+### 1. Equipment bills still never reach Plant & Machinery
+R2-327, quoting its own live capture: *"`Plant & Machinery` is computed from `EquipmentDeployment ×
+Equipment.hourly_rate + FuelLog.total_cost` and never looks at bills. The clean room's `equipment`
+bill of ₹23,600 appears only inside `Material Cost`. A company that rents plant on invoice rather
+than logging deployments sees `Plant & Machinery: 0` forever."*
+
+Still true. `equipment_actual = round(dep_cost + fuel_cost, 2)` (`finance.py:593`) is built purely
+from `EquipmentDeployment` and `FuelLog` (`:568-592`); no bill query contributes to it. Meanwhile
+`material_actual` filters `Bill.invoice_type.in_(EXPENSE_INVOICE_TYPES)` excluding only `subcon`
+(`:543-548`), so `equipment` bills land in **Material Cost**.
+
+### 2. Overhead is still a hardcoded zero
+R2-327: *"`Overhead` is hardcoded to `0.0` with no source at all."* Still true, `finance.py:626-631`:
+
+```python
+PLItemResponse(
+    head="Overhead",
+    budget=0.0,
+    actual=0.0,
+    variance=0.0
+)
+```
+
+`expense` bills — the natural source for this head — are instead absorbed into Material Cost by the
+same `EXPENSE_INVOICE_TYPES` filter.
+
+### Net effect
+`Material Cost` is the sum of `purchase` + `expense` + `equipment` while being labelled as one of four
+sibling components. The **total** is now correct (that was R2-243's fix), but the **partition** is
+not, and a partition is what a P&L is for. Three of the six heads misreport:
+
+| Head | Reports | Should report (per R2-327's own prescription) |
+|---|---|---|
+| Material Cost | purchase + expense + equipment | purchase |
+| Plant & Machinery | deployment + fuel only | equipment bills + deployment + fuel |
+| Overhead | hardcoded 0.0 | expense |
+
+A contractor who rents plant on invoice — the common arrangement — reads ₹0 against a Plant &
+Machinery budget they are actually consuming, and sees the overspend land against Material instead.
+Both heads carry a real budget (`eq_budget`, `mat_budget`) and a variance computed against it, so the
+variance column is wrong on both lines in opposite directions.
+
+### Severity
+HIGH rather than its parent's CRITICAL: totals reconcile and no rupee is double-counted any more, so
+this misstates allocation rather than magnitude. It is still a statement head reading zero while money
+flows through it.
+
+### Fix
+Apply the partition R2-327 already specified, which the analytics endpoint's `expense_by_type` uses
+today: Material = `purchase`; Subcontractor = `subcon`; Plant & Machinery = `equipment` bills **plus**
+deployment and fuel; Overhead = `expense`. That is a filter change on three existing queries plus one
+new bill sum, with no schema change.
+
+### Gate this needs
+A test asserting the six heads partition the cost base — that summing the cost heads equals the sum of
+non-cancelled expense bills plus wastage, deployment and fuel, with no invoice_type counted twice or
+dropped. The existing RC-022 pin covers the subcon double-count only, which is why the other two
+defects stayed green.

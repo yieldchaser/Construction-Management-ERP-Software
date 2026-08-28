@@ -117,6 +117,38 @@ EVIDENCE_CLOSE = {"R2-001", "R2-118", "R2-428"}
 # Verdicts reached by hand, one finding at a time. E1 = code read, E3 = live product.
 # NOT_IN_PROD is a FIFTH verdict, added deliberately - see the header note in the emitted file.
 VERDICTS = {
+    "R2-327": ("REGRESSED", "PARTIAL FIX passing as FIX_VERIFIED. Read against the finding AS "
+               "FILED, not its register summary. The headline defect IS fixed: subcontractor "
+               "cost is no longer double-counted, because finance.py:543-548 now adds "
+               "Bill.invoice_type != 'subcon' to the material bucket under an explicit R2-243 "
+               "comment, so the cost heads no longer sum to 189% of true cost. But R2-327 named "
+               "TWO further defects in the same response and BOTH survive verbatim. (1) "
+               "'Plant & Machinery ... never looks at bills' - still true: equipment_actual at "
+               ":593 is round(dep_cost + fuel_cost, 2), built only from EquipmentDeployment and "
+               "FuelLog at :568-592, while equipment bills fall into material_actual. A company "
+               "renting plant on invoice still reads Plant & Machinery 0 forever. (2) 'Overhead "
+               "is hardcoded to 0.0 with no source at all' - still true, verbatim, at :626-631 "
+               "(budget=0.0, actual=0.0, variance=0.0), while expense bills are absorbed into "
+               "Material Cost. The total now reconciles but the PARTITION does not, and three of "
+               "six heads misreport with a variance computed against a real budget on two of "
+               "them. Filed as R2-749. The RC-022 pin covers the subcon double-count only, which "
+               "is why the other two stayed green."),
+    "R2-544": ("CONFIRMED", "Off-main row, fix re-landed on main under R2-328's annotation. The "
+               "finding's mechanism was that the Finance summary selected payments by project "
+               "while cash_balance was company-scoped, so a project-less payment moved the "
+               "balance but appeared in no row and no In/Out total (IN (...) never matches NULL). "
+               "get_company_transactions (finance.py:1178-1187) now queries "
+               "Payment.company_id == company_id with NO project predicate, under a comment "
+               "naming exactly this mechanism - 'Payment.project_id is nullable and SET NULL on "
+               "project delete, so membership-scoping silently dropped every project-less "
+               "payment from totals/rows while cash_balance (company-scoped) saw them'."),
+    "R2-549": ("CONFIRMED", "Off-main row, closed by the same R2-328 change as R2-544 - same root "
+               "cause, as the finding itself states ('Per R2-544, the Finance summary selects "
+               "payments with Payment.project_id.in_(project_ids), and IN (...) never matches "
+               "NULL'). perform_p2p_transfer still writes both legs with project_id=None, but "
+               "both carry company_id=comp_uuid, and the summary is now company-scoped, so a "
+               "party-to-party transfer appears in the ledger and moves In/Out. Verified the "
+               "transfer's own writes rather than assuming: both Payment rows set company_id."),
     "R2-042": ("CONFIRMED", "Off-main row, fix re-landed by another route. The cited commit is "
                "not an ancestor of origin/main, and neither 'R2-042' nor a test for it appears "
                "anywhere in the live tree. The defect is nonetheless fixed: the finding's "
