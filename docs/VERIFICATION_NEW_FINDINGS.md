@@ -1254,6 +1254,7 @@ finding read **as filed** rather than from its register note.
 | **R2-745** | **CRITICAL** | **quotation→invoice conversion bypasses `_validate_bill_line_items`; inter-state quotations produce a tax invoice with gst_amount 0** | worklist row 2 (R2-271) |
 | **R2-746** | **CRITICAL** | **company switch never re-mints the session — team invites land in the previous company; proved live in the founder's own session** | verifying R2-418 E3 |
 | **R2-747** | **HIGH** | **invoice HSN/SAC column renders empty — quotation conversion drops the field and no validator requires it** | worklist row 3 (R2-399) |
+| **R2-748** | **MEDIUM** | **invoice PDF and the shared party-name resolver use opposite precedence — one party, two printed names (latent: 0 live instances)** | worklist row 21 (R2-131) |
 
 ## FINDING R2-743 — 🔴 CRITICAL: the BI export feed writes user-controlled text straight into CSV cells, so the one export built for external consumption is the one still formula-injectable
 
@@ -1695,3 +1696,71 @@ records as "now rejected" by the checksum validator. The validator is write-time
 this pre-existing row persists and prints on live invoices. Correct per that fix's stated scope, and
 AK is a test tenant covered by `launch_cleanup.sql`, but it means every PDF this tenant emits today
 carries a GSTIN that would fail its own validation.
+
+## FINDING R2-748 — 🟡 MEDIUM: the invoice PDF and the shared party-name resolver use OPPOSITE precedence, so one party can print under two different names
+
+R2-131 is CONFIRMED on its own claim: `app/party_names.py` exists as the single shared resolver, and
+five surfaces use it — `billing.py:294,428` (subcon), `finance.py:1144,1280,1343` (ledger and payment
+requests), `labour.py:29` (contractor), `subcon_performance.py:140`. "Unknown Party" and bare
+login-name storage are gone from those paths.
+
+**One surface does not use it, and inverts its precedence.** The invoice PDF builder resolves the
+party name by hand at `billing.py:735-753`:
+
+```python
+if party.library_party_id:
+    linked_party = db.query(LibraryParty)...
+    if linked_party and linked_party.name:
+        party_name = linked_party.name        # ← LibraryParty FIRST
+if not party_name and party.user_id:
+    party_user = db.query(User)...
+    if party_user and party_user.name:
+        party_name = party_user.name          # ← user second
+```
+
+The shared resolver does the opposite (`party_names.py:22-29`):
+
+```python
+if team.user_id:
+    user = ...
+    if user and user.name:
+        return user.name                      # ← user FIRST
+if team.library_party_id:
+    party = ...
+    if party and party.name:
+        return party.name                     # ← LibraryParty second
+```
+
+For a counterparty holding **both** a login and a vendor-master row, the tax invoice prints the
+business name while the finance ledger, party statement, labour report and subcontractor scorecard
+all print the login name — for the same party, from the same record.
+
+Notably `party_names.py`'s own docstring argues for the PDF's ordering, not its own: *"the real name
+[is] reachable only through library_party_id -> LibraryParty.name, so any lookup that walks the users
+table alone must fail for the normal external case (R2-131)."* The module documents LibraryParty as
+the authoritative name and then checks it second.
+
+### Latent today — stated plainly
+Probed production 2026-08-28: of 9 `company_team` rows, **1** has both `user_id` and
+`library_party_id` set, and for that row the two names are identical, so **zero** parties currently
+render differently. The probe was calibrated — the same query returns the 1/6/2/0 population split,
+so the null is real rather than a broken filter.
+
+This is filed as MEDIUM because it misstates no amount and has no live instance, but the trigger is an
+ordinary ERP scenario rather than a contrived one: a subcontractor who is given a login as
+`Ramesh Kumar` while the vendor master carries `Kumar Construction Pvt Ltd`. From that moment the
+invoice and the ledger disagree on who the counterparty is, and R2-418's lesson — that two figures
+for one thing on one screen destroys trust in both — applies to names as much as amounts.
+
+### Fix
+Delete the hand-rolled block at `billing.py:735-753` and call `resolve_party_name`, then decide the
+precedence **once**, in the shared resolver. Per its own docstring the correct order is LibraryParty
+first (the business is the invoicing counterparty; the login is an individual who happens to
+represent it), which means the PDF is right and the shared resolver should be changed to match — not
+the reverse. The GSTIN lookup beside it already reads `LibraryParty.tax_no`, so the vendor master is
+already treated as authoritative for the other half of the same block.
+
+### Gate this needs
+A test with one `CompanyTeam` carrying a `user_id` and a `library_party_id` whose names differ,
+asserting the invoice PDF and `resolve_party_name` return the SAME string. No current test constructs
+that row, which is why the two orderings have coexisted.

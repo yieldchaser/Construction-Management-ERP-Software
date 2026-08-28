@@ -117,6 +117,60 @@ EVIDENCE_CLOSE = {"R2-001", "R2-118", "R2-428"}
 # Verdicts reached by hand, one finding at a time. E1 = code read, E3 = live product.
 # NOT_IN_PROD is a FIFTH verdict, added deliberately - see the header note in the emitted file.
 VERDICTS = {
+    "R2-503": ("CONFIRMED", "E1 PASS on three of the finding's four bullets outright and the "
+               "fourth in substance. assets.py:137-150 enforces the running identities the "
+               "finding said were absent - accumulated must equal prior accumulated plus this "
+               "period's amount, book_value must equal prior book_value minus it, the first "
+               "entry's accumulated must equal its own amount, and book_value may not fall below "
+               "the schedule's salvage_value. :160-178 adds a per-entry cap of one year under the "
+               "DECLARED method (wdv: opening book value x depreciation_pct; slm: (cost - "
+               "salvage) / useful_life_years, cost reconstructed as book_value + accumulated). "
+               "The schedule row the finding said was 'read by nothing' is now read for both the "
+               "salvage floor and the cap. CAVEAT, recorded not filed: the finding's 'twice in "
+               "one period' clause is still literally true - there is no per-period uniqueness on "
+               "entry_date - but the chain identities plus the salvage floor bound TOTAL "
+               "depreciation to (cost - salvage) regardless of how many entries are posted, so "
+               "the exposure is entry timing rather than over-depreciation."),
+    "R2-113": ("CONFIRMED", "E1 PASS. Same commit as R2-169 (2f3e63f, D7). auth.py:175 and :194 "
+               "resolve a NULL or dangling role_id to Viewer grants under the documented D7 "
+               "fail-closed policy, and :216/:249 carry the same rule for the unconfigured "
+               "non-partner case."),
+    "R2-169": ("CONFIRMED", "E1 PASS. Same fix and same evidence as R2-113 - role_id NULL or "
+               "dangling resolves to Viewer (auth.py:175, :194)."),
+    "R2-138": ("CONFIRMED", "E1 PASS. auth.py:834-835 caps GET /auth/me at 120/minute, so the "
+               "runaway-tab scenario the finding described gets bounded 429s instead of holding "
+               "pool connections until exhaustion. Root cause and pool hardening are R2-116/"
+               "R2-310 and R2-308 respectively, both separately verified."),
+    "R2-308": ("CONFIRMED", "E1 PASS. database.py:15-19 builds the engine with pool_pre_ping=True, "
+               "pool_size=10, max_overflow=20, pool_timeout=15 and pool_recycle=1800, matching "
+               "the register note exactly; build_engine at :23 makes it testable and the live "
+               "engine at :31 is constructed through it. pool_timeout 15 is the fail-fast the "
+               "finding asked for (was the 30s default that produced the reported TimeoutErrors)."),
+    "R2-511": ("CONFIRMED", "E1 + E3. auth.py:34 defines _auth_limit_key composing the "
+               "proxy-aware client address with the identifier being authenticated, and it is "
+               "wired to 8 routes (:332, :379, :511, :520, :565, :612, :636, :660) - the count "
+               "the register claims. backend/Dockerfile:35 runs uvicorn with "
+               "--forwarded-allow-ips='*'. E3 2026-08-28: checked the Render service settings "
+               "rather than trusting the Dockerfile, because a dashboard override would make the "
+               "gate meaningless - Dockerfile Path is 'backend/', Docker Build Context is "
+               "'backend/', and the 'Docker Command' override field is EMPTY (it renders its "
+               "description then Edit with no value, unlike Dockerfile Path which shows its "
+               "value). The Dockerfile CMD is therefore what runs in production."),
+    "R2-028": ("CONFIRMED", "E1 PASS. billing.py:14 carries 'from app import models' alongside "
+               "the explicit symbol imports at :10-12, so the four qualified models.* references "
+               "the finding flagged all resolve."),
+    "R2-131": ("CONFIRMED", "E1 PASS on the claim as filed, with a residual filed as R2-748. "
+               "app/party_names.py is the single shared resolver and FIVE surfaces use it - "
+               "billing.py:294,428 (subcon), finance.py:1144,1280,1343 (ledger + payment "
+               "requests), labour.py:29 (contractor), subcon_performance.py:140. All four "
+               "surfaces named in the register note are covered; 'Unknown Party' and login-name "
+               "storage are gone from them. NOTE ON METHOD: my first coverage grep was truncated "
+               "by head -8 and appeared to show labour.py NOT using the resolver, which would "
+               "have been a false finding - re-run untruncated it does (labour.py:14). RESIDUAL: "
+               "the invoice PDF at billing.py:735-753 does not call the shared resolver and "
+               "hand-rolls the OPPOSITE precedence (LibraryParty first, user second, versus the "
+               "resolver's user first), so one party can print under two names. Latent - only 1 "
+               "of 9 company_team rows has both ids set and its two names match. Filed R2-748."),
     "R2-080": ("CONFIRMED", "E1 + E3. main.py:713 defines GET /health and .github/workflows/"
                "keep_alive.yml pings it on a */10 cron. E3 2026-08-28: /health returns 200 "
                "{'status':'ok'}. The residual the register already discloses (Actions cron "
