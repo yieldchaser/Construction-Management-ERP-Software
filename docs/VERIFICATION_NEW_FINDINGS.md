@@ -1250,6 +1250,8 @@ finding read **as filed** rather than from its register note.
 | id | severity | one-line | surfaced while |
 |---|---|---|---|
 | **R2-743** | **CRITICAL** | **the BI CSV feed is formula-injectable — the fourth call site R2-185 named, never fixed, and R2-407 was closed claiming it was the last one** | worklist row 4 (R2-407) |
+| **R2-744** | **CRITICAL** | **Tally export books every supply as CGST+SGST — the one D4 place-of-supply surface never swept; reports and the invoice PDF now emit IGST and disagree with it** | worklist row 5 (R2-410) |
+| **R2-745** | **CRITICAL** | **quotation→invoice conversion bypasses `_validate_bill_line_items`; inter-state quotations produce a tax invoice with gst_amount 0** | worklist row 2 (R2-271) |
 
 ## FINDING R2-743 — 🔴 CRITICAL: the BI export feed writes user-controlled text straight into CSV cells, so the one export built for external consumption is the one still formula-injectable
 
@@ -1333,3 +1335,178 @@ it — per-call-site application is what allowed this site to be missed.
 A test asserting that **every** backend CSV producer neutralizes a leading `= + - @` cell, discovered
 by enumeration rather than by a hardcoded list of four filenames. The existing per-finding gates all
 pin their own file, which is precisely why three passed while the fourth was unprotected.
+
+## FINDING R2-744 — 🔴 CRITICAL: the Tally export still books every supply as CGST+SGST, so an inter-state works contract is exported under the wrong tax heads — the one D4 surface the sweep missed
+
+R2-410's fix (`c6f2dfb`) is correct on its own terms and is CONFIRMED: revenue and expense post at the
+tax-exclusive base, GST lands on Output/Input CGST+SGST under a `Duties & Taxes` parent
+(`tally_xml.py:52-54`), the party leg stays gross, and the vouchers balance. **This finding is about
+the half of R2-410's own root-cause paragraph that outlived its fix.**
+
+R2-410 as filed says it is "the third instance of the same root gap in this audit": the GST returns
+fabricate a 50/50 split (R2-319), the invoice PDF prints no breakup (R2-399), and the Tally export
+posts no tax at all. D4 (`520fb87`) closed that root gap — place of supply now derives from
+`Project.state` per IGST Act s.12(3), and `Project.state` is enforced at write time with a 422
+(verified live 2026-08-28: creating a project without `state` returns *"Project.state is required for
+invoicing - set the site state (GST state code or name) before creating invoices; place of supply
+derives from the site per IGST Act s.12(3)"*).
+
+**D4 swept reports.py (R2-041/R2-319), quotations (R2-125) and the invoice PDF (R2-272). It did not
+sweep tally.py.**
+
+### The code
+`backend/app/routers/tally.py:314-322` (sales) and `:334-342` (purchase) split the tax unconditionally:
+
+```python
+if gst > 0:
+    half = round(gst / 2, 2)
+    entries.append({"ledger": "Output CGST", "amount": half, "debit": False,
+                    "ledger_type": "output_tax"})
+    entries.append({"ledger": "Output SGST", "amount": round(gst - half, 2), "debit": False,
+                    "ledger_type": "output_tax"})
+```
+
+There is no branch on state. `grep -c "igst\|IGST\|inter_state\|interstate"` over the **whole** of both
+`tally.py` and `tally_xml.py` returns **0** in each — this is a whole-file count, not a truncated
+grep.
+
+The justification sits in the comment immediately above (`tally.py:304-305`):
+
+> `# turnover. The 50/50 CGST/SGST halves follow the same documented`
+> `# convention as reports._gst_split (no place-of-supply column).`
+
+**That comment is now false in both of its clauses.** `reports._gst_split` (`reports.py:1093-1119`)
+takes `project_state` and `supplier_gstin`, returns a four-tuple `(cgst, sgst, igst, utgst)`, and
+documents itself as *"Same state -> CGST+SGST halves. Different -> IGST full. **Never unconditional
+50/50.**"* It delegates to `app.gst_utils.gst_split`, which carries the full 01-38 state-code map. The
+place-of-supply column the comment says does not exist is the column the rest of the system is now
+validated against.
+
+### Consequence
+For an inter-state works contract — a Maharashtra-registered contractor running a site in Gujarat,
+which is ordinary in this market — the same bill now produces two documents that disagree on the tax
+head:
+
+| Surface | Inter-state supply renders as |
+|---|---|
+| GSTR-1 / GSTR-3B report (`reports.py`) | **IGST**, full amount ✅ |
+| Tax invoice PDF (`billing.py:794`) | **IGST**, `inter_state` computed ✅ |
+| **Tally export (`tally.py:314`)** | **CGST + SGST, half each** ❌ |
+
+The accountant imports the voucher, and the books carry input credit under CGST/SGST heads that the
+GSTR-2B reconciliation — which reports IGST for the same invoice — will not match. Credit claimed
+under the wrong head is not merely a presentation defect: it is disallowed on reconciliation and
+attracts interest, and the mismatch surfaces at filing time rather than at import time.
+
+This is strictly worse than the pre-D4 state of the other two surfaces, because those two are now
+right. Before D4 all three were consistently wrong, which at least reconciled with itself.
+
+### Severity
+Filed CRITICAL, matching its parent R2-410. The money is misclassified rather than lost, but it is
+misclassified in the export whose entire purpose is to become the statutory books, and it is silent —
+the XML imports cleanly and the vouchers balance.
+
+### Fix
+Route the tally split through the same helper the rest of D4 uses rather than a fourth hand-rolled
+convention: read the bill's project state and the company/branch GSTIN exactly as
+`_rep_gstr1_sales` does (`reports.py:1136-1143`), call `gst_utils.gst_split`, and emit an
+`Output IGST` / `Input IGST` ledger under the existing `Duties & Taxes` parent when the split
+returns an IGST leg. `_ledger_parent` already routes `input_tax` / `output_tax` correctly, so the
+XML side needs no change beyond the new ledger names.
+
+Delete the stale comment at `tally.py:304-305` as part of the fix — it is what made this site look
+already-considered.
+
+### Gate this needs
+A test that feeds one intra-state and one inter-state bill through `_build_vouchers` and asserts the
+emitted ledger names, so the tally export cannot silently diverge from `gst_utils.gst_split` again.
+The existing R2-410 gate pins the Duties & Taxes parent and voucher balance, both of which stay green
+under this defect.
+
+## FINDING R2-745 — 🔴 CRITICAL: converting a quotation to an invoice bypasses every line-item and tax check — an inter-state quotation becomes a tax invoice recording ZERO GST
+
+R2-271 is CONFIRMED on the path it was filed against: `_validate_bill_line_items`
+(`billing.py:919-968`) now rejects a tax invoice with no lines, requires a description per line, and
+rejects any bill whose line amounts miss the subtotal by more than ₹0.01. R2-401's gate is real.
+
+**But it is wired into exactly one call site** — `create_bill` at `billing.py:1000`. `grep -n
+"_validate_bill_line_items"` over the whole file returns two lines: the definition and that single
+call.
+
+`crm.py:928-949` is a **second bill-creation surface**. `convert_quotation_to_invoice` constructs a
+`Bill(...)` directly through the ORM, sets `subtotal`, `gst_amount`, `total_payable` and `items_json`
+by hand, and calls no validator. Two independent defects follow, and neither can be caught downstream
+because the invoice PDF renders whatever is stored.
+
+### Defect 1 — inter-state quotations lose their entire tax
+`crm.py:910`:
+
+```python
+gst_amount = float(quot.cgst_amount or 0) + float(quot.sgst_amount or 0)
+total_payable = float(quot.total_amount or 0)
+subtotal = total_payable - gst_amount
+```
+
+`igst_amount` is a real column (`models.py:1201`) and D4 sets it to the **full** tax amount on an
+inter-state quotation, zeroing CGST and SGST to do so (`crm.py:701-710`):
+
+```python
+if _d4_inter is True:
+    cgst_amount = 0.0
+    sgst_amount = 0.0
+    igst_amount = float(total_tax)
+```
+
+So for any inter-state supply the conversion computes `gst_amount = 0 + 0 = 0`, and therefore
+`subtotal = total_payable` — the **gross** figure, tax included. The resulting tax invoice records
+zero output GST and a subtotal inflated by exactly the tax that went missing.
+
+That this is an oversight rather than a convention is settled by the rest of the same file: every
+other place that totals a quotation's tax sums all three components —
+
+```python
+# crm.py:734 and again at :801
+tax_amount=float(float(quot.cgst_amount or 0) + float(quot.sgst_amount or 0)
+                 + float(getattr(quot, "igst_amount", 0) or 0)),
+```
+
+The conversion is the only reader of these three columns that drops one.
+
+### Defect 2 — R2-271's own reconciliation gap, reopened on this path
+`final_total` includes two components that no line item represents (`crm.py:699`):
+
+```python
+final_total = base_total + (req.additional_charges or 0.0) + (req.round_off or 0.0)
+```
+
+`items_json` is built from `CRMQuotationItem.total_amount` only. So whenever `additional_charges` or
+`round_off` is non-zero, the emitted line items under-sum the stored subtotal by exactly that amount —
+the ₹0.01-tolerance mismatch `_validate_bill_line_items` exists to reject, arriving through the door
+that does not call it. This is R2-271's original defect ("a ₹10 line item printed on a ₹1,00,000
+invoice"), reachable through a supported flow rather than a hand-crafted API call.
+
+### Why CRITICAL
+Defect 1 understates output GST liability to **zero** on the statutory document the customer files
+and the auditor reads, for the ordinary case of a contractor billing a site in another state. It is
+silent: the PDF renders cleanly, the totals internally "agree" because the subtotal absorbed the tax,
+and the error is only discoverable by reconciling against the quotation it came from. This is the same
+class of harm as R2-271 and R2-399, on a path both of those fixes left open.
+
+### Not yet exercised live
+E1 only. Proving it end to end needs a lead → quotation → convert run with `state` differing from the
+company GSTIN prefix, and the current session's JWT is scoped to ZZ R8 Throwaway (which has no CRM
+data) while AK Construction returns 403. Flagged for a session scoped to a tenant with CRM rows; the
+code path above is unconditional, so the E1 read is decisive on its own.
+
+### Fix
+Route the conversion through `_validate_bill_line_items` rather than trusting hand-assembled totals —
+that is the single change that closes both defects and prevents a third. Concretely: include
+`igst_amount` in the `gst_amount` sum (reuse the `:734` expression, which is already correct), and
+either emit `additional_charges` / `round_off` as their own line items or exclude them from
+`subtotal`. The validator will then hold this path to the same contract as `create_bill`.
+
+### Gate this needs
+The R2-401 gate pins the validator's behaviour but not its **coverage**. Needed: a test asserting that
+every path constructing a `Bill` passes through `_validate_bill_line_items`, plus a conversion test
+for an inter-state quotation asserting `bill.gst_amount == quotation total tax`. The present gate stays
+green under both defects above.
