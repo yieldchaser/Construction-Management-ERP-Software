@@ -1258,6 +1258,7 @@ finding read **as filed** rather than from its register note.
 | **R2-749** | **HIGH** | **project P&L misallocates 3 of 6 heads — equipment bills never reach Plant & Machinery, Overhead hardcoded 0.0 (R2-327 partial)** | off-main subset (R2-327) |
 | **R2-750** | **HIGH** | **project API has no `location` field, so all 7 projects lack coordinates and the attendance geofence is inert — R2-474's fix has nothing to measure against** | off-main subset (R2-475) |
 | **R2-751** | **HIGH** | **`POST /face/punch` has no company check — any authenticated user can write attendance evidence into another tenant (2nd write-path tenancy gap after R2-049)** | off-main subset (R2-593) |
+| **R2-752** | **MEDIUM** | **6 write controls still fail silently (2.5%, down from 48%) — including payment-request Request Approval and Mark as Paid** | off-main subset (R2-590) |
 
 ## FINDING R2-743 — 🔴 CRITICAL: the BI export feed writes user-controlled text straight into CSV cells, so the one export built for external consumption is the one still formula-injectable
 
@@ -2050,3 +2051,60 @@ this pairing.
 A test asserting that a member of company A posting `/face/punch` with company B's `company_id`
 receives 403 and that no `FaceRecognitionLog` row is created. More broadly, the write-path sweep above
 would gate the class rather than this instance.
+
+## FINDING R2-752 — 🟡 MEDIUM: six write controls still fail silently, and two of them are the payment-request approve and mark-as-paid buttons
+
+R2-590 ("91 of 189 write controls, 48%, fail silently") is **substantially fixed**. Re-measured
+2026-08-28 with `scripts/verification/okelse.py`: of 244 write controls (a `fetch` whose options carry
+POST/PUT/PATCH/DELETE), **230 surface a failure** (94.3%). The class went from roughly half silent to a
+handful.
+
+### On the number
+The measurement is bracketed rather than exact, and both bounds were established deliberately:
+
+| window used to find the failure path | silent |
+|---|---|
+| 1400 chars after the fetch | 17 (upper bound — misses `else` blocks further down the handler) |
+| 3500 chars | 6 (lower bound — can catch an `else` belonging to a *later* handler) |
+
+The six at the wider setting were then **read by hand**, and all six are genuine. The two false
+positives the narrow pass produced (the P2P transfer at `finance/page.tsx:455` and the BI-key create at
+`settings/page.tsx:715`) do surface errors — via an `alert` and a `setBiMsg` respectively — and are
+correctly excluded. So: **6 confirmed, 244 total, 2.5%.**
+
+### The six
+| file:line | control | consequence of a silent failure |
+|---|---|---|
+| `d/finance/page.tsx:4018` | **payment request → Request Approval** | approval rejected (e.g. by the R2-342 multi-level rules) and the user sees nothing happen |
+| `d/finance/page.tsx:4029` | **payment request → Mark as Paid** | **a money-state transition**: the user believes a payment is recorded when the write failed |
+| `d/team-action/page.tsx:653` | delete timesheet | `catch { /* ignore */ }` — explicitly discards the error |
+| `p/[project_id]/boq/page.tsx:331` | BOQ import | import failure indistinguishable from an empty file |
+| `settings/page.tsx:943` | create leave template | |
+| `settings/page.tsx:952` | delete leave template | |
+
+Both finance controls have the same shape:
+
+```tsx
+const res = await fetch(`.../finance/payment-requests/approve/${selectedPR.id}`, {
+  method: "PUT", ..., body: JSON.stringify({ status: "Paid" }),
+});
+if (res.ok) { const u = await res.json(); setSelectedPR(u); ... }
+// no else, no catch
+```
+
+### Why filed rather than folded into R2-590
+R2-590 is recorded FIX_VERIFIED, and its headline claim genuinely is addressed. Separately, R2-137's
+register row states this same class is *"STILL OPEN as a class"* — so the class is tracked but carries
+no instance list, which gives the fixing agent nothing to act on. This finding is that list. Two of
+the six sit on money controls, which is what makes the residual worth naming rather than leaving to a
+future sweep.
+
+### Fix
+The pattern already used correctly in 230 other places in this codebase: add the `else` that reads
+`res.json()` and surfaces `detail`. `d/payment-approval/page.tsx` (R2-059's fix) is the reference
+implementation for exactly these two finance controls.
+
+### Gate this needs
+`scripts/verification/okelse.py` is checked in and can run in CI as a ratchet — fail the build if the
+silent count rises above the current 6, then drive it to 0. That gates the class rather than these six
+instances, which is what R2-137 has been missing.

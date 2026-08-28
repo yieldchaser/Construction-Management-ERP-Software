@@ -117,6 +117,22 @@ EVIDENCE_CLOSE = {"R2-001", "R2-118", "R2-428"}
 # Verdicts reached by hand, one finding at a time. E1 = code read, E3 = live product.
 # NOT_IN_PROD is a FIFTH verdict, added deliberately - see the header note in the emitted file.
 VERDICTS = {
+    "R2-590": ("CONFIRMED", "Off-main row, class substantially fixed, residual filed as R2-752. "
+               "Re-measured 2026-08-28 with scripts/verification/okelse.py (self-tested first "
+               "against d/payment-approval/page.tsx, which the register records as fixed to "
+               "surface server detail, and against a synthetic silent handler). Of 244 write "
+               "controls - a fetch whose options carry POST/PUT/PATCH/DELETE - 230 surface a "
+               "failure (94.3%). The finding measured 91 of 189 silent (48%); it is now 6 of 244 "
+               "(2.5%). METHOD NOTE, because the number is bracketed not exact: a 1400-char "
+               "search window after each fetch reported 17 silent (upper bound - misses an else "
+               "further down the handler) and a 3500-char window reported 6 (lower bound - can "
+               "catch an else belonging to a later handler). The 6 were then read by hand and all "
+               "6 are genuine; the two false positives the narrow pass produced (finance p2p at "
+               ":455 via alert, settings BI-key at :715 via setBiMsg) were excluded. Residual "
+               "includes two money controls - payment-request Request Approval (:4018) and Mark "
+               "as Paid (:4029), both 'if (res.ok) {...}' with no else and no catch. Note "
+               "R2-137's register row calls this same class STILL OPEN, so the class is tracked "
+               "without an instance list; R2-752 is that list."),
     "R2-593": ("REGRESSED", "THE DEFECT IS LIVE, recorded FIX_VERIFIED against an off-main "
                "commit. The finding's own test still returns the same answer: grep -rn "
                "'AttendanceLog(' over backend/app yields exactly ONE construction site, hr.py:361 "
