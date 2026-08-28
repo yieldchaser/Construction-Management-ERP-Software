@@ -117,6 +117,48 @@ EVIDENCE_CLOSE = {"R2-001", "R2-118", "R2-428"}
 # Verdicts reached by hand, one finding at a time. E1 = code read, E3 = live product.
 # NOT_IN_PROD is a FIFTH verdict, added deliberately - see the header note in the emitted file.
 VERDICTS = {
+    "R2-080": ("CONFIRMED", "E1 + E3. main.py:713 defines GET /health and .github/workflows/"
+               "keep_alive.yml pings it on a */10 cron. E3 2026-08-28: /health returns 200 "
+               "{'status':'ok'}. The residual the register already discloses (Actions cron "
+               "throttling needs an external pinger or a paid instance) is REAL and measured "
+               "today: a cold request took 99.4s end to end and a concurrent /health queued "
+               "behind it took 19.1s, while the same two calls against a warm instance took "
+               "3.0s and 0.3s. That matches the founder's parked 'Render paid instance at first "
+               "non-founder signup' item (measured cold start ~90s), so it is not filed as new."),
+    "R2-081": ("CONFIRMED", "E1 PASS on every surface. The claim is that ALL total_payable "
+               "aggregates filter expense types and Cancelled. Checked all 12 total_payable "
+               "sites in analytics.py. The two fed by the UNGUARDED bills query at :163 both "
+               "carry inline guards - :244 project_spend and :320 month_spend each test "
+               "is_expense_invoice_type(...) and status != 'Cancelled'. Every other aggregate "
+               "(:522, :662, :663, :699, :701, :703, :709) is downstream of the query at :623, "
+               "which filters Bill.status != 'Cancelled' at the database. NOT A DEFECT, checked "
+               "and dismissed: subcontractor_scorecard's bill_count (:417) counts Cancelled "
+               "subcon bills, but it is a row count rather than a total_payable aggregate, so "
+               "outside this finding's claim, and the cancelled-exclusion class is already filed "
+               "as R2-723."),
+    "R2-303": ("CONFIRMED", "E1 + E3. analytics.py:314-327 now filters each month to bills dated "
+               "INSIDE it (month_start_d <= invoice_date <= month_end_d) before accumulating, so "
+               "the += at :328 is a genuine accumulation rather than a re-addition of an "
+               "already-cumulative figure; expense-type and Cancelled guards were added in the "
+               "same expression. E3 PROVED LIVE 2026-08-28 against AK Construction: "
+               "budget_burn_series returns Jul 2026 spend 802754 and Aug 2026 spend 802754 - "
+               "FLAT across a month with no transactions, where the finding measured 1051144 "
+               "doubling to 2102288. total_spend (802754) equals the final series point exactly, "
+               "and independently equals the sum of to_pay across the party ledger (802754), so "
+               "two subsystems agree on the number."),
+    "R2-304": ("CONFIRMED", "E1 + E3. analytics.py:344-356 no longer fabricates 8.0 for a null "
+               "hours_worked: a log with hours contributes its real value, a log without one "
+               "increments logs_without_hours and contributes ZERO, and labour_days is None "
+               "rather than 0 when there are no real hours. E3 PROVED LIVE 2026-08-28: "
+               "labour_productivity returns total_hours 8, logs_without_hours 2, labour_days 1. "
+               "The finding proved the defect by the disagreement between two of the product's "
+               "own feeds - BI labour-productivity said 8.0 while analytics said 16.0 for the "
+               "same records. Analytics now reports 8.0, matching the BI feed exactly, and "
+               "discloses the two null-hours logs instead of inventing sixteen hours from them."),
+    "R2-497": ("CONFIRMED", "Duplicate row of R2-303, same site and same atomic fix (the "
+               "register records both against f87ba34). Verified by the same E1 read and the "
+               "same live budget_burn_series result - see the R2-303 entry. Flat Jul/Aug series "
+               "at 802754, no compounding."),
     "R2-399": ("CONFIRMED", "E1 + E3, with a residual filed as R2-747. E3 2026-08-28: pulled "
                "the real PDF for ZZ-QA-AUDIT-001 (the finding's own example bill) from production "
                "and extracted its text - the document is uncompressed so this is the rendered "
