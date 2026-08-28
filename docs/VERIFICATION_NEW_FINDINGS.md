@@ -1253,6 +1253,7 @@ finding read **as filed** rather than from its register note.
 | **R2-744** | **CRITICAL** | **Tally export books every supply as CGST+SGST — the one D4 place-of-supply surface never swept; reports and the invoice PDF now emit IGST and disagree with it** | worklist row 5 (R2-410) |
 | **R2-745** | **CRITICAL** | **quotation→invoice conversion bypasses `_validate_bill_line_items`; inter-state quotations produce a tax invoice with gst_amount 0** | worklist row 2 (R2-271) |
 | **R2-746** | **CRITICAL** | **company switch never re-mints the session — team invites land in the previous company; proved live in the founder's own session** | verifying R2-418 E3 |
+| **R2-747** | **HIGH** | **invoice HSN/SAC column renders empty — quotation conversion drops the field and no validator requires it** | worklist row 3 (R2-399) |
 
 ## FINDING R2-743 — 🔴 CRITICAL: the BI export feed writes user-controlled text straight into CSV cells, so the one export built for external consumption is the one still formula-injectable
 
@@ -1606,3 +1607,91 @@ on a claim the client cannot see or correct.
 A test asserting that after `POST /auth/switch-company/{B}`, a token minted for A no longer resolves
 to A on `/auth/me`; and a frontend test that `switchTo` issues the re-mint call before navigating.
 Neither exists — R2-186's closure was verified on the endpoint alone, never on a caller.
+
+## FINDING R2-747 — 🟠 HIGH: the invoice's HSN/SAC column was added but nothing ever fills it — the quotation that collects HSN drops it on conversion, and no validator requires it
+
+R2-399 is **substantially CONFIRMED**. Six of the eight Rule 46 elements it tabulated as missing are
+now present, verified by pulling a real PDF from production rather than by reading the code. Live
+extraction of `ZZ-QA-AUDIT-001` (AK Construction, 2026-08-28), which is the finding's own example
+bill — the PDF is uncompressed, so this is the document text itself:
+
+```
+AK Construction
+Legal Name: SurajConstruction
+GSTIN: 29ABCDE1234F1Z5
+Address: Nerul , Navi Mumbai
+Tax Invoice
+Party: upadhyayprateek574
+Invoice No: ZZ-QA-AUDIT-001
+Recipient GSTIN: 27AAPFU0939F1ZV
+Place of Supply: 27
+Description                    HSN/SAC     Qty    Rate      Amount
+QA audit line item                         1      100000    100000
+SUMMARY / TOTALS
+Subtotal: 100000.00
+GST Amount: 18000.00
+Total Payable: 118000.00
+IGST: 18000.00
+Amount in Words: One Lakh Eighteen Thousand Rupees Only
+Tax Payable Under Reverse Charge: No
+For AK Construction
+Authorised Signatory
+```
+
+Supplier GSTIN and address, recipient GSTIN, the tax split, place of supply, amount in words, the
+reverse-charge declaration and the signature block are all present and correct. The split is
+IGST-only because supplier state 29 differs from place of supply 27 — D4 working as designed, on the
+document, live.
+
+### What is still missing
+**The HSN/SAC column renders, and its cell is empty.** Look at the line-item row above: the `HSN/SAC`
+header is printed, and the value between the description and `Qty` is blank. R2-399 filed
+"HSN/SAC per line ❌"; the closure added the *column* and left the *value* unfilled, which is the same
+Rule 46 defect wearing a header.
+
+Two independent reasons it can never be populated today:
+
+1. **Nothing requires it.** `billing.py:824` reads `str(it.get("hsn_sac") or "")` — the only mention of
+   `hsn` in the whole file. `_validate_bill_line_items` (`billing.py:919-968`) enforces a description
+   and the subtotal reconciliation, and says nothing about HSN. A bill created through
+   `POST /billing/bills` with no `hsn_sac` on any line is accepted and prints blanks.
+2. **The one path that HAS the data throws it away.** The CRM quotation UI collects HSN/SAC per item
+   (`d/crm/page.tsx:62, 291, 574` — `hsn_sac: it.hsn_sac.trim() || null`) and the library stores it
+   (`models.py:1231, 2111, 2131`). But `convert_quotation_to_invoice` rebuilds `items_json` by hand
+   (`crm.py:915-921`) with exactly five keys:
+
+   ```python
+   {"desc": i.item_name, "cost_code_name": i.cost_code, "qty": float(i.qty),
+    "rate": ..., "amount": float(i.total_amount or 0)}
+   ```
+
+   `hsn_sac` is not among them. Every invoice converted from a quotation therefore has a structurally
+   blank HSN column, **even when the user filled HSN in on the quotation.**
+
+**Recipient address is also absent.** R2-399's table required "recipient name, address and GSTIN"; the
+PDF prints `Party:` and `Recipient GSTIN:` but no recipient address.
+
+### Relationship to R2-745
+Leg 2 is the same function and the same root cause as R2-745 — `convert_quotation_to_invoice`
+hand-assembles a payload instead of going through a shared, validated builder, and each hand-assembly
+drops a different field (`igst_amount` there, `hsn_sac` here). Fixing that function properly closes
+both. Filed separately because leg 1 (no validator requires HSN on the direct creation path) is
+independent of the conversion and survives fixing it.
+
+### Severity
+HIGH rather than CRITICAL: unlike R2-745 this misstates no amount. But HSN/SAC is mandatory per line
+on a B2B tax invoice, the recipient uses it to claim credit, and an invoice missing it is rejectable —
+so the document R2-399 set out to make lawful is still not.
+
+### Fix
+Carry `hsn_sac` through `convert_quotation_to_invoice` (the field is already on `CRMQuotationItem`),
+and extend `_validate_bill_line_items` to require it for revenue invoice types, matching how that
+function already requires a description. Add the recipient's address to `party_lines` beside the
+recipient GSTIN.
+
+### Observation, not filed
+AK Construction's stored supplier GSTIN is `29ABCDE1234F1Z5` — the exact dummy value R2-114's closure
+records as "now rejected" by the checksum validator. The validator is write-time and forward-only, so
+this pre-existing row persists and prints on live invoices. Correct per that fix's stated scope, and
+AK is a test tenant covered by `launch_cleanup.sql`, but it means every PDF this tenant emits today
+carries a GSTIN that would fail its own validation.
