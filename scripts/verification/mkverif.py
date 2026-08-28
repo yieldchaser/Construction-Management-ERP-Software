@@ -117,6 +117,38 @@ EVIDENCE_CLOSE = {"R2-001", "R2-118", "R2-428"}
 # Verdicts reached by hand, one finding at a time. E1 = code read, E3 = live product.
 # NOT_IN_PROD is a FIFTH verdict, added deliberately - see the header note in the emitted file.
 VERDICTS = {
+    "R2-172": ("CONFIRMED", "E1 PASS on both surfaces: permissions.py:46-62 WORKFLOW_MODULES and "
+               "rbac.ts:33-49 both carry the same 16 modules, covering all ten approve keys the "
+               "finding named (crm/safety/quality/reports/drawings/planning/projects/equipment/"
+               "attendance/production). MODULES lists are identical (18 entries, same order). "
+               "E2 PASS: backend/tests/coverage/test_r2_172_preset_keys_representable.py pins "
+               "three contracts - presets are a subset of ALL_PERMISSION_KEYS, the ten keys are "
+               "grantable, and rbac.ts mirrors permissions.py; all three fail against the "
+               "pre-aa17f72 tree. E0 PASS 2026-08-28: a probe over company_roles jsonb keys "
+               "across all 24 production roles returns ZERO keys outside the canonical taxonomy. "
+               "The probe was calibrated against a known-positive first (canon with crm:approve "
+               "removed returned exactly the 4 expected Manager / Project partner rows), so the "
+               "null result is the probe working rather than the probe broken. RESIDUAL, not "
+               "filed: the as-filed fix had two conjuncts and only the root one landed - "
+               "buildInitialDraft (RolePermissionsModal.tsx:29-35) still silently drops any "
+               "stored key absent from ALL_PERMISSION_KEYS instead of merging it back or "
+               "surfacing it read-only. Latent only: the backend rejects unknown keys on write "
+               "and no such key exists in production, so it cannot fire today. The gate covers "
+               "WORKFLOW_MODULES drift but not MODULES drift."),
+    "R2-407": ("REGRESSED", "E1 FAIL, verified against the finding AS FILED rather than the "
+               "register note. R2-407's closure claims the payslip CSV was 'the last raw-text "
+               "exporter'. It was not. R2-185, the parent class finding, names FOUR backend call "
+               "sites: labour.py (fixed b3d3a77), dpr.py (fixed beb5823), hr.py (fixed 74b64ce) "
+               "and bi_export.py:85 'BI feed - every column, via csv.DictWriter'. bi_export.py "
+               "carries zero neutralization: a whole-file grep for lstrip / startswith / escape "
+               "/ sanitize / quote-prefix returns nothing, and all three feed routes (projects, "
+               "budget-variance, labour-productivity) render through the same unguarded _to_csv "
+               "at :86. E3 PROVED LIVE 2026-08-28 in ZZ R8 Throwaway. Filed as R2-743."),
+    "R2-185": ("REGRESSED", "E1 FAIL. Same defect as the R2-407 entry above, on R2-185's own "
+               "primary claim: the finding says 'One helper, four call sites' and enumerates "
+               "them; three were fixed and bi_export.py:85 was not. Closed on the strength of "
+               "the BOCW site alone (b3d3a77 'BOCW CSV export neutralizes formula cells'). "
+               "Filed as R2-743."),
     "R2-730": ("CONFIRMED", "E0 2026-08-27: material_wastage_reported_by_fkey IS now present in "
                "production, so migration 20260816_000005 has been applied since this was filed. "
                "The finding is resolved against the live database. Note it is the ONLY late "

