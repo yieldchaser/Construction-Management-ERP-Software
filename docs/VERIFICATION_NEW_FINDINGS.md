@@ -1252,6 +1252,7 @@ finding read **as filed** rather than from its register note.
 | **R2-743** | **CRITICAL** | **the BI CSV feed is formula-injectable — the fourth call site R2-185 named, never fixed, and R2-407 was closed claiming it was the last one** | worklist row 4 (R2-407) |
 | **R2-744** | **CRITICAL** | **Tally export books every supply as CGST+SGST — the one D4 place-of-supply surface never swept; reports and the invoice PDF now emit IGST and disagree with it** | worklist row 5 (R2-410) |
 | **R2-745** | **CRITICAL** | **quotation→invoice conversion bypasses `_validate_bill_line_items`; inter-state quotations produce a tax invoice with gst_amount 0** | worklist row 2 (R2-271) |
+| **R2-746** | **CRITICAL** | **company switch never re-mints the session — team invites land in the previous company; proved live in the founder's own session** | verifying R2-418 E3 |
 
 ## FINDING R2-743 — 🔴 CRITICAL: the BI export feed writes user-controlled text straight into CSV cells, so the one export built for external consumption is the one still formula-injectable
 
@@ -1510,3 +1511,98 @@ The R2-401 gate pins the validator's behaviour but not its **coverage**. Needed:
 every path constructing a `Bill` passes through `_validate_bill_line_items`, plus a conversion test
 for an inter-state quotation asserting `bill.gst_amount == quotation total tax`. The present gate stays
 green under both defects above.
+
+## FINDING R2-746 — 🔴 CRITICAL: switching company never re-mints the session, so `/auth/me`, `/auth/me/permissions` and the team-invite write all still target the PREVIOUS company
+
+R2-186 ("a user can belong to several companies, and there is no way to switch between them") is
+recorded FIXED by `1a564f1`: *"POST /auth/switch-company/{company_id} verifies membership and
+re-mints the company-scoped session."* The endpoint exists and is correct. **Nothing calls it.**
+
+```
+$ grep -rn "switch-company" frontend/src
+(no output)
+```
+
+`CompanySwitcher.tsx:39-47` is the entire switch implementation:
+
+```tsx
+const switchTo = useCallback(
+  (newId: string, newName: string) => {
+    const segments = (pathname || "").split("/");
+    if (segments[1] === "c") segments[2] = newId;
+    if (typeof window !== "undefined") localStorage.setItem("company_name", newName);
+    setOpen(false);
+    router.push(segments.join("/"));
+  },
+  [pathname, router]
+);
+```
+
+It rewrites the URL segment, overwrites `company_name`, and navigates. It does **not** call the
+re-mint endpoint, does **not** replace `access_token`, and does **not** update `company_id`. The fix
+for R2-186 landed backend-only.
+
+### The two identities then disagree
+Company context is resolved two different ways:
+- **Path-scoped routes** take `company_id` from the URL and check membership — these follow the UI.
+- **`get_current_active_company_user`** (`auth.py:283-295`) decodes the JWT and reads its
+  `company_id` claim — these follow the *pre-switch* company.
+
+Three routes take the second path: `/auth/me` (:838), `/auth/me/permissions` (:875) and
+**`/auth/team/invite` (:969)**.
+
+### Proved live, 2026-08-28, in the founder's own session
+The browser was showing AK Construction's finance page, rendering AK's party ledger, having switched
+from ZZ R8 Throwaway:
+
+| signal | value |
+|---|---|
+| URL segment / rendered data | `d3724ec3-edac-4b5f-b296-fc6a013b7b5d` — **AK Construction** |
+| JWT `company_id` claim (decoded locally) | `1fa705a4-7aa6-42f2-9906-65902c96916f` — **ZZ R8 Throwaway** |
+| `GET /auth/me` → `company_id` | `1fa705a4…` — **ZZ R8** |
+| `GET /auth/me/permissions` → `company_id` | `1fa705a4…` — **ZZ R8**, role `Owner` |
+| `localStorage.company_name` | `AK Construction` |
+| `localStorage.company_id` | `1fa705a4…` — **ZZ R8** |
+
+The screen says AK Construction. The identity endpoints say ZZ R8 Throwaway. Both are true at once.
+
+### Consequences
+1. **`/auth/team/invite` adds the invitee to the wrong company.** `invite_member` takes
+   `company_id = ctx["company_id"]` (`auth.py:974`) — from the token claim. There is no company id in
+   the path or payload, so the route has no way to learn which company the user is looking at. A user
+   who switches to company B and invites a colleague **grants them membership of company A**, with a
+   role looked up in A, and the UI reports success. This is a silent grant of access to a tenant the
+   inviter did not intend to touch, which is the security-relevant half of this finding.
+2. **The UI is gated by the wrong company's permissions.** `/auth/me/permissions` returns A's rights
+   while B's screens render. A user who is Owner in A and Viewer in B sees Owner affordances
+   throughout B. Path-scoped writes are still rejected server-side by `require_permission`, so this is
+   a misleading-UI defect rather than a privilege escalation — but any control enforced only in the
+   client is bypassed, and the user is shown actions that will fail.
+3. **`localStorage.company_id` goes stale**, and `profile/onboarding/page.tsx:38` is its only reader.
+   That page POSTs the stale id to `/profile/onboarding`, which sets `company.name`,
+   `onboarding_city`, `onboarding_segment` and `onboarding_categories` (`profile.py:38-42`). Reaching
+   it after a switch renames and reconfigures the *previous* company with details typed for the new
+   one. Membership is checked, so the blast radius is limited to companies the user already belongs
+   to.
+
+### Why CRITICAL
+Consequence 1 is a membership write against an unintended tenant, triggered by a supported UI action,
+with a success message and no indication anything went to the wrong place. The multi-company switcher
+exists precisely for users who hold several companies, which is exactly the population this misfires
+for. It is also entirely invisible in single-company accounts and in any account holding the same role
+everywhere — including the founder's, which is Owner in both, which is why it has survived.
+
+### Fix
+Have `switchTo` await `POST /auth/switch-company/{newId}`, store the re-minted `access_token` and the
+returned `company_id` (the response already carries both — `siteflow.ts:49` writes `company_id` from
+`data.company.id` on the login path and can be reused), and only then navigate. Failing the switch
+should keep the user where they are rather than navigating with a stale token.
+
+Independently, `/auth/team/invite` should take the target company explicitly and membership-check it
+rather than inferring it from the token — a route that performs a membership write should not depend
+on a claim the client cannot see or correct.
+
+### Gate this needs
+A test asserting that after `POST /auth/switch-company/{B}`, a token minted for A no longer resolves
+to A on `/auth/me`; and a frontend test that `switchTo` issues the re-mint call before navigating.
+Neither exists — R2-186's closure was verified on the endpoint alone, never on a caller.
