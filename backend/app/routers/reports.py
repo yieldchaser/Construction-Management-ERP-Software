@@ -91,22 +91,9 @@ class ReportResponse(BaseModel):
 
 # ─── Endpoints ───────────────────────────────────────────────────────────────
 
-@router.post("/generate/{project_id}", response_model=ReportResponse, status_code=status.HTTP_201_CREATED)
-def generate_report(
-    project_id: uuid.UUID,
-    payload: ReportCreate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-    _: None = Depends(verify_project_access)
-):
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
-
-    report_id = uuid.uuid4()
-
+def _render_client_report_pdf(db: Session, report_name: str, summary_markdown: Optional[str], project: Project) -> bytes:
     # 1. Query Timeline Progress
-    project_tasks = db.query(Task).filter(Task.project_id == project_id).all()
+    project_tasks = db.query(Task).filter(Task.project_id == project.id).all()
     tasks_total = len(project_tasks)
     tasks_completed = sum(1 for t in project_tasks if t.status == "completed")
     tasks_active = sum(1 for t in project_tasks if t.status == "in_progress")
@@ -114,29 +101,26 @@ def generate_report(
     tasks_completion_pct = int(avg_task_progress)
 
     # 2. Query Billing & Financials
-    billing_wo_count = db.query(WorkOrder).filter(WorkOrder.project_id == project_id).count()
-    subcon_bills = db.query(Bill).filter(Bill.project_id == project_id, Bill.invoice_type == "subcon", Bill.status != "Cancelled").all()
+    billing_wo_count = db.query(WorkOrder).filter(WorkOrder.project_id == project.id).count()
+    subcon_bills = db.query(Bill).filter(Bill.project_id == project.id, Bill.invoice_type == "subcon", Bill.status != "Cancelled").all()
     approved_subcon_bills = [b for b in subcon_bills if b.approval_flag and b.approval_flag.lower() in ("approved", "auto_approved")]
     billing_ra_count = len(approved_subcon_bills)
     total_certified = sum(b.total_payable for b in approved_subcon_bills)
     billing_certified_net = f"{total_certified:.2f}"
 
     # 3. Query Procurement
-    procurement_indents = db.query(MaterialIndent).filter(MaterialIndent.project_id == project_id).count()
-    procurement_pos = db.query(PurchaseOrder).filter(PurchaseOrder.project_id == project_id).count()
+    procurement_indents = db.query(MaterialIndent).filter(MaterialIndent.project_id == project.id).count()
+    procurement_pos = db.query(PurchaseOrder).filter(PurchaseOrder.project_id == project.id).count()
 
     # 4. Query Quality Control
-    quality_inspections = db.query(SiteInspection).filter(SiteInspection.project_id == project_id).count()
-    quality_ncr_open = db.query(NCR).filter(NCR.project_id == project_id, NCR.status == "open").count()
-    quality_ncr_closed = db.query(NCR).filter(NCR.project_id == project_id, NCR.status == "closed").count()
-    quality_tests = db.query(MaterialTestResult).filter(MaterialTestResult.project_id == project_id).all()
+    quality_inspections = db.query(SiteInspection).filter(SiteInspection.project_id == project.id).count()
+    quality_ncr_open = db.query(NCR).filter(NCR.project_id == project.id, NCR.status == "open").count()
+    quality_ncr_closed = db.query(NCR).filter(NCR.project_id == project.id, NCR.status == "closed").count()
+    quality_tests = db.query(MaterialTestResult).filter(MaterialTestResult.project_id == project.id).all()
     quality_tests_total = len(quality_tests)
     quality_tests_assessed = [t for t in quality_tests if t.is_pass is not None]
     quality_tests_unassessed = quality_tests_total - len(quality_tests_assessed)
     quality_tests_pass_count = sum(1 for t in quality_tests_assessed if t.is_pass)
-    # R2-414: with zero assessed tests there is NO pass rate, not a 0% one.
-    # None is the "no data" sentinel; 0 stays reserved for tests that exist
-    # and all fail.
     quality_tests_pass_rate = int((quality_tests_pass_count / len(quality_tests_assessed)) * 100) if quality_tests_assessed else None
 
     metrics = {
@@ -163,18 +147,12 @@ def generate_report(
     custom_banner = None
     company = db.query(Company).filter(Company.id == project.company_id).first()
     if company:
-        # document_company_name_display: "branch" prints the issuing branch's
-        # name instead of the parent company's name (falls back to company
-        # name when the project has no branch or the branch can't be found).
         if company.document_company_name_display == "branch" and project.branch_id:
             branch = db.query(CompanyBranch).filter(CompanyBranch.id == project.branch_id).first()
             company_name = branch.branch_name if branch else company.name
         else:
             company_name = company.name
 
-        # custom_pdf_template_enabled: switch from the default hardcoded
-        # layout to the company's configured PdfTemplate (falls back to the
-        # default layout when no template has been configured yet).
         if company.custom_pdf_template_enabled:
             template = (
                 db.query(PdfTemplate)
@@ -190,20 +168,36 @@ def generate_report(
 
     # 6. Generate PDF stream
     from app.utils.document_pdf import load_branding_assets
-    pdf_bytes = generate_client_report_pdf(
-        payload.report_name,
-        payload.summary_markdown or "",
+    return generate_client_report_pdf(
+        report_name,
+        summary_markdown or "",
         metrics,
         company_name=company_name,
         custom_banner=custom_banner,
         branding=load_branding_assets(db, project.company_id),
-        # R2-607: the registered supplier identity (legal name, GSTIN, phone,
-        # address) is stored on the Company/branch rows; print it under the
-        # client report masthead like the bill/PO/BOQ PDFs already do (R2-403).
         supplier_lines=resolve_supplier_tax_details(db, project.company_id, project),
     )
 
-    # 7. Save PDF to static files directory (absolute, CWD-independent)
+
+@router.post("/generate/{project_id}", response_model=ReportResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/{project_id}/generate", response_model=ReportResponse, status_code=status.HTTP_201_CREATED)
+def create_report(
+    project_id: uuid.UUID,
+    payload: ReportCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    _: None = Depends(verify_project_access)
+):
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "reports:create")
+
+    report_id = uuid.uuid4()
+    pdf_bytes = _render_client_report_pdf(db, payload.report_name, payload.summary_markdown, project)
+
+    # Save PDF to static files directory (absolute, CWD-independent)
     reports_dir = REPORTS_DIR
     os.makedirs(reports_dir, exist_ok=True)
     pdf_filename = f"{report_id}.pdf"
@@ -212,7 +206,7 @@ def generate_report(
     with open(pdf_path, "wb") as f:
         f.write(pdf_bytes)
 
-    # 8. Create report record in database
+    # Create report record in database
     db_report = ClientReport(
         id=report_id,
         project_id=project_id,
@@ -220,8 +214,6 @@ def generate_report(
         report_date=datetime.utcnow(),
         summary_markdown=payload.summary_markdown,
         pdf_url=f"/static/reports/{pdf_filename}",
-        # R2-286(b): record who generated the report so the approver can be
-        # required to be someone else.
         generated_by=current_user.id,
         is_approved=False
     )
@@ -281,10 +273,24 @@ def download_report(report_id: uuid.UUID, db: Session = Depends(get_db), current
     pdf_filename = f"{report.id}.pdf"
     pdf_path = os.path.join(REPORTS_DIR, pdf_filename)
 
-    if not os.path.exists(pdf_path):
-        raise HTTPException(status_code=404, detail="PDF file not found on server disk")
+    if os.path.exists(pdf_path):
+        return FileResponse(pdf_path, media_type="application/pdf", filename=pdf_filename)
 
-    return FileResponse(pdf_path, media_type="application/pdf", filename=pdf_filename)
+    # R2-758: Render PDF on demand when container restart/deploy wipes ephemeral disk
+    pdf_bytes = _render_client_report_pdf(db, report.report_name, report.summary_markdown, project)
+    try:
+        os.makedirs(REPORTS_DIR, exist_ok=True)
+        with open(pdf_path, "wb") as f:
+            f.write(pdf_bytes)
+    except Exception:
+        pass
+
+    from fastapi import Response
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{pdf_filename}"'},
+    )
 
 # Read-only, defensive endpoint that returns real aggregated rows keyed by the
 # EXACT column-header strings defined in the frontend report definitions:
