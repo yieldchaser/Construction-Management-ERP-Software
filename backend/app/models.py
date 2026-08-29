@@ -675,6 +675,14 @@ class Bill(Base):
     # non-subcon bills and legacy rows; when set, cumulative billing is validated
     # against the WO's estimated_work_amount.
     wo_id = Column(UUID(as_uuid=True), ForeignKey("work_orders.id", ondelete="SET NULL"), nullable=True)
+    # R2-371: the purchase order this bill bills against. Null for non-purchase
+    # bills and legacy rows. Without it, billed-vs-ordered is uncomputable and
+    # over-invoicing against a PO is structurally undetectable -- a vendor can
+    # bill ₹5,00,000 against a ₹1,00,000 PO and no query in the product can
+    # relate the two documents. The only prior path was
+    # Bill.match_id -> ThreeWayMatch.po_id, and of 7 purchase bills in
+    # production zero carried a match_id.
+    po_id = Column(UUID(as_uuid=True), ForeignKey("purchase_orders.id", ondelete="SET NULL"), nullable=True)
     match_id = Column(UUID(as_uuid=True), ForeignKey("three_way_matches.id", ondelete="SET NULL"), nullable=True)
     # Transaction sub-entity persistence (Project Tab Transaction build)
     items_json = Column(Text, nullable=True)  # JSON array of line items: {desc, cost_code_id, cost_code_name, qty, rate, amount}
