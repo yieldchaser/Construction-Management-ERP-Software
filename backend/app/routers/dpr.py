@@ -91,9 +91,21 @@ def create_dpr(req: DPRCreateRequest, db: Session = Depends(get_db), current_use
     task_uuid = None
     if req.task_id:
         task_uuid = uuid.UUID(str(req.task_id))
-        task = db.query(Task).filter(Task.id == task_uuid).first()
+        # R2-599: the task must belong to the project this report is filed
+        # against. Resolving it by id alone let a caller advance a task in any
+        # project -- or any company -- whose id they knew, because the
+        # permission check above authorises against `project`, not against the
+        # task. Scoping the query to the project makes the cross-project write
+        # unrepresentable: a foreign task id now selects no row at all.
+        task = db.query(Task).filter(
+            Task.id == task_uuid,
+            Task.project_id == project_uuid,
+        ).first()
         if not task:
-            raise HTTPException(status_code=404, detail="Task not found")
+            raise HTTPException(
+                status_code=400,
+                detail="Task not found in this project",
+            )
         # Update task status on progress update
         if task.status == "not_started":
             task.status = "in_progress"
