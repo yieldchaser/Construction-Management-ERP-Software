@@ -1028,10 +1028,21 @@ class ClientReport(Base):
 class Equipment(Base):
     """Assets/Machinery fleet owned or hired by the company."""
     __tablename__ = "equipment"
+    # R2-049 / R2-358b: `code` used to be unique=True at column level, which
+    # made it unique across every tenant on the platform. Two different
+    # companies could not both register "EXC-01" -- whoever claimed a code
+    # first squatted it platform-wide, and the resulting 400 confirmed to the
+    # caller that some other tenant already held that code. Equipment codes are
+    # short and conventional, so collisions were near-certain as tenants grew.
+    # Every other duplicate guard in this codebase is company-scoped; this one
+    # now is too, enforced by constraint so no call site can bypass it.
+    __table_args__ = (
+        UniqueConstraint("company_id", "code", name="uq_equipment_company_id_code"),
+    )
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
     name = Column(String(255), nullable=False)
-    code = Column(String(100), unique=True, nullable=False)
+    code = Column(String(100), nullable=False)
     category = Column(String(100), nullable=False)        # Excavator, Crane, Mixer, Generator, etc.
     ownership_type = Column(String(50), nullable=False)     # Owned, Hired
     status = Column(String(50), default="available", nullable=False) # available, deployed, maintenance, inactive

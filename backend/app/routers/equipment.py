@@ -125,8 +125,15 @@ def add_equipment(payload: EquipmentCreate, db: Session = Depends(get_db), curre
         raise HTTPException(status_code=404, detail="Company not found")
     get_company_membership(db, current_user, payload.company_id)
     require_permission(db, current_user, payload.company_id, "equipment:edit")
-    # Check if code already exists
-    existing = db.query(Equipment).filter(Equipment.code == payload.code).first()
+    # R2-049: the code check is company-scoped, matching the (company_id, code)
+    # unique constraint. Unscoped, it rejected a code held by a different
+    # tenant and told the caller that code was taken -- simultaneously a
+    # cross-tenant denial of service and a disclosure about another company's
+    # fleet numbering.
+    existing = db.query(Equipment).filter(
+        Equipment.code == payload.code,
+        Equipment.company_id == payload.company_id,
+    ).first()
     if existing:
         raise HTTPException(status_code=400, detail="Equipment code already exists")
     

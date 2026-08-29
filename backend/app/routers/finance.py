@@ -570,24 +570,38 @@ def get_project_pl(project_id: uuid.UUID, db: Session = Depends(get_db), _: None
     dep_cost = 0.0
     for dep in deployments:
         eq = db.query(Equipment).filter(Equipment.id == dep.equipment_id).first()
-        if eq and eq.hourly_rate:
-            rate = float(eq.hourly_rate)
-            if dep.hours_used is not None:
-                # R2-357: recorded engine/shift hours are the billed truth;
-                # wall-clock (24 h/day) is only the fallback when never recorded.
-                hours = float(dep.hours_used)
-            else:
-                # R2-727: EquipmentDeployment columns are timezone-aware on Postgres
-                # but round-trip naive on SQLite; normalize both operands so the
-                # "still deployed" fallback (end_date NULL) can't raise TypeError.
-                start = dep.start_date
-                if start.tzinfo is None:
-                    start = start.replace(tzinfo=timezone.utc)
-                end = dep.end_date if dep.end_date else datetime.now(timezone.utc)
-                if end.tzinfo is None:
-                    end = end.replace(tzinfo=timezone.utc)
-                hours = (end - start).total_seconds() / 3600.0
-            dep_cost += round(max(0.0, hours * rate), 2)
+        if not eq:
+            continue
+        # R2-358a: this used to be `if eq and eq.hourly_rate:` -- a truthiness
+        # test on a Numeric column whose default is 0.0. A machine with no
+        # configured rate (the ordinary case for a Hired machine whose rate
+        # lives on the hire invoice) was skipped silently and contributed
+        # nothing forever, indistinguishable from a machine that was never
+        # deployed. The cost is still zero -- there is no rate to invent -- but
+        # the omission is now reported instead of swallowed.
+        rate = float(eq.hourly_rate or 0.0)
+        if rate <= 0.0:
+            logger.warning(
+                "P&L: equipment %s (%s) is deployed on project %s with no "
+                "hourly_rate configured, so its deployment contributes 0.00 "
+                "to Plant & Machinery.", eq.id, eq.code, proj_uuid,
+            )
+        if dep.hours_used is not None:
+            # R2-357: recorded engine/shift hours are the billed truth;
+            # wall-clock (24 h/day) is only the fallback when never recorded.
+            hours = float(dep.hours_used)
+        else:
+            # R2-727: EquipmentDeployment columns are timezone-aware on Postgres
+            # but round-trip naive on SQLite; normalize both operands so the
+            # "still deployed" fallback (end_date NULL) can't raise TypeError.
+            start = dep.start_date
+            if start.tzinfo is None:
+                start = start.replace(tzinfo=timezone.utc)
+            end = dep.end_date if dep.end_date else datetime.now(timezone.utc)
+            if end.tzinfo is None:
+                end = end.replace(tzinfo=timezone.utc)
+            hours = (end - start).total_seconds() / 3600.0
+        dep_cost += round(max(0.0, hours * rate), 2)
 
     fuel_logs = db.query(FuelLog).filter(FuelLog.project_id == proj_uuid).all()
     fuel_cost = sum(float(log.total_cost or 0.0) for log in fuel_logs)
