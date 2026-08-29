@@ -118,7 +118,14 @@ def get_committed_costs(project_id: UUID, db: Session = Depends(get_db), _: None
     subcon_committed = sum(float(w.estimated_work_amount) for w in wos)
 
     labour_committed = 0.0
-    labour_actual = float(db.query(func.sum(PayrollLineItem.net_payable)).join(PayrollRun).filter(PayrollRun.project_id == project_id).scalar() or 0.0)
+    # C2: only finalized payroll runs contribute to actual labour cost
+    labour_actual = float(
+        db.query(func.sum(PayrollLineItem.net_payable))
+        .join(PayrollRun)
+        .filter(PayrollRun.project_id == project_id, PayrollRun.status == "finalized")
+        .scalar()
+        or 0.0
+    )
 
     equipment_committed = 0.0
     deployments = db.query(EquipmentDeployment).filter(EquipmentDeployment.project_id == project_id).all()

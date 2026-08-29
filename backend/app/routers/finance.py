@@ -552,10 +552,17 @@ def get_project_pl(project_id: uuid.UUID, db: Session = Depends(get_db), _: None
     ).scalar() or 0.0
     material_actual = float(material_actual) + float(material_wastage_actual)
 
-    # 3. Labour Cost: Salary expenses
-    labour_actual = db.query(func.sum(PayrollLineItem.net_payable)).join(PayrollRun).filter(
-        PayrollRun.project_id == proj_uuid
-    ).scalar() or 0.0
+    # 3. Labour Cost: Salary expenses (C2: finalized payroll runs only)
+    labour_actual = (
+        db.query(func.sum(PayrollLineItem.net_payable))
+        .join(PayrollRun)
+        .filter(
+            PayrollRun.project_id == proj_uuid,
+            PayrollRun.status == "finalized",
+        )
+        .scalar()
+        or 0.0
+    )
 
     # 4. Subcontractor Cost: Subcon bills (invoice_type == "subcon")
     subcon_actual = db.query(func.sum(Bill.total_payable)).filter(

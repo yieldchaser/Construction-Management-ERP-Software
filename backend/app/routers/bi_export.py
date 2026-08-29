@@ -283,11 +283,14 @@ def feed_budget_variance(
                 equipment_bill_total += amount
             else:
                 other_actual += amount
-        # Labour actual: sum of payroll line-item net payables for this project's runs.
+        # Labour actual: sum of payroll line-item net payables for this project's finalized runs (C2).
         labour_actual = float(
             db.query(func.coalesce(func.sum(models.PayrollLineItem.net_payable), 0))
             .join(models.PayrollRun)
-            .filter(models.PayrollRun.project_id == p.id)
+            .filter(
+                models.PayrollRun.project_id == p.id,
+                models.PayrollRun.status == "finalized",
+            )
             .scalar()
             or 0
         )
