@@ -1251,7 +1251,7 @@ finding read **as filed** rather than from its register note.
 |---|---|---|---|
 | **R2-743** | **CRITICAL** | **the BI CSV feed is formula-injectable — the fourth call site R2-185 named, never fixed, and R2-407 was closed claiming it was the last one** | worklist row 4 (R2-407) |
 | **R2-744** | **CRITICAL** | **Tally export books every supply as CGST+SGST — the one D4 place-of-supply surface never swept; reports and the invoice PDF now emit IGST and disagree with it** | worklist row 5 (R2-410) |
-| **R2-745** | **CRITICAL** | **quotation→invoice conversion bypasses `_validate_bill_line_items`; inter-state quotations produce a tax invoice with gst_amount 0** | worklist row 2 (R2-271) |
+| **R2-745** | **CRITICAL** | **`convert_quotation_to_invoice` sums cgst+sgst and DROPS `quot.igst_amount` (crm.py:911), so an inter-state quotation becomes a tax invoice with gst_amount 0 AND the tax-inclusive total booked as taxable value; `_validate_bill_line_items` never called. See the batch-37 addendum for the authoritative fix** | worklist row 2 (R2-271) |
 | **R2-746** | **CRITICAL** | **company switch never re-mints the session — team invites land in the previous company; proved live in the founder's own session** | verifying R2-418 E3 |
 | **R2-747** | **HIGH** | **invoice HSN/SAC column renders empty — quotation conversion drops the field and no validator requires it** | worklist row 3 (R2-399) |
 | **R2-748** | **MEDIUM** | **invoice PDF and the shared party-name resolver use opposite precedence — one party, two printed names (latent: 0 live instances)** | worklist row 21 (R2-131) |
@@ -1514,7 +1514,10 @@ company GSTIN prefix, and the current session's JWT is scoped to ZZ R8 Throwaway
 data) while AK Construction returns 403. Flagged for a session scoped to a tenant with CRM rows; the
 code path above is unconditional, so the E1 read is decisive on its own.
 
-### Fix
+### Fix (original statement — superseded in scope by the revised Fix at the end of this finding)
+> **Implementers: use the revised Fix below.** It agrees with this one and is more precise about
+> which line changes. Nothing here is retracted.
+
 Route the conversion through `_validate_bill_line_items` rather than trusting hand-assembled totals —
 that is the single change that closes both defects and prevents a third. Concretely: include
 `igst_amount` in the `gst_amount` sum (reuse the `:734` expression, which is already correct), and
@@ -1580,7 +1583,7 @@ reader will restore the bug.
 **Confirmed unchanged:** `_validate_bill_line_items` is still called zero times in this function, which
 was this finding's original claim.
 
-### Fix (revised, and smaller than originally stated)
+### Fix (revised — AUTHORITATIVE, use this one)
 Two lines and a call:
 ```python
 gst_amount = float(quot.cgst_amount or 0) + float(quot.sgst_amount or 0) + float(quot.igst_amount or 0)
