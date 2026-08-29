@@ -766,33 +766,16 @@ def get_bill_pdf(bill_id: UUID, db: Session = Depends(get_db), current_user=Depe
     supplier_lines = resolve_supplier_tax_details(db, bill.company_id, project)
 
     party = db.query(CompanyTeam).filter(CompanyTeam.id == bill.party_company_user_id).first()
-    # R2-400: the invoice addressee is the counterparty's business name held on
-    # LibraryParty (the vendor master); a platform login name is only a fallback
-    # because vendors routinely have no users row at all.
-    party_name = None
-    # R2-272: the recipient GSTIN lives on the vendor master (LibraryParty
-    # tax_no, same field the Zoho integration reads) - a tax invoice that does
-    # not name its recipient's GSTIN cannot be issued.
+    # R2-400 / R2-748: Resolve party name using the single shared resolver (LibraryParty first, then User)
+    party_name = resolve_party_name(db, bill.party_company_user_id, fallback="N/A")
     party_gstin = ""
-    # R2-747: Rule 46 requires the recipient's name, address and GSTIN. The PDF
-    # printed name and GSTIN only, so the document was still short of one
-    # mandatory element.
     party_address = ""
-    if party:
-        if party.library_party_id:
-            linked_party = db.query(LibraryParty).filter(LibraryParty.id == party.library_party_id).first()
-            if linked_party and linked_party.name:
-                party_name = linked_party.name
-            if linked_party and getattr(linked_party, "tax_no", None):
-                party_gstin = str(linked_party.tax_no)
-            if linked_party and getattr(linked_party, "address", None):
-                party_address = str(linked_party.address).strip()
-        if not party_name and party.user_id:
-            party_user = db.query(User).filter(User.id == party.user_id).first()
-            if party_user and party_user.name:
-                party_name = party_user.name
-    if not party_name:
-        party_name = "N/A"
+    if party and party.library_party_id:
+        linked_party = db.query(LibraryParty).filter(LibraryParty.id == party.library_party_id).first()
+        if linked_party and getattr(linked_party, "tax_no", None):
+            party_gstin = str(linked_party.tax_no)
+        if linked_party and getattr(linked_party, "address", None):
+            party_address = str(linked_party.address).strip()
 
     type_label_map = {
         "sale": "Tax Invoice",
