@@ -1267,6 +1267,7 @@ finding read **as filed** rather than from its register note.
 | **R2-758** | **HIGH** | **client-report PDFs still written to ephemeral container disk and the generate/download affordance is intact — the commit cited as closing that half touches 4 unrelated pages** | worklist (R2-184) |
 | **R2-759** | **MEDIUM** | **CRM lead `priority` still unvalidated free text (`Medium` vs `medium` split one filter bucket in two); register records the clause as fixed** | worklist (R2-438) |
 | **R2-760** | **MEDIUM** | **3 of 19 record types gained a void path and the row closed for all 19 — DPR, NCR, inspection, wastage, asset and custom-field records are still permanent; no D-code, no BACKLOG line** | worklist (R2-177) |
+| **R2-761** | **MEDIUM** | **Multi Level Approval panel carries two contradicting notices; the enforcement one omits Payment Entries, the category the dropdown opens on and one that IS enforced** | worklist (R2-480) |
 
 ## FINDING R2-743 — 🔴 CRITICAL: the BI export feed writes user-controlled text straight into CSV cells, so the one export built for external consumption is the one still formula-injectable
 
@@ -2598,3 +2599,69 @@ Not necessarily the nineteen endpoints. Either:
 
 What should not stand is the current state: the row reads FIXED for nineteen record types on the
 evidence of one endpoint, with no decision recorded anywhere.
+
+---
+
+## FINDING R2-761 — 🟡 MEDIUM: the Multi Level Approval panel carries two contradicting notices, and the one describing enforcement omits the category the dropdown opens on
+
+**Source:** verifying worklist row R2-480 (which rewrote this panel's copy) against the R2-479 / R2-178
+fixes that changed what the panel offers.
+
+### The two notices, both on the same panel
+`frontend/src/app/c/[company_id]/settings/page.tsx:2110-2111`, directly under the category dropdown:
+
+> *"Only categories with active enforcement are offered today. More approval categories are coming."*
+
+`:2193-2194`, under the rule list on the same tab:
+
+> *"Approval chains are enforced today on Payment Requests and Purchase Orders: when a matching rule
+> covers the amount, the document is held until every level approves it. **For the remaining
+> categories, rules are saved here but are not yet enforced.**"*
+
+The first says every offered category is enforced. The second says some offered categories are not.
+They cannot both be true, and the second one is the stale one.
+
+### What is actually true
+The offered set is three (`:476-478`), mirroring the backend tuple:
+
+```javascript
+const APPROVAL_CATEGORIES = [
+  "Payment Entries", "Payment Request", "Purchase Order",
+];
+```
+
+All three are enforced — I traced each constant to its call site:
+
+| Category | Enforced at |
+|---|---|
+| Payment Entries | `finance.py:675` — `find_matching_rule(..., PAYMENT_ENTRIES_FEATURE_TYPE, ...)` |
+| Payment Request | `finance.py:1357` — `find_matching_rule(..., PAYMENT_REQUEST_FEATURE_TYPE, ...)` |
+| Purchase Order | `procurement.py:587` — `find_matching_rule(..., PO_FEATURE_TYPE, ...)` |
+
+And `approvals.py:48-51` is a module-level assert that every enforcement constant is inside
+`APPROVAL_FEATURE_TYPES`, so the backend cannot drift. There are no "remaining categories" — the twelve
+unenforced ones were removed by the R2-178 / R2-479 fixes.
+
+### Why it matters more than a typo
+`approvalCat` is initialised to `APPROVAL_CATEGORIES[0]` (`:481`) — **Payment Entries**. So the tab
+opens on the one enforced category the notice does not name, beneath a sentence saying the remaining
+categories are not enforced. The natural reading is that payment-entry approval chains are decorative.
+
+An administrator who believes a money gate is inert will either build a manual process around it or
+distrust the gate they are configuring. That is the same user-harm R2-480 was filed to stop — internal
+or inaccurate Settings copy misdescribing the product — reappearing in the text that replaced it.
+
+### Root cause: the mirror is pinned by a comment, not by a test
+`:475` reads *"Mirrors APPROVAL_FEATURE_TYPES in backend/app/approvals.py (contract-pinned)"*. The list
+itself is fine today. What drifted is the **prose beside it**, which no pin covers at all — R2-480
+rewrote it correctly for the product as it stood, and the R2-479 fix then changed the product.
+
+### Fix
+Replace `:2194` with a single notice generated from `APPROVAL_CATEGORIES` rather than hand-written, so
+the sentence cannot name a different set from the dropdown, and delete the "remaining categories"
+clause, which now describes nothing. Two amber notices saying overlapping things should collapse to one.
+
+### Gate this needs
+Assert the rendered notice text contains every entry of `APPROVAL_CATEGORIES` — cheap, and it fails
+today. The stronger version pins `APPROVAL_CATEGORIES` itself against the backend
+`APPROVAL_FEATURE_TYPES` so the "contract-pinned" comment becomes true.
