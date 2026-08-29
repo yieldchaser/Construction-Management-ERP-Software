@@ -1262,6 +1262,10 @@ finding read **as filed** rather than from its register note.
 | **R2-753** | **HIGH** | **date-only fields shift a day by browser timezone; a holiday entered as 15 Aug stores as 14 Aug (proved live). 9 sites, only 1 normalised** | off-main subset (R2-220) |
 | **R2-754** | **HIGH** | **Holiday Calendar feeds nothing into payroll — a declared holiday reduces days_present but not days_in_month, so it is silently unpaid** | off-main subset (R2-481) |
 | **R2-755** | **HIGH** | **client-side CSV formula guard applied to 1 of 5 frontend exports — the frontend twin of R2-743** | worklist (R2-396) |
+| **R2-756** | **HIGH** | **PF ECR cannot be filed — every line emits `uan: "NOT_LINKED"`; no UAN column exists on any model (R2-523 disclosed residual)** | worklist (R2-523) |
+| **R2-757** | **MEDIUM** | **role editor silently revokes any stored permission key outside the taxonomy on save (R2-171/172 second conjunct; latent: 0 live instances)** | worklist (R2-171/R2-172) |
+| **R2-758** | **HIGH** | **client-report PDFs still written to ephemeral container disk and the generate/download affordance is intact — the commit cited as closing that half touches 4 unrelated pages** | worklist (R2-184) |
+| **R2-759** | **MEDIUM** | **CRM lead `priority` still unvalidated free text (`Medium` vs `medium` split one filter bucket in two); register records the clause as fixed** | worklist (R2-438) |
 
 ## FINDING R2-743 — 🔴 CRITICAL: the BI export feed writes user-controlled text straight into CSV cells, so the one export built for external consumption is the one still formula-injectable
 
@@ -2285,3 +2289,237 @@ where three duplicate `_csv_safe_cell` definitions exist. One helper, one import
 The enumeration check both findings point to: a test asserting that **every** CSV-producing path —
 backend and frontend — neutralizes a leading `= + - @`, discovered by scanning for CSV construction
 rather than by listing known files. Per-file pins are exactly what let four of five slip through.
+
+---
+
+## FINDING R2-756 — 🟠 HIGH: the PF ECR export is arithmetically correct but cannot be filed — every line carries `uan: "NOT_LINKED"` because no UAN column exists anywhere in the schema
+
+**Source:** verifying worklist row R2-523. The register row reads FIXED and discloses the gap in its
+own note (`RESIDUAL: UAN column does not exist (schema + HR write path needed)`). Filing it because a
+disclosed residual on a row marked FIXED is still a live gap — the disclosure records it, it does not
+close it.
+
+### What is fixed
+The employer split R2-523 named is implemented correctly. `backend/app/routers/statutory.py:380-384`:
+
+```python
+pf_wages = min(float(li.basic or 0), 15000.0)  # PF capped at ₹15,000 wage ceiling
+ee_pf = round(pf_wages * float(emp.pf_employee_pct or 12) / 100, 2)
+er_pf = round(pf_wages * float(emp.pf_employer_pct or 12) / 100, 2)
+eps_pf = round(pf_wages * 8.33 / 100, 2)
+epf_pf = round(er_pf - eps_pf, 2)
+```
+
+EPS at 8.33% of PF wages, EPF as the remainder of the employer share, wages capped at the ₹15,000
+ceiling, built from the period's finalized payslips (`:349-352`) and refusing to generate when no
+finalized run exists for the period (`:361-364`). That is what EPFO's ECR requires.
+
+### What is not
+`statutory.py:386`:
+
+```python
+"uan": "NOT_LINKED",  # UAN not stored on any model yet; placeholder
+```
+
+A grep for `uan` over `backend/app/models.py` returns **zero** column definitions. The UAN is not
+stored on `StaffEmployee`, not on `User`, not anywhere — there is no field to populate, and no HR
+screen collects one.
+
+### Why this matters
+The UAN is the **member identifier** in an ECR. EPFO matches every contribution line to a member
+account by UAN; a file whose member field is a literal string `NOT_LINKED` is rejected at upload. So
+the module's stated purpose — producing a filable PF return — is not achieved, even though every
+number on the line is right.
+
+This is the difference between a computation bug and a missing capability. R2-523's computation bug is
+genuinely fixed. The capability was never there.
+
+### Severity
+HIGH, not CRITICAL: nothing is misstated and no wrong figure reaches a statutory authority — the file
+simply cannot be submitted. It is a blocked feature, not a false filing. Contrast R2-522/R2-524, where
+the *wrong data source* was being reported as a return.
+
+### Fix
+Three parts, in order:
+1. Add `uan = Column(String(12), nullable=True)` to `StaffEmployee` (UAN is a 12-digit number), with a
+   migration. Nullable — pre-existing employees have none recorded.
+2. Surface it on the HR employee create/edit write path and form, validated as 12 digits.
+3. In `statutory.py:386`, emit `emp.uan` and **refuse the export** when any included member lacks one,
+   naming the employees — the same refusal shape already used at `:361-364` for a missing payroll run.
+   An ECR that silently omits a member is worse than one that will not generate.
+
+### Gate this needs
+A test asserting `export_pf_ecr` raises rather than emitting a placeholder member id: seed a finalized
+run with one employee whose `uan` is NULL, assert 409. That gate fails today against the placeholder.
+
+---
+
+## FINDING R2-757 — 🟡 MEDIUM: opening and saving a role in the permissions editor silently REVOKES any stored permission key outside the current taxonomy
+
+**Source:** verifying worklist rows R2-171 / R2-172. Same disclosure situation as R2-756 — the residual
+was noted during verification and not filed. Filing it now.
+
+### The defect
+`frontend/src/components/rbac/RolePermissionsModal.tsx:29-35` builds the editor's draft state by
+iterating the **taxonomy**, not the **stored grants**:
+
+```javascript
+function buildInitialDraft(perms?: PermissionDict | null): PermissionDict {
+  const draft: PermissionDict = {};
+  for (const key of ALL_PERMISSION_KEYS) {
+    if (key === "all") continue;
+    draft[key] = perms ? perms[key] === true : false;
+  }
+  return draft;
+}
+```
+
+Any key present in the role's stored `permissions` but absent from `ALL_PERMISSION_KEYS` never enters
+`draft`. The save then PUTs the draft **wholesale** (`:81-83`):
+
+```javascript
+method: "PUT",
+body: JSON.stringify({ permissions: draft }),
+```
+
+So the sequence *open a role → change one unrelated checkbox → Save* deletes every out-of-taxonomy key
+from that role, with no warning and nothing in the UI having ever shown the administrator those keys
+existed. The permission is revoked by an action that looks unrelated to it.
+
+### Why R2-172's fix does not cover this
+R2-172 fixed the *root* cause — `WORKFLOW_MODULES` was missing nine keys the seeded presets emitted, so
+those roles were unsaveable. That is genuinely closed: `permissions.py:46-62` now carries 16 modules,
+and `backend/tests/coverage/test_r2_172_preset_keys_representable.py` pins that no preset key falls
+outside `ALL_PERMISSION_KEYS`.
+
+But the as-filed finding had two conjuncts, and only the root one landed. The **client's silent-drop
+behaviour** is the second, and it is the general case: the gate covers `WORKFLOW_MODULES` drift, not
+`MODULES` drift, and it covers *preset* keys, not *stored* keys. Any future taxonomy change — a renamed
+module, a key retired ahead of its data — reintroduces exactly the same silent revocation.
+
+### Live status: latent
+Not exploitable today, and I checked rather than assuming:
+- the backend rejects unknown keys on write, so no new out-of-taxonomy key can be introduced, and
+- the production probe under R2-172 found **zero** stored keys outside the canonical set across all
+  24 roles.
+
+So there is nothing for it to drop right now. It is a trap armed for the next taxonomy edit, which is
+why it is MEDIUM rather than HIGH — a security-relevant silent state change, with no current instance.
+
+### Fix
+Merge unknown keys back rather than discarding them. In `buildInitialDraft`, seed `draft` from `perms`
+first, then overlay the taxonomy; render any key not in `ALL_PERMISSION_KEYS` as a read-only row
+labelled unrecognised, so it survives the round-trip and the administrator can see it. Failing that,
+diff before submit and require explicit confirmation naming the keys about to be removed. Silently is
+the only unacceptable option.
+
+### Gate this needs
+A component test: stored permissions containing a key absent from `ALL_PERMISSION_KEYS`, open, toggle
+an unrelated checkbox, save — assert the unknown key is still present in the PUT body. Fails today.
+
+---
+
+## FINDING R2-758 — 🟠 HIGH: the client-report generator still writes PDFs to the container's ephemeral disk, and the affordance that produces them was never removed — the commit cited as closing that half touches four unrelated pages
+
+**Source:** verifying worklist row R2-184.
+
+### What the register claims
+> `D-010 — de-escalated to feature needing object storage; defect half (false affordance, CRITICAL) closed by ab9623e removing 5 upload controls; storage feature moved to docs/BACKLOG.md`
+
+### What `ab9623e` actually changed
+```
+frontend/src/app/c/[company_id]/d/finance/page.tsx     |  8 ++--
+frontend/src/app/c/[company_id]/d/hr/page.tsx          |  9 +----
+frontend/src/app/c/[company_id]/d/library/page.tsx     | 47 ++------
+frontend/src/app/c/[company_id]/d/procurement/page.tsx | 15 ++---
+```
+Four pages, none of them the reports page, and **no change to `reports.py`**. The commit removed
+upload affordances — a real and correct change, but a *different* affordance from the one R2-184 named.
+
+### The affordance R2-184 named is still live
+`d/reports/page.tsx` still ships the **Compile Progress Report** modal (`:270`), a **Download PDF**
+link (`:226-230`) and an inline PDF preview iframe (`:251`), all pointed at
+`/apis/v3/reports/{id}/download`. Behind it, `reports.py` is unchanged in the way that matters:
+
+- `:21` — `REPORTS_DIR = <backend>/static/reports`
+- `:207-214` — generate the PDF, `os.makedirs`, write the bytes to local disk
+- `:222` — store `pdf_url=f"/static/reports/{pdf_filename}"` on the `ClientReport` row
+- `:282-286` — on download, `if not os.path.exists(pdf_path): raise HTTPException(404, "PDF file not
+  found on server disk")`
+
+Render's filesystem is ephemeral. The `ClientReport` row survives every deploy; the file does not. So
+a user compiles a report, the row persists, and after the next deploy the Download button and the
+preview both 404 permanently — the report cannot be regenerated, since only the markdown summary is
+stored and the metrics were computed at generation time.
+
+### Why this is a finding rather than a backlog item
+The **feature** half is legitimately deferred: `docs/BACKLOG.md:8` records it under D-010 and states
+the loss plainly. That decision is the founder's and I am not reopening it.
+
+What is not covered is the **affordance**: the register says the false-affordance half was closed, and
+it was not — the cited commit closed a different one. Until object storage lands, the reports UI still
+offers a durable-looking artefact that silently expires, which is exactly the class of defect D-010
+agreed to remove everywhere else.
+
+### Severity
+HIGH, not CRITICAL: no figure is misstated and no data outside the PDF is lost. But a client progress
+report is an outward-facing document that may already have been sent to a client and cited, and the
+system's copy vanishes with no notice to anyone.
+
+### Fix (small, until the backlog item lands)
+Either disable the generate/download controls behind the same D-010 rationale used for the five upload
+controls, or — cheaper and more useful — keep generation and **render the PDF from the stored row on
+demand** rather than serving a file, so nothing depends on disk. If neither, state the expiry in the UI
+next to the Download button; an affordance that discloses its own limit is not a false one.
+
+### Note on the register row
+The row's *conclusion* (defer the storage feature) is sound. Its *evidence* is not — `ab9623e` is cited
+for something it did not do. Worth a correction on the row independently of the fix.
+
+---
+
+## FINDING R2-759 — 🟡 MEDIUM: CRM lead `priority` is still unvalidated free text, so `Medium` and `medium` remain two different values — the register records this clause as fixed and it is not
+
+**Source:** verifying worklist row R2-438.
+
+### Two of three clauses are genuinely fixed
+- **Phone** — `crm.py:101` `phone_no: str = Field(..., pattern=r"^\+?\d{8,15}$")`, and `:135` the same
+  pattern on update. `not-a-phone` is now a 422; the UI can no longer prefix `+91` onto nonsense.
+- **Past closure date** — `:118-128` on create and `:152-165` on update, a `field_validator` raising
+  `expected_closure must not be in the past`. The `01 Jan 2020` case is rejected.
+
+### The third clause is not
+The finding also measured `priority` rendering as **`Medium`** on one row and **`medium`** on another —
+the same value in two cases, sorted and filtered as different strings. In the live tree:
+
+```python
+priority: str = "medium"          # crm.py:110  — create, no pattern, no Literal
+priority: Optional[str] = None    # crm.py:144  — update, no pattern, no Literal
+```
+
+and both write straight through — `priority=req.priority` (`:326`) and `lead.priority = req.priority`
+(`:364`). A grep over `crm.py` for `Literal`, a `priority` pattern, a `priority` field validator, or any
+`.lower()` normalisation returns **nothing**. Any string whatsoever is accepted and stored verbatim.
+
+So the register's `priority vocabulary normalized` is not supported by the code. Same shape as the
+R2-171/R2-172 split filed as R2-757: a multi-clause finding where the clauses were closed unevenly and
+the row reads closed for all of them.
+
+### Why it matters
+`priority` is a filter and sort key on the CRM pipeline. Case variants split one bucket in two, so a
+filter for `high` silently omits every lead stored as `High` — the lead does not appear as
+deprioritised, it disappears from the view entirely. That is the same failure mode as R2-252
+(free-text `incident_type` silently excluded from safety statistics), which was fixed with exactly the
+remedy needed here.
+
+### Severity
+MEDIUM: a sales-pipeline view defect, not a money or statutory one, and no figure is misstated.
+
+### Fix
+Constrain it at the boundary the way `incident_type` now is — `Field(pattern="^(low|medium|high)$")` on
+both the create and update schemas, matching whatever vocabulary the UI's select actually emits. Then
+one migration normalising existing rows to that casing, since the drift is already stored.
+
+### Gate this needs
+A test posting `priority="High"` and asserting 422, alongside the existing phone and closure-date
+cases — the same test file, three lines.
