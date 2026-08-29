@@ -16,6 +16,7 @@ Endpoints:
 import calendar
 import csv
 import io
+import logging
 import math
 import uuid
 from datetime import datetime, date, timedelta, timezone
@@ -23,6 +24,8 @@ from decimal import Decimal
 from typing import List, Literal, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, File, Form, UploadFile, Response
 from sqlalchemy import func
+
+logger = logging.getLogger(__name__)
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field, field_validator
 from app.database import get_db
@@ -1226,8 +1229,14 @@ def upload_payroll(
     try:
         content = file.file.read().decode("utf-8")
         csv_reader = csv.reader(io.StringIO(content))
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to read file: {str(e)}")
+    except UnicodeDecodeError:
+        raise HTTPException(
+            status_code=400,
+            detail="Uploaded file could not be decoded as UTF-8 text. Please upload a CSV file.",
+        )
+    except Exception:
+        logger.exception("Payroll CSV upload failed while reading file")
+        raise HTTPException(status_code=400, detail="Failed to read the uploaded file. Please re-upload a valid CSV.")
 
     headers = next(csv_reader, None)
     if not headers:

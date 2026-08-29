@@ -1,8 +1,11 @@
 import json
+import logging
 from uuid import UUID
 from datetime import datetime, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Response, status
+
+logger = logging.getLogger(__name__)
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.database import get_db
@@ -854,8 +857,8 @@ def get_bill_pdf(bill_id: UUID, db: Session = Depends(get_db), current_user=Depe
                     str(it.get("rate", "")),
                     str(it.get("amount", "")),
                 ])
-        except Exception:
-            pass
+        except (json.JSONDecodeError, TypeError, ValueError) as exc:
+            logger.warning("Bill %s has unparseable items_json: %s", bill.id, exc)
     if not table_rows:
         table_rows.append(["(No line items)", "", "", "", ""])
 

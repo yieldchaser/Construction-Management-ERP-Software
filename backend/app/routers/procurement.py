@@ -1,7 +1,10 @@
+import logging
 from uuid import UUID
 from datetime import datetime, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+
+logger = logging.getLogger(__name__)
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.database import get_db
@@ -1018,8 +1021,8 @@ def create_grn(req: GRNCreateRequest, db: Session = Depends(get_db), current_use
     from app.routers.vendor_performance import refresh_vendor_performance
     try:
         refresh_vendor_performance(db, req.project_id, req.company_id)
-    except Exception:
-        db.rollback()
+    except Exception as exc:
+        logger.exception("Failed to refresh vendor performance after GRN %s: %s", grn.id, exc)
 
     return GRNResponse(
         id=grn.id,
