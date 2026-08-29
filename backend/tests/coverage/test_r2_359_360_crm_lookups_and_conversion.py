@@ -127,7 +127,7 @@ def _make_quotation(client, hdr, comp, db):
     response (unrelated pre-existing defect, out of this wave's scope)."""
     project = models.Project(
         id=uuid.uuid4(), company_id=comp.id, name=f"P360-{_SUFFIX}",
-        code=f"PRJ-360-{_SUFFIX}", status="Ongoing",
+        code=f"PRJ-360-{_SUFFIX}", status="Ongoing", state="Karnataka",
     )
     db.add(project)
 
@@ -151,6 +151,7 @@ def _make_quotation(client, hdr, comp, db):
         qty=10, unit="nos", cost_price=0, selling_price=1000.0,
         supply_rate=0, installation_rate=0, supply_tax_pct=18.0,
         installation_tax_pct=12.0, total_amount=10000.0, markup=0,
+        hsn_sac="9954",
     ))
     db.commit()
     return project, {"id": str(quot.id), "qt_no": qt_no}
@@ -218,7 +219,7 @@ def test_r2_360_conversion_resolves_references_and_numbers(client, db, make_tena
 
     other_project = models.Project(
         id=uuid.uuid4(), company_id=comp_b.id, name="Foreign",
-        code=f"PRJ-F-{_SUFFIX}", status="Ongoing",
+        code=f"PRJ-F-{_SUFFIX}", status="Ongoing", state="Karnataka",
     )
     db.add(other_project)
     db.commit()

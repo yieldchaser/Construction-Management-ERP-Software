@@ -35,7 +35,7 @@ def _tenant(make_tenant, auth_headers):
 def _project(db, comp):
     p = models.Project(
         id=uuid.uuid4(), company_id=comp.id,
-        name=f"P-{uuid.uuid4().hex[:6]}", code=f"PRJ-{uuid.uuid4().hex[:8]}", status="Ongoing",
+        name=f"P-{uuid.uuid4().hex[:6]}", code=f"PRJ-{uuid.uuid4().hex[:8]}", status="Ongoing", state="Karnataka",
     )
     db.add(p)
     db.commit()

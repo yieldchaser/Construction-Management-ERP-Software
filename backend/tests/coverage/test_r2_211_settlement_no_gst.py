@@ -14,7 +14,7 @@ from app import models
 
 def _mk_project(db, comp):
     p = models.Project(
-        id=uuid.uuid4(), company_id=comp.id, name="P", code=f"PRJ-{uuid.uuid4().hex[:8]}", status="Ongoing"
+        id=uuid.uuid4(), company_id=comp.id, name="P", code=f"PRJ-{uuid.uuid4().hex[:8]}", status="Ongoing", state="Karnataka",
     )
     db.add(p)
     db.commit()

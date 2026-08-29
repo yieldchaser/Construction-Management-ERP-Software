@@ -32,7 +32,7 @@ def test_every_log_deletion_call_site_passes_the_actor():
     )
     offenders = []
     for path in sorted(glob.glob(os.path.join(routers_dir, "*.py"))):
-        tree = ast.parse(open(path, encoding="utf-8").read())
+        tree = ast.parse(open(path, encoding="utf-8-sig").read())
         for node in ast.walk(tree):
             if isinstance(node, ast.Call) and getattr(node.func, "id", "") == "log_deletion":
                 if not any(kw.arg == "deleted_by" for kw in node.keywords):

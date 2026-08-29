@@ -16,7 +16,7 @@ from app import models
 
 def _mk_project(db, comp):
     p = models.Project(
-        id=uuid.uuid4(), company_id=comp.id, name="P", code=f"PRJ-{uuid.uuid4().hex[:8]}", status="Ongoing"
+        id=uuid.uuid4(), company_id=comp.id, name="P", code=f"PRJ-{uuid.uuid4().hex[:8]}", status="Ongoing", state="Karnataka",
     )
     db.add(p)
     db.commit()
@@ -41,7 +41,7 @@ def _payload(comp, project, team, **kw):
 
 def _lines(*amounts):
     return json.dumps([
-        {"desc": f"Supply line {i + 1}", "qty": 1, "rate": a, "amount": a}
+        {"desc": f"Supply line {i + 1}", "qty": 1, "rate": a, "amount": a, "hsn_sac": "9954"}
         for i, a in enumerate(amounts)
     ])
 
@@ -89,7 +89,7 @@ def test_undescribed_line_rejected(client, db, make_tenant, auth_headers):
     hdr = auth_headers(user, comp)
     project = _mk_project(db, comp)
 
-    lines = json.dumps([{"desc": "", "qty": 1, "rate": 1000.0, "amount": 1000.0}])
+    lines = json.dumps([{"desc": "", "qty": 1, "rate": 1000.0, "amount": 1000.0, "hsn_sac": "9954"}])
     r = client.post(
         "/apis/v3/billing/bills",
         json=_payload(comp, project, team, items_json=lines),

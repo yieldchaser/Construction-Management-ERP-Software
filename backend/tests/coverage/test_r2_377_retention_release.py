@@ -27,7 +27,7 @@ _DUE = datetime.datetime(2026, 12, 1)
 
 def _mk_project(db, comp):
     p = models.Project(
-        id=uuid.uuid4(), company_id=comp.id, name=f"P377-{_SUFFIX}", code=f"PRJ-377-{_SUFFIX}", status="Ongoing"
+        id=uuid.uuid4(), company_id=comp.id, name=f"P377-{_SUFFIX}", code=f"PRJ-377-{_SUFFIX}", status="Ongoing", state="Karnataka",
     )
     db.add(p)
     db.commit()
@@ -219,7 +219,7 @@ def test_reports_surface_retention_and_due_date(client, db, make_tenant, auth_he
             "gst_pct": 18.0,
             # R2-401: tax invoices must carry line items reconciling to the subtotal.
             "items_json": json.dumps([
-                {"desc": "Fitout work supplied", "qty": 1, "rate": 50000.0, "amount": 50000.0}
+                {"desc": "Fitout work supplied", "qty": 1, "rate": 50000.0, "amount": 50000.0, "hsn_sac": "9954"}
             ]),
             "deductions": [
                 {

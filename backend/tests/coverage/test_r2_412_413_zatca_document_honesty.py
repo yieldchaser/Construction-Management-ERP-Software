@@ -23,7 +23,7 @@ from app import models
 
 def _mk_project(db, comp):
     p = models.Project(
-        id=uuid.uuid4(), company_id=comp.id, name="P", code=f"PRJ-{uuid.uuid4().hex[:8]}", status="Ongoing"
+        id=uuid.uuid4(), company_id=comp.id, name="P", code=f"PRJ-{uuid.uuid4().hex[:8]}", status="Ongoing", state="Karnataka",
     )
     db.add(p)
     db.commit()
@@ -31,7 +31,7 @@ def _mk_project(db, comp):
 
 
 def _lines(*specs):
-    return json.dumps([{"desc": d, "qty": 1, "rate": a, "amount": a} for d, a in specs])
+    return json.dumps([{"desc": d, "qty": 1, "rate": a, "amount": a, "hsn_sac": "9954"} for d, a in specs])
 
 
 def _mk_sale_bill(client, db, comp, user, team, items_json=None, subtotal=1000.0, gst_pct=18.0):
@@ -198,7 +198,7 @@ def test_qty_rate_only_lines_derive_amounts_like_the_validator(client, db, make_
     validator via qty*rate; the e-invoice must price them the same way
     instead of emitting 0.00 against the subtotal."""
     comp, user, team = _configured_tenant(client, db, make_tenant, "Z413C", "U413C")
-    items = json.dumps([{"desc": "Formwork", "qty": 10, "rate": 100}])
+    items = json.dumps([{"desc": "Formwork", "qty": 10, "rate": 100, "hsn_sac": "9954"}])
     bill_id = _mk_sale_bill(client, db, comp, user, team, items_json=items, subtotal=1000.0, gst_pct=0)
 
     body = _get_zatca(client, comp, user, bill_id)

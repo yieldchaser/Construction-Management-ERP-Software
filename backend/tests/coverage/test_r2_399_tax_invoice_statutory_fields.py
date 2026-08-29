@@ -32,7 +32,7 @@ def test_r2_399_tax_invoice_carries_rule_46_elements(client, db, make_tenant, au
     team.library_party_id = party.id
     project = models.Project(
         id=uuid.uuid4(), company_id=comp.id, name="P399",
-        code=f"PRJ-399-{_SUFFIX}", status="Ongoing",
+        code=f"PRJ-399-{_SUFFIX}", status="Ongoing", state="Karnataka",
     )
     db.add_all([party, project])
     db.commit()

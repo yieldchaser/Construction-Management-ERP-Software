@@ -24,7 +24,7 @@ from app import models
 def _project(db, company):
     p = models.Project(
         id=uuid.uuid4(), company_id=company.id, name="BillProj",
-        code=uuid.uuid4().hex[:6], status="Ongoing",
+        code=uuid.uuid4().hex[:6], status="Ongoing", state="Karnataka",
     )
     db.add(p)
     db.commit()

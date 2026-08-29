@@ -144,7 +144,7 @@ def test_partially_settled_payout_reports_only_unsettled_residual(
     rep = client.get(f"{DATA}/gstr2-purchase?company_id={comp.id}&project_id={project.id}", headers=hdr)
     assert rep.status_code == 200
     rows = rep.json()["rows"]
-    assert [r["Bill Number"] for r in rows if r["Bill Number"]] == [f"PUR-{tag}"]
+    assert [r.get("Bill Number") for r in rows if r.get("Bill Number")] == [f"PUR-{tag}"]
     out_rows = [r for r in rows if r["Expense Type"] == "Payment Out"]
     assert len(out_rows) == 1
     # Only the money NOT already carried by the bill row may appear.

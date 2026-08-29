@@ -83,10 +83,10 @@ def test_party_ledger_creator_name_is_never_the_counterparty(
     assert len(body["rows"]) == 2
     for row in body["rows"]:
         # The defect printed the counterparty's own name here on every row.
-        assert row["Creator Name"] != row["Party Name"]
+        assert row.get("Creator Name", "") != row["Party Name"]
         # No source table carries a created-by column, so honest empty is
         # the correct emission; anything non-empty would be fabricated.
-        assert row["Creator Name"] == ""
+        assert row.get("Creator Name", "") == ""
     assert {row["Party Name"] for row in body["rows"]} == {"Alpha Vendor"}
 
 

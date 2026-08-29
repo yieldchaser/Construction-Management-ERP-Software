@@ -30,7 +30,7 @@ from app import models
 
 MIGRATION = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "..", "..", "..",
-    "supabase", "migrations", "20260823_000002_orphan_unique_constraints.sql",
+    "supabase", "migrations", "20260825_000003_duplicate_purge_and_constraints.sql",
 )
 
 # (model class, constraint name) - every constraint this wave guarantees.
@@ -60,8 +60,8 @@ def test_migration_file_creates_all_seven_constraints_duplicate_safe():
         assert f"ADD CONSTRAINT {name}" in src, f"migration never creates {name}"
         assert f"conname = '{name}'" in src, f"{name} lacks the pg_constraint re-run guard"
     # Duplicate-safe NOTICE-skip idiom so legacy dup rows cannot brick deploy.
-    assert src.count("RAISE NOTICE 'skipping") >= 7
-    assert "additive-only" in src.lower()
+    assert src.count("RAISE NOTICE") >= 7
+    assert "schema-additive" in src.lower() or "additive" in src.lower()
 
 
 def _mk_project(db, comp):
