@@ -9,6 +9,7 @@ from decimal import Decimal
 from app.database import get_db
 from app.auth import get_current_user, verify_company_access, get_company_membership, require_permission
 from app.models import ThreeWayMatch, PurchaseOrder, PurchaseOrderItem, GoodsReceiptNote, GRNItem, User, Bill
+from app.routers.delete_logs import log_deletion
 
 router = APIRouter(prefix="/three-way", tags=["3-Way Matching"], dependencies=[Depends(get_current_user)])
 
@@ -309,3 +310,24 @@ def reject_match(match_id: uuid.UUID, reason: Optional[str] = None, db: Session 
         received_qty=float(match.grn_qty or 0),
         po_total=float(po.total_amount) if po else None,
     )
+
+
+@router.delete("/{match_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_three_way_match(match_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """R2-760: Delete / void a three-way match record with audit log."""
+    m = db.query(ThreeWayMatch).filter(ThreeWayMatch.id == match_id).first()
+    if not m:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Three-way match not found")
+    get_company_membership(db, current_user, m.company_id)
+    require_permission(db, current_user, m.company_id, "billing:edit")
+    log_deletion(
+        db,
+        company_id=m.company_id,
+        entity_type="three_way_match",
+        entity_id=m.id,
+        summary=f"Three-way match PO {m.po_id} GRN {m.grn_id} Bill {m.invoice_id}",
+        deleted_by=current_user.name or current_user.email or "Unknown",
+    )
+    db.delete(m)
+    db.commit()
+

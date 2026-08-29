@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.auth import get_current_user, verify_project_in_company, verify_project_access, get_company_membership, require_permission
 from app.models import RFQ, RFQItem, RFQQuote, User
+from app.routers.delete_logs import log_deletion
 from pydantic import BaseModel, Field
 
 router = APIRouter(
@@ -343,3 +344,27 @@ def get_comparison(rfq_id: UUID, db: Session = Depends(get_db), current_user: Us
             recommended_vendor_name=recommended.vendor_name if recommended else None,
         ))
     return result
+
+
+@router.delete("/rfq/{rfq_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_rfq(rfq_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """R2-760: Delete / void an RFQ with audit log."""
+    rfq = db.query(RFQ).filter(RFQ.id == rfq_id).first()
+    if not rfq:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="RFQ not found")
+    get_company_membership(db, current_user, rfq.company_id)
+    require_permission(db, current_user, rfq.company_id, "procurement:edit")
+
+    db.query(RFQQuote).filter(RFQQuote.rfq_id == rfq.id).delete()
+    db.query(RFQItem).filter(RFQItem.rfq_id == rfq.id).delete()
+    log_deletion(
+        db,
+        company_id=rfq.company_id,
+        entity_type="rfq",
+        entity_id=rfq.id,
+        summary=f"RFQ {rfq.rfq_number}",
+        deleted_by=current_user.name or current_user.email or "Unknown",
+    )
+    db.delete(rfq)
+    db.commit()
+

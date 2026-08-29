@@ -31,6 +31,7 @@ from app.models import (
     InspectionResponse, NCR, MaterialTestResult, Project, User
 )
 from app.workflow_controls import enforce_entry_creation_window
+from app.routers.delete_logs import log_deletion
 
 router = APIRouter(prefix="/quality", tags=["Quality Control & Inspections"], dependencies=[Depends(get_current_user)])
 
@@ -492,3 +493,51 @@ def list_material_tests(project_id: uuid.UUID, db: Session = Depends(get_db), _:
     return db.query(MaterialTestResult).filter(
         MaterialTestResult.project_id == project_id
     ).order_by(MaterialTestResult.test_date.desc()).all()
+
+
+@router.delete("/ncr/{ncr_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_ncr(ncr_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """R2-760: Delete / void an NCR with audit log."""
+    ncr = db.query(NCR).filter(NCR.id == ncr_id).first()
+    if not ncr:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="NCR not found")
+    project = db.query(Project).filter(Project.id == ncr.project_id).first()
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "quality:edit")
+    log_deletion(
+        db,
+        company_id=project.company_id,
+        entity_type="ncr",
+        entity_id=ncr.id,
+        summary=f"NCR {ncr.ncr_number}: {ncr.description}",
+        deleted_by=current_user.name or current_user.email or "Unknown",
+    )
+    db.delete(ncr)
+    db.commit()
+
+
+@router.delete("/inspections/{insp_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_inspection(insp_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """R2-760: Delete / void a Site Inspection and its responses with audit log."""
+    insp = db.query(SiteInspection).filter(SiteInspection.id == insp_id).first()
+    if not insp:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Site inspection not found")
+    project = db.query(Project).filter(Project.id == insp.project_id).first()
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "quality:edit")
+    db.query(InspectionResponse).filter(InspectionResponse.inspection_id == insp.id).delete()
+    log_deletion(
+        db,
+        company_id=project.company_id,
+        entity_type="site_inspection",
+        entity_id=insp.id,
+        summary=f"Site inspection for zone {insp.zone or 'N/A'}",
+        deleted_by=current_user.name or current_user.email or "Unknown",
+    )
+    db.delete(insp)
+    db.commit()
+

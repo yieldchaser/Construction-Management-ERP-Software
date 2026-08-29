@@ -9,6 +9,7 @@ from app.auth import get_current_user, verify_project_access, get_company_member
 from app.constants import WASTAGE_TYPE_PATTERN, WASTAGE_STATUS_PATTERN
 from app.models import MaterialWastage, MaterialTransaction, PurchaseOrder, PurchaseOrderItem, User, WarehouseInventory
 from app.workflow_controls import enforce_stock_availability
+from app.routers.delete_logs import log_deletion
 from decimal import Decimal
 
 router = APIRouter(prefix="/wastage", tags=["Material Wastage & Scrap"], dependencies=[Depends(get_current_user)])
@@ -126,3 +127,35 @@ def update_wastage_status(wastage_id: uuid.UUID, status: str = Query(..., patter
     db.commit()
     db.refresh(wastage)
     return wastage
+
+
+@router.delete("/{wastage_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_wastage(wastage_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """R2-760: Delete / void a material wastage entry with inventory reversal and audit log."""
+    w = db.query(MaterialWastage).filter(MaterialWastage.id == wastage_id).first()
+    if not w:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Wastage record not found")
+    get_company_membership(db, current_user, w.company_id)
+    require_permission(db, current_user, w.company_id, "procurement:edit")
+
+    # Restore inventory on delete
+    inv = db.query(WarehouseInventory).filter(
+        WarehouseInventory.project_id == w.project_id,
+        WarehouseInventory.material_name == w.material_name,
+    ).first()
+    if inv:
+        inv.on_hand_qty = float(inv.on_hand_qty) + float(w.quantity)
+        db.add(inv)
+
+    db.query(MaterialTransaction).filter(MaterialTransaction.source_ref_id == w.id).delete()
+    log_deletion(
+        db,
+        company_id=w.company_id,
+        entity_type="material_wastage",
+        entity_id=w.id,
+        summary=f"Wastage [{w.wastage_type}]: {w.quantity} {w.unit} of {w.material_name}",
+        deleted_by=current_user.name or current_user.email or "Unknown",
+    )
+    db.delete(w)
+    db.commit()
+

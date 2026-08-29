@@ -9,7 +9,8 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.auth import get_current_user, verify_project_access, get_company_membership, require_permission, require_module_view
 from app.models import DailyProgressReport, Task, WarehouseInventory, MaterialTransaction, Project, User
-from app.workflow_controls import enforce_entry_creation_window, enforce_stock_availability, get_company
+from app.workflow_controls import enforce_entry_creation_window, enforce_entry_editing_window, enforce_stock_availability, get_company
+from app.routers.delete_logs import log_deletion
 from pydantic import BaseModel, Field
 from app.csv_export import csv_safe_cell as _csv_safe_cell, CSV_FORMULA_PREFIXES as _CSV_FORMULA_PREFIXES
 
@@ -322,3 +323,44 @@ def export_dpr_csv(
             "Cache-Control": "no-store",
         },
     )
+
+
+@router.delete("/{dpr_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_dpr(dpr_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """R2-760: Void / delete a DPR entry, reverting any inventory and logging deletion audit."""
+    dpr = db.query(DailyProgressReport).filter(DailyProgressReport.id == dpr_id).first()
+    if not dpr:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="DPR not found")
+    project = db.query(Project).filter(Project.id == dpr.project_id).first()
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "projects:edit")
+    enforce_entry_editing_window(db, project.company_id, dpr.dpr_date)
+
+    if dpr.materials_consumed:
+        for mat in dpr.materials_consumed:
+            if isinstance(mat, dict):
+                qty = float(mat.get("quantity", 0))
+                name = mat.get("material_name")
+                if qty > 0 and name:
+                    inv = db.query(WarehouseInventory).filter(
+                        WarehouseInventory.project_id == dpr.project_id,
+                        WarehouseInventory.material_name == name
+                    ).first()
+                    if inv:
+                        inv.on_hand_qty = float(inv.on_hand_qty) + qty
+                        db.add(inv)
+    db.query(MaterialTransaction).filter(MaterialTransaction.source_ref_id == dpr.id).delete()
+
+    log_deletion(
+        db,
+        company_id=project.company_id,
+        entity_type="dpr",
+        entity_id=dpr.id,
+        summary=f"DPR for date {dpr.dpr_date.date() if dpr.dpr_date else 'N/A'} reported by {dpr.reported_by}",
+        deleted_by=current_user.name or current_user.email or "Unknown",
+    )
+    db.delete(dpr)
+    db.commit()
+

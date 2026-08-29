@@ -12,6 +12,7 @@ from app.models import (
     AttendanceLog, SubcontractorAttendance, PayrollRun
 )
 from app.party_names import resolve_party_name
+from app.routers.delete_logs import log_deletion
 from pydantic import BaseModel, Field
 import csv
 import io
@@ -417,3 +418,44 @@ def create_muster_roll(req: MusterRollCreate, response: Response, db: Session = 
         overtime_hours=float(record.overtime_hours),
         notes=record.notes,
     )
+
+
+@router.delete("/bocw/{record_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_bocw(record_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """R2-760: Delete / void a BOCW record with audit log."""
+    rec = db.query(BOCWRecord).filter(BOCWRecord.id == record_id).first()
+    if not rec:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="BOCW record not found")
+    get_company_membership(db, current_user, rec.company_id)
+    require_permission(db, current_user, rec.company_id, "attendance:edit")
+    log_deletion(
+        db,
+        company_id=rec.company_id,
+        entity_type="bocw_record",
+        entity_id=rec.id,
+        summary=f"BOCW record for {rec.month_year} contractor {rec.contractor_name}",
+        deleted_by=current_user.name or current_user.email or "Unknown",
+    )
+    db.delete(rec)
+    db.commit()
+
+
+@router.delete("/muster-roll/{record_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_muster_roll(record_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """R2-760: Delete / void a Muster Roll entry with audit log."""
+    rec = db.query(MusterRoll).filter(MusterRoll.id == record_id).first()
+    if not rec:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Muster roll record not found")
+    get_company_membership(db, current_user, rec.company_id)
+    require_permission(db, current_user, rec.company_id, "attendance:edit")
+    log_deletion(
+        db,
+        company_id=rec.company_id,
+        entity_type="muster_roll",
+        entity_id=rec.id,
+        summary=f"Muster roll on {rec.date} role {rec.labor_role}",
+        deleted_by=current_user.name or current_user.email or "Unknown",
+    )
+    db.delete(rec)
+    db.commit()
+

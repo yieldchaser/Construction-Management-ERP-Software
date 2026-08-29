@@ -13,6 +13,7 @@ from app.models import (
 )
 from app.bill_scope import _active_bills
 from app.party_names import resolve_party_name
+from app.routers.delete_logs import log_deletion
 from pydantic import BaseModel, Field
 
 router = APIRouter(
@@ -397,3 +398,24 @@ def recompute_scorecards(
         period_end=period_end,
         scorecards=rows,
     )
+
+
+@router.delete("/performance/{record_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_subcon_performance(record_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """R2-760: Delete / void a subcontractor performance scorecard with audit log."""
+    perf = db.query(SubcontractorPerformance).filter(SubcontractorPerformance.id == record_id).first()
+    if not perf:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Performance scorecard not found")
+    get_company_membership(db, current_user, perf.company_id)
+    require_permission(db, current_user, perf.company_id, "subcontractor:edit")
+    log_deletion(
+        db,
+        company_id=perf.company_id,
+        entity_type="subcon_performance",
+        entity_id=perf.id,
+        summary=f"Performance scorecard for subcontractor {perf.subcontractor_id}",
+        deleted_by=current_user.name or current_user.email or "Unknown",
+    )
+    db.delete(perf)
+    db.commit()
+

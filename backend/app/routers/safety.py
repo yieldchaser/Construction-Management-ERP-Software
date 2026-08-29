@@ -3,12 +3,13 @@ Phase 13 — Safety & Incident Management (HSE)
 Router for OSHA-aligned incident logging, toolbox talks, PPE compliance audits,
 and LTI/LTIF statistics computation.
 """
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func as sqlfunc
 from app.database import get_db
 from app.auth import get_current_user, get_company_membership, require_permission
 from app.models import SafetyIncident, ToolboxTalk, PPECheck, Project, AttendanceLog, User
+from app.routers.delete_logs import log_deletion
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List
 from datetime import datetime, timezone
@@ -376,3 +377,27 @@ def list_ppe_checks(
             "created_at": c.created_at.isoformat() if c.created_at else None,
         })
     return result
+
+
+@router.delete("/incidents/{incident_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_safety_incident(incident_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """R2-760: Delete / void a safety incident with audit log."""
+    inc = db.query(SafetyIncident).filter(SafetyIncident.id == incident_id).first()
+    if not inc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Safety incident not found")
+    project = db.query(Project).filter(Project.id == inc.project_id).first()
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "safety:edit")
+    log_deletion(
+        db,
+        company_id=project.company_id,
+        entity_type="safety_incident",
+        entity_id=inc.id,
+        summary=f"Safety incident [{inc.incident_type} / {inc.severity}]: {inc.description}",
+        deleted_by=current_user.name or current_user.email or "Unknown",
+    )
+    db.delete(inc)
+    db.commit()
+

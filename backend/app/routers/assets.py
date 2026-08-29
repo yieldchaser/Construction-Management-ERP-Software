@@ -5,8 +5,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from app.database import get_db
-from app.auth import get_current_user, verify_company_access, require_permission
+from app.auth import get_current_user, verify_company_access, get_company_membership, require_permission
 from app.models import AssetDepreciationSchedule, AssetDepreciationEntry, Equipment, User
+from app.routers.delete_logs import log_deletion
 from decimal import Decimal
 
 router = APIRouter(prefix="/assets", tags=["Asset Depreciation"], dependencies=[Depends(get_current_user)])
@@ -193,3 +194,46 @@ def list_entries(company_id: uuid.UUID, asset_id: Optional[uuid.UUID] = None, db
     if asset_id:
         query = query.filter(AssetDepreciationEntry.asset_id == asset_id)
     return query.order_by(AssetDepreciationEntry.entry_date.desc()).all()
+
+
+@router.delete("/schedules/{schedule_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_asset_schedule(schedule_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """R2-760: Delete / void an asset depreciation schedule with audit log."""
+    sched = db.query(AssetDepreciationSchedule).filter(AssetDepreciationSchedule.id == schedule_id).first()
+    if not sched:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Depreciation schedule not found")
+    get_company_membership(db, current_user, sched.company_id)
+    require_permission(db, current_user, sched.company_id, "equipment:edit")
+
+    db.query(AssetDepreciationEntry).filter(AssetDepreciationEntry.schedule_id == sched.id).delete()
+    log_deletion(
+        db,
+        company_id=sched.company_id,
+        entity_type="asset_depreciation_schedule",
+        entity_id=sched.id,
+        summary=f"Depreciation schedule [{sched.method}] for asset {sched.asset_id}",
+        deleted_by=current_user.name or current_user.email or "Unknown",
+    )
+    db.delete(sched)
+    db.commit()
+
+
+@router.delete("/entries/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_asset_entry(entry_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """R2-760: Delete / void an asset depreciation entry with audit log."""
+    entry = db.query(AssetDepreciationEntry).filter(AssetDepreciationEntry.id == entry_id).first()
+    if not entry:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Depreciation entry not found")
+    get_company_membership(db, current_user, entry.company_id)
+    require_permission(db, current_user, entry.company_id, "equipment:edit")
+    log_deletion(
+        db,
+        company_id=entry.company_id,
+        entity_type="asset_depreciation_entry",
+        entity_id=entry.id,
+        summary=f"Depreciation entry for date {entry.entry_date.date()} amount {entry.depreciation_amount}",
+        deleted_by=current_user.name or current_user.email or "Unknown",
+    )
+    db.delete(entry)
+    db.commit()
+

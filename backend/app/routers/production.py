@@ -30,6 +30,7 @@ from app.models import (
     WarehouseInventory,
 )
 from app.workflow_controls import enforce_stock_availability, get_company
+from app.routers.delete_logs import log_deletion
 
 router = APIRouter(prefix="/production", tags=["Production Management"], dependencies=[Depends(get_current_user)])
 
@@ -548,3 +549,60 @@ def production_summary(project_id: UUID, db: Session = Depends(get_db), _: None 
         batches=[_batch_response(db, batch) for batch in batches],
         inventory_alerts=inventory_alerts,
     )
+
+
+@router.delete("/recipes/{recipe_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_recipe(recipe_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """R2-760: Delete / void a production recipe with audit log."""
+    rec = db.query(ProductionRecipe).filter(ProductionRecipe.id == recipe_id).first()
+    if not rec:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Production recipe not found")
+    get_company_membership(db, current_user, rec.company_id)
+    require_permission(db, current_user, rec.company_id, "production:edit")
+
+    db.query(ProductionRecipeMaterial).filter(ProductionRecipeMaterial.recipe_id == rec.id).delete()
+    log_deletion(
+        db,
+        company_id=rec.company_id,
+        entity_type="production_recipe",
+        entity_id=rec.id,
+        summary=f"Production recipe [{rec.recipe_code}]: {rec.product_name}",
+        deleted_by=current_user.name or current_user.email or "Unknown",
+    )
+    db.delete(rec)
+    db.commit()
+
+
+@router.delete("/batches/{batch_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_batch(batch_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """R2-760: Delete / void a production batch with inventory reversal and audit log."""
+    batch = db.query(ProductionBatch).filter(ProductionBatch.id == batch_id).first()
+    if not batch:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Production batch not found")
+    get_company_membership(db, current_user, batch.company_id)
+    require_permission(db, current_user, batch.company_id, "production:edit")
+
+    # Restore materials if consumed
+    mats = db.query(ProductionBatchMaterial).filter(ProductionBatchMaterial.batch_id == batch.id).all()
+    for m in mats:
+        inv = db.query(WarehouseInventory).filter(
+            WarehouseInventory.project_id == batch.project_id,
+            WarehouseInventory.material_name == m.material_name,
+        ).first()
+        if inv:
+            inv.on_hand_qty = float(inv.on_hand_qty) + float(m.consumed_qty)
+            db.add(inv)
+
+    db.query(ProductionBatchMaterial).filter(ProductionBatchMaterial.batch_id == batch.id).delete()
+    db.query(MaterialTransaction).filter(MaterialTransaction.source_ref_id == batch.id).delete()
+    log_deletion(
+        db,
+        company_id=batch.company_id,
+        entity_type="production_batch",
+        entity_id=batch.id,
+        summary=f"Production batch [{batch.batch_number}]",
+        deleted_by=current_user.name or current_user.email or "Unknown",
+    )
+    db.delete(batch)
+    db.commit()
+

@@ -8,6 +8,7 @@ from app.database import get_db
 from app.auth import get_current_user, verify_project_access, get_company_membership, require_permission
 from app.models import SubcontractorAttendance, Project, User, CompanyTeam
 from app.workflow_controls import enforce_entry_creation_window, enforce_entry_editing_window
+from app.routers.delete_logs import log_deletion
 
 router = APIRouter(prefix="/subcon", tags=["Subcontractor Attendance"], dependencies=[Depends(get_current_user)])
 
@@ -109,3 +110,28 @@ def get_subcon_attendance(project_id: uuid.UUID, date_str: str, db: Session = De
     
     # Filter in python to make it SQLite and Postgres date-agnostic
     return [log for log in logs if log.attendance_date.date() == target]
+
+
+@router.delete("/attendance/{att_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_subcon_attendance(att_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """R2-760: Delete / void a subcontractor attendance log with audit log."""
+    att = db.query(SubcontractorAttendance).filter(SubcontractorAttendance.id == att_id).first()
+    if not att:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Subcon attendance not found")
+    project = db.query(Project).filter(Project.id == att.project_id).first()
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "attendance:edit")
+    enforce_entry_editing_window(db, project.company_id, att.attendance_date)
+    log_deletion(
+        db,
+        company_id=project.company_id,
+        entity_type="subcon_attendance",
+        entity_id=att.id,
+        summary=f"Subcon attendance {att.worker_count} workers ({att.labor_role}) on {att.attendance_date.date()}",
+        deleted_by=current_user.name or current_user.email or "Unknown",
+    )
+    db.delete(att)
+    db.commit()
+

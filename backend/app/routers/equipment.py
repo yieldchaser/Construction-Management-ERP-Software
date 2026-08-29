@@ -14,6 +14,7 @@ from app.database import get_db
 from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership, require_permission
 from app.models import Company, Equipment, EquipmentDeployment, FuelLog, MaintenanceSchedule, Project, User
 from app.workflow_controls import enforce_entry_creation_window
+from app.routers.delete_logs import log_deletion
 
 router = APIRouter(prefix="/equipment", tags=["Equipment & Machinery Tracking"], dependencies=[Depends(get_current_user)])
 
@@ -376,3 +377,79 @@ def list_maintenance_schedules(equipment_id: uuid.UUID, db: Session = Depends(ge
     return db.query(MaintenanceSchedule).filter(
         MaintenanceSchedule.equipment_id == equipment_id
     ).order_by(MaintenanceSchedule.scheduled_date.desc()).all()
+
+
+@router.delete("/{equipment_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_equipment(equipment_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """R2-760: Delete / void an equipment record with audit log."""
+    eq = db.query(Equipment).filter(Equipment.id == equipment_id).first()
+    if not eq:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Equipment not found")
+    get_company_membership(db, current_user, eq.company_id)
+    require_permission(db, current_user, eq.company_id, "equipment:edit")
+
+    # Check for active deployments
+    active_dep = db.query(EquipmentDeployment).filter(
+        EquipmentDeployment.equipment_id == eq.id,
+        EquipmentDeployment.end_date == None,
+    ).first()
+    if active_dep:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Cannot delete equipment with active deployment")
+
+    log_deletion(
+        db,
+        company_id=eq.company_id,
+        entity_type="equipment",
+        entity_id=eq.id,
+        summary=f"Equipment [{eq.code}]: {eq.name}",
+        deleted_by=current_user.name or current_user.email or "Unknown",
+    )
+    db.delete(eq)
+    db.commit()
+
+
+@router.delete("/deployments/{deployment_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_deployment(deployment_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """R2-760: Delete / void an equipment deployment with audit log."""
+    dep = db.query(EquipmentDeployment).filter(EquipmentDeployment.id == deployment_id).first()
+    if not dep:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deployment not found")
+    eq = db.query(Equipment).filter(Equipment.id == dep.equipment_id).first()
+    if not eq:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Equipment not found")
+    get_company_membership(db, current_user, eq.company_id)
+    require_permission(db, current_user, eq.company_id, "equipment:edit")
+    log_deletion(
+        db,
+        company_id=eq.company_id,
+        entity_type="equipment_deployment",
+        entity_id=dep.id,
+        summary=f"Deployment for equipment {eq.name}",
+        deleted_by=current_user.name or current_user.email or "Unknown",
+    )
+    db.delete(dep)
+    db.commit()
+
+
+@router.delete("/fuel-logs/{log_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_fuel_log(log_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """R2-760: Delete / void an equipment fuel log with audit log."""
+    fl = db.query(FuelLog).filter(FuelLog.id == log_id).first()
+    if not fl:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Fuel log not found")
+    eq = db.query(Equipment).filter(Equipment.id == fl.equipment_id).first()
+    if not eq:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Equipment not found")
+    get_company_membership(db, current_user, eq.company_id)
+    require_permission(db, current_user, eq.company_id, "equipment:edit")
+    log_deletion(
+        db,
+        company_id=eq.company_id,
+        entity_type="fuel_log",
+        entity_id=fl.id,
+        summary=f"Fuel log {fl.liters}L for equipment {eq.name}",
+        deleted_by=current_user.name or current_user.email or "Unknown",
+    )
+    db.delete(fl)
+    db.commit()
+

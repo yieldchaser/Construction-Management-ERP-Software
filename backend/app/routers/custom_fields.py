@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from app.database import get_db
 from app.auth import get_current_user, verify_company_access, get_company_membership, require_permission
 from app.models import CustomField, CustomFieldValue, User, Project, Task, Bill, CRMLead
+from app.routers.delete_logs import log_deletion
 
 router = APIRouter(prefix="/custom-fields", tags=["Custom Fields"], dependencies=[Depends(get_current_user)])
 
@@ -355,3 +356,26 @@ def get_values(entity_type: str, entity_id: uuid.UUID, db: Session = Depends(get
         CustomFieldValue.entity_id == entity_id,
         CustomFieldValue.company_id == entity.company_id,
     ).all()
+
+
+@router.delete("/{field_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_custom_field(field_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """R2-760: Delete / void a custom field definition and its attached values with audit log."""
+    cf = db.query(CustomField).filter(CustomField.id == field_id).first()
+    if not cf:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Custom field not found")
+    get_company_membership(db, current_user, cf.company_id)
+    require_permission(db, current_user, cf.company_id, "settings:manage")
+
+    db.query(CustomFieldValue).filter(CustomFieldValue.field_id == cf.id).delete()
+    log_deletion(
+        db,
+        company_id=cf.company_id,
+        entity_type="custom_field",
+        entity_id=cf.id,
+        summary=f"Custom field [{cf.entity_type}]: {cf.field_label} ({cf.field_name})",
+        deleted_by=current_user.name or current_user.email or "Unknown",
+    )
+    db.delete(cf)
+    db.commit()
+
