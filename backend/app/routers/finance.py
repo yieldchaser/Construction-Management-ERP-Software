@@ -1,3 +1,4 @@
+import hashlib
 import logging
 import uuid
 from datetime import datetime, timezone
@@ -1599,10 +1600,107 @@ def p2p_transfer_finance(req: P2PTransferRequest, db: Session = Depends(get_db),
     return perform_p2p_transfer(req, db)
 
 
+# ---------------------------------------------------------------------------
+# R2-533 / R2-534 - payments CSV import.
+#
+# The importer used to carry four compounding defects. Each is fixed at the
+# point of ingestion rather than at a call site, so no caller can reintroduce
+# it: an unreadable value is rejected instead of being coerced, and a row's
+# identity is derived from its own content instead of being invented.
+# ---------------------------------------------------------------------------
+
+# Money direction is a closed vocabulary with no default. The old importer
+# treated everything that was not exactly "receipt" or "in" as outgoing, so
+# "Credit", "Received", a stray trailing space or a blank cell silently turned
+# a company's income into expenditure at a 100% rate.
+PAYMENT_TYPE_INBOUND = frozenset({
+    "in", "inward", "incoming", "receipt", "receipts", "received",
+    "credit", "credited", "cr", "deposit", "deposited", "collection",
+})
+PAYMENT_TYPE_OUTBOUND = frozenset({
+    "out", "outward", "outgoing", "payment", "payments", "paid",
+    "debit", "debited", "dr", "expense", "withdrawal", "disbursement",
+})
+
+# Unambiguous ISO forms are always accepted. Day/month order in a slash or
+# dash date (03/04/2026) is genuinely ambiguous, so it is only interpreted
+# once the caller declares which convention the statement was exported in.
+_ISO_DATE_FORMATS = ("%Y-%m-%d", "%Y/%m/%d", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S")
+_AMBIGUOUS_DATE_FORMATS = {
+    "DMY": ("%d/%m/%Y", "%d-%m-%Y"),
+    "MDY": ("%m/%d/%Y", "%m-%d-%Y"),
+}
+
+
+def _normalise_payment_type(raw):
+    """Map a statement's Payment Type to "in"/"out".
+
+    Returns None for anything not in the vocabulary, including blank. There is
+    deliberately no default: guessing "out" is how receipts were booked as
+    expenditure.
+    """
+    token = " ".join((raw or "").split()).lower()
+    if token in PAYMENT_TYPE_INBOUND:
+        return "in"
+    if token in PAYMENT_TYPE_OUTBOUND:
+        return "out"
+    return None
+
+
+def _parse_payment_date(raw, date_format="DMY"):
+    """Parse a statement date, returning None when it cannot be read.
+
+    The old importer substituted datetime.utcnow() for anything unparseable,
+    booking a payment from last quarter into today's period with no flag.
+    There is no honest value to substitute, so the caller skips the row
+    instead -- and says so.
+    """
+    token = (raw or "").strip()
+    if not token:
+        return None
+    for fmt in _ISO_DATE_FORMATS:
+        try:
+            return datetime.strptime(token, fmt)
+        except ValueError:
+            continue
+    for fmt in _AMBIGUOUS_DATE_FORMATS.get(date_format, _AMBIGUOUS_DATE_FORMATS["DMY"]):
+        try:
+            return datetime.strptime(token, fmt)
+        except ValueError:
+            continue
+    return None
+
+
+def _payment_import_reference(company_id, *, explicit_ref, payment_type, amount,
+                              payment_date, party_name, method, remark):
+    """Return a stable reference for an imported payment row.
+
+    The importer used to mint "CSV-V-<random>" whenever the file carried no
+    Payment Request ID, so no two uploads of the same statement produced the
+    same value and every payment was booked twice. A row's own content is a
+    perfectly good identity, so the reference is derived from it: re-uploading
+    the same statement now collides with itself, and the existing
+    (company_id, reference_number) unique constraint rejects the duplicate.
+    """
+    if explicit_ref:
+        return explicit_ref
+    basis = "|".join([
+        str(company_id),
+        payment_type,
+        f"{float(amount):.2f}",
+        payment_date.strftime("%Y-%m-%d"),
+        " ".join((party_name or "").split()).lower(),
+        " ".join((method or "").split()).lower(),
+        " ".join((remark or "").split()).lower(),
+    ])
+    return "CSV-" + hashlib.sha256(basis.encode("utf-8")).hexdigest()[:16].upper()
+
+
 @cashbook_router.post("/upload")
 def upload_payments(
     company_id: uuid.UUID = Form(...),
     file: UploadFile = File(...),
+    date_format: str = Form("DMY"),
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
@@ -1611,6 +1709,16 @@ def upload_payments(
     # sub-dependency; verify membership + write permission inline instead.
     get_company_membership(db, current_user, company_id)
     require_permission(db, current_user, company_id, "finance:edit")
+
+    # R2-533 clause 3: an ambiguous date is only interpreted when the
+    # caller declares which day/month convention the statement uses.
+    date_format = (date_format or "DMY").strip().upper()
+    if date_format not in _AMBIGUOUS_DATE_FORMATS:
+        raise HTTPException(
+            status_code=422,
+            detail="date_format must be one of: DMY, MDY",
+        )
+
     import csv
     import io
 
@@ -1642,65 +1750,142 @@ def upload_payments(
     for col in required:
         if col not in headers:
             raise HTTPException(status_code=400, detail=f"Invalid CSV schema: '{col}' column is required")
-            
+
+    # R2-533 clause 3: "Payment Date" is optional in the schema, so a file with
+    # no date column is a declared omission -- those rows are dated today and
+    # the response says how many. A file that HAS the column but whose date
+    # cells cannot be read is the actual defect: those rows are rejected rather
+    # than silently booked into today's period.
+    has_date_column = "Payment Date" in headers
+
     created_count = 0
-    
+    duplicate_count = 0
+    dated_today = 0
+    skipped = []
+    # Reported line numbers count the header, so the operator can jump
+    # straight to the offending row in the file they uploaded.
+    line_no = 1
+
+    # R2-533 clause 1: every reference this company already holds. The
+    # (company_id, reference_number) unique constraint is the real guard; this
+    # is the cheap pre-check that lets a duplicate be reported as a duplicate
+    # instead of blowing up the whole batch at commit time.
+    known_references = {
+        ref
+        for (ref,) in db.query(Payment.reference_number).filter(
+            Payment.company_id == company_id,
+            Payment.reference_number.isnot(None),
+        )
+    }
+
     for row_cells in csv_reader:
+        line_no += 1
         if not row_cells or not any(row_cells):
             continue
-            
+
         row = {}
         for idx, header in enumerate(headers):
             if idx < len(row_cells):
                 row[header] = row_cells[idx].strip()
-                
-        party_name = row.get("Party Name")
-        amt_str = row.get("Amount")
-        pay_type = (row.get("Payment Type") or "out").lower()
-        if pay_type in ["receipt", "in"]:
-            payment_type = "in"
-        else:
-            payment_type = "out"
-            
+
+        party_name = (row.get("Party Name") or "").strip()
+        amt_str = (row.get("Amount") or "").strip()
+
+        # Clause 2 - direction. Unrecognised is rejected, never defaulted.
+        payment_type = _normalise_payment_type(row.get("Payment Type"))
+        if payment_type is None:
+            skipped.append({
+                "line": line_no,
+                "reason": (
+                    "Unrecognised Payment Type '{}'. Use an incoming form "
+                    "(receipt, credit, in) or an outgoing one (payment, debit, out)."
+                ).format(row.get("Payment Type") or ""),
+            })
+            continue
+
         try:
             amount = float(amt_str) if amt_str else 0.0
         except ValueError:
+            skipped.append({
+                "line": line_no,
+                "reason": "Amount '{}' is not a number.".format(amt_str),
+            })
             continue
-            
+
         if amount <= 0:
+            skipped.append({
+                "line": line_no,
+                "reason": "Amount {} must be greater than zero.".format(amount),
+            })
             continue
-            
-        party_user = db.query(User).filter(User.name == party_name).first()
+
+        # Clause 3 - date. An unreadable value is rejected, never replaced by
+        # today. The only exception is a file that declares no date column at
+        # all, where dating the row today is the operator's stated intent and
+        # is reported back to them.
+        if has_date_column:
+            payment_date = _parse_payment_date(row.get("Payment Date"), date_format)
+            if payment_date is None:
+                skipped.append({
+                    "line": line_no,
+                    "reason": (
+                        "Payment Date '{}' could not be read. Export as YYYY-MM-DD, "
+                        "or pass date_format=MDY for month-first statements."
+                    ).format(row.get("Payment Date") or ""),
+                })
+                continue
+        else:
+            payment_date = datetime.now(timezone.utc)
+            dated_today += 1
+
+        # R2-534: resolve the party inside this company only. The old query
+        # matched User.name across the whole platform and took .first(), so a
+        # same-named member of another tenant shadowed this company's own and
+        # the payment landed unattributed.
         party_team_id = None
-        if party_user:
-            team_member = db.query(CompanyTeam).filter(
-                CompanyTeam.user_id == party_user.id,
-                CompanyTeam.company_id == company_id
-            ).first()
-            if team_member:
-                party_team_id = team_member.id
-                
-        project_name = row.get("Project Name")
+        if party_name:
+            member = (
+                db.query(CompanyTeam.id)
+                .join(User, User.id == CompanyTeam.user_id)
+                .filter(
+                    CompanyTeam.company_id == company_id,
+                    User.name == party_name,
+                )
+                .first()
+            )
+            if member:
+                party_team_id = member.id
+
+        project_name = (row.get("Project Name") or "").strip()
         project_id = None
         if project_name:
             proj = db.query(Project).filter(
                 Project.name == project_name,
-                Project.company_id == company_id
+                Project.company_id == company_id,
             ).first()
             if proj:
                 project_id = proj.id
-                
-        pay_date_str = row.get("Payment Date")
-        payment_date = datetime.utcnow()
-        if pay_date_str:
-            for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%m/%d/%Y", "%Y-%m-%dT%H:%M:%S"):
-                try:
-                    payment_date = datetime.strptime(pay_date_str, fmt)
-                    break
-                except ValueError:
-                    pass
 
-        payment = Payment(
+        method = row.get("Mode of Payment") or "Cash"
+        remark = row.get("Remark") or f"CSV Uploaded Payment - Category: {row.get('Category')}"
+
+        reference_number = _payment_import_reference(
+            company_id,
+            explicit_ref=(row.get("Payment Request ID") or "").strip(),
+            payment_type=payment_type,
+            amount=amount,
+            payment_date=payment_date,
+            party_name=party_name,
+            method=method,
+            remark=remark,
+        )
+
+        if reference_number in known_references:
+            duplicate_count += 1
+            continue
+        known_references.add(reference_number)
+
+        db.add(Payment(
             id=uuid.uuid4(),
             company_id=company_id,
             project_id=project_id,
@@ -1708,18 +1893,33 @@ def upload_payments(
             payment_type=payment_type,
             amount=amount,
             unsettled_amount=amount,
-            payment_method=row.get("Mode of Payment") or "Cash",
-            reference_number=row.get("Payment Request ID") or f"CSV-V-{uuid.uuid4().hex[:6].upper()}",
-            description=row.get("Remark") or f"CSV Uploaded Payment - Category: {row.get('Category')}",
-            payment_date=payment_date
-        )
-        db.add(payment)
+            payment_method=method,
+            reference_number=reference_number,
+            description=remark,
+            payment_date=payment_date,
+        ))
         created_count += 1
-        
+
     db.commit()
+
+    # Clause 4 - the response reports what it actually did. A batch that
+    # dropped rows, or dated rows today because the file carried no date
+    # column, no longer claims a clean success.
+    warnings = []
+    if dated_today:
+        warnings.append(
+            "{} row(s) were dated today because the file has no Payment Date "
+            "column. Add that column to book payments into their real period.".format(dated_today)
+        )
+
     return {
-        "status": "success",
-        "created": created_count
+        "status": "success" if not skipped and not warnings else "completed_with_warnings",
+        "created": created_count,
+        "duplicates": duplicate_count,
+        "dated_today": dated_today,
+        "skipped": skipped,
+        "warnings": warnings,
+        "date_format": date_format,
     }
 
 
