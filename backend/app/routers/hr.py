@@ -199,6 +199,19 @@ class TimesheetResponse(BaseModel):
         from_attributes = True
 
 
+class TimesheetHeaderResponse(TimesheetResponse):
+    """A timesheet HEADER, for the weekly approvals table.
+
+    R2-588: both existing GETs (/timesheets/project/{id} and
+    /timesheets/company/{id}) return List[TimesheetEntryResponse] -- entries,
+    not headers. Nothing in the API returned headers at all, so the console's
+    approvals table had nothing to render and its Submit/Approve buttons, which
+    live inside those rows, could never appear. Every timesheet therefore stayed
+    draft forever.
+    """
+    employee_name: Optional[str] = None
+
+
 class TimesheetEntryResponse(BaseModel):
     id: uuid.UUID
     timesheet_id: uuid.UUID
@@ -532,6 +545,29 @@ def list_project_timesheet_entries(project_id: uuid.UUID, db: Session = Depends(
         res.employee_id = emp_id
         response.append(res)
     return response
+
+
+@router.get("/timesheets/project/{project_id}/headers", response_model=List[TimesheetHeaderResponse])
+def list_project_timesheet_headers(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
+    """R2-588: return the timesheet HEADERS for a project.
+
+    The project and company variants above both return entries; the weekly
+    approvals table needs one row per timesheet (employee, week, hours, status)
+    so Submit and Approve have somewhere to render.
+    """
+    rows = (
+        db.query(Timesheet, StaffEmployee.name.label("employee_name"))
+        .join(StaffEmployee, Timesheet.employee_id == StaffEmployee.id)
+        .filter(Timesheet.project_id == project_id)
+        .order_by(Timesheet.week_start.desc(), StaffEmployee.name.asc())
+        .all()
+    )
+    headers = []
+    for ts, emp_name in rows:
+        item = TimesheetHeaderResponse.model_validate(ts)
+        item.employee_name = emp_name
+        headers.append(item)
+    return headers
 
 
 @router.get("/timesheets/company/{company_id}")
