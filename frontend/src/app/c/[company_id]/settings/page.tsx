@@ -964,7 +964,7 @@ export default function CompanySettingsPage() {
     try {
       const res = await fetch(`${apiHost}/apis/v3/hr/holidays/${company_id}`, {
         method: "POST", headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
-        body: JSON.stringify({ name: hName.trim(), date: new Date(hDate + "T00:00:00").toISOString() }),
+        body: JSON.stringify({ name: hName.trim(), date: hDate }),
       });
       if (res.ok) { const h = await res.json(); setHolidays([...holidays, h]); setHName(""); setHDate(""); setShowAddHoliday(false); }
     } catch { /* ignore */ }

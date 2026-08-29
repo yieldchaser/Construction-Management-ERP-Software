@@ -123,7 +123,7 @@ const jdel = async (p: string) => {
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const todayStr = () => new Date().toISOString().slice(0, 10);
 const dayName = (d: string) => WEEKDAYS[new Date(d + "T00:00:00").getDay()];
-const isoDateTime = (d: string) => new Date(d + "T00:00:00").toISOString();
+const isoDateTime = (d: string) => d.includes("T") ? d : `${d}T00:00:00Z`;
 
 // ─── Small UI primitives ──────────────────────────────────────────────────────
 

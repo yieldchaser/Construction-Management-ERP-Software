@@ -240,7 +240,7 @@ function CreatableSelect({
 const toDateInput = (s: string | null): string =>
   s ? new Date(s).toISOString().slice(0, 10) : "";
 const fromDateInput = (s: string): string | null =>
-  s ? new Date(s + "T00:00:00").toISOString() : null;
+  s ? (s.includes("T") ? s : `${s}T00:00:00Z`) : null;
 const fmtDate = (s: string | null): string =>
   s ? new Date(s).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 const todayISO = () => new Date().toISOString().slice(0, 10);

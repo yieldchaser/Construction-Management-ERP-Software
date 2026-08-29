@@ -59,7 +59,16 @@ def _aware_utc(dt: datetime) -> datetime:
     return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
 
 
+_IST = timezone(timedelta(hours=5, minutes=30))
+
+
 def _utc_midnight(dt: datetime) -> datetime:
+    # R2-753: If the datetime carries a timezone offset (or was converted to UTC from local browser time),
+    # convert it to IST so that an evening UTC instant (e.g. 14 Aug 18:30Z) correctly maps to the intended
+    # calendar day (15 Aug) before pinning at UTC midnight.
+    if dt.tzinfo is not None:
+        local = dt.astimezone(_IST)
+        return datetime(local.year, local.month, local.day, tzinfo=timezone.utc)
     return datetime(dt.year, dt.month, dt.day, tzinfo=timezone.utc)
 
 

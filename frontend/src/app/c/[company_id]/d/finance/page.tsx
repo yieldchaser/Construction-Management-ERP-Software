@@ -489,7 +489,7 @@ export default function FinancePage() {
             sender_company_user_id: paymentFromParty,
             receiver_company_user_id: paymentToParty,
             amount: amtVal,
-            payment_date: new Date(txnDate + "T00:00:00").toISOString(),
+            payment_date: txnDate ? (txnDate.includes("T") ? txnDate : `${txnDate}T00:00:00Z`) : new Date().toISOString(),
             description: desc || ""
           }),
         });
@@ -570,7 +570,7 @@ export default function FinancePage() {
           payment_method: paymentMethod,
           reference_number: refNum || `SF-V-${crypto.randomUUID().replace(/-/g, "").slice(0, 6).toUpperCase()}`,
           description: desc || `Recorded ${selectedTxnType} voucher`,
-          payment_date: new Date(txnDate + "T00:00:00").toISOString()
+          payment_date: txnDate ? (txnDate.includes("T") ? txnDate : `${txnDate}T00:00:00Z`) : new Date().toISOString()
         }),
       });
 
@@ -794,7 +794,7 @@ export default function FinancePage() {
           company_id: companyId,
           tally_company_name: tallyCompany.trim(),
           registered_mobile: tallyMobile.trim(),
-          sync_window_start_date: new Date(tallySyncFrom + "T00:00:00").toISOString(),
+          sync_window_start_date: tallySyncFrom ? (tallySyncFrom.includes("T") ? tallySyncFrom : `${tallySyncFrom}T00:00:00Z`) : new Date().toISOString(),
           voucher_number_template: tallyVoucherTemplate.trim() || "",
           auto_create_missing_ledgers: tallyAutoCreate,
           default_cash_ledger: tallyDefaultCash.trim() || null,
