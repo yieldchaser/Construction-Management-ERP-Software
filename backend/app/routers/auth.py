@@ -348,6 +348,11 @@ def send_otp(request: Request, payload: OTPSendRequest, db: Session = Depends(ge
         )
 
     use_demo_code = is_demo and not provider_ready
+    if use_demo_code and not settings.OTP_DEMO_CODE:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Demo OTP code is not configured on this server.",
+        )
     code = settings.OTP_DEMO_CODE if use_demo_code else _generate_otp_code()
 
     _issue_otp(db, mobile, channel="sms", code=code, purpose="login")
@@ -483,6 +488,11 @@ def _deliver_email_code(db: Session, email: str, purpose: str) -> dict:
         )
 
     use_demo_code = is_demo and not provider_ready
+    if use_demo_code and not settings.OTP_DEMO_CODE:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Demo OTP code is not configured on this server.",
+        )
     code = settings.OTP_DEMO_CODE if use_demo_code else _generate_otp_code()
     _issue_otp(db, email, channel="email", code=code, purpose=purpose)
 
