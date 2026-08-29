@@ -168,7 +168,8 @@ def create_dpr(req: DPRCreateRequest, db: Session = Depends(get_db), current_use
             material_name=mat.material_name,
             qty=mat.quantity,
             type="used",
-            source_ref_id=dpr.id
+            source_ref_id=dpr.id,
+            created_at=dpr.dpr_date,
         )
         db.add(txn)
 
@@ -199,22 +200,29 @@ def get_dpr_summary(project_id: uuid.UUID, db: Session = Depends(get_db), _: Non
     tasks = db.query(Task).filter(Task.project_id == project_uuid).all()
     avg_completion = (sum(float(t.progress or 0) for t in tasks) / len(tasks)) if tasks else 0
 
-    # R2-444: the dashboard's material tiles must answer from the same stock
-    # ledger this project writes to (GRN receipts and DPR consumption both
-    # land here) for today, instead of reading fields that do not exist on
-    # the DPR payload - "No consumption logged" used to render directly above
-    # a DPR that had logged 500 cft hours earlier.
-    today_rows = (
-        db.query(MaterialTransaction.type, func.sum(MaterialTransaction.qty))
+    # R2-444 / C6: the dashboard's material tiles must answer from the same stock
+    # ledger this project writes to. DPR consumption keys on func.date(dpr_date)
+    # matching the feed so backdated or scheduled DPRs align with their day.
+    today_date = datetime.utcnow().date()
+    used_today = float(
+        db.query(func.sum(MaterialTransaction.qty))
+        .outerjoin(DailyProgressReport, MaterialTransaction.source_ref_id == DailyProgressReport.id)
         .filter(
             MaterialTransaction.project_id == project_uuid,
-            func.date(MaterialTransaction.created_at) == datetime.utcnow().date(),
+            MaterialTransaction.type == "used",
+            func.date(func.coalesce(DailyProgressReport.dpr_date, MaterialTransaction.created_at)) == today_date,
         )
-        .group_by(MaterialTransaction.type)
-        .all()
+        .scalar() or 0.0
     )
-    received_today = sum(float(q) for t, q in today_rows if t == "received")
-    used_today = sum(float(q) for t, q in today_rows if t == "used")
+    received_today = float(
+        db.query(func.sum(MaterialTransaction.qty))
+        .filter(
+            MaterialTransaction.project_id == project_uuid,
+            MaterialTransaction.type == "received",
+            func.date(MaterialTransaction.created_at) == today_date,
+        )
+        .scalar() or 0.0
+    )
 
     return {
         "activities_tracked": activities_count,
