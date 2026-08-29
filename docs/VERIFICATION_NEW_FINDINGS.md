@@ -1527,6 +1527,70 @@ every path constructing a `Bill` passes through `_validate_bill_line_items`, plu
 for an inter-state quotation asserting `bill.gst_amount == quotation total tax`. The present gate stays
 green under both defects above.
 
+### ADDENDUM (batch 37, re-read while verifying R2-360) — the exact line, and why the guard above it is misleading
+
+Re-reading `convert_quotation_to_invoice` in full sharpens this finding considerably. Two things are
+now precise:
+
+**1. The omitted field has a name.** `crm.py:911`:
+
+```python
+gst_amount = float(quot.cgst_amount or 0) + float(quot.sgst_amount or 0)
+total_payable = float(quot.total_amount or 0)
+subtotal = total_payable - gst_amount
+```
+
+The quotation side already implements D4 **correctly** — `:701-715` splits IGST when the supply is
+inter-state, storing the whole tax in `quot.igst_amount` and leaving `cgst_amount` and `sgst_amount`
+at zero. The quotation's own read path knows this; `:734` computes
+`tax_amount = cgst + sgst + igst`.
+
+The conversion reads two of those three fields. So for an inter-state quotation:
+
+| | quotation row | carried into the bill |
+|---|---|---|
+| `cgst_amount` | 0 | 0 |
+| `sgst_amount` | 0 | 0 |
+| `igst_amount` | **the entire tax** | **dropped** |
+| resulting `gst_amount` | — | **0** |
+| resulting `subtotal` | — | `total_payable`, i.e. the tax-inclusive figure booked as taxable value |
+
+The tax invoice records zero GST *and* overstates the taxable value by the tax amount. Both halves of
+the line are wrong, not just the tax.
+
+**2. The guard directly above it reads like the fix and is not.** `:882-886` raises 422 unless
+`Project.state` is set, and the message cites the statute:
+
+> *"Project.state is required for invoicing — set the site state before converting quotations; place of
+> supply derives from the site per IGST Act s.12(3)"*
+
+`project.state` is then **never read again in the function**. Grepped every IGST-related symbol in
+`crm.py`: `is_inter_state` is imported at `:567` inside the *quotation* path only, and there is no
+place-of-supply comparison, no `igst` reference, and no `gst_utils` call anywhere in the conversion.
+The check enforces that a value exists and discards it.
+
+That matters for triage: a reviewer scanning this function sees a statute-citing D4 guard and
+reasonably concludes place of supply is handled here. It is handled one function up, and the result is
+thrown away on the way down.
+
+**3. The docstring states the defect as intent.** `:865-866`: *"Money comes from the quotation's own
+arithmetic (GST is the stored CGST+SGST split)"*. So the fix must correct the comment too, or the next
+reader will restore the bug.
+
+**Confirmed unchanged:** `_validate_bill_line_items` is still called zero times in this function, which
+was this finding's original claim.
+
+### Fix (revised, and smaller than originally stated)
+Two lines and a call:
+```python
+gst_amount = float(quot.cgst_amount or 0) + float(quot.sgst_amount or 0) + float(quot.igst_amount or 0)
+```
+then route the constructed payload through `_validate_bill_line_items(items_json, subtotal,
+"sale")` before `db.add(bill)`, and correct the docstring. The place-of-supply determination does not
+need to be rebuilt here — the quotation already made it; the conversion only has to stop discarding it.
+
+---
+
 ## FINDING R2-746 — 🔴 CRITICAL: switching company never re-mints the session, so `/auth/me`, `/auth/me/permissions` and the team-invite write all still target the PREVIOUS company
 
 R2-186 ("a user can belong to several companies, and there is no way to switch between them") is
