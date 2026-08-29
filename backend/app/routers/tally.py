@@ -11,7 +11,7 @@ from app.auth import get_current_user, verify_project_in_company, verify_company
 from app.models import (
     TallyConnection, TallyAgent, TallyLedgerMapping, TallyPartyMapping,
     TallyCostCentreMapping, TallyBankMapping, TallySyncLog,
-    Company, Bill, Payment, CompanyTeam, User, LibraryParty,
+    Company, Bill, Payment, CompanyTeam, User, LibraryParty, Project,
 )
 from app.tally_xml import build_tally_envelope
 from pydantic import BaseModel
@@ -194,6 +194,75 @@ def _cash_bank_type(name: str, default_cash: Optional[str]) -> str:
     return "cash" if "cash" in (name or "").lower() else "bank"
 
 
+def _bill_gst_split(db: Session, company_id, bill):
+    """R2-744: the D4 tax split for one bill, as (cgst, sgst, igst, utgst).
+
+    Place of supply derives from Project.state (the site) versus the supplier
+    GSTIN prefix, per IGST Act s.12(3). reports.py, the CRM quotations and the
+    invoice PDF all resolve it this way; tally.py used to split every supply
+    into unconditional 50/50 CGST/SGST halves, so an inter-state works contract
+    was exported under heads the GSTR-2B reconciliation will not match.
+
+    This mirrors _rep_gstr1_sales (reports.py:1130-1143) exactly -- same
+    project state, same branch-GSTIN precedence, same helper -- so the export
+    cannot drift from the return again.
+    """
+    project = (
+        db.query(Project).filter(Project.id == bill.project_id).first()
+        if bill.project_id else None
+    )
+    supplier_gstin = None
+    try:
+        comp = db.query(Company).filter(Company.id == company_id).first()
+        supplier_gstin = getattr(comp, "gstin", None)
+        # A branch GSTIN wins when the document masthead resolves to a branch.
+        if project and getattr(project, "branch_id", None):
+            from app.models import CompanyBranch as _Br
+            br = db.query(_Br).filter(_Br.id == project.branch_id).first()
+            if br and getattr(br, "gstin", None):
+                supplier_gstin = br.gstin
+    except Exception:
+        supplier_gstin = None
+
+    try:
+        from app.gst_utils import gst_split as _d4_split
+        return _d4_split(
+            bill.gst_amount,
+            getattr(project, "state", None) if project else None,
+            supplier_gstin,
+        )
+    except Exception:
+        # Pre-D4 halves, so an unexpected helper failure still balances.
+        tax = float(bill.gst_amount or 0.0)
+        half = round(tax / 2.0, 2)
+        return half, round(tax - half, 2), 0.0, 0.0
+
+
+def _gst_tax_entries(db: Session, company_id, bill, prefix, debit):
+    """Emit the tax legs for a bill: IGST whole, or CGST/SGST halves.
+
+    `prefix` is "Output" for a sale and "Input" for a purchase.
+    """
+    cgst, sgst, igst, utgst = _bill_gst_split(db, company_id, bill)
+    legs = []
+    if igst:
+        legs.append({"ledger": f"{prefix} IGST", "amount": igst, "debit": debit,
+                     "ledger_type": "output_tax" if prefix == "Output" else "input_tax"})
+    else:
+        if cgst:
+            legs.append({"ledger": f"{prefix} CGST", "amount": cgst, "debit": debit,
+                         "ledger_type": "output_tax" if prefix == "Output" else "input_tax"})
+        if sgst:
+            legs.append({"ledger": f"{prefix} SGST", "amount": sgst, "debit": debit,
+                         "ledger_type": "output_tax" if prefix == "Output" else "input_tax"})
+    # app.gst_utils returns 0.0 for UTGST today; emitted when it ever is not, so
+    # a union-territory supply cannot silently lose its tax.
+    if utgst:
+        legs.append({"ledger": f"{prefix} UTGST", "amount": utgst, "debit": debit,
+                     "ledger_type": "output_tax" if prefix == "Output" else "input_tax"})
+    return legs
+
+
 def _build_vouchers(db: Session, conn: TallyConnection, bills, payments, advance_sequence: bool = False):
     """Resolve Bill + Payment rows into Tally voucher dicts (double entry).
 
@@ -301,8 +370,17 @@ def _build_vouchers(db: Session, conn: TallyConnection, bills, payments, advance
             # R2-410: revenue is posted at the tax-exclusive base and the GST
             # goes to Output tax ledgers under Duties & Taxes - posting the
             # gross figure on the sales leg booked the output liability as
-            # turnover. The 50/50 CGST/SGST halves follow the same documented
-            # convention as reports._gst_split (no place-of-supply column).
+            # turnover.
+            #
+            # R2-744: the tax HEAD follows D4, not a fixed convention. The
+            # comment that used to sit here claimed the 50/50 halves "follow the
+            # same documented convention as reports._gst_split (no
+            # place-of-supply column)". Both clauses were false: reports.
+            # _gst_split takes project_state and supplier_gstin and documents
+            # itself as "Never unconditional 50/50", and the place-of-supply
+            # column the comment said does not exist is the one the rest of the
+            # system is now validated against. That comment is why this site
+            # looked already-considered.
             gst = float(b.gst_amount or 0.0)
             net = round(total - gst, 2)
             entries = [
@@ -312,11 +390,7 @@ def _build_vouchers(db: Session, conn: TallyConnection, bills, payments, advance
                  "ledger_type": "party_debtor"},
             ]
             if gst > 0:
-                half = round(gst / 2, 2)
-                entries.append({"ledger": "Output CGST", "amount": half, "debit": False,
-                                "ledger_type": "output_tax"})
-                entries.append({"ledger": "Output SGST", "amount": round(gst - half, 2), "debit": False,
-                                "ledger_type": "output_tax"})
+                entries.extend(_gst_tax_entries(db, conn.company_id, b, "Output", debit=False))
         else:
             # Purchase / subcon: debit the expense ledger, credit the party.
             # R2-410: the expense is the tax-exclusive base and the GST is
@@ -332,11 +406,10 @@ def _build_vouchers(db: Session, conn: TallyConnection, bills, payments, advance
                  "ledger_type": "party_creditor"},
             ]
             if gst > 0:
-                half = round(gst / 2, 2)
-                entries.append({"ledger": "Input CGST", "amount": half, "debit": True,
-                                "ledger_type": "input_tax"})
-                entries.append({"ledger": "Input SGST", "amount": round(gst - half, 2), "debit": True,
-                                "ledger_type": "input_tax"})
+                # R2-744: same D4 split as the sales branch -- an inter-state
+                # purchase takes input credit as IGST, under the head the return
+                # will report.
+                entries.extend(_gst_tax_entries(db, conn.company_id, b, "Input", debit=True))
         vouchers.append({
             "vchtype": vchtype,
             "voucher_type_name": vchtype,
