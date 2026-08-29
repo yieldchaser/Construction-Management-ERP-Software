@@ -122,3 +122,85 @@ tenant isolation (180 live cross-tenant probes over 106 routes, zero leaks), Sen
 > new surface must obey the rules this audit established: server-computed identity, permission gates,
 > honest empty states, validated vocabularies, no fabricated values. Adding a feature carelessly
 > reopens the classes this audit spent months closing.
+
+---
+
+## Additional task — make the pre-login index page fast, changing nothing visible
+
+This is a **separate workstream** from Parts A–E. It has one hard constraint that overrides every
+optimisation instinct you have:
+
+> **The page must look and behave EXACTLY the same when you are done.** Every animation, gradient,
+> mockup, count-up, typewriter effect and piece of visual polish stays. You are optimising *delivery
+> and execution*, not design. If an optimisation costs a visual effect, you do not take it — you find
+> another way or you leave it alone. "It was slow because of the fancy bit, so I removed the fancy
+> bit" is a failed task, not a fix.
+
+**Target:** `frontend/src/app/page.tsx` (343 lines) and the marketing components it pulls in —
+`MarketingShell`, `MockupFrame`, `Icon`, `TypewriterText`, `CountUp`, `Aurora`, `EmberSparks`.
+
+### Measure first, and keep the numbers
+
+Do not change anything until you have a baseline. Record, for both mobile and desktop:
+LCP, CLS, INP, TBT, total transferred bytes, JS bytes parsed, and main-thread long tasks. Use the
+browser preview tools (Performance trace + network panel) against a production build (`next build &&
+next start`) — **never against the dev server**, whose numbers are meaningless for this.
+
+Then after each change, re-measure. Report before/after per change, not one summary at the end. A
+change with no measured improvement gets reverted, however sensible it looked.
+
+### Confirmed starting points — verified in the tree 2026-08-29
+
+These are real and measured; start here rather than guessing.
+
+1. **Images are the dominant cost. `frontend/public` is 83 MB.** The worst offenders:
+
+   | Size | File |
+   |---|---|
+   | 8.5 MB | `resources/glossary/construction-hero.webp` |
+   | 8.5 MB | `resources/glossary/construction-hero.png` |
+   | **4.1 MB** | `marketing/landing/feature-dpr-phones.png` — **this one is on the landing page** |
+   | 2.0 MB | `marketing/calculators/concrete-volume-calculator-3.png` |
+   | 1.9 MB ×4 | `marketing/blog/cat-*.png`, `marketing/mocks/mock-*.png` |
+
+   Note the first two: the `.webp` is the **same 8.5 MB as the `.png`**, so whatever produced it did
+   not actually compress. Re-encode properly.
+
+   Do: convert to WebP/AVIF at sane quality, generate responsive sizes, serve through `next/image`
+   with correct `sizes`, set `priority` on the LCP image only and lazy-load the rest. **The rendered
+   image must be visually identical at display size** — compare crops before/after, do not just trust
+   the byte count.
+
+2. **Three client components run animation loops.** `TypewriterText` (8 `requestAnimationFrame` /
+   timer call sites in 85 lines) and `CountUp` (4 in 98 lines) are `"use client"` with running timers;
+   `EmberSparks` is client too. These are the most likely source of the hang you are chasing.
+
+   Do: drive animation with CSS transforms/opacity where the effect allows; ensure every loop
+   **cancels on unmount and pauses when off-screen** (`IntersectionObserver`) and when the tab is
+   hidden (`visibilitychange`); never animate layout-triggering properties; coalesce independent
+   timers. `CountUp` should not run before it scrolls into view.
+
+3. **`MockupFrame` is 562 lines and is not a client component** — good. Keep it that way. Check
+   whether it and `Aurora` (22 lines, no effects, server-rendered) stay off the client bundle.
+
+4. **Check what else is being pulled into the client bundle.** Run the bundle analyser. The page has
+   only 4 runtime deps, so anything large is coming from a component boundary that should be a server
+   component or a `dynamic()` import with `ssr: false` for genuinely below-the-fold decoration.
+
+5. **Fonts.** Confirm `next/font` self-hosting with `display: swap` and preloaded subsets — a
+   render-blocking font request is a classic invisible hang with no visual change when fixed.
+
+6. **The service worker serves stale marketing pages** (a known property of this project). Verify your
+   improvement against a hard reload with the SW unregistered, then again with it active, or you will
+   measure the cache instead of your change.
+
+### Acceptance
+
+- Before/after numbers for every change, on a production build.
+- **Visual proof of no regression:** screenshots of the full page at mobile and desktop widths, before
+  and after, plus each animation confirmed still running. This is the deliverable that matters most —
+  the founder's constraint is that nothing is lost.
+- No console errors, no new network failures, no layout shift introduced.
+- Keep going until there is no perceptible hang on a mid-range device — but **stop before removing
+  anything visual**, and if you believe a specific effect genuinely cannot be made smooth, report it
+  with its measurement and let the founder decide. Do not decide that yourself.
