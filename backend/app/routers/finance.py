@@ -539,13 +539,12 @@ def get_project_pl(project_id: uuid.UUID, db: Session = Depends(get_db), _: None
         Bill.status != "Cancelled"
     ).scalar() or 0.0
 
-    # 2. Material Cost: Vendor bills (invoice_type in EXPENSE_INVOICE_TYPES).
-    # R2-243: EXPENSE_INVOICE_TYPES contains "subcon"; exclude it here so
-    # subcon bills are not double-counted (they are summed in subcon_actual).
+    # 2. Material Cost: Vendor purchase bills (invoice_type == "purchase") + wastage.
+    # R2-749: Partition expense invoice types into their respective heads:
+    # Material = purchase, Subcontractor = subcon, Plant & Machinery = equipment + deployments + fuel, Overhead = expense.
     material_actual = db.query(func.sum(Bill.total_payable)).filter(
         Bill.project_id == proj_uuid,
-        Bill.invoice_type.in_(EXPENSE_INVOICE_TYPES),
-        Bill.invoice_type != "subcon",
+        Bill.invoice_type == "purchase",
         Bill.status != "Cancelled"
     ).scalar() or 0.0
     material_wastage_actual = db.query(func.sum(MaterialWastage.estimated_value)).filter(
@@ -565,7 +564,13 @@ def get_project_pl(project_id: uuid.UUID, db: Session = Depends(get_db), _: None
         Bill.status != "Cancelled"
     ).scalar() or 0.0
 
-    # 5. Plant & Machinery (Equipment deployment cost + fuel costs)
+    # 5. Plant & Machinery (Equipment bills + equipment deployment cost + fuel costs)
+    equipment_bills_actual = db.query(func.sum(Bill.total_payable)).filter(
+        Bill.project_id == proj_uuid,
+        Bill.invoice_type == "equipment",
+        Bill.status != "Cancelled"
+    ).scalar() or 0.0
+
     deployments = db.query(EquipmentDeployment).filter(EquipmentDeployment.project_id == proj_uuid).all()
     dep_cost = 0.0
     for dep in deployments:
@@ -605,7 +610,14 @@ def get_project_pl(project_id: uuid.UUID, db: Session = Depends(get_db), _: None
 
     fuel_logs = db.query(FuelLog).filter(FuelLog.project_id == proj_uuid).all()
     fuel_cost = sum(float(log.total_cost or 0.0) for log in fuel_logs)
-    equipment_actual = round(dep_cost + fuel_cost, 2)
+    equipment_actual = round(float(equipment_bills_actual) + dep_cost + fuel_cost, 2)
+
+    # 6. Overhead: General expense bills (invoice_type == "expense")
+    overhead_actual = db.query(func.sum(Bill.total_payable)).filter(
+        Bill.project_id == proj_uuid,
+        Bill.invoice_type == "expense",
+        Bill.status != "Cancelled"
+    ).scalar() or 0.0
 
     # Variance: for Revenue, variance = Actual - Budget. For Cost, variance = Budget - Actual.
     # To keep it standard: return positive variance for positive variance outcomes, negative for cost overruns.
@@ -643,8 +655,8 @@ def get_project_pl(project_id: uuid.UUID, db: Session = Depends(get_db), _: None
         PLItemResponse(
             head="Overhead",
             budget=0.0,
-            actual=0.0,
-            variance=0.0
+            actual=float(overhead_actual),
+            variance=0.0 - float(overhead_actual)
         )
     ]
     return pl_data
