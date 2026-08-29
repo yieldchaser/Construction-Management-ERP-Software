@@ -4046,22 +4046,44 @@ export default function FinancePage() {
               <div className="flex gap-2">
                 <button
                   onClick={async () => {
-                    const res = await fetch(`${getApiHost()}/apis/v3/finance/payment-requests/approve/${selectedPR.id}`, {
-                      method: "PUT", headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
-                      body: JSON.stringify({ status: "Approved" }),
-                    });
-                    if (res.ok) { const u = await res.json(); setSelectedPR(u); setPaymentRequests(paymentRequests.map(p => p.id === u.id ? u : p)); }
+                    try {
+                      const res = await fetch(`${getApiHost()}/apis/v3/finance/payment-requests/approve/${selectedPR.id}`, {
+                        method: "PUT", headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+                        body: JSON.stringify({ status: "Approved" }),
+                      });
+                      if (res.ok) {
+                        const u = await res.json();
+                        setSelectedPR(u);
+                        setPaymentRequests(paymentRequests.map(p => p.id === u.id ? u : p));
+                      } else {
+                        const err = await res.json().catch(() => ({}));
+                        alert(err.detail || "Failed to update approval status");
+                      }
+                    } catch (e: any) {
+                      alert(e?.message || "Network error updating approval status");
+                    }
                   }}
                   disabled={selectedPR.status === "Paid"}
                   className="flex-1 py-2.5 bg-primary text-white font-bold rounded-lg hover:bg-primary/95 text-xs transition-all disabled:opacity-40"
                 >Request Approval</button>
                 <button
                   onClick={async () => {
-                    const res = await fetch(`${getApiHost()}/apis/v3/finance/payment-requests/approve/${selectedPR.id}`, {
-                      method: "PUT", headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
-                      body: JSON.stringify({ status: "Paid" }),
-                    });
-                    if (res.ok) { const u = await res.json(); setSelectedPR(u); setPaymentRequests(paymentRequests.map(p => p.id === u.id ? u : p)); }
+                    try {
+                      const res = await fetch(`${getApiHost()}/apis/v3/finance/payment-requests/approve/${selectedPR.id}`, {
+                        method: "PUT", headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+                        body: JSON.stringify({ status: "Paid" }),
+                      });
+                      if (res.ok) {
+                        const u = await res.json();
+                        setSelectedPR(u);
+                        setPaymentRequests(paymentRequests.map(p => p.id === u.id ? u : p));
+                      } else {
+                        const err = await res.json().catch(() => ({}));
+                        alert(err.detail || "Failed to mark payment request as paid");
+                      }
+                    } catch (e: any) {
+                      alert(e?.message || "Network error marking payment request as paid");
+                    }
                   }}
                   disabled={selectedPR.status === "Paid"}
                   className="flex-1 py-2.5 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-500 text-xs transition-all disabled:opacity-40"

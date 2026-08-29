@@ -341,10 +341,15 @@ export default function BoqTab() {
             ? { tone: "warn", text: `Imported ${imported} item(s), skipped ${skipped}. ${warnings.join("; ")}`.trim() }
             : { tone: "ok", text: `Imported ${imported} item(s).` }
         );
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setImportNotice({ tone: "warn", text: err.detail || "BOQ import failed. Please check the file format." });
       }
       setDocFile(null);
       await loadDocItems(docId);
       await loadDocs();
+    } catch (e: any) {
+      setImportNotice({ tone: "warn", text: e?.message || "Network error during BOQ import" });
     } finally {
       setDocImporting(false);
     }

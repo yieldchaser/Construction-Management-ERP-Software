@@ -659,9 +659,14 @@ ${tasksXml}
         method: "DELETE",
         headers: authHeaders() || undefined,
       });
-      if (res.ok) setTimesheets((prev) => prev.filter((t) => t.id !== id));
-    } catch {
-      /* ignore */
+      if (res.ok) {
+        setTimesheets((prev) => prev.filter((t) => t.id !== id));
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(err.detail || "Failed to delete timesheet");
+      }
+    } catch (e: any) {
+      alert(e?.message || "Network error deleting timesheet");
     }
   };
 

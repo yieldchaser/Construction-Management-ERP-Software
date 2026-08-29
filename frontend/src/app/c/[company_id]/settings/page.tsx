@@ -944,13 +944,34 @@ export default function CompanySettingsPage() {
         method: "POST", headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({ name: ltName.trim(), leave_types: rows }),
       });
-      if (res.ok) { const t = await res.json(); setLeaveTemplates([...leaveTemplates, t]); setLtName(""); setLtTypes([{ type: "", days: 0 }]); setShowAddLeave(false); }
-    } catch { /* ignore */ }
-    finally { setLtBusy(false); }
+      if (res.ok) {
+        const t = await res.json();
+        setLeaveTemplates([...leaveTemplates, t]);
+        setLtName("");
+        setLtTypes([{ type: "", days: 0 }]);
+        setShowAddLeave(false);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(err.detail || "Failed to create leave template");
+      }
+    } catch (e: any) {
+      alert(e?.message || "Network error creating leave template");
+    } finally {
+      setLtBusy(false);
+    }
   };
   const deleteLeaveTemplate = async (id: string) => {
-    const res = await fetch(`${apiHost}/apis/v3/hr/leave-templates/${id}`, { method: "DELETE", headers: authHeaders() });
-    if (res.ok) setLeaveTemplates(leaveTemplates.filter((t) => t.id !== id));
+    try {
+      const res = await fetch(`${apiHost}/apis/v3/hr/leave-templates/${id}`, { method: "DELETE", headers: authHeaders() });
+      if (res.ok) {
+        setLeaveTemplates(leaveTemplates.filter((t) => t.id !== id));
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(err.detail || "Failed to delete leave template");
+      }
+    } catch (e: any) {
+      alert(e?.message || "Network error deleting leave template");
+    }
   };
 
   // Holiday Calendar
