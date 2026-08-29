@@ -117,6 +117,69 @@ EVIDENCE_CLOSE = {"R2-001", "R2-118", "R2-428"}
 # Verdicts reached by hand, one finding at a time. E1 = code read, E3 = live product.
 # NOT_IN_PROD is a FIFTH verdict, added deliberately - see the header note in the emitted file.
 VERDICTS = {
+    "R2-374": ("CONFIRMED", "Same defect and same resolution as R2-228/R2-248, verified in the "
+               "same read. consolidated_pnl returns a single row with tower_id=None and "
+               "tower_name='Overall Project' (towers.py:182-183, :212) rather than repeating the "
+               "project's figures once per tower, because no document in the schema carries a "
+               "tower_id. A three-tower project can no longer report its costs three times."),
+    "R2-205": ("CONFIRMED", "Fix present on main. The finding's defect was that reporting "
+               "material wastage did not reduce stock, so the material stayed on the books as "
+               "available. wastage.py now does both halves of the write: it decrements the "
+               "warehouse balance (inv.on_hand_qty = on_hand_qty - payload.quantity, :97) and "
+               "records the movement in the ledger (MaterialTransaction, :98), with "
+               "WarehouseInventory and MaterialTransaction imported at :10. Wasted material "
+               "leaves the available balance."),
+    "R2-245": ("CONFIRMED", "Fix present on main, and all three clauses of the finding are "
+               "addressed. (1) Wastage can no longer exceed existing stock - wastage.py:75 calls "
+               "enforce_stock_availability(db, project_id, material_name, quantity, 'Material "
+               "Wastage') before writing. (2) It reduces stock - see R2-205, :97-98. (3) It "
+               "reaches a financial report - MaterialWastage.estimated_value is summed into the "
+               "P&L material cost (finance.py:549-552, verified while reading R2-327), and the "
+               "field itself is bounded Field(None, ge=0) at :24."),
+    "R2-187": ("CONFIRMED", "Fix present on main. The finding's defect was that pushing a bill to "
+               "Zoho was not idempotent and nothing recorded that it had been pushed, so every "
+               "click created another bill in the customer's accounting system. The push now "
+               "refuses a repeat: zoho_books.py:543-545 raises 409 when bill.zoho_bill_id is "
+               "already set, so the identifier both records the push and prevents the duplicate. "
+               "The vendor-contact path has the same shape - a duplicate-name response (code "
+               "3062) is resolved to the existing contact rather than creating another (:316)."),
+    "R2-209": ("CONFIRMED", "Fix present on main. The finding's defect was that the Zoho bill "
+               "push failed 100% of the time - no bill had ever reached Zoho. The cause was the "
+               "gst_treatment element, which some Zoho organisations reject outright (error code "
+               "8). zoho_books.py:258-292 now handles that explicitly: the element is included "
+               "only when the organisation accepts it and omitted otherwise, under a comment "
+               "stating that a rejected gst_treatment must not break the bill push."),
+    "R2-392": ("CONFIRMED", "Duplicate of R2-209 and closed by the same change (the register "
+               "records both against 5096c8a). The gst_treatment element is omitted for "
+               "organisations that reject it rather than failing the push - see the R2-209 "
+               "entry for the code."),
+    "R2-189": ("CONFIRMED", "Fix present on main. The finding's defect was that push_bill had no "
+               "permission check, unlike every other endpoint in the same file - it required only "
+               "company membership while its sibling authorize required settings:manage. "
+               "push_bill (zoho_books.py:506) now resolves membership AND calls "
+               "require_permission(db, current_user, company_id, 'billing:edit'), so pushing a "
+               "bill into the customer's accounting system is permission-gated like the rest of "
+               "the module."),
+    "R2-199": ("CONFIRMED", "Fix present on main, resolved by removing the false claim rather "
+               "than by shipping delivery. The finding's defect was that 'Enable Push' reported "
+               "success while subscribing to nothing, so push could never be delivered. "
+               "PwaControls.tsx now does exactly what it says: handleEnableNotifications requests "
+               "Notification permission and reports the real outcome - 'Notifications allowed on "
+               "this device' or 'Notifications blocked' or 'Notifications are not supported "
+               "here' - and the control is labelled 'Enable Notifications'. It no longer claims a "
+               "subscription it did not create. Actual push delivery remains a feature awaiting "
+               "the Firebase work already on the founder's open-items list, not a defect of this "
+               "row."),
+    "R2-166": ("CONFIRMED", "Fix present on main. The finding's defect was that the Attendance "
+               "mobile header was clipped by an overflow:hidden ancestor, so its right-hand "
+               "controls could not be reached at all. The header band now carries overflow-x-auto "
+               "with shrink-0 (p/[project_id]/attendance/page.tsx:606), so at mobile width the "
+               "controls scroll into reach instead of being cut off by the parent."),
+    "R2-547": ("CONFIRMED", "Closed by the same remedy verified under R2-288 - the statutory "
+               "payroll percentages are now bounded at the schema (settings.py:705-707: pf "
+               "employee and employer 0-12, esi employee 0-1, pf_wage_ceiling ge=0), so the "
+               "unbounded-rate class this row belongs to cannot be expressed. The register "
+               "records both rows against e9139f1."),
     "R2-522": ("CONFIRMED", "Fix present on main. The finding's defect was that /statutory/{cid}/"
                "gstr1 read the PAYROLL table and returned wages and TDS, so the company's actual "
                "GST outward supply was absent. export_gstr1 (statutory.py:270-300) is now built "
