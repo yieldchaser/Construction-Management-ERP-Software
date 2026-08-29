@@ -27,10 +27,15 @@ interface Props {
 }
 
 function buildInitialDraft(perms?: PermissionDict | null): PermissionDict {
-  const draft: PermissionDict = {};
+  // R2-757: preserve any out-of-taxonomy or legacy permission keys stored on the role
+  // so opening and saving a role never silently revokes them.
+  const draft: PermissionDict = perms ? { ...perms } : {};
+  if ("all" in draft) delete draft["all"];
   for (const key of ALL_PERMISSION_KEYS) {
     if (key === "all") continue;
-    draft[key] = perms ? perms[key] === true : false;
+    if (!(key in draft)) {
+      draft[key] = false;
+    }
   }
   return draft;
 }
@@ -49,6 +54,12 @@ export default function RolePermissionsModal({ role, onClose, onSaved }: Props) 
     setMsg(null);
   }, [role]);
 
+  const unrecognisedKeys = useMemo(() => {
+    const canonicalSet = new Set<string>(ALL_PERMISSION_KEYS);
+    canonicalSet.add("all");
+    return Object.keys(draft).filter((k) => !canonicalSet.has(k) && draft[k]);
+  }, [draft]);
+
   const grouped = useMemo(() => {
     return MODULES.map((m) => ({
       module: m,
@@ -65,12 +76,14 @@ export default function RolePermissionsModal({ role, onClose, onSaved }: Props) 
     setDraft((d) => ({ ...d, [key]: !d[key] }));
 
   const setAll = (value: boolean) => {
-    const next: PermissionDict = {};
-    for (const key of ALL_PERMISSION_KEYS) {
-      if (key === "all") continue;
-      next[key] = value;
-    }
-    setDraft(next);
+    setDraft((prev) => {
+      const next: PermissionDict = { ...prev };
+      for (const key of ALL_PERMISSION_KEYS) {
+        if (key === "all") continue;
+        next[key] = value;
+      }
+      return next;
+    });
   };
 
   const save = async () => {
@@ -260,6 +273,30 @@ export default function RolePermissionsModal({ role, onClose, onSaved }: Props) 
                   ))}
                 </div>
               </div>
+
+              {/* Preserved Legacy / Out-of-Taxonomy Permissions */}
+              {unrecognisedKeys.length > 0 && (
+                <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] uppercase tracking-wider text-amber-400 font-bold">
+                      Preserved Legacy Permissions ({unrecognisedKeys.length})
+                    </span>
+                    <span className="text-[10px] text-muted">
+                      Retained automatically on save
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {unrecognisedKeys.map((k) => (
+                      <span
+                        key={k}
+                        className="inline-flex items-center gap-1 rounded bg-amber-500/20 px-2 py-0.5 text-[11px] font-mono text-amber-300 border border-amber-500/40"
+                      >
+                        <code>{k}</code>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </>
           )}
         </div>
