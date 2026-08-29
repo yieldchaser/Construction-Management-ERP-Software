@@ -1266,6 +1266,7 @@ finding read **as filed** rather than from its register note.
 | **R2-757** | **MEDIUM** | **role editor silently revokes any stored permission key outside the taxonomy on save (R2-171/172 second conjunct; latent: 0 live instances)** | worklist (R2-171/R2-172) |
 | **R2-758** | **HIGH** | **client-report PDFs still written to ephemeral container disk and the generate/download affordance is intact — the commit cited as closing that half touches 4 unrelated pages** | worklist (R2-184) |
 | **R2-759** | **MEDIUM** | **CRM lead `priority` still unvalidated free text (`Medium` vs `medium` split one filter bucket in two); register records the clause as fixed** | worklist (R2-438) |
+| **R2-760** | **MEDIUM** | **3 of 19 record types gained a void path and the row closed for all 19 — DPR, NCR, inspection, wastage, asset and custom-field records are still permanent; no D-code, no BACKLOG line** | worklist (R2-177) |
 
 ## FINDING R2-743 — 🔴 CRITICAL: the BI export feed writes user-controlled text straight into CSV cells, so the one export built for external consumption is the one still formula-injectable
 
@@ -2523,3 +2524,77 @@ one migration normalising existing rows to that casing, since the drift is alrea
 ### Gate this needs
 A test posting `priority="High"` and asserting 422, alongside the existing phone and closure-date
 cases — the same test file, three lines.
+
+---
+
+## FINDING R2-760 — 🟡 MEDIUM: three of nineteen record types gained a void path and the row closed for all nineteen — a mis-entered DPR, NCR, inspection, wastage entry, asset or custom field is still permanent
+
+**Source:** verifying worklist row R2-177.
+
+### What the register claims
+> `S33 FIXED ff20153 (H-billing): POST /billing/work-orders/{id}/cancel void path (409 double-cancel/open linked bills; editing window honoured); no schema change; test added.`
+
+One endpoint, on one document type.
+
+### What R2-177 actually filed
+> *"26 routers create records and can never delete them, and the core transactional documents have no general edit either"*
+
+— enumerating nineteen business-record routers by name: `billing · procurement · budgeting ·
+equipment · quality · safety · assets · dpr · labour · production · rfq · three_way · wastage ·
+statutory · subcon_attendance · subcon_performance · custom_fields · files · reports`.
+
+### What the live tree has
+Void paths now exist — and they are on the right documents, which is why this is MEDIUM and not HIGH:
+
+```
+billing.py:389      POST /work-orders/{wo_id}/cancel
+billing.py:501      POST /bills/{bill_id}/cancel
+procurement.py:710  POST /pos/{po_id}/cancel
+```
+
+The three money documents — bill, work order, purchase order — can be voided, with the double-cancel
+and linked-record guards the register describes. That is the highest-value third of the problem.
+
+Counted `@router.delete` across all nineteen named routers: `budgeting` 1, `files` 2, **every other
+one zero**, and no cancel endpoint either. So still with no correction path of any kind:
+
+| Router | Records that cannot be removed or voided |
+|---|---|
+| `dpr` | daily progress reports |
+| `quality` | inspections, inspection responses, NCRs |
+| `safety` | safety incidents |
+| `equipment` | equipment records, deployments, fuel logs |
+| `assets` | asset records |
+| `wastage` | material wastage entries |
+| `rfq` | RFQs |
+| `three_way` | three-way match records |
+| `custom_fields` | custom field definitions |
+| `subcon_attendance` / `subcon_performance` | subcontractor attendance and scores |
+| `production` / `labour` / `statutory` / `reports` | production entries, labour records, statutory returns, report rows |
+
+### Why MEDIUM, not the original HIGH
+Two things reduce it from where R2-177 filed it:
+- The money documents are covered, so no financial record is trapped.
+- **There is no false affordance.** I checked the console pages for `quality`, `safety`, `dpr`,
+  `equipment` and `assets`: no delete control is offered. The product does not claim a capability it
+  lacks — it simply lacks it. That is the distinction D-010 drew on R2-184's upload controls.
+
+### Why it is still worth a row
+A daily progress report is the primary contemporaneous site record and is cited in delay claims; an
+NCR and a safety incident are quality and statutory evidence. Entered against the wrong project or the
+wrong date, each is permanent and uncorrectable, and the only remedy is a database edit. For an ERP
+holding other companies' records that is an operational gap, not a cosmetic one.
+
+Note also that the deletion **audit infrastructure already exists and is unused here**:
+`backend/app/routers/delete_logs.py` provides `log_deletion(...)`, which queues an audit row on the
+caller's session so the log and the deletion commit in one transaction. Any delete path added to these
+routers has its audit trail waiting for it.
+
+### What I am asking for
+Not necessarily the nineteen endpoints. Either:
+1. build the correction paths (soft-delete or void, routed through `log_deletion`), or
+2. **make the deferral explicit** — a D-code and a `docs/BACKLOG.md` line, the way R2-184's storage half
+   was handled under D-010.
+
+What should not stand is the current state: the row reads FIXED for nineteen record types on the
+evidence of one endpoint, with no decision recorded anywhere.
