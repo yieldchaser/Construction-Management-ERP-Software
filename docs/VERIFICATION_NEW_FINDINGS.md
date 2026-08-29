@@ -1260,6 +1260,7 @@ finding read **as filed** rather than from its register note.
 | **R2-751** | **HIGH** | **`POST /face/punch` has no company check — any authenticated user can write attendance evidence into another tenant (2nd write-path tenancy gap after R2-049)** | off-main subset (R2-593) |
 | **R2-752** | **MEDIUM** | **6 write controls still fail silently (2.5%, down from 48%) — including payment-request Request Approval and Mark as Paid** | off-main subset (R2-590) |
 | **R2-753** | **HIGH** | **date-only fields shift a day by browser timezone; a holiday entered as 15 Aug stores as 14 Aug (proved live). 9 sites, only 1 normalised** | off-main subset (R2-220) |
+| **R2-754** | **HIGH** | **Holiday Calendar feeds nothing into payroll — a declared holiday reduces days_present but not days_in_month, so it is silently unpaid** | off-main subset (R2-481) |
 
 ## FINDING R2-743 — 🔴 CRITICAL: the BI export feed writes user-controlled text straight into CSV cells, so the one export built for external consumption is the one still formula-injectable
 
@@ -2176,3 +2177,55 @@ its own — by the time it runs, the day is already lost.
 A test that posts a holiday for a fixed date from a `+05:30` context and asserts the stored date is the
 same calendar day. The current R2-220 pin asserts the stored time is midnight, which passes on the
 wrong day — that is exactly why this survived as FIX_VERIFIED.
+
+## FINDING R2-754 — 🟠 HIGH: the Holiday Calendar still feeds nothing into payroll, so a company holiday silently becomes an unpaid day
+
+R2-481 said "the Holiday Calendar **and** Weekly Off configuration feed nothing". **Half of that is
+fixed.** Weekly offs now genuinely reach payroll: `run_payroll` calls
+`_working_days_in_month(payload.payroll_month, company.weekly_off_days)` (`hr.py:738-739`) and that
+helper walks the real calendar month excluding configured off-days (`:634-647`), with a docstring
+citing R2-481.
+
+**Holidays do not.** `_working_days_in_month` takes exactly two arguments — the month string and the
+weekly-off list — and its body never queries `Holiday`. `run_payroll` does not subtract holidays
+either. The `Holiday` model is imported into `hr.py` (`:33`) and the calendar has full CRUD
+(`:1630-1690`), but no payroll path reads it.
+
+### Why this costs money
+Payroll pays `ratio = min(1.0, days_present / days_in_month)`.
+
+A company holiday reduces the numerator — nobody punches in, and a holiday is not
+`approved_leave_days`, which only counts `LeaveRequest` rows — while leaving the denominator
+untouched. So for a month with one declared holiday and an employee present on every working day:
+
+```
+days_present    = 25   (26 working days minus the holiday nobody punched)
+days_in_month   = 26   (holiday not subtracted)
+ratio           = 0.96 → paid 96% of salary
+```
+
+**A declared paid holiday is silently taken out of the employee's wages.** Every employee, every
+holiday. The defect is invisible on the payslip because both numbers look plausible.
+
+### Compounding with R2-753
+The same Holiday Calendar stores its dates one day early (R2-753, proved live). So the holiday
+feature currently: records the wrong date, and then that wrong date is ignored by the only subsystem
+that should consume it. Fixing R2-753 alone would give payroll a correct date it still does not read.
+
+### Also unresolved from the same finding
+`run_payroll` still honours a caller-supplied `days_in_month` when one is passed
+(`hr.py:736`), falling back to the computed value only when it is omitted. That is much safer than
+the original — the divisor is now bounded `ge=1, le=31` (R2-354) and no longer defaults to 26 — but
+the client can still choose the denominator that divides real wages. Worth deciding explicitly rather
+than leaving as an accident.
+
+### Fix
+Give `_working_days_in_month` the company's holidays for that month and exclude those dates alongside
+the weekly offs — it already has the year and month in hand, so this is one query and one set
+membership test. Then decide whether a caller may override `days_in_month` at all; if payroll is
+meant to be attendance-driven, it should not be overridable.
+
+### Gate this needs
+A test asserting that declaring a holiday in a month reduces `days_in_month` for that month's payroll
+run by exactly one. The current R2-481 pin covers the weekly-off path only, which is why the holiday
+half stayed green.
