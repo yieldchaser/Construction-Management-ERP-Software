@@ -21,7 +21,35 @@ interface ReportCategory {
   title: string;
   icon: IconName;
   reports: ReportItem[];
-}
+// C4: 24 active report slugs implemented in backend/app/routers/reports.py.
+// All remaining catalogue entries are honestly badged as "Coming soon" to prevent
+// misleading 404s when users attempt to view or download unimplemented reports.
+const IMPLEMENTED_REPORT_SLUGS = new Set([
+  "dpr",
+  "task-report",
+  "purchase-order-item",
+  "po-summary",
+  "material-stock",
+  "production-material",
+  "attendance-salary",
+  "company-payments",
+  "payment-request",
+  "party-ledger",
+  "all-party-balances",
+  "item-wise-sales",
+  "company-sales",
+  "crm-lead-detail",
+  "task-measurement-book",
+  "material-stock-movement",
+  "material-received-used",
+  "task-attendance",
+  "gstr1-sales",
+  "gstr2-purchase",
+  "sales-deduction-retention",
+  "bank-statement",
+  "project-wise-payment-summary",
+  "project-payment",
+]);
 
 export default function ReportsDashboard() {
   const params = useParams();
@@ -332,10 +360,14 @@ export default function ReportsDashboard() {
                       <Icon name={category.icon} className="w-4 h-4 text-muted" />
                       <h3 className="text-sm font-bold text-foreground">{category.title}</h3>
                     </div>
-
                     <div className="space-y-1.5">
                       {filteredReports.map((report) => {
+                        const isImplemented = !!report.viewSlug && IMPLEMENTED_REPORT_SLUGS.has(report.viewSlug);
                         const handleClick = () => {
+                          if (!isImplemented) {
+                            showToast(`${report.name} is coming soon!`);
+                            return;
+                          }
                           if (report.hasView && report.viewSlug) {
                             router.push(`/c/${companyId}/reports/${report.viewSlug}`);
                           } else if (report.hasDownload) {
@@ -348,31 +380,39 @@ export default function ReportsDashboard() {
                           <div
                             key={report.name}
                             onClick={handleClick}
-                            className="group flex items-center justify-between p-2 rounded-lg hover:bg-elevated cursor-pointer transition-all"
+                            className={`group flex items-center justify-between p-2 rounded-lg transition-all ${
+                              isImplemented ? "hover:bg-elevated cursor-pointer" : "opacity-60 cursor-default"
+                            }`}
                           >
                             <span className="text-xs text-muted group-hover:text-foreground transition-colors truncate max-w-[70%]">
                               {report.name}
                             </span>
                             <div className="flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
-                              {/* Download icon — only if hasDownload */}
-                              {report.hasDownload && (
-                                <button
-                                  onClick={() => { setSelectedReport(report); setShowModal(true); }}
-                                  className="inline-flex items-center text-muted hover:text-[#FF8A00] transition-colors"
-                                  title="Download Report"
-                                >
-                                  <Icon name="arrow_down" className="w-4 h-4" />
-                                </button>
-                              )}
-                              {/* Eye/View icon — only if hasView */}
-                              {report.hasView && report.viewSlug && (
-                                <Link
-                                  href={`/c/${companyId}/reports/${report.viewSlug}`}
-                                  className="inline-flex items-center text-muted hover:text-primary transition-colors"
-                                  title="View Report"
-                                >
-                                  <Icon name="eye" className="w-4 h-4" />
-                                </Link>
+                              {!isImplemented ? (
+                                <span className="text-[10px] bg-border-custom/50 text-muted px-2 py-0.5 rounded font-medium">Coming soon</span>
+                              ) : (
+                                <>
+                                  {/* Download icon — only if hasDownload */}
+                                  {report.hasDownload && (
+                                    <button
+                                      onClick={() => { setSelectedReport(report); setShowModal(true); }}
+                                      className="inline-flex items-center text-muted hover:text-[#FF8A00] transition-colors"
+                                      title="Download Report"
+                                    >
+                                      <Icon name="arrow_down" className="w-4 h-4" />
+                                    </button>
+                                  )}
+                                  {/* Eye/View icon — only if hasView */}
+                                  {report.hasView && report.viewSlug && (
+                                    <Link
+                                      href={`/c/${companyId}/reports/${report.viewSlug}`}
+                                      className="inline-flex items-center text-muted hover:text-primary transition-colors"
+                                      title="View Report"
+                                    >
+                                      <Icon name="eye" className="w-4 h-4" />
+                                    </Link>
+                                  )}
+                                </>
                               )}
                             </div>
                           </div>
