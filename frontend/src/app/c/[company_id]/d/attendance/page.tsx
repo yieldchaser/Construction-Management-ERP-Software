@@ -518,8 +518,9 @@ export default function AttendancePage() {
             lat: parseFloat(punch.lat),
             lng: parseFloat(punch.lng),
             punch_type: punch.mode.toLowerCase(),
-          shift_multiplier: punch.shift_multiplier,
-          notes: "Offline queued punch synced",
+            shift_multiplier: punch.shift_multiplier,
+            notes: "Offline queued punch synced",
+            captured_at: punch.time,
           }),
         });
         if (res.ok) {

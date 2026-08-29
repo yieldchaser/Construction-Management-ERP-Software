@@ -3917,9 +3917,9 @@ export default function FinancePage() {
                       {usersList.map((u: any) => (
                         <option key={u.id} value={u.id}>{u.name} ({u.role || "—"})</option>
                       ))}
-                      {usersList.length === 0 && (Array.from(new Set(txnSummary.transactions.map((t: any) => t.party))) as any[]).map((p: any, idx) => (
-                        <option key={idx} value="00000000-0000-0000-0000-000000000000">{p}</option>
-                      ))}
+                      {usersList.length === 0 && (
+                        <option value="" disabled>No parties registered yet</option>
+                      )}
                     </select>
                   </div>
 
