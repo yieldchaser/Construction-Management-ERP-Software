@@ -1,5 +1,28 @@
 # Remaining Parity Tasks
 
+> ## ⚠ STALE IN THREE PLACES — corrected 2026-08-29 (Round 3 verification)
+>
+> This file predates the audit fixes and **three of its statements about `log_deletion` are now wrong.**
+> Following it as written would undo work the audit landed:
+>
+> | This file says | Current truth | Landed by |
+> |---|---|---|
+> | `log_deletion` is "non-blocking (never raises into caller), wrapped in try/except" | It **queues the audit row on the caller's session** so the log and the deletion commit together, all-or-nothing. The redundant `try/except: pass` was **removed at every call site** | R2-537 |
+> | `deleted_by` is a positional parameter | `deleted_by` is **keyword-only and required** (`*, deleted_by: str`) — omitting it is a `TypeError`, not a silent `None`. Verified by AST scan: 32 call sites, zero missing | R2-536 |
+> | Router registered at prefix `/apis/v3` | Registered at **`/apis/v3/delete-logs`** (`main.py:680`), with a catch-all 404 for unmatched `/apis/v3/*` paths | R2-291 |
+>
+> **So the closing instruction below — "add a `log_deletion(...)` call (try/except, non-blocking)" — is
+> exactly backwards. Do not wrap it. Let it raise.**
+>
+> The "Skipped (no DELETE endpoint exists)" list below is superseded by finding **R2-760**, which
+> counted the current state properly: three record types now have a void path (bill, work order,
+> purchase order) and sixteen routers still have no delete or cancel at all.
+>
+> **Authoritative source for all outstanding work: [`REMEDIATION_MASTER_PLAN.md`](./REMEDIATION_MASTER_PLAN.md).**
+> Competitor parity specifically: [`COMPETITOR_PARITY_ONSITE.md`](./COMPETITOR_PARITY_ONSITE.md).
+> This file is retained for its record of what was built, not as a source of instructions.
+
+
 Tracking of competitor-parity modules still to be built or extended for SiteFlow.
 
 ## Built / Implemented

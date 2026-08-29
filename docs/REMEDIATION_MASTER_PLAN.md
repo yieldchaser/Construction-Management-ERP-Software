@@ -20,6 +20,7 @@ observation, every ops cleanup, every parked infrastructure item, and the compet
 | `audit/AUDIT_ROUND2_FINDINGS.md` (branch `campaign/waves`) | Every finding **as originally filed** | Reading a finding as filed. Use `git show campaign/waves:audit/AUDIT_ROUND2_FINDINGS.md` — **do not check the branch out** |
 | `docs/COMPETITOR_PARITY_ONSITE.md` | Onsite gap analysis, HAVE/PARTIAL/MISSING, sequenced | Part E |
 | `docs/BACKLOG.md`, `docs/FOUNDER_ACTIONS.md` | Pre-existing deferrals and founder decisions | Part D |
+| `docs/REMAINING_PARITY_TASKS.md` | Historical record of earlier parity work. **Carries a correction header — three of its `log_deletion` statements are stale and following them would undo R2-536/R2-537.** Not a source of instructions | Context only |
 
 **Verification status of what follows.** Every item in Parts A and B was verified by reading the live
 tree on `origin/main` during Round 3, and the ones marked "proved live" were additionally exercised
