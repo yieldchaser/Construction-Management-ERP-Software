@@ -749,6 +749,10 @@ def get_bill_pdf(bill_id: UUID, db: Session = Depends(get_db), current_user=Depe
     # tax_no, same field the Zoho integration reads) - a tax invoice that does
     # not name its recipient's GSTIN cannot be issued.
     party_gstin = ""
+    # R2-747: Rule 46 requires the recipient's name, address and GSTIN. The PDF
+    # printed name and GSTIN only, so the document was still short of one
+    # mandatory element.
+    party_address = ""
     if party:
         if party.library_party_id:
             linked_party = db.query(LibraryParty).filter(LibraryParty.id == party.library_party_id).first()
@@ -756,6 +760,8 @@ def get_bill_pdf(bill_id: UUID, db: Session = Depends(get_db), current_user=Depe
                 party_name = linked_party.name
             if linked_party and getattr(linked_party, "tax_no", None):
                 party_gstin = str(linked_party.tax_no)
+            if linked_party and getattr(linked_party, "address", None):
+                party_address = str(linked_party.address).strip()
         if not party_name and party.user_id:
             party_user = db.query(User).filter(User.id == party.user_id).first()
             if party_user and party_user.name:
@@ -819,6 +825,9 @@ def get_bill_pdf(bill_id: UUID, db: Session = Depends(get_db), current_user=Depe
     ]
     if party_gstin:
         party_lines.append(f"Recipient GSTIN: {party_gstin}")
+    # R2-747: recipient name, address and GSTIN are the Rule 46 recipient trio.
+    if party_address:
+        party_lines.append(f"Recipient Address: {party_address}")
     if place_of_supply:
         party_lines.append(f"Place of Supply: {place_of_supply}")
     if bill.due_date:
@@ -962,6 +971,18 @@ def _validate_bill_line_items(items_json: Optional[str], subtotal: float, invoic
             raise HTTPException(status_code=422, detail="Each line item must be a JSON object")
         if not str(it.get("desc") or it.get("description") or "").strip():
             raise HTTPException(status_code=422, detail="Every line item needs a description")
+        # R2-747: HSN/SAC is mandatory per line on a B2B tax invoice (Rule 46 of
+        # the CGST Rules) and the recipient needs it to claim credit. The PDF
+        # renders the column but the value was never required, so it shipped
+        # blank -- the same Rule 46 defect wearing a header.
+        if is_revenue_invoice_type(invoice_type) and not str(it.get("hsn_sac") or "").strip():
+            raise HTTPException(
+                status_code=422,
+                detail=(
+                    "Every line item on a tax invoice needs an HSN/SAC code "
+                    "(Rule 46, CGST Rules) -- the recipient needs it to claim credit."
+                ),
+            )
         amount = it.get("amount")
         if amount is None:
             amount = float(it.get("qty") or 0) * float(it.get("rate") or 0)
