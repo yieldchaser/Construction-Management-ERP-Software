@@ -238,7 +238,6 @@ export default function ProcurementPage() {
   const [newIndentQty, setNewIndentQty] = useState(50);
   const [newIndentUnit, setNewIndentUnit] = useState("bags");
   const [newIndentSpec, setNewIndentSpec] = useState("");
-  const [newIndentPhoto, setNewIndentPhoto] = useState("");
 
   // New PO form state (Multi-item support)
   const [newPONum, setNewPONum] = useState("");
@@ -277,7 +276,6 @@ export default function ProcurementPage() {
         qty: newIndentQty, 
         unit: newIndentUnit, 
         specOverride: newIndentSpec || undefined,
-        photoUrl: newIndentPhoto || undefined 
       }],
       status: "pending",
       requestedBy: "Amit K (Site Engineer)",
@@ -307,7 +305,6 @@ export default function ProcurementPage() {
     setIndents([newIndent, ...indents]);
     setShowIndentModal(false);
     setNewIndentSpec("");
-    setNewIndentPhoto("");
     setNewIndentNum("");
   };
 
@@ -969,7 +966,7 @@ export default function ProcurementPage() {
         </div>
       </main>
 
-      {/* Add Indent Modal Drawer (Specs & Photo proof overrides per item) */}
+      {/* Add Indent Modal Drawer (Specs overrides per item) */}
       {showIndentModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-background border border-border-custom rounded-lg w-full max-w-md shadow-2xl p-6 space-y-4 text-xs">
@@ -1005,7 +1002,7 @@ export default function ProcurementPage() {
                 </div>
               </div>
 
-              {/* Item-level Spec & Photo override (Screen 5761-5762) */}
+              {/* Item-level Spec override (Screen 5761-5762) */}
               <div className="space-y-1">
                 <label className="text-muted">Line-Item Custom Specification Override</label>
                 <input type="text" value={newIndentSpec} onChange={(e) => setNewIndentSpec(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" placeholder="Grade 53 OPC Cement, Fe 550D Rebars..." />
