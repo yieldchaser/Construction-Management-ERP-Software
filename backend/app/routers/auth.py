@@ -5,6 +5,7 @@ import logging
 import secrets as pysecrets
 import uuid
 from datetime import datetime, timedelta, timezone
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from jose import JWTError, jwt
@@ -953,6 +954,12 @@ class InviteMemberRequest(BaseModel):
     email: EmailStr
     name: str = Field(..., min_length=1)
     role_id: uuid.UUID
+    # R2-746: an optional explicit target. A membership write must not depend
+    # silently on a JWT claim the client cannot see or correct: after a company
+    # switch the claim still named the PREVIOUS company, so an invite issued from
+    # company B's screen granted membership of company A. When supplied it wins;
+    # when omitted the token claim is used, so existing callers keep working.
+    company_id: Optional[uuid.UUID] = None
 
 
 class AcceptInviteRequest(BaseModel):
@@ -971,7 +978,9 @@ def invite_member(
 ):
     """Attach an email address to the caller's company as a working member."""
     user = ctx["user"]
-    company_id = ctx["company_id"]
+    # R2-746: prefer an explicitly-named target. The claim is only a default,
+    # and it is the one that goes stale across a company switch.
+    company_id = payload.company_id or ctx["company_id"]
     require_permission(db, user, company_id, "settings:manage")
 
     email = _normalize_email(payload.email)

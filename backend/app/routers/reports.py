@@ -1270,17 +1270,46 @@ def _rep_sales_deduction_retention(db: Session, cid: uuid.UUID, pid: Optional[uu
         return _REPORT_FAILED
 
 
+# R2-317: BankAccount has no `account_name` column at all, so the statement's
+# bucket label is derived from the account record itself rather than from
+# Payment.account_name, which is unvalidated caller-supplied free text.
+_UNASSIGNED_ACCOUNT_LABEL = "Unassigned (no bank account)"
+
+
+def _bank_account_label(acct):
+    if acct is None:
+        return _UNASSIGNED_ACCOUNT_LABEL
+    parts = [p for p in (acct.bank_name, acct.account_number) if p]
+    if parts:
+        return " - ".join(parts)
+    return acct.account_holder_name or "Bank account"
+
+
 def _rep_bank_statement(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
     try:
-        q = db.query(Payment).filter(Payment.company_id == cid, Payment.account_name.isnot(None))
+        # R2-317: the account_name filter is gone. It silently dropped every
+        # payment recorded without one -- measured in production as 7 of 7
+        # payments, so this report returned nothing for any company and could
+        # never be reconciled against a bank.
+        q = db.query(Payment).filter(Payment.company_id == cid)
         if pid:
             q = q.filter(Payment.project_id == pid)
         payments = q.order_by(Payment.payment_date.asc()).all()
+
+        # Bucket on the real foreign key, not on free text: "HDFC Current" and
+        # "HDFC current" are one account, and a typo can no longer spawn a
+        # phantom statement carrying its own running balance.
+        accounts = {
+            a.id: a
+            for a in db.query(BankAccount).filter(BankAccount.company_id == cid).all()
+        }
+
         by_account = {}
         for p in payments:
-            by_account.setdefault(p.account_name, []).append(p)
+            by_account.setdefault(p.account_id, []).append(p)
         rows = []
-        for account, ps in by_account.items():
+        for account_id, ps in by_account.items():
+            label = _bank_account_label(accounts.get(account_id))
             proj_cache = {}
             party_cache = {}
             running = 0.0
@@ -1303,7 +1332,9 @@ def _rep_bank_statement(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
                     debit = amt
                     running -= amt
                 rows.append({
-                    "Account Name": p.account_name,
+                    # R2-317: the account record's label, so the bucket name can
+                    # no longer disagree with the account it belongs to.
+                    "Account Name": label,
                     "Project Name": proj.name if proj else "",
                     "Party Name": party,
                     "Payment Date": _clean(p.payment_date),

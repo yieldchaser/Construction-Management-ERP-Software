@@ -27,6 +27,8 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field, field_validator
 from app.database import get_db
 from app.auth import get_current_user, verify_project_in_company, verify_company_access, verify_project_access, get_company_membership, require_permission, require_module_view
+# R2-185/R2-407: the shared CSV formula guard (one helper, every export).
+from app.csv_export import csv_safe_cell as _csv_safe_cell, CSV_FORMULA_PREFIXES as _CSV_FORMULA_PREFIXES
 from app.models import (
     StaffEmployee, AttendanceLog, Timesheet,
     TimesheetEntry, PayrollRun, PayrollLineItem, Project, LeaveRequest,
@@ -199,6 +201,19 @@ class TimesheetResponse(BaseModel):
         from_attributes = True
 
 
+class TimesheetHeaderResponse(TimesheetResponse):
+    """A timesheet HEADER, for the weekly approvals table.
+
+    R2-588: both existing GETs (/timesheets/project/{id} and
+    /timesheets/company/{id}) return List[TimesheetEntryResponse] -- entries,
+    not headers. Nothing in the API returned headers at all, so the console's
+    approvals table had nothing to render and its Submit/Approve buttons, which
+    live inside those rows, could never appear. Every timesheet therefore stayed
+    draft forever.
+    """
+    employee_name: Optional[str] = None
+
+
 class TimesheetEntryResponse(BaseModel):
     id: uuid.UUID
     timesheet_id: uuid.UUID
@@ -339,8 +354,17 @@ def punch(payload: PunchRequest, db: Session = Depends(get_db), current_user: Us
         distance_m = round(haversine_distance_m(payload.lat, payload.lng, site_lat, site_lng), 2)
         within_geofence = distance_m <= radius
     else:
-        # No site coords configured → allow punch without GPS enforcement
-        within_geofence = True
+        # R2-750: no site coords configured, so nothing was measured. This used
+        # to set within_geofence = True, which stamped every punch
+        # location_verified=True and "Present" on the strength of a measurement
+        # that never happened. Attendance drives payroll and "GPS Verified" is
+        # an assurance shown to whoever reviews the muster, so an unverifiable
+        # punch is recorded as unverified -- not as verified.
+        #
+        # The project can be given coordinates via PUT /projects/{id} (R2-750
+        # added `location` to ProjectCreate/ProjectUpdate); until then the
+        # honest answer is "not verified", never a silently-passing geofence.
+        within_geofence = False
 
     # R2-210/R2-262/R2-728: aware UTC clock so stored/loaded punch values (aware on
     # Postgres) are always compared against the same flavor.
@@ -532,6 +556,29 @@ def list_project_timesheet_entries(project_id: uuid.UUID, db: Session = Depends(
         res.employee_id = emp_id
         response.append(res)
     return response
+
+
+@router.get("/timesheets/project/{project_id}/headers", response_model=List[TimesheetHeaderResponse])
+def list_project_timesheet_headers(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
+    """R2-588: return the timesheet HEADERS for a project.
+
+    The project and company variants above both return entries; the weekly
+    approvals table needs one row per timesheet (employee, week, hours, status)
+    so Submit and Approve have somewhere to render.
+    """
+    rows = (
+        db.query(Timesheet, StaffEmployee.name.label("employee_name"))
+        .join(StaffEmployee, Timesheet.employee_id == StaffEmployee.id)
+        .filter(Timesheet.project_id == project_id)
+        .order_by(Timesheet.week_start.desc(), StaffEmployee.name.asc())
+        .all()
+    )
+    headers = []
+    for ts, emp_name in rows:
+        item = TimesheetHeaderResponse.model_validate(ts)
+        item.employee_name = emp_name
+        headers.append(item)
+    return headers
 
 
 @router.get("/timesheets/company/{company_id}")
@@ -940,17 +987,6 @@ def get_payslips(run_id: uuid.UUID, db: Session = Depends(get_db), current_user:
     return result
 
 
-_CSV_FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
-
-
-def _csv_safe_cell(value):
-    # R2-407: a cell whose text begins with = + - @ TAB or CR is executed as a
-    # formula when the export CSV is opened in Excel/LibreOffice/Sheets. Prefix
-    # a single quote so the value is treated as text; everything else passes
-    # through untouched (same neutralisation the DPR and BOCW exports use).
-    if isinstance(value, str) and value.startswith(_CSV_FORMULA_PREFIXES):
-        return "'" + value
-    return value
 
 
 @router.get("/payroll/{run_id}/payslips/export")
@@ -1041,6 +1077,7 @@ def latest_payroll_run(company_id: uuid.UUID, db: Session = Depends(get_db), cur
 
 
 from pydantic import BaseModel
+
 
 class LeaveRequestCreate(BaseModel):
     project_id: Optional[uuid.UUID] = None

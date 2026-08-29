@@ -6,6 +6,9 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
 import Icon, { type IconName } from "@/components/marketing/Icon";
+// R2-755: shared CSV guard. Quote-doubling protects the delimiter, not the
+// formula — a leading = + - @ executes when the export opens in Excel/Sheets.
+import { buildCsv } from "@/lib/csv";
 
 interface Transaction {
   id: string;
@@ -400,7 +403,33 @@ export default function FinancePage() {
       });
       if (res.ok) {
         const data = await res.json();
-        alert(`Payments imported successfully! Created ${data.created} transactions.`);
+        // R2-533 clause 4: the importer now reports what it did. A batch that
+        // dropped rows must never again claim a clean success.
+        const created: number = data.created ?? 0;
+        const duplicates: number = data.duplicates ?? 0;
+        const skipped: Array<{ line: number; reason: string }> = data.skipped ?? [];
+        const warnings: string[] = data.warnings ?? [];
+        const summary: string[] = [
+          `Created ${created} transaction${created === 1 ? "" : "s"}.`,
+        ];
+        for (const w of warnings) summary.push(w);
+        if (duplicates > 0) {
+          summary.push(
+            `Skipped ${duplicates} duplicate row${duplicates === 1 ? "" : "s"} already on file.`
+          );
+        }
+        if (skipped.length > 0) {
+          summary.push(
+            `Skipped ${skipped.length} row${skipped.length === 1 ? "" : "s"} that could not be read:`
+          );
+          for (const s of skipped.slice(0, 10)) {
+            summary.push(`Line ${s.line}: ${s.reason}`);
+          }
+          if (skipped.length > 10) {
+            summary.push(`...and ${skipped.length - 10} more.`);
+          }
+        }
+        alert(summary.join("\n"));
         setShowAddModal(false);
         setCsvPreview(null);
         setCsvFile(null);
@@ -1296,7 +1325,9 @@ export default function FinancePage() {
             const exportCsv = () => {
               const rows = [["Party ID", "Name", "Type", "Balance", "Status"]];
               filteredParties.forEach(p => rows.push([p.party_id_custom || "", p.name, p.party_type || "", String(p.balance), p.status]));
-              const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+              // R2-755: party names and IDs are user-controlled free text; the
+              // old builder only quote-doubled, which does not stop a formula.
+              const csv = buildCsv(rows[0], rows.slice(1));
               const blob = new Blob([csv], { type: "text/csv" });
               const url = URL.createObjectURL(blob);
               const a = document.createElement("a");

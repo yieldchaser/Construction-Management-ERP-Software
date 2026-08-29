@@ -6,8 +6,9 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from collections import defaultdict
 from app.database import get_db
-from app.auth import get_current_user, verify_company_access
-from app.models import FaceRecognitionLog, StaffEmployee
+from app.auth import get_current_user, verify_company_access, get_company_membership, verify_project_in_company
+# R2-751: face_punch now takes the current user, so the model is needed here.
+from app.models import FaceRecognitionLog, StaffEmployee, User
 
 router = APIRouter(prefix="/face", tags=["Face Recognition Attendance"], dependencies=[Depends(get_current_user)])
 
@@ -66,7 +67,26 @@ class DailySummary(BaseModel):
 
 
 @router.post("/punch", response_model=FacePunchResponse, status_code=status.HTTP_201_CREATED)
-def face_punch(payload: FacePunchRequest, db: Session = Depends(get_db)):
+def face_punch(
+    payload: FacePunchRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    # R2-751: this was the only endpoint in the router with no company check --
+    # the three read paths all use verify_company_access, so this was an
+    # omission on the one write rather than a module convention. The router is
+    # authenticated but not authorized: any authenticated user of any tenant
+    # could POST a punch naming another tenant's company_id and project_id,
+    # which was then visible to the victim through the guarded GET /face/logs.
+    #
+    # A face-recognition log is presented as biometric evidence of presence, so
+    # an injected row is evidence-shaped. The direct payroll impact is currently
+    # limited only by R2-593 (face punches never become an AttendanceLog) --
+    # two findings cancelling each other's severity by accident. Fixing R2-593
+    # without this would connect an unguarded cross-tenant write to payroll.
+    get_company_membership(db, current_user, payload.company_id)
+    verify_project_in_company(db, payload.project_id, payload.company_id)
+
     log = FaceRecognitionLog(**payload.model_dump())
     db.add(log)
     db.commit()

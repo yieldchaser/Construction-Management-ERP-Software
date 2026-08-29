@@ -14,6 +14,10 @@ from app.models import (
 )
 from app.workflow_controls import get_default_terms
 from app.routers.library import next_party_id_custom
+# R2-745: the shared line-item/tax validator. create_bill was its only caller,
+# so the second bill-creation surface (quotation conversion) bypassed every
+# check it enforces. Imported here so both surfaces cannot drift apart.
+from app.routers.billing import _validate_bill_line_items
 from pydantic import BaseModel, Field, EmailStr, field_validator
 
 router = APIRouter(
@@ -862,10 +866,16 @@ class QuotationConversionResponse(BaseModel):
 )
 def convert_quotation_to_invoice(quotation_id: uuid.UUID, req: QuotationConvertRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """R2-360: turn a CRM quotation into a sale invoice instead of re-keying it
-    by hand in Billing. Money comes from the quotation's own arithmetic (GST is
-    the stored CGST+SGST split), the itemised lines survive into items_json,
-    bill.quotation_id records the link so conversion can be reconciled, and a
-    quotation holds at most one active invoice."""
+    by hand in Billing. Money comes from the quotation's own arithmetic -- GST
+    is the stored CGST+SGST+IGST split, all three components, because an
+    inter-state quotation stores the whole tax in igst_amount and zeroes the
+    other two (D4). The itemised lines survive into items_json, including
+    hsn_sac, bill.quotation_id records the link so conversion can be
+    reconciled, and a quotation holds at most one active invoice.
+
+    R2-745/R2-747: the payload is validated by _validate_bill_line_items, the
+    same contract create_bill enforces. It used to be hand-assembled and
+    unchecked, which is how the tax and the HSN column were lost."""
     quot_uuid = uuid.UUID(str(quotation_id))
     quot = db.query(CRMQuotation).filter(CRMQuotation.id == quot_uuid).first()
     if not quot:
@@ -907,7 +917,14 @@ def convert_quotation_to_invoice(quotation_id: uuid.UUID, req: QuotationConvertR
     if number_clash:
         raise HTTPException(status_code=409, detail="Invoice number already exists for this company")
 
-    gst_amount = float(quot.cgst_amount or 0) + float(quot.sgst_amount or 0)
+    # R2-745: all three tax components, matching crm.py:734 and :801. Dropping
+    # igst_amount made an inter-state invoice record gst_amount 0 and book the
+    # tax-inclusive total as taxable value.
+    gst_amount = (
+        float(quot.cgst_amount or 0)
+        + float(quot.sgst_amount or 0)
+        + float(getattr(quot, "igst_amount", 0) or 0)
+    )
     total_payable = float(quot.total_amount or 0)
     subtotal = total_payable - gst_amount
 
@@ -920,10 +937,20 @@ def convert_quotation_to_invoice(quotation_id: uuid.UUID, req: QuotationConvertR
                 "qty": float(i.qty),
                 "rate": float(i.selling_price or 0) + float(i.supply_rate or 0) + float(i.installation_rate or 0),
                 "amount": float(i.total_amount or 0),
+                # R2-747: carried through so the invoice's HSN/SAC column is not
+                # structurally blank even when the user filled it on the quotation.
+                "hsn_sac": i.hsn_sac or "",
             }
             for i in items
         ]
     )
+
+    # R2-745/R2-747: hold this surface to the same contract as create_bill.
+    # Without it, a quotation carrying additional_charges or round_off emits
+    # lines that under-sum the subtotal, and a tax invoice can ship with no
+    # HSN/SAC -- neither of which any downstream step catches, because the PDF
+    # renders whatever is stored.
+    _validate_bill_line_items(items_json, subtotal, "sale")
 
     bill = Bill(
         id=uuid.uuid4(),

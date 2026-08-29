@@ -1382,6 +1382,28 @@ export default function AttendancePage() {
                   <p className="text-[10px] text-muted max-w-xs mx-auto leading-relaxed">
                     Geofencing matches GPS punch coordinates to project boundaries within a {projectSettings.attendance_radius_meters}m radius limit.
                   </p>
+
+                  {/* R2-750: this tab used to render a map-looking panel with no
+                      way to enter coordinates, while the API had no `location`
+                      writer on the path that creates real projects. Every
+                      project was null, so the geofence never ran and every punch
+                      was stamped GPS-verified without a measurement. */}
+                  <div className="text-left max-w-xs mx-auto space-y-1">
+                    <label className="block text-[10px] font-bold text-muted uppercase tracking-wider">
+                      Site coordinates (latitude, longitude)
+                    </label>
+                    <input
+                      value={projectSettings.location || ""}
+                      onChange={(e) => setProjectSettings({ ...projectSettings, location: e.target.value })}
+                      placeholder="22.3072,73.1812"
+                      className="w-full rounded-md border border-border-custom bg-background px-2 py-1.5 text-xs text-foreground"
+                    />
+                    <p className="text-[9px] text-muted">
+                      Leave empty only if the site has no fixed position. An empty value means
+                      punches cannot be measured, so they are recorded as not GPS-verified
+                      rather than as verified.
+                    </p>
+                  </div>
                 </div>
               )}
             </div>

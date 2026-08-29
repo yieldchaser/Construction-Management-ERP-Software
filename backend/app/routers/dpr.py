@@ -11,6 +11,7 @@ from app.auth import get_current_user, verify_project_access, get_company_member
 from app.models import DailyProgressReport, Task, WarehouseInventory, MaterialTransaction, Project, User
 from app.workflow_controls import enforce_entry_creation_window, enforce_stock_availability, get_company
 from pydantic import BaseModel, Field
+from app.csv_export import csv_safe_cell as _csv_safe_cell, CSV_FORMULA_PREFIXES as _CSV_FORMULA_PREFIXES
 
 router = APIRouter(
     prefix="/dpr",
@@ -18,17 +19,6 @@ router = APIRouter(
     dependencies=[Depends(get_current_user)]
 )
 
-_CSV_FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
-
-
-def _csv_safe_cell(value):
-    # R2-266: a cell whose text begins with = + - @ TAB or CR is executed as a
-    # formula when the export CSV is opened in Excel/LibreOffice/Sheets. Prefix
-    # a single quote so the value is treated as text; everything else passes
-    # through untouched.
-    if isinstance(value, str) and value.startswith(_CSV_FORMULA_PREFIXES):
-        return "'" + value
-    return value
 
 class MaterialConsumptionSchema(BaseModel):
     material_name: str
@@ -91,9 +81,21 @@ def create_dpr(req: DPRCreateRequest, db: Session = Depends(get_db), current_use
     task_uuid = None
     if req.task_id:
         task_uuid = uuid.UUID(str(req.task_id))
-        task = db.query(Task).filter(Task.id == task_uuid).first()
+        # R2-599: the task must belong to the project this report is filed
+        # against. Resolving it by id alone let a caller advance a task in any
+        # project -- or any company -- whose id they knew, because the
+        # permission check above authorises against `project`, not against the
+        # task. Scoping the query to the project makes the cross-project write
+        # unrepresentable: a foreign task id now selects no row at all.
+        task = db.query(Task).filter(
+            Task.id == task_uuid,
+            Task.project_id == project_uuid,
+        ).first()
         if not task:
-            raise HTTPException(status_code=404, detail="Task not found")
+            raise HTTPException(
+                status_code=400,
+                detail="Task not found in this project",
+            )
         # Update task status on progress update
         if task.status == "not_started":
             task.status = "in_progress"

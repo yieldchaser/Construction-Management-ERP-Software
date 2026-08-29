@@ -675,6 +675,14 @@ class Bill(Base):
     # non-subcon bills and legacy rows; when set, cumulative billing is validated
     # against the WO's estimated_work_amount.
     wo_id = Column(UUID(as_uuid=True), ForeignKey("work_orders.id", ondelete="SET NULL"), nullable=True)
+    # R2-371: the purchase order this bill bills against. Null for non-purchase
+    # bills and legacy rows. Without it, billed-vs-ordered is uncomputable and
+    # over-invoicing against a PO is structurally undetectable -- a vendor can
+    # bill ₹5,00,000 against a ₹1,00,000 PO and no query in the product can
+    # relate the two documents. The only prior path was
+    # Bill.match_id -> ThreeWayMatch.po_id, and of 7 purchase bills in
+    # production zero carried a match_id.
+    po_id = Column(UUID(as_uuid=True), ForeignKey("purchase_orders.id", ondelete="SET NULL"), nullable=True)
     match_id = Column(UUID(as_uuid=True), ForeignKey("three_way_matches.id", ondelete="SET NULL"), nullable=True)
     # Transaction sub-entity persistence (Project Tab Transaction build)
     items_json = Column(Text, nullable=True)  # JSON array of line items: {desc, cost_code_id, cost_code_name, qty, rate, amount}
@@ -1028,10 +1036,21 @@ class ClientReport(Base):
 class Equipment(Base):
     """Assets/Machinery fleet owned or hired by the company."""
     __tablename__ = "equipment"
+    # R2-049 / R2-358b: `code` used to be unique=True at column level, which
+    # made it unique across every tenant on the platform. Two different
+    # companies could not both register "EXC-01" -- whoever claimed a code
+    # first squatted it platform-wide, and the resulting 400 confirmed to the
+    # caller that some other tenant already held that code. Equipment codes are
+    # short and conventional, so collisions were near-certain as tenants grew.
+    # Every other duplicate guard in this codebase is company-scoped; this one
+    # now is too, enforced by constraint so no call site can bypass it.
+    __table_args__ = (
+        UniqueConstraint("company_id", "code", name="uq_equipment_company_id_code"),
+    )
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
     name = Column(String(255), nullable=False)
-    code = Column(String(100), unique=True, nullable=False)
+    code = Column(String(100), nullable=False)
     category = Column(String(100), nullable=False)        # Excavator, Crane, Mixer, Generator, etc.
     ownership_type = Column(String(50), nullable=False)     # Owned, Hired
     status = Column(String(50), default="available", nullable=False) # available, deployed, maintenance, inactive

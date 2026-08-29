@@ -204,6 +204,39 @@ export default function HRPayrollPage() {
     }
   };
 
+  // R2-588: `timesheets` is read by the Weekly Timesheet Approvals table but
+  // nothing ever wrote to it -- setTimesheets appeared only as the useState and
+  // an optimistic updater mapping over a permanently empty array. The Submit and
+  // Approve buttons live inside those rows, so the whole approval workflow was
+  // unreachable and every timesheet stayed draft forever. The nearest fetch
+  // loaded `timesheetLogs` (entries, a different state) for the Daily Activity
+  // table below. Headers now come from the endpoint added for them.
+  const fetchTimesheets = async () => {
+    if (!projectId) return;
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/hr/timesheets/project/${projectId}/headers`, { headers: authHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        setTimesheets(
+          (Array.isArray(data) ? data : []).map((ts: {
+            id: string; employee_id: string; employee_name?: string | null;
+            week_start: string; week_end: string; total_hours?: number; status: string;
+          }) => ({
+            id: ts.id,
+            employeeId: ts.employee_id,
+            employeeName: ts.employee_name || "",
+            weekStart: ts.week_start,
+            weekEnd: ts.week_end,
+            totalHours: Number(ts.total_hours ?? 0),
+            status: ts.status as Timesheet["status"],
+          }))
+        );
+      }
+    } catch (e) {
+      console.error("Failed to fetch timesheets", e);
+    }
+  };
+
   const fetchProjectTasks = async () => {
     if (!projectId) return;
     try {
@@ -435,6 +468,7 @@ export default function HRPayrollPage() {
   useEffect(() => {
     if (projectId && tab === "timesheets") {
       fetchTimesheetLogs();
+      fetchTimesheets();
       fetchProjectTasks();
     }
   }, [projectId, tab]);
@@ -578,7 +612,10 @@ export default function HRPayrollPage() {
         headers: authHeaders()
       });
       if (res.ok) {
+        // Keep the optimistic update (it is instant) but re-read from the
+        // server so the row can never show a status the API did not accept.
         setTimesheets(prev => prev.map(ts => ts.id === tsId ? { ...ts, status: action === "submit" ? "submitted" : "approved" } : ts));
+        fetchTimesheets();
       } else {
         const err = await res.json().catch(() => ({}));
         alert(`Failed to ${action} timesheet: ${typeof err.detail === "string" ? err.detail : "Server error"}`);
@@ -665,6 +702,8 @@ export default function HRPayrollPage() {
       if (res.ok) {
         setShowNewTimesheetDrawer(false);
         fetchTimesheetLogs();
+        // A new entry can create or grow a header row in the approvals table.
+        fetchTimesheets();
       } else {
         const err = await res.json().catch(() => ({}));
         alert(`Failed to save timesheet entry: ${typeof err.detail === "string" ? err.detail : "Server error"}`);

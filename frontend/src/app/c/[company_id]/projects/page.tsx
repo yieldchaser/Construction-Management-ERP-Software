@@ -5,6 +5,9 @@ import { useParams, useRouter } from "next/navigation";
 import { getApiHost } from "@/lib/api";
 import { CustomFieldsSection, useCustomFields } from "@/components/CustomFieldsSection";
 import Icon from "@/components/marketing/Icon";
+// R2-755: shared CSV guard — quote-doubling protects the delimiter, not the
+// formula. A leading = + - @ is executed when the export opens in Excel/Sheets.
+import { buildCsv } from "@/lib/csv";
 
 type Project = {
   id: string;
@@ -206,7 +209,7 @@ export default function ProjectsPage() {
       String(p.cash_out ?? 0),
       String(p.todo_pending ?? 0),
     ]);
-    const csv = [headers, ...rows].map((r) => r.join(",")).join("\n");
+    const csv = buildCsv(headers, rows);
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

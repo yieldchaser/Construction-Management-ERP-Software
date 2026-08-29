@@ -6,6 +6,9 @@ import { useParams, useRouter } from "next/navigation";
 import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 import Icon, { type IconName } from "@/components/marketing/Icon";
+// R2-755: shared CSV guard. Quote-doubling protects the delimiter, not the
+// formula — a leading = + - @ executes when the export opens in Excel/Sheets.
+import { buildCsv } from "@/lib/csv";
 
 interface ReportItem {
   name: string;
@@ -265,10 +268,12 @@ export default function ReportsDashboard() {
       const rows: Record<string, any>[] = data.rows || [];
       const headers = rows[0] ? Object.keys(rows[0]) : [];
 
-      const csvContent = [
-        headers.map(h => `"${String(h ?? "").replace(/"/g, '""')}"`).join(","),
-        ...rows.map(r => headers.map(h => `"${String(r[h] ?? "").replace(/"/g, '""')}"`).join(","))
-      ].join("\n");
+      // R2-755: this export quoted its cells but never neutralised a leading
+      // = + - @, so a value typed by a user executed as a formula on open.
+      const csvContent = buildCsv(
+        headers,
+        rows.map(r => headers.map(h => r[h] ?? "")),
+      );
 
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);

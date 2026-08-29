@@ -7,6 +7,8 @@ import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 import Icon from "@/components/marketing/Icon";
 import { isMissingOrDemoTenant, redirectToLogin } from "@/lib/company-guard";
+// R2-755: shared CSV guard, so this export cannot drift from the other four.
+import { csvSafeCell, csvQuote } from "@/lib/csv";
 
 const escapeHtml = (value: unknown) =>
   String(value)
@@ -663,14 +665,8 @@ export default function DynamicReportViewPage() {
       return value;
     };
     const headers = ["#", ...exportColumns];
-    // R2-396: a string cell beginning with = + - @ TAB or CR executes as a
-    // formula when the export opens in Excel/LibreOffice/Sheets. Prefix a
-    // single quote so it is treated as text; every other cell passes through
-    // byte-identical (mirrors the backend _csv_safe_cell guard).
-    const csvSafeCell = (value: unknown): string => {
-      if (typeof value !== "string") return String(value);
-      return /^[=+@\t\r-]/.test(value) ? `'${value}` : value;
-    };
+    // R2-755: lifted into lib/csv.ts so every CSV builder can share it. The
+    // guard was correct here and simply did not reach the other four exports.
     const dataRows = processedData.map((row, i) => [
       String(i + 1),
       ...exportColumns.map(col => formatExportCell(row[col]))
@@ -777,7 +773,7 @@ export default function DynamicReportViewPage() {
     // Default to CSV / Excel (CSV formatted stream)
     const csvContent = [
       headers.join(","),
-      ...dataRows.map(r => r.map(csvSafeCell).map(c => `"${c.replace(/"/g, '""')}"`).join(","))
+      ...dataRows.map(r => r.map(c => csvQuote(csvSafeCell(c))).join(","))
     ].join("\n");
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });

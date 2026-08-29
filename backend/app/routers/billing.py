@@ -9,7 +9,8 @@ from app.database import get_db
 from app.auth import get_current_user, verify_project_in_company, verify_project_access, verify_company_access, get_company_membership, require_permission, require_module_view
 from app.models import (
     WorkOrder, WorkOrderItem, Bill, TransactionDeduction,
-    DebitNote, CreditNote, CompanyTeam, User, Company, LibraryParty, Project, ThreeWayMatch, ProjectParty
+    DebitNote, CreditNote, CompanyTeam, User, Company, LibraryParty, Project, ThreeWayMatch, ProjectParty,
+    PurchaseOrder,
 )
 from app import models
 from app.party_names import resolve_party_name
@@ -112,6 +113,10 @@ class BillCreateRequest(BaseModel):
     # exactly one active work order on the project. Cumulative billing is validated
     # against the WO's estimated_work_amount.
     wo_id: Optional[UUID] = None
+    # R2-371: the purchase order this purchase bill is raised against. When set,
+    # cumulative billing is validated against the PO's total_amount, which is
+    # the control that makes over-invoicing against a PO detectable.
+    po_id: Optional[UUID] = None
     terms: Optional[str] = None  # Terms & Conditions; defaults to company Invoice Terms on create
     # Theme B (soft flag): optional link to an APPROVED ThreeWayMatch. Ignored for
     # sale invoices; required to be approved + same company/project when supplied on
@@ -164,6 +169,9 @@ class BillResponse(BaseModel):
     match_id: Optional[UUID] = None
     match_status: Optional[str] = None
     wo_id: Optional[UUID] = None
+    # R2-371: the purchase order this bill is raised against, null when it was
+    # not raised against one.
+    po_id: Optional[UUID] = None
 
     class Config:
         from_attributes = True
@@ -494,6 +502,7 @@ def get_bills(project_id: UUID, invoice_type: Optional[str] = None, db: Session 
                 match_id=b.match_id,
                 match_status=_derive_bill_match_status(db, b),
                 wo_id=b.wo_id,
+                po_id=b.po_id,
             )
         )
     return res
@@ -558,6 +567,7 @@ def cancel_bill(bill_id: UUID, db: Session = Depends(get_db), current_user: User
         match_id=bill.match_id,
         match_status=_derive_bill_match_status(db, bill),
         wo_id=bill.wo_id,
+        po_id=bill.po_id,
     )
 
 
@@ -625,6 +635,7 @@ def approve_bill(bill_id: UUID, db: Session = Depends(get_db), current_user: Use
         match_id=bill.match_id,
         match_status=_derive_bill_match_status(db, bill),
         wo_id=bill.wo_id,
+        po_id=bill.po_id,
     )
 
 
@@ -738,6 +749,10 @@ def get_bill_pdf(bill_id: UUID, db: Session = Depends(get_db), current_user=Depe
     # tax_no, same field the Zoho integration reads) - a tax invoice that does
     # not name its recipient's GSTIN cannot be issued.
     party_gstin = ""
+    # R2-747: Rule 46 requires the recipient's name, address and GSTIN. The PDF
+    # printed name and GSTIN only, so the document was still short of one
+    # mandatory element.
+    party_address = ""
     if party:
         if party.library_party_id:
             linked_party = db.query(LibraryParty).filter(LibraryParty.id == party.library_party_id).first()
@@ -745,6 +760,8 @@ def get_bill_pdf(bill_id: UUID, db: Session = Depends(get_db), current_user=Depe
                 party_name = linked_party.name
             if linked_party and getattr(linked_party, "tax_no", None):
                 party_gstin = str(linked_party.tax_no)
+            if linked_party and getattr(linked_party, "address", None):
+                party_address = str(linked_party.address).strip()
         if not party_name and party.user_id:
             party_user = db.query(User).filter(User.id == party.user_id).first()
             if party_user and party_user.name:
@@ -808,6 +825,9 @@ def get_bill_pdf(bill_id: UUID, db: Session = Depends(get_db), current_user=Depe
     ]
     if party_gstin:
         party_lines.append(f"Recipient GSTIN: {party_gstin}")
+    # R2-747: recipient name, address and GSTIN are the Rule 46 recipient trio.
+    if party_address:
+        party_lines.append(f"Recipient Address: {party_address}")
     if place_of_supply:
         party_lines.append(f"Place of Supply: {place_of_supply}")
     if bill.due_date:
@@ -951,6 +971,18 @@ def _validate_bill_line_items(items_json: Optional[str], subtotal: float, invoic
             raise HTTPException(status_code=422, detail="Each line item must be a JSON object")
         if not str(it.get("desc") or it.get("description") or "").strip():
             raise HTTPException(status_code=422, detail="Every line item needs a description")
+        # R2-747: HSN/SAC is mandatory per line on a B2B tax invoice (Rule 46 of
+        # the CGST Rules) and the recipient needs it to claim credit. The PDF
+        # renders the column but the value was never required, so it shipped
+        # blank -- the same Rule 46 defect wearing a header.
+        if is_revenue_invoice_type(invoice_type) and not str(it.get("hsn_sac") or "").strip():
+            raise HTTPException(
+                status_code=422,
+                detail=(
+                    "Every line item on a tax invoice needs an HSN/SAC code "
+                    "(Rule 46, CGST Rules) -- the recipient needs it to claim credit."
+                ),
+            )
         amount = it.get("amount")
         if amount is None:
             amount = float(it.get("qty") or 0) * float(it.get("rate") or 0)
@@ -1092,6 +1124,44 @@ def create_bill(req: BillCreateRequest, db: Session = Depends(get_db), current_u
                     ),
                 )
 
+    # R2-371: a bill raised against a purchase order must be comparable to it.
+    # Scope the PO to this company/project and cap cumulative billing at its
+    # total_amount. This is the control that makes over-invoicing against a PO
+    # detectable at all -- before it, a vendor could bill far beyond the PO and
+    # no query in the product could relate the two documents. Mirrors the wo_id
+    # ceiling added by R2-253.
+    po_id = req.po_id
+    if po_id is not None:
+        po = db.query(PurchaseOrder).filter(PurchaseOrder.id == po_id).first()
+        if not po:
+            raise HTTPException(status_code=404, detail="Purchase order not found")
+        if po.company_id != req.company_id or po.project_id != req.project_id:
+            raise HTTPException(
+                status_code=400,
+                detail="Purchase order does not belong to this company/project",
+            )
+        already_billed = float(
+            db.query(func.coalesce(func.sum(Bill.subtotal), 0))
+            .filter(
+                Bill.company_id == req.company_id,
+                Bill.project_id == req.project_id,
+                Bill.po_id == po_id,
+                Bill.status != "Cancelled",
+            )
+            .scalar()
+            or 0.0
+        )
+        ceiling = float(po.total_amount or 0.0)
+        if already_billed + float(req.subtotal) > ceiling:
+            raise HTTPException(
+                status_code=422,
+                detail=(
+                    f"Purchase bill exceeds PO {po.po_number}: cumulative billing "
+                    f"₹{already_billed + float(req.subtotal):,.2f} against committed "
+                    f"₹{ceiling:,.2f}. Raise a PO amendment first."
+                ),
+            )
+
     # Workflow Controls: Finance Controls (Pre-Tax Deduction/Retention order)
     company = get_company(db, req.company_id)
     pretax_order = bool(company.pretax_deduction_retention) if company else False
@@ -1150,6 +1220,7 @@ def create_bill(req: BillCreateRequest, db: Session = Depends(get_db), current_u
         ship_to=req.ship_to,
         boq_document_id=req.boq_document_id,
         wo_id=wo_id,
+        po_id=po_id,
         match_id=match_id,
         # Settings -> Terms & Conditions -> Invoice Terms (or Subcon Terms for
         # subcon invoices): pre-fill the company default when the caller doesn't
@@ -1244,6 +1315,8 @@ def create_bill(req: BillCreateRequest, db: Session = Depends(get_db), current_u
         match_id=bill.match_id,
         match_status=_derive_bill_match_status(db, bill),
         wo_id=bill.wo_id,
+        # R2-371: echo the purchase order this bill was raised against.
+        po_id=bill.po_id,
     )
 
 
@@ -1317,6 +1390,7 @@ def link_bill_match(bill_id: UUID, req: BillMatchLinkRequest, db: Session = Depe
         match_id=bill.match_id,
         match_status=_derive_bill_match_status(db, bill),
         wo_id=bill.wo_id,
+        po_id=bill.po_id,
     )
 
 

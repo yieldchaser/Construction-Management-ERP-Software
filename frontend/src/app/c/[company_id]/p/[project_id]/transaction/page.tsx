@@ -454,7 +454,10 @@ function NewTransactionModal({
   const [shipTo, setShipTo] = useState("");
 
   // Add Item rows (subtotal calculator; cost code from library)
-  const [items, setItems] = useState<{ desc: string; costCodeId: string; unit: string; qty: string; rate: string }[]>([]);
+  // R2-747: HSN/SAC is mandatory per line on a tax invoice (Rule 46, CGST
+  // Rules) and the backend now rejects a revenue invoice without it, so the
+  // editor has to be able to supply it rather than leaving the user blocked.
+  const [items, setItems] = useState<{ desc: string; hsn: string; costCodeId: string; unit: string; qty: string; rate: string }[]>([]);
   // Deduction rows
   const [deductions, setDeductions] = useState<{ type: string; mode: "amount" | "percent"; value: string; notes: string }[]>([]);
   const [retentionPct, setRetentionPct] = useState("");
@@ -485,7 +488,7 @@ function NewTransactionModal({
     [items]
   );
 
-  const addItem = () => setItems((s) => [...s, { desc: "", costCodeId: "", unit: "", qty: "", rate: "" }]);
+  const addItem = () => setItems((s) => [...s, { desc: "", hsn: "", costCodeId: "", unit: "", qty: "", rate: "" }]);
   const addDeduction = () => setDeductions((s) => [...s, { type: "TDS", mode: "percent", value: "", notes: "" }]);
 
   const selectedMember = members.find((m) => m.company_team_id === partyId || m.user_id === partyId);
@@ -513,6 +516,9 @@ function NewTransactionModal({
           const cc = costCodes.find((c) => c.id === it.costCodeId);
           return {
             desc: it.desc,
+            // R2-747: carried into the invoice so the HSN/SAC column is not
+            // structurally blank.
+            hsn_sac: it.hsn || "",
             cost_code_id: it.costCodeId || null,
             cost_code_name: cc ? `${cc.code} · ${cc.name}` : null,
             unit: it.unit || null,
@@ -747,7 +753,19 @@ function NewTransactionModal({
             </div>
             {items.map((it, i) => (
               <div key={i} className="grid grid-cols-12 gap-2 mb-2">
-                <input placeholder="Description" value={it.desc} onChange={(e) => setItems((s) => s.map((x, j) => j === i ? { ...x, desc: e.target.value } : x))} className="col-span-3 rounded-md border border-border-custom bg-background px-2 py-1.5 text-sm text-foreground" />
+                <input placeholder="Description" value={it.desc} onChange={(e) => setItems((s) => s.map((x, j) => j === i ? { ...x, desc: e.target.value } : x))} className={(cfg.key === "sales_invoice" || cfg.key === "material_sales" ? "col-span-2" : "col-span-3") + " rounded-md border border-border-custom bg-background px-2 py-1.5 text-sm text-foreground"} />
+                {/* R2-747: HSN/SAC is required per line on a tax invoice, so the
+                    field is shown exactly where the backend demands it. Showing
+                    it only for revenue types keeps every other form unchanged. */}
+                {(cfg.key === "sales_invoice" || cfg.key === "material_sales") && (
+                  <input
+                    placeholder="HSN/SAC"
+                    title="HSN/SAC code — mandatory on a tax invoice (Rule 46, CGST Rules)"
+                    value={it.hsn}
+                    onChange={(e) => setItems((s) => s.map((x, j) => j === i ? { ...x, hsn: e.target.value } : x))}
+                    className="col-span-1 rounded-md border border-border-custom bg-background px-2 py-1.5 text-sm text-foreground"
+                  />
+                )}
                 <select value={it.costCodeId} onChange={(e) => setItems((s) => s.map((x, j) => j === i ? { ...x, costCodeId: e.target.value } : x))} className="col-span-2 rounded-md border border-border-custom bg-background px-2 py-1.5 text-sm text-foreground">
                   <option value="">Cost Code</option>
                   {costCodes.map((c) => <option key={c.id} value={c.id}>{c.code} · {c.name}</option>)}
