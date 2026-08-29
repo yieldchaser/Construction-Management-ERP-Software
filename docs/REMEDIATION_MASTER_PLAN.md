@@ -9,6 +9,58 @@ observation, every ops cleanup, every parked infrastructure item, and the compet
 
 ---
 
+## STATUS — updated 2026-08-29 after run 1, independently verified
+
+Run 1 (agent "Hy4") closed **15 findings in 15 commits, all confirmed on `origin/main`** (merged as
+PR #15, then commits `e0b1689` … `c70a96a`). I re-verified a sample directly against the source rather
+than accepting the report:
+
+| Verified by me | Result |
+|---|---|
+| R2-745 — the igst term AND the `_validate_bill_line_items("sale")` call in `convert_quotation_to_invoice` | ✅ exactly as specified |
+| R2-755 — all **5 of 5** frontend CSV builders now import the shared `lib/csv.ts` | ✅ complete sweep |
+| R2-743 — shared `backend/app/csv_export.py` + an enumeration test | ✅ consolidated, not per-file |
+| R2-751 — `get_company_membership` + `verify_project_in_company` on `POST /face/punch` | ✅ |
+| R2-049 — `UniqueConstraint("company_id", "code")` replaces the global unique | ✅ |
+| R2-533 — importer is idempotent and reports `dated_today` | ✅ |
+
+### CLOSED — do not redo
+
+**All 8 Part B unmapped regressions:** R2-533, R2-534, R2-599, R2-049, R2-358, R2-317, R2-371, R2-588.
+**All 4 Part A CRITICALs:** R2-743, R2-744, R2-745, R2-746.
+**Part A HIGHs:** R2-747, R2-750, R2-751, R2-755.
+**Part C:** C1.
+
+### STILL OPEN — this is the remaining work
+
+- **D-014** Part A HIGH: R2-749, R2-753, R2-754, R2-756, R2-758, R2-762, R2-764
+- **D-015** Part A MED/LOW: R2-748, R2-752, R2-757, R2-759, R2-760, R2-761, R2-763
+- **D-016** Part C: C2–C8, C10, C11 (C9 deliberately left)
+- **D-017** index page performance — untouched, needs its own session
+- **D-018** Part E parity — now unblocked
+- **D-019** `uq_bills_po_id` / `uq_equipment_company_id_code` **may not exist in production** — both
+  migrations skip with a NOTICE while violating rows exist. Until the purge runs, those guarantees are
+  not enforced. **Founder-owned (Part D).**
+
+### ⚠ THE BASELINE IS RED — read before writing any code
+
+`python -m pytest` in `backend/` currently reports **45 failures across 16 files** (41 `AssertionError`,
+2 `KeyError`, 1 `SyntaxError`, measured 2026-08-29 on `origin/main`). Run 1 reported 44 and stated they
+were pre-existing and unchanged by its work; the count has since moved by one.
+
+**You cannot prove you introduced no regression against a red baseline you have not characterised.**
+Triage these before anything else — see Part G.
+
+One is already diagnosed and is a **broken gate, not broken code**:
+`tests/coverage/test_r2_536_delete_log_records_actor.py:35` opens source files with `encoding="utf-8"`
+and dies on the UTF-8 BOM in `admin_migrations.py` (`SyntaxError: invalid non-printable character
+U+FEFF`) **before it scans anything**. The underlying code is fine — I re-ran my own AST scan against
+current `main`: **32 `log_deletion` call sites, zero missing `deleted_by`.** Fix is `utf-8-sig`.
+Assume others in this set are also stale or broken tests rather than live defects until you have
+checked each one.
+
+---
+
 ## 0. Where the evidence lives
 
 | Document | What it holds | You need it for |
@@ -235,6 +287,20 @@ starting.**
 ---
 
 ## Part G — suggested order
+
+### RUN 2 STARTS HERE
+
+**G0 — triage the 45 failing tests before writing any code.** For each: does it fail because the code
+is wrong, or because the test is stale/broken? Produce a list splitting them into
+`CODE_DEFECT` / `BROKEN_TEST` / `STALE_EXPECTATION`, fix the broken tests, and file any genuine code
+defect as a new finding (continue numbering from R2-765). One is already solved for you: the
+`utf-8`/BOM crash in the R2-536 gate, above. **Do not skip this** — every "no regressions" claim you
+make afterwards depends on a baseline you can name, and several of these tests guard findings this
+audit already verified as fixed (R2-487, R2-412/413, the regression pins), so a red one there is
+suspicious in both directions.
+
+Then:
+
 
 1. **Part B's eight unmapped regressions** — highest severity, and money/tenancy defects hiding behind
    rows that read closed: R2-533, R2-534, R2-599, R2-049+R2-358, R2-371, R2-317, R2-588
