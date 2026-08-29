@@ -1269,6 +1269,8 @@ finding read **as filed** rather than from its register note.
 | **R2-760** | **MEDIUM** | **3 of 19 record types gained a void path and the row closed for all 19 — DPR, NCR, inspection, wastage, asset and custom-field records are still permanent; no D-code, no BACKLOG line** | worklist (R2-177) |
 | **R2-761** | **MEDIUM** | **Multi Level Approval panel carries two contradicting notices; the enforcement one omits Payment Entries, the category the dropdown opens on and one that IS enforced** | worklist (R2-480) |
 | **R2-762** | **HIGH** | **subcon register prints `0%` progress and `₹0` billed on every work order from two hardcoded literals; `WOResponse` carries neither field. R2-494's em-dash reached `status` only** | worklist (R2-494) |
+| **R2-763** | **LOW** | **one "Ship To" input posts into `ship_to`, `notes` and `details` across three document types; R2-053's blocking half is fixed, this is its disclosed UI residual** | worklist (R2-053) |
+| **R2-764** | **HIGH** | **cost-code library gate reached payments only — crm quotation items, hr payroll profiles and library materials still write unvalidated codes that roll up nowhere (R2-609 named 4 surfaces, 1 fixed)** | worklist (R2-609) |
 
 ## FINDING R2-743 — 🔴 CRITICAL: the BI export feed writes user-controlled text straight into CSV cells, so the one export built for external consumption is the one still formula-injectable
 
@@ -2804,3 +2806,112 @@ read. So this is not purely a frontend fix.
 A test asserting the subcon register's billed column reflects a bill raised against the work order:
 create a WO, raise a bill carrying its `wo_id`, assert the row's billed value is non-zero. Fails today
 regardless of the data, since the value is a constant.
+
+---
+
+## FINDING R2-763 — 🔵 LOW: one input labelled "Ship To" is posted into four different fields across three document types, so a shipping address is stored as a payment request's `details`
+
+**Source:** verifying worklist row R2-053. The register row discloses this explicitly — *"UI half (Ship-To
+mislabel transaction/page.tsx:557) still open"* — so it is a known residual on a row marked
+FIX_VERIFIED, filed here to give it somewhere to live.
+
+### The blocking half is genuinely fixed
+R2-053's severity driver was that a payment request could not be created at all unless an unrelated
+field was filled in: the API declared `details: str` (required) while the model had it nullable, so a
+blank Ship To sent `null` and got a 422 that named nothing the user could act on.
+
+`finance.py:729-731` now reads:
+```python
+# R2-053: matches models.PaymentRequest.details (nullable=True); leaving
+details: Optional[str] = None
+```
+Schema and model agree; the 422 is gone.
+
+### What remains
+`transaction/page.tsx` has one state variable, `shipTo` (`:454`), rendered under one label — *"Ship To
+(addressing)"* with the placeholder *"Optional ship-to / notes"* (`:815-816`) — and posted to four
+destinations depending on which document the modal is creating:
+
+| Branch | Endpoint | Field it fills | Right field? |
+|---|---|---|---|
+| bill / invoice | `/billing/...` | `ship_to` (`:580`) | ✅ yes |
+| debit note | `/billing/debit-notes` | `notes` (`:593`) | ✖ |
+| credit note | `/billing/credit-notes` | `notes` (`:606`) | ✖ |
+| payment request | `/finance/payment-requests/{cid}` | `details` (`:619`) | ✖ |
+
+So a user typing a delivery address while raising a payment request stores that address in the
+request's `details` column — the field other surfaces render as the request's description.
+
+### Why LOW
+- No amount is misstated, nothing is blocked, and nothing is lost — the text is stored, just in a
+  differently-named column.
+- The placeholder *"Optional ship-to / notes"* half-discloses the dual use, so the user is not
+  actively misled on the debit/credit branches.
+- It is a data-quality and labelling defect, not a control failure.
+
+It is worth a row rather than nothing because `details` is read back and displayed as the payment
+request's description, so the wrong content surfaces to a different reader later.
+
+### Fix
+Give the payment-request and debit/credit branches their own labelled inputs, or — cheaper — switch
+the label and placeholder per branch from the same state variable, so the field says "Details" when it
+fills `details` and "Notes" when it fills `notes`. The Ship To label is correct only on the bill branch.
+
+---
+
+## FINDING R2-764 — 🟠 HIGH: the cost-code library gate reached payments only — quotation items, payroll profiles and library materials still write unvalidated cost codes, so those costs roll up nowhere
+
+**Source:** verifying worklist row R2-609.
+
+### What R2-609 filed
+The row was raised during the R2-334 closure precisely because that fix was BOQ-only, and it named
+four surfaces writing `cost_code` as free text outside budgeting:
+
+> `finance.py Payment.cost_code/sub_cost_code (~:125), crm.py quotation items (~:569/:643/:702),
+> library.py LibraryMaterial.cost_code (~:443), hr.py PayrollProfile (~:1230)`
+
+### What was fixed
+One of the four. `finance.py:166-168` gates the payment path against the library:
+
+```python
+if req.cost_code and not db.query(LibraryCostCode.id).filter(
+    LibraryCostCode.company_id == comp_uuid,
+    LibraryCostCode.code == req.cost_code,
+```
+
+The register's own fix line says so plainly — *"payment cost_code/sub_cost_code gated against Cost Code
+Library (422 naming unknowns, atomic)"*. The row is nevertheless closed for all four.
+
+### What is still ungated
+Counted `LibraryCostCode` references per file:
+
+| Surface | Writes `cost_code` at | `LibraryCostCode` refs | Gated? |
+|---|---|---|---|
+| `crm.py` quotation items | `:681`, `:765`, `:828` | **0** | ❌ |
+| `hr.py` PayrollProfile | `:1404`, `:1419` | **0** | ❌ |
+| `library.py` LibraryMaterial | `:451` | 3 — but all three are the cost-code CRUD endpoints (`:268`, `:272`, `:289`), none validates the material's own `cost_code` | ❌ |
+| `finance.py` Payment | `:166-168` | gated | ✅ |
+
+### Why this matters — it is R2-334's exact consequence
+R2-334 was filed because *a BOQ cost code outside the company's Cost Code Library would never roll up
+into any report*. That reasoning does not depend on the document being a BOQ. `reports.py:544-545`
+emits `Cost Code` and `Sub Cost Code` columns, and `:670`/`:690` group by the value — so a quotation
+line, a payroll profile or a library material carrying a typo'd or invented code is silently absent
+from every cost-code rollup, exactly as a BOQ item was.
+
+`crm.py` is the one that costs money: quotation items become invoice lines through
+`convert_quotation_to_invoice`, so an unvalidated code enters the revenue ledger.
+
+### Severity
+HIGH, matching R2-334 and R2-609's own rating. Nothing crashes and no amount is wrong on its own
+document — the cost simply disappears from the analysis the codes exist to produce, silently.
+
+### Fix
+Lift the payment gate into one shared helper — `assert_cost_codes_known(db, company_id, codes)` — and
+call it from all four write paths, failing atomically with a 422 naming the unknown codes, exactly as
+`budgeting.py:239-250` already does for the Excel import. Four call sites, one rule.
+
+### Gate this needs
+The enumeration form, not per-file pins: a test that scans for models carrying a `cost_code` column
+and asserts each write path validates against `LibraryCostCode`. Per-file pins are what let three of
+four through here — the same lesson as R2-743 / R2-755 on the CSV guard.
