@@ -1268,6 +1268,7 @@ finding read **as filed** rather than from its register note.
 | **R2-759** | **MEDIUM** | **CRM lead `priority` still unvalidated free text (`Medium` vs `medium` split one filter bucket in two); register records the clause as fixed** | worklist (R2-438) |
 | **R2-760** | **MEDIUM** | **3 of 19 record types gained a void path and the row closed for all 19 — DPR, NCR, inspection, wastage, asset and custom-field records are still permanent; no D-code, no BACKLOG line** | worklist (R2-177) |
 | **R2-761** | **MEDIUM** | **Multi Level Approval panel carries two contradicting notices; the enforcement one omits Payment Entries, the category the dropdown opens on and one that IS enforced** | worklist (R2-480) |
+| **R2-762** | **HIGH** | **subcon register prints `0%` progress and `₹0` billed on every work order from two hardcoded literals; `WOResponse` carries neither field. R2-494's em-dash reached `status` only** | worklist (R2-494) |
 
 ## FINDING R2-743 — 🔴 CRITICAL: the BI export feed writes user-controlled text straight into CSV cells, so the one export built for external consumption is the one still formula-injectable
 
@@ -2732,3 +2733,74 @@ clause, which now describes nothing. Two amber notices saying overlapping things
 Assert the rendered notice text contains every entry of `APPROVAL_CATEGORIES` — cheap, and it fails
 today. The stronger version pins `APPROVAL_CATEGORIES` itself against the backend
 `APPROVAL_FEATURE_TYPES` so the "contract-pinned" comment becomes true.
+
+---
+
+## FINDING R2-762 — 🟠 HIGH: the subcontractor register prints `0%` progress and `₹0` billed on every work order, from two hardcoded literals — the em-dash fix reached `status` and nothing else
+
+**Source:** verifying worklist row R2-494.
+
+### What the register claims
+> `S33 FIXED ad8712f: subcon register renders honest em-dash (no fabricated 0%/Rs 0).`
+
+### What the live tree does
+`frontend/src/app/c/[company_id]/d/subcon/page.tsx:80-89`, building every work-order row:
+
+```javascript
+(data as any[]).map((wo: any, i: number) => ({
+  id: wo.wo_number || wo.id,
+  sNo: i + 1,
+  subContractor: wo.subcontractor_name || "Unknown",
+  progress: "0%",          // <- literal
+  woValue: Number(wo.estimated_work_amount) || 0,
+  billedValue: 0,          // <- literal
+  status: wo.status || "—",   // <- the em-dash fix, applied here only
+}))
+```
+
+Three fields come from the API response. Two are constants. The em-dash the register describes was
+applied to `status` — the one field of the three that was never the problem.
+
+Both literals are rendered as if measured, `:261-267`:
+
+```javascript
+<div className="bg-primary h-full" style={{ width: wo.progress }}></div>   // a 0%-wide progress bar
+<span>{wo.progress}</span>                                                  // the text "0%"
+<td className="px-4 py-3 text-zinc-300">{fmt(wo.billedValue)}</td>          // "₹0"
+```
+
+So every subcontractor work order in the product displays an empty progress bar reading **0%** and a
+billed value of **₹0**, regardless of how much has actually been billed against it.
+
+### Why HIGH
+This is the same failure as R2-487, which was filed when the project Party register reported ₹0 payable
+against ₹1,35,700 of unpaid bills. This is that on the subcontractor side: the register a
+commercial lead opens to see what each subcontractor has drawn against their work order states zero for
+all of them. A number rendered in a money column is read as measured; there is nothing on screen
+saying otherwise.
+
+`0%` is the worse of the two in one respect — an empty progress bar is a *positive* claim that no work
+has been done, on work orders whose status may read `in_progress`, so the row contradicts itself.
+
+### The data exists; the API does not carry it
+`Bill.wo_id` is a real column (`models.py:677`, nullable, `ondelete="SET NULL"`) — the link R2-253
+added — so billed-to-date per work order is one `SUM` away server-side.
+
+But `WOResponse` (`billing.py:65-77`) carries `id, company_id, project_id, subcontractor_id,
+subcontractor_name, wo_number, wo_date, status, estimated_work_amount, terms, created_at, items` —
+**no `billed_amount` and no `progress`**. The page hardcodes because the endpoint returns nothing to
+read. So this is not purely a frontend fix.
+
+### Fix
+1. Add `billed_amount` to `WOResponse`, computed as the sum of `total_payable` over active bills with
+   `wo_id == wo.id` — reuse `_active_bills`-style Cancelled exclusion so a cancelled bill does not
+   count as drawn.
+2. Render it in place of the `billedValue: 0` literal.
+3. For `progress`: either derive it (`billed_amount / estimated_work_amount`, which is commercial
+   progress and is honest if labelled as such), or render **`—`** and drop the bar. Do not keep a
+   0%-wide bar — the R2-494 remedy applied properly, rather than to the neighbouring field.
+
+### Gate this needs
+A test asserting the subcon register's billed column reflects a bill raised against the work order:
+create a WO, raise a bill carrying its `wo_id`, assert the row's billed value is non-zero. Fails today
+regardless of the data, since the value is a constant.
