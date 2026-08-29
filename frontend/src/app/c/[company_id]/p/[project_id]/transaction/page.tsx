@@ -441,6 +441,27 @@ function NewTransactionModal({
   // GST field is hidden and gst_pct forced to 0 for them.
   const isSettlement = cfg.endpoint === "bill" && SETTLEMENT_TYPES.includes(cfg.key);
 
+  // R2-763: dynamically label the auxiliary text input so a payment request's
+  // purpose is labelled Details and debit/credit notes are labelled Notes,
+  // instead of misleadingly labelling all branches as Ship To addressing.
+  const addressingLabel =
+    cfg.endpoint === "bill"
+      ? "Ship To (addressing)"
+      : cfg.endpoint === "debit"
+      ? "Notes (Debit Note remarks)"
+      : cfg.endpoint === "credit"
+      ? "Notes (Credit Note remarks)"
+      : "Details / Purpose";
+
+  const addressingPlaceholder =
+    cfg.endpoint === "bill"
+      ? "Optional ship-to address"
+      : cfg.endpoint === "debit"
+      ? "Optional notes / reason for debit note"
+      : cfg.endpoint === "credit"
+      ? "Optional notes / reason for credit note"
+      : "Purpose of payment request / details";
+
   // Custom Fields (Settings → Custom Fields, entity_type="invoice") — only surfaced
   // for the Sales Invoice transaction type, which is the entity this framework is wired to.
   const customFields = useCustomFields(companyId, "invoice");
@@ -828,10 +849,15 @@ function NewTransactionModal({
           />
         )}
 
-        {/* Bill / Ship addressing */}
+        {/* Bill / Ship addressing / Notes / Details depending on branch (R2-763) */}
         <div className="col-span-2">
-          <Lbl>Ship To (addressing)</Lbl>
-          <input value={shipTo} onChange={(e) => setShipTo(e.target.value)} placeholder="Optional ship-to / notes" className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
+          <Lbl>{addressingLabel}</Lbl>
+          <input
+            value={shipTo}
+            onChange={(e) => setShipTo(e.target.value)}
+            placeholder={addressingPlaceholder}
+            className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground"
+          />
         </div>
       </div>
 
