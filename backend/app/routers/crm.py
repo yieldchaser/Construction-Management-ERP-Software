@@ -5,7 +5,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.auth import get_current_user, verify_company_access, get_company_membership, require_permission, verify_project_in_company
+from app.auth import get_current_user, verify_company_access, get_company_membership, require_permission, verify_project_in_company, assert_cost_codes_known
 from app.models import (
     CRMLead, CRMQuotation, CRMQuotationItem, Company,
     CRMLeadSource, CRMLeadCategory, CRMLeadStatus, CompanyTeam, User,
@@ -590,6 +590,11 @@ def create_quotation(lead_id: uuid.UUID, req: QuotationCreateRequest, db: Sessio
         cgst_pct = req.cgst_pct if req.cgst_pct is not None else gst_pct / 2.0
         sgst_pct = req.sgst_pct if req.sgst_pct is not None else gst_pct / 2.0
         _d4_igst_pct = 0.0
+
+    # R2-764: quotation item cost codes must exist in the company's Cost Code Library
+    item_cost_codes = [item.cost_code for item in req.items if item.cost_code]
+    if item_cost_codes:
+        assert_cost_codes_known(db, lead.company_id, codes=item_cost_codes, status_code=422)
 
     # Create quotation record
     quot = CRMQuotation(

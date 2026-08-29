@@ -26,7 +26,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field, field_validator
 from app.database import get_db
-from app.auth import get_current_user, verify_project_in_company, verify_company_access, verify_project_access, get_company_membership, require_permission, require_module_view
+from app.auth import get_current_user, verify_project_in_company, verify_company_access, verify_project_access, get_company_membership, require_permission, require_module_view, assert_cost_codes_known
 # R2-185/R2-407: the shared CSV formula guard (one helper, every export).
 from app.csv_export import csv_safe_cell as _csv_safe_cell, CSV_FORMULA_PREFIXES as _CSV_FORMULA_PREFIXES
 from app.models import (
@@ -1544,6 +1544,11 @@ def upsert_payroll_profile(employee_id: uuid.UUID, payload: PayrollProfileUpdate
     require_permission(db, current_user, emp.company_id, "payroll:edit")
     prof = db.query(PayrollProfile).filter(PayrollProfile.employee_id == employee_id).first()
     data = payload.model_dump(exclude_unset=True)
+
+    # R2-764: payroll profile cost code must exist in the company's Cost Code Library
+    if "cost_code" in data and data["cost_code"]:
+        assert_cost_codes_known(db, emp.company_id, codes=[data["cost_code"]], status_code=422)
+
     if not prof:
         prof = PayrollProfile(
             employee_id=employee_id,

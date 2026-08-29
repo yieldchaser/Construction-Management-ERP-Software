@@ -8,7 +8,16 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import Payment, PaymentSettlement, Bill, PayrollRun, PayrollLineItem, StaffEmployee, ProjectBudget, Project, CompanyTeam, User, Equipment, EquipmentDeployment, FuelLog, BankAccount, PaymentRequest, PaymentRequestPayment, CashAccount, LibraryParty, Company, ApprovalRule, LibraryCostCode, MaterialWastage
-from app.auth import get_current_user, verify_project_in_company, verify_company_access, verify_project_access, get_company_membership, require_permission, require_module_view
+from app.auth import (
+    get_current_user,
+    verify_project_in_company,
+    verify_company_access,
+    verify_project_access,
+    get_company_membership,
+    require_permission,
+    require_module_view,
+    assert_cost_codes_known,
+)
 from app.approvals import (
     find_matching_rule,
     match_approver,
@@ -163,22 +172,13 @@ def create_payment(req: PaymentCreateRequest, db: Session = Depends(get_db), cur
     # Library (same gate as budgeting.py's BOQ import). A free-text typo
     # used to be written as-is, silently forking a code that never rolls
     # up with the rest. Rejected before anything is written.
-    unknown_codes = []
-    if req.cost_code and not db.query(LibraryCostCode.id).filter(
-        LibraryCostCode.company_id == comp_uuid,
-        LibraryCostCode.code == req.cost_code,
-    ).first():
-        unknown_codes.append(req.cost_code)
-    if req.sub_cost_code and not db.query(LibraryCostCode.id).filter(
-        LibraryCostCode.company_id == comp_uuid,
-        LibraryCostCode.sub_cost_code == req.sub_cost_code,
-    ).first():
-        unknown_codes.append(req.sub_cost_code)
-    if unknown_codes:
-        raise HTTPException(
-            status_code=422,
-            detail="Unknown cost codes (add them to the Cost Code Library first): " + ", ".join(unknown_codes),
-        )
+    assert_cost_codes_known(
+        db,
+        comp_uuid,
+        codes=[req.cost_code] if req.cost_code else None,
+        sub_cost_codes=[req.sub_cost_code] if req.sub_cost_code else None,
+        status_code=422,
+    )
 
     # R2-381: money entries obey the same Entry Controls back-dating window as bills.
     enforce_entry_creation_window(db, req.company_id, req.payment_date)

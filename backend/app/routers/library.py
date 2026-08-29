@@ -7,7 +7,7 @@ from typing import List, Optional
 from app.database import get_db
 from app import models
 from app.models import User
-from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership, require_permission
+from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership, require_permission, assert_cost_codes_known
 import uuid
 
 router = APIRouter(prefix="/library", tags=["Company Libraries"], dependencies=[Depends(get_current_user)])
@@ -436,6 +436,9 @@ def get_library_rates(company_id: uuid.UUID, db: Session = Depends(get_db), _: N
 def create_library_rate(payload: RateCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     get_company_membership(db, current_user, payload.company_id)
     require_permission(db, current_user, payload.company_id, "library:edit")
+    # R2-764: library rate cost code must exist in the company's Cost Code Library
+    if payload.cost_code:
+        assert_cost_codes_known(db, payload.company_id, codes=[payload.cost_code], status_code=422)
     item = models.LibraryRate(
         company_id=payload.company_id,
         name=payload.name,

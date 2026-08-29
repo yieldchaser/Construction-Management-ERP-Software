@@ -386,3 +386,48 @@ def get_verified_company_user(
         "role_id": membership.role_id,
         "priority_type": membership.priority_type,
     }
+
+
+def assert_cost_codes_known(
+    db: Session,
+    company_id: uuid.UUID,
+    codes: Optional[list] = None,
+    sub_cost_codes: Optional[list] = None,
+    status_code: int = 422,
+) -> None:
+    """R2-764: Cost code validation gate across all write paths.
+    Every non-empty cost code or sub_cost_code must exist in the company's Cost Code Library.
+    Fails atomically with HTTP 422 naming unknown codes.
+    """
+    comp_uuid = uuid.UUID(str(company_id))
+    unknown_codes = []
+
+    if codes:
+        cleaned_codes = {str(c).strip() for c in codes if c and str(c).strip()}
+        if cleaned_codes:
+            known = set(
+                code for (code,) in db.query(models.LibraryCostCode.code).filter(
+                    models.LibraryCostCode.company_id == comp_uuid,
+                    models.LibraryCostCode.code.in_(cleaned_codes),
+                ).all()
+            )
+            for c in sorted(cleaned_codes - known):
+                unknown_codes.append(c)
+
+    if sub_cost_codes:
+        cleaned_subs = {str(s).strip() for s in sub_cost_codes if s and str(s).strip()}
+        if cleaned_subs:
+            known_subs = set(
+                sub for (sub,) in db.query(models.LibraryCostCode.sub_cost_code).filter(
+                    models.LibraryCostCode.company_id == comp_uuid,
+                    models.LibraryCostCode.sub_cost_code.in_(cleaned_subs),
+                ).all()
+            )
+            for s in sorted(cleaned_subs - known_subs):
+                unknown_codes.append(s)
+
+    if unknown_codes:
+        raise HTTPException(
+            status_code=status_code,
+            detail="Unknown cost codes (add them to the Cost Code Library first): " + ", ".join(unknown_codes),
+        )
