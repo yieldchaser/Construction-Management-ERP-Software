@@ -2129,7 +2129,7 @@ export default function CompanySettingsPage() {
               </div>
 
               <div className="p-4 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs rounded-lg">
-                Only categories with active enforcement are offered today. More approval categories are coming.
+                Approval chains are enforced today across {APPROVAL_CATEGORIES.join(", ")}: when a matching rule covers the amount, the document is held until every level approves it.
               </div>
 
               {ruleMsg && (
@@ -2209,10 +2209,6 @@ export default function CompanySettingsPage() {
                     );
                   })
                 )}
-              </div>
-
-              <div className="p-4 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs rounded-lg">
-                Approval chains are enforced today on Payment Requests and Purchase Orders: when a matching rule covers the amount, the document is held until every level approves it. For the remaining categories, rules are saved here but are not yet enforced.
               </div>
             </div>
           )}
