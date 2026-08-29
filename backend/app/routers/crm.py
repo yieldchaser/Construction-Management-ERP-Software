@@ -111,13 +111,21 @@ class LeadCreateRequest(BaseModel):
     source: Optional[str] = None
     category: Optional[str] = None
     status: str = "New Lead"
-    priority: str = "medium"
+    # R2-759: constrain priority vocabulary to (low, medium, high) and normalize casing
+    priority: str = Field("medium", pattern=r"(?i)^(low|medium|high)$")
     budget: float = Field(0.0, ge=0)
     lead_name: Optional[str] = None
     description: Optional[str] = None
     last_contacted: Optional[datetime] = None
     next_follow_up: Optional[datetime] = None
     expected_closure: Optional[datetime] = None
+
+    @field_validator("priority")
+    @classmethod
+    def _normalize_priority(cls, v: Optional[str]) -> str:
+        if v is not None:
+            return v.strip().lower()
+        return "medium"
 
     @field_validator("expected_closure")
     @classmethod
@@ -145,13 +153,21 @@ class LeadUpdateRequest(BaseModel):
     source: Optional[str] = None
     category: Optional[str] = None
     status: Optional[str] = None
-    priority: Optional[str] = None
+    # R2-759: constrain priority vocabulary to (low, medium, high) and normalize casing
+    priority: Optional[str] = Field(None, pattern=r"(?i)^(low|medium|high)$")
     budget: Optional[float] = Field(None, ge=0)
     description: Optional[str] = None
     lead_name: Optional[str] = None
     last_contacted: Optional[datetime] = None
     next_follow_up: Optional[datetime] = None
     expected_closure: Optional[datetime] = None
+
+    @field_validator("priority")
+    @classmethod
+    def _normalize_priority(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None:
+            return v.strip().lower()
+        return v
 
     @field_validator("expected_closure")
     @classmethod
