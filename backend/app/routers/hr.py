@@ -167,6 +167,7 @@ class PunchRequest(BaseModel):
     shift_multiplier: Optional[float] = 1.0
     location_verified: Optional[bool] = True
     notes: Optional[str] = None
+    captured_at: Optional[datetime] = None
 
 
 class AttendanceResponse(BaseModel):
@@ -395,7 +396,26 @@ def punch(payload: PunchRequest, db: Session = Depends(get_db), current_user: Us
     # R2-210/R2-262/R2-728: aware UTC clock so stored/loaded punch values (aware on
     # Postgres) are always compared against the same flavor.
     now = datetime.now(timezone.utc)
-    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    # C10: Offline punches accept client-provided captured_at within a sane window
+    # (up to 24h in the past, max 5 minutes in the future for clock skew).
+    if payload.captured_at is not None:
+        punch_time = _aware_utc(payload.captured_at)
+        if punch_time > now + timedelta(minutes=5):
+            raise HTTPException(
+                status_code=400,
+                detail="captured_at cannot be in the future (maximum 5 minutes clock skew allowed).",
+            )
+        if punch_time < now - timedelta(hours=24):
+            raise HTTPException(
+                status_code=400,
+                detail="captured_at is too old (maximum 24 hours allowed for offline sync).",
+            )
+    else:
+        punch_time = now
+
+    today_start = punch_time.replace(hour=0, minute=0, second=0, microsecond=0)
+    today_end = today_start + timedelta(days=1)
 
     if payload.punch_type == "in":
         # Check if already punched in today
@@ -403,6 +423,7 @@ def punch(payload: PunchRequest, db: Session = Depends(get_db), current_user: Us
             AttendanceLog.employee_id == payload.employee_id,
             AttendanceLog.project_id == payload.project_id,
             AttendanceLog.attendance_date >= today_start,
+            AttendanceLog.attendance_date < today_end,
             AttendanceLog.punch_in.isnot(None)
         ).first()
         if existing:
@@ -411,8 +432,8 @@ def punch(payload: PunchRequest, db: Session = Depends(get_db), current_user: Us
         log = AttendanceLog(
             employee_id=payload.employee_id,
             project_id=payload.project_id,
-            attendance_date=now,
-            punch_in=now,
+            attendance_date=punch_time,
+            punch_in=punch_time,
             lat_in=Decimal(str(payload.lat)),
             lng_in=Decimal(str(payload.lng)),
             distance_from_site_m=Decimal(str(distance_m)) if distance_m is not None else None,
@@ -432,14 +453,13 @@ def punch(payload: PunchRequest, db: Session = Depends(get_db), current_user: Us
             AttendanceLog.employee_id == payload.employee_id,
             AttendanceLog.project_id == payload.project_id,
             AttendanceLog.attendance_date >= today_start,
+            AttendanceLog.attendance_date < today_end,
             AttendanceLog.punch_out.is_(None)
         ).first()
         if not log:
             raise HTTPException(status_code=400, detail="No open punch-in found for today.")
 
-        # R2-728: punch-out clock must be aware UTC as well; naive - aware raises TypeError on Postgres.
-        now = datetime.now(timezone.utc)
-        log.punch_out = now
+        log.punch_out = punch_time
         log.lat_out = Decimal(str(payload.lat))
         log.lng_out = Decimal(str(payload.lng))
 
@@ -452,7 +472,9 @@ def punch(payload: PunchRequest, db: Session = Depends(get_db), current_user: Us
         # back aware from Postgres (naive from SQLite), and mixing flavors
         # raised TypeError, 500ing punch-out and leaving the row open (R2-728).
         if log.punch_in:
-            delta = (now - _aware_utc(log.punch_in)).total_seconds() / 3600
+            delta = (punch_time - _aware_utc(log.punch_in)).total_seconds() / 3600
+            if delta < 0:
+                raise HTTPException(status_code=400, detail="punch_out time cannot be earlier than punch_in time.")
             log.hours_worked = Decimal(str(round(delta, 2)))
             # Overtime = hours beyond 8
             ot = max(0.0, delta - 8.0)
