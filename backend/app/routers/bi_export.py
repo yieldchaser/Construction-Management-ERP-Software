@@ -27,6 +27,9 @@ from sqlalchemy.orm import Session
 from app.auth import get_company_membership, get_current_user, require_permission
 from app.config import settings
 from app.constants import REVENUE_INVOICE_TYPES, EXPENSE_INVOICE_TYPES
+# R2-743: the shared CSV formula guard, so this exporter cannot drift from the
+# other three again.
+from app.csv_export import csv_safe_cell
 from app.database import get_db
 from app.rate_limit import limiter
 from app.bill_scope import _active_bills
@@ -84,11 +87,21 @@ def _resolve_key(company_id: uuid.UUID, request: Request, db: Session) -> models
 
 
 def _to_csv(rows: List[dict], columns: List[str]) -> str:
+    # R2-743: neutralise formula cells here, in the single writer every feed
+    # route renders through (feed_projects, feed_budget_variance,
+    # feed_labour_productivity). Applying the guard per call site is exactly
+    # what let this site be missed while its three siblings were protected.
+    #
+    # That matters most on this feed: it is built for a machine, not for a human
+    # glance. A BI key is long-lived and polled on a schedule, so a payload
+    # lands on every refresh with no user in the loop. And csv.DictWriter's
+    # quote-doubling protects the delimiter, not the formula -- a leading "="
+    # survives a correctly-quoted field entirely intact.
     buf = io.StringIO()
     writer = csv.DictWriter(buf, fieldnames=columns, extrasaction="ignore")
     writer.writeheader()
     for r in rows:
-        writer.writerow(r)
+        writer.writerow({k: csv_safe_cell(v) for k, v in r.items()})
     return buf.getvalue()
 
 

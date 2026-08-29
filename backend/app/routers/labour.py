@@ -15,6 +15,7 @@ from app.party_names import resolve_party_name
 from pydantic import BaseModel, Field
 import csv
 import io
+from app.csv_export import csv_safe_cell as _csv_safe_cell, CSV_FORMULA_PREFIXES as _CSV_FORMULA_PREFIXES
 
 router = APIRouter(
     prefix="/labour",
@@ -29,17 +30,6 @@ def _resolve_contractor_name(db: Session, contractor_id: Optional[UUID]) -> str:
     return resolve_party_name(db, contractor_id)
 
 
-_CSV_FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
-
-
-def _csv_safe_cell(value):
-    # R2-185: a cell whose text begins with = + - @ TAB or CR is executed as a
-    # formula when the statutory CSV is opened in Excel/LibreOffice/Sheets.
-    # Prefix a single quote so the value is treated as text; everything else
-    # passes through untouched.
-    if isinstance(value, str) and value.startswith(_CSV_FORMULA_PREFIXES):
-        return "'" + value
-    return value
 
 
 # --- Schemas ---

@@ -11,6 +11,7 @@ from app.auth import get_current_user, verify_project_access, get_company_member
 from app.models import DailyProgressReport, Task, WarehouseInventory, MaterialTransaction, Project, User
 from app.workflow_controls import enforce_entry_creation_window, enforce_stock_availability, get_company
 from pydantic import BaseModel, Field
+from app.csv_export import csv_safe_cell as _csv_safe_cell, CSV_FORMULA_PREFIXES as _CSV_FORMULA_PREFIXES
 
 router = APIRouter(
     prefix="/dpr",
@@ -18,17 +19,6 @@ router = APIRouter(
     dependencies=[Depends(get_current_user)]
 )
 
-_CSV_FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
-
-
-def _csv_safe_cell(value):
-    # R2-266: a cell whose text begins with = + - @ TAB or CR is executed as a
-    # formula when the export CSV is opened in Excel/LibreOffice/Sheets. Prefix
-    # a single quote so the value is treated as text; everything else passes
-    # through untouched.
-    if isinstance(value, str) and value.startswith(_CSV_FORMULA_PREFIXES):
-        return "'" + value
-    return value
 
 class MaterialConsumptionSchema(BaseModel):
     material_name: str

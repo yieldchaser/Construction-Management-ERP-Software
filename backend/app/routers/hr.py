@@ -27,6 +27,8 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field, field_validator
 from app.database import get_db
 from app.auth import get_current_user, verify_project_in_company, verify_company_access, verify_project_access, get_company_membership, require_permission, require_module_view
+# R2-185/R2-407: the shared CSV formula guard (one helper, every export).
+from app.csv_export import csv_safe_cell as _csv_safe_cell, CSV_FORMULA_PREFIXES as _CSV_FORMULA_PREFIXES
 from app.models import (
     StaffEmployee, AttendanceLog, Timesheet,
     TimesheetEntry, PayrollRun, PayrollLineItem, Project, LeaveRequest,
@@ -976,17 +978,6 @@ def get_payslips(run_id: uuid.UUID, db: Session = Depends(get_db), current_user:
     return result
 
 
-_CSV_FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
-
-
-def _csv_safe_cell(value):
-    # R2-407: a cell whose text begins with = + - @ TAB or CR is executed as a
-    # formula when the export CSV is opened in Excel/LibreOffice/Sheets. Prefix
-    # a single quote so the value is treated as text; everything else passes
-    # through untouched (same neutralisation the DPR and BOCW exports use).
-    if isinstance(value, str) and value.startswith(_CSV_FORMULA_PREFIXES):
-        return "'" + value
-    return value
 
 
 @router.get("/payroll/{run_id}/payslips/export")
@@ -1077,6 +1068,7 @@ def latest_payroll_run(company_id: uuid.UUID, db: Session = Depends(get_db), cur
 
 
 from pydantic import BaseModel
+
 
 class LeaveRequestCreate(BaseModel):
     project_id: Optional[uuid.UUID] = None

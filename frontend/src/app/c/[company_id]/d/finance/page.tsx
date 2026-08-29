@@ -6,6 +6,9 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
 import Icon, { type IconName } from "@/components/marketing/Icon";
+// R2-755: shared CSV guard. Quote-doubling protects the delimiter, not the
+// formula — a leading = + - @ executes when the export opens in Excel/Sheets.
+import { buildCsv } from "@/lib/csv";
 
 interface Transaction {
   id: string;
@@ -1322,7 +1325,9 @@ export default function FinancePage() {
             const exportCsv = () => {
               const rows = [["Party ID", "Name", "Type", "Balance", "Status"]];
               filteredParties.forEach(p => rows.push([p.party_id_custom || "", p.name, p.party_type || "", String(p.balance), p.status]));
-              const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+              // R2-755: party names and IDs are user-controlled free text; the
+              // old builder only quote-doubled, which does not stop a formula.
+              const csv = buildCsv(rows[0], rows.slice(1));
               const blob = new Blob([csv], { type: "text/csv" });
               const url = URL.createObjectURL(blob);
               const a = document.createElement("a");

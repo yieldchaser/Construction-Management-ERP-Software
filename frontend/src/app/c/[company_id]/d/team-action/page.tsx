@@ -4,6 +4,9 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { getApi, authHeaders } from "@/lib/siteflow";
 import Icon from "@/components/marketing/Icon";
+// R2-755: shared CSV guard. Quote-doubling protects the delimiter, not the
+// formula — a leading = + - @ executes when the export opens in Excel/Sheets.
+import { buildCsv } from "@/lib/csv";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -509,7 +512,9 @@ export default function TeamSchedulePage() {
       t.status,
       String(Math.round(Number(t.progress) || 0)),
     ]);
-    const csv = [header, ...rows].map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(",")).join("\n");
+    // R2-755: task names and assignee names are user-controlled; the old
+    // builder only quote-doubled, which does not stop a formula.
+    const csv = buildCsv(header, rows);
     downloadBlob(csv, "team-schedule.csv", "text/csv;charset=utf-8");
   };
 
