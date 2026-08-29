@@ -687,18 +687,37 @@ def delete_timesheet(ts_id: uuid.UUID, db: Session = Depends(get_db), current_us
 _WEEKDAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 
 
-def _working_days_in_month(payroll_month: str, weekly_off_days) -> int:
-    """R2-481: real calendar length of payroll_month minus the company's
-    configured weekly offs. Stored day names may be full ("Sunday") or
-    abbreviated ("Sun"); matching is case-insensitive on the first three
-    letters."""
+def _working_days_in_month(payroll_month: str, weekly_off_days, holidays=None) -> int:
+    """R2-481/R2-754: real calendar length of payroll_month minus the company's
+    configured weekly offs and declared company holidays for that month.
+    Stored day names may be full ("Sunday") or abbreviated ("Sun"); matching
+    is case-insensitive on the first three letters."""
     year, month = (int(part) for part in payroll_month.split("-"))
     off_keys = {str(name).strip().lower()[:3] for name in (weekly_off_days or [])}
+    holiday_days = set()
+    for h in (holidays or []):
+        if hasattr(h, "date") and not callable(getattr(h, "date")):
+            h_date = h.date
+        elif isinstance(h, (datetime, date)):
+            h_date = h
+        elif isinstance(h, str):
+            try:
+                h_date = date.fromisoformat(h.split("T")[0])
+            except Exception:
+                continue
+        else:
+            continue
+
+        if isinstance(h_date, (datetime, date)):
+            if h_date.year == year and h_date.month == month:
+                holiday_days.add(h_date.day)
+
     total_days = calendar.monthrange(year, month)[1]
     return sum(
         1
         for day in range(1, total_days + 1)
         if _WEEKDAY_KEYS[datetime(year, month, day).weekday()] not in off_keys
+        and day not in holiday_days
     )
 
 
@@ -788,11 +807,19 @@ def run_payroll(payload: PayrollRunCreate, db: Session = Depends(get_db), curren
     # days_in_month wins; otherwise the real month length minus the company's
     # weekly offs replaces the old constant default of 26.
     company = db.query(Company).filter(Company.id == payload.company_id).first()
+    # R2-754: Fetch declared company holidays for this month so paid holidays reduce working days
+    holidays = db.query(Holiday).filter(
+        Holiday.company_id == payload.company_id,
+        Holiday.date >= month_start,
+        Holiday.date < month_end,
+    ).all()
     if payload.days_in_month is not None:
         effective_days_in_month = int(payload.days_in_month)
     else:
         effective_days_in_month = _working_days_in_month(
-            payload.payroll_month, company.weekly_off_days if company else []
+            payload.payroll_month,
+            company.weekly_off_days if company else [],
+            holidays=holidays,
         )
 
     # R2-606: a payroll run is a money entry into a period, so it obeys the
