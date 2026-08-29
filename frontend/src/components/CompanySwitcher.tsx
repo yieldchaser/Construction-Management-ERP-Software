@@ -36,15 +36,67 @@ export default function CompanySwitcher({
       .catch(() => setCompanies([]));
   }, []);
 
+  const [switching, setSwitching] = useState(false);
+  const [switchError, setSwitchError] = useState<string | null>(null);
+
   const switchTo = useCallback(
-    (newId: string, newName: string) => {
-      const segments = (pathname || "").split("/");
-      if (segments[1] === "c") segments[2] = newId;
-      if (typeof window !== "undefined") localStorage.setItem("company_name", newName);
-      setOpen(false);
-      router.push(segments.join("/"));
+    async (newId: string, newName: string) => {
+      if (newId === currentCompanyId) {
+        setOpen(false);
+        return;
+      }
+
+      // R2-746: this used to rewrite the URL segment and navigate without ever
+      // re-minting the session. Path-scoped routes then followed the new company
+      // while /auth/me, /auth/me/permissions and /auth/team/invite kept reading
+      // the OLD company from the JWT claim -- so switching to company B and
+      // inviting a colleague granted them membership of company A. The endpoint
+      // (POST /auth/switch-company/{id}) existed and was correct; nothing called
+      // it.
+      setSwitching(true);
+      setSwitchError(null);
+      try {
+        const token =
+          typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+        const res = await fetch(`${getApiHost()}/apis/v3/auth/switch-company/${newId}`, {
+          method: "POST",
+          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          const detail = typeof err.detail === "string" ? err.detail : "Could not switch company.";
+          // Do NOT navigate: staying put with the old session is honest,
+          // navigating would strand the user on a company their token cannot see.
+          setSwitchError(detail);
+          setSwitching(false);
+          return;
+        }
+
+        const data = await res.json();
+        if (typeof window !== "undefined") {
+          if (data.access_token) localStorage.setItem("access_token", data.access_token);
+          // The claim is what the identity endpoints read, so it has to move too.
+          if (data.company?.id) localStorage.setItem("company_id", data.company.id);
+          localStorage.setItem("company_name", newName);
+        }
+
+        const segments = (pathname || "").split("/");
+        if (segments[1] === "c") segments[2] = newId;
+        setOpen(false);
+        setSwitching(false);
+        // A fresh session has to be picked up by the server-rendered shell, so
+        // a soft push is not enough here.
+        if (typeof window !== "undefined") {
+          window.location.assign(segments.join("/") || "/");
+        } else {
+          router.push(segments.join("/"));
+        }
+      } catch {
+        setSwitchError("Could not switch company. Check your connection and try again.");
+        setSwitching(false);
+      }
     },
-    [pathname, router]
+    [pathname, router, currentCompanyId]
   );
 
   if (companies.length <= 1) {
@@ -90,11 +142,24 @@ export default function CompanySwitcher({
       </button>
       {open && (
         <div className="absolute left-0 right-0 mt-1 z-50 rounded-md border border-border-custom bg-sidebar shadow-lg max-h-72 overflow-y-auto">
+          {/* R2-746: a failed switch must be visible. Previously the UI always
+              navigated, so a rejected re-mint left the user on a company their
+              session could not see, with no indication anything went wrong. */}
+          {switchError && (
+            <div className="px-3 py-2 text-xs text-risk border-b border-border-custom/50">
+              {switchError}
+            </div>
+          )}
+          {switching && (
+            <div className="px-3 py-2 text-xs text-muted border-b border-border-custom/50">
+              Switching company…
+            </div>
+          )}
           {enterprises.map((ent) => (
             <div key={ent.id} className="py-1 border-b border-border-custom/50 last:border-b-0">
               <button
                 type="button"
-                onClick={() => switchTo(ent.id, ent.name)}
+                onClick={() => void switchTo(ent.id, ent.name)}
                 className={`${itemBase} ${ent.id === currentCompanyId ? activeCls : idleCls}`}
               >
                 <span className="truncate font-semibold">{ent.name}</span>
@@ -106,7 +171,7 @@ export default function CompanySwitcher({
                 <button
                   key={ch.id}
                   type="button"
-                  onClick={() => switchTo(ch.id, ch.name)}
+                  onClick={() => void switchTo(ch.id, ch.name)}
                   className={`${itemBase} pl-6 ${ch.id === currentCompanyId ? activeCls : idleCls}`}
                 >
                   <span className="truncate">{ch.name}</span>
@@ -118,7 +183,7 @@ export default function CompanySwitcher({
             <button
               key={c.id}
               type="button"
-              onClick={() => switchTo(c.id, c.name)}
+              onClick={() => void switchTo(c.id, c.name)}
               className={`${itemBase} ${c.id === currentCompanyId ? activeCls : idleCls}`}
             >
               <span className="truncate">{c.name}</span>
