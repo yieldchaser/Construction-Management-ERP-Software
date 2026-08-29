@@ -1261,6 +1261,7 @@ finding read **as filed** rather than from its register note.
 | **R2-752** | **MEDIUM** | **6 write controls still fail silently (2.5%, down from 48%) — including payment-request Request Approval and Mark as Paid** | off-main subset (R2-590) |
 | **R2-753** | **HIGH** | **date-only fields shift a day by browser timezone; a holiday entered as 15 Aug stores as 14 Aug (proved live). 9 sites, only 1 normalised** | off-main subset (R2-220) |
 | **R2-754** | **HIGH** | **Holiday Calendar feeds nothing into payroll — a declared holiday reduces days_present but not days_in_month, so it is silently unpaid** | off-main subset (R2-481) |
+| **R2-755** | **HIGH** | **client-side CSV formula guard applied to 1 of 5 frontend exports — the frontend twin of R2-743** | worklist (R2-396) |
 
 ## FINDING R2-743 — 🔴 CRITICAL: the BI export feed writes user-controlled text straight into CSV cells, so the one export built for external consumption is the one still formula-injectable
 
@@ -2229,3 +2230,58 @@ meant to be attendance-driven, it should not be overridable.
 A test asserting that declaring a holiday in a month reduces `days_in_month` for that month's payroll
 run by exactly one. The current R2-481 pin covers the weekly-off path only, which is why the holiday
 half stayed green.
+
+## FINDING R2-755 — 🟠 HIGH: the client-side CSV formula guard was written once and applied to one export of five — the other four are still injectable
+
+R2-396's fix is real and correct where it landed. `reports/[slug]/page.tsx:669-670` defines
+`csvSafeCell`, explicitly documented as byte-identical to the backend `_csv_safe_cell` guard, and
+applies it to every cell before quoting (`:780`):
+
+```tsx
+...dataRows.map(r => r.map(csvSafeCell).map(c => `"${c.replace(/"/g, '""')}"`).join(","))
+```
+
+**It is applied to exactly one of the five frontend CSV builders.**
+
+| file | `csvSafeCell` refs | user-controlled data it exports |
+|---|---|---|
+| `reports/[slug]/page.tsx` | **2** ✅ | report rows |
+| `reports/page.tsx` | **0** ❌ | report rows (the catalogue's own export) |
+| `d/finance/page.tsx` | **0** ❌ | party names, descriptions, references |
+| `d/team-action/page.tsx` | **0** ❌ | party names, timesheet remarks |
+| `projects/page.tsx` | **0** ❌ | project name, code, city — the exact fields proved injectable in R2-743 |
+
+The unprotected four all use the same shape — quote-doubling and nothing else, e.g.
+`reports/page.tsx:268-271`:
+
+```tsx
+const csvContent = [
+  headers.map(h => `"${String(h ?? "").replace(/"/g, '""')}"`).join(","),
+  ...rows.map(r => headers.map(h => `"${String(r[h] ?? "").replace(/"/g, '""')}"`).join(","))
+].join("\n");
+```
+
+Quote-doubling protects the delimiter, not the formula. R2-407 settled this precisely — *"Quote-doubling is applied — `""` — and nothing neutralises the leading `=`"* — and the live capture in
+R2-743 shows the same quoted-but-executable cell surviving a real export.
+
+### Why this is the same defect twice
+R2-743 (filed earlier this round) found the backend guard applied to three of four exporters, with
+`bi_export.py` missed. This is that pattern on the client: one helper, written correctly, applied at
+one call site. In both cases the *protection exists in the repository* and simply does not reach every
+surface, which is why per-finding gates keep passing — each pins its own file.
+
+### Severity
+HIGH rather than CRITICAL: unlike R2-743's BI feed, these are click-to-download exports rather than a
+scheduled machine feed, so a payload needs a human to open the file. The exposure is otherwise
+identical, and `projects/page.tsx` exports the very fields (`name`, `code`, `city`) that were proved
+to carry a live `=HYPERLINK(...)` payload through to a downloaded file.
+
+### Fix
+Lift `csvSafeCell` out of `reports/[slug]/page.tsx` into a shared module beside the other frontend
+helpers and call it from all five builders — the same consolidation R2-743 asks for on the backend,
+where three duplicate `_csv_safe_cell` definitions exist. One helper, one import, five call sites.
+
+### Gate this needs
+The enumeration check both findings point to: a test asserting that **every** CSV-producing path —
+backend and frontend — neutralizes a leading `= + - @`, discovered by scanning for CSV construction
+rather than by listing known files. Per-file pins are exactly what let four of five slip through.
