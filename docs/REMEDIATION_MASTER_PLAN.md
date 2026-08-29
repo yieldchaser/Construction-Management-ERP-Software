@@ -38,9 +38,7 @@ than accepting the report:
 - **D-016** Part C: C2–C8, C10, C11 (C9 deliberately left)
 - **D-017** index page performance — untouched, needs its own session
 - **D-018** Part E parity — now unblocked
-- **D-019** `uq_bills_po_id` / `uq_equipment_company_id_code` **may not exist in production** — both
-  migrations skip with a NOTICE while violating rows exist. Until the purge runs, those guarantees are
-  not enforced. **Founder-owned (Part D).**
+- ~~**D-019**~~ **CLOSED 2026-08-29 — verified against production, nothing to purge.** `dup_groups` = 0, `uq_equipment_company_id_code` is PRESENT as `UNIQUE (company_id, code)`, global `equipment_code_key` dropped, `bills.po_id` present. The constraint is live and enforced. `uq_bills_po_id` never existed — that migration is purely additive and cannot skip; that half was a documentation error.
 
 ### ⚠ THE BASELINE IS RED — read before writing any code
 
