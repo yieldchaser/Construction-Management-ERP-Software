@@ -100,6 +100,7 @@ class EmployeeCreate(BaseModel):
     project_id: Optional[uuid.UUID] = None
     name: str
     employee_code: Optional[str] = None
+    uan: Optional[str] = None
     designation: Optional[str] = None
     department: Optional[str] = None
     mobile: Optional[str] = None
@@ -114,6 +115,18 @@ class EmployeeCreate(BaseModel):
     is_esi_applicable: bool = True
     date_of_joining: Optional[datetime] = None
 
+    @field_validator("uan", mode="before")
+    @classmethod
+    def validate_uan(cls, v):
+        if v is None:
+            return None
+        v = str(v).strip()
+        if not v:
+            return None
+        if len(v) != 12 or not v.isdigit():
+            raise ValueError("UAN must be a 12-digit numeric string")
+        return v
+
 
 class EmployeeResponse(BaseModel):
     id: uuid.UUID
@@ -121,6 +134,7 @@ class EmployeeResponse(BaseModel):
     project_id: Optional[uuid.UUID]
     name: str
     employee_code: Optional[str]
+    uan: Optional[str] = None
     designation: Optional[str]
     department: Optional[str]
     mobile: Optional[str]
@@ -1315,6 +1329,7 @@ def upload_payroll(
 # ─── Company-scoped HR (Payroll tab) ────────────────────────────────────────
 
 class EmployeeUpdate(BaseModel):
+    uan: Optional[str] = None
     designation: Optional[str] = None
     department: Optional[str] = None
     mobile: Optional[str] = None
@@ -1324,6 +1339,18 @@ class EmployeeUpdate(BaseModel):
     tds_monthly: Optional[float] = Field(None, ge=0)
     status: Optional[str] = None
     date_of_joining: Optional[datetime] = None
+
+    @field_validator("uan", mode="before")
+    @classmethod
+    def validate_uan(cls, v):
+        if v is None:
+            return None
+        v = str(v).strip()
+        if not v:
+            return None
+        if len(v) != 12 or not v.isdigit():
+            raise ValueError("UAN must be a 12-digit numeric string")
+        return v
 
 
 @router.get("/company/employees/{company_id}", response_model=List[EmployeeResponse])

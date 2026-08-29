@@ -29,6 +29,7 @@ def _emp(db, comp, name, **kw):
         basic_salary=kw.pop("basic_salary", 20000),
         hra=kw.pop("hra", 5000),
         other_allowances=kw.pop("other_allowances", 2500),
+        uan=kw.pop("uan", "100123456789"),
         **kw,
     )
     db.add(emp)
@@ -317,8 +318,8 @@ def test_r2_523_pf_ecr_from_period_payslips_with_eps_split(client, db, make_tena
     part = lines["Part Month"]
     assert part["pf_wages"] == 6000.0, part           # earned wages, not master salary
     assert part["eps_contribution"] == 499.8 and part["epf_contribution"] == 220.2, part
-    # Residual gap: no model stores a UAN yet, so the ECR stays NOT_LINKED.
-    assert full["uan"] == "NOT_LINKED", full
+    # R2-756: StaffEmployee stores real UAN, and ECR reflects it.
+    assert full["uan"] == "100123456789", full
     assert body["total_pf_liability"] == 5040.0, body
 
     # Months no longer return identical figures.

@@ -15,6 +15,7 @@ type Emp = {
   designation: string | null;
   department: string | null;
   mobile: string | null;
+  uan: string | null;
   basic_salary: number;
   hra: number;
   other_allowances: number;
@@ -578,6 +579,7 @@ function NewPayrollModal({
   const [designation, setDesignation] = useState("");
   const [department, setDepartment] = useState("");
   const [mobile, setMobile] = useState("");
+  const [uan, setUan] = useState("");
   const [basic, setBasic] = useState(0);
   const [hra, setHra] = useState(0);
   const [allow, setAllow] = useState(0);
@@ -601,6 +603,7 @@ function NewPayrollModal({
         designation: designation || null,
         department: department || null,
         mobile: mobile || null,
+        uan: uan.trim() || null,
         basic_salary: basic,
         hra,
         other_allowances: allow,
@@ -639,9 +642,14 @@ function NewPayrollModal({
           <input className={inputCls} value={department} onChange={(e) => setDepartment(e.target.value)} />
         </Field>
       </div>
-      <Field label="Mobile">
-        <input className={inputCls} value={mobile} onChange={(e) => setMobile(e.target.value)} />
-      </Field>
+      <div className="grid grid-cols-2 gap-2">
+        <Field label="Mobile">
+          <input className={inputCls} value={mobile} onChange={(e) => setMobile(e.target.value)} />
+        </Field>
+        <Field label="UAN (12 digits)">
+          <input className={inputCls} placeholder="12-digit UAN" maxLength={12} value={uan} onChange={(e) => setUan(e.target.value)} />
+        </Field>
+      </div>
       <div className="grid grid-cols-3 gap-2">
         <Field label="Basic Salary">
           <input type="number" className={inputCls} value={basic} onChange={(e) => setBasic(parseFloat(e.target.value) || 0)} />

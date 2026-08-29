@@ -750,6 +750,7 @@ class StaffEmployee(Base):
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=True)
     name = Column(String(255), nullable=False)
     employee_code = Column(String(50), nullable=True)
+    uan = Column(String(12), nullable=True)
     designation = Column(String(100), nullable=True)
     department = Column(String(100), nullable=True)
     mobile = Column(String(20), nullable=True)

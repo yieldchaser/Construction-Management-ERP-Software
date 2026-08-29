@@ -372,6 +372,20 @@ def export_pf_ecr(
         PayrollLineItem.payroll_run_id.in_([r.id for r in runs])
     ).all()
 
+    # R2-756: Refuse export if any employee included in the return lacks a valid 12-digit UAN
+    missing_uan_employees = []
+    for li in line_items:
+        emp = employees_by_id.get(li.employee_id)
+        if emp and not (emp.uan and str(emp.uan).strip()):
+            missing_uan_employees.append(emp.name)
+    
+    if missing_uan_employees:
+        unique_names = sorted(set(missing_uan_employees))
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Cannot generate PF ECR return: employee(s) missing UAN: {', '.join(unique_names)}. Update employee records with 12-digit UAN before filing.",
+        )
+
     ecr_lines = []
     for li in line_items:
         emp = employees_by_id.get(li.employee_id)
@@ -383,7 +397,7 @@ def export_pf_ecr(
         eps_pf = round(pf_wages * 8.33 / 100, 2)
         epf_pf = round(er_pf - eps_pf, 2)
         ecr_lines.append({
-            "uan": "NOT_LINKED",  # UAN not stored on any model yet; placeholder
+            "uan": emp.uan,
             "employee_code": emp.employee_code or str(emp.id)[:8].upper(),
             "name": emp.name,
             "pf_wages": pf_wages,
