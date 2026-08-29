@@ -815,19 +815,38 @@ def _rep_all_party_balances(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID
 
 def _rep_item_wise_sales(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
     try:
-        # R2-321: honour the project filter. Quotation lines hang off leads
-        # (CRMQuotationItem -> CRMQuotation -> CRMLead) and crm_leads carries
-        # no project linkage whatsoever (nor does Bill reference quotations,
-        # R2-360), so no line can ever belong to one project. An explicit pid
-        # therefore selects zero rows instead of silently returning the whole
-        # company's data under a narrowed heading.
+        # R2-321 / C7: honour the project filter via Bill.quotation_id linkage.
+        # Converted quotations carry Bill.quotation_id and Bill.project_id.
+        # When a project filter is requested, include quotations linked to active
+        # bills for that project. If no bills link to quotations for this project,
+        # return [] (truthful filter, no company-wide leakage).
         if pid:
-            return []
-        items = db.query(CRMQuotationItem).join(
-            CRMQuotation, CRMQuotationItem.quotation_id == CRMQuotation.id
-        ).join(
-            CRMLead, CRMQuotation.lead_id == CRMLead.id
-        ).filter(CRMLead.company_id == cid).all()
+            linked_quot_ids = [
+                b.quotation_id for b in db.query(Bill.quotation_id).filter(
+                    Bill.company_id == cid,
+                    Bill.project_id == pid,
+                    Bill.quotation_id.isnot(None),
+                    Bill.status != "Cancelled",
+                ).all()
+            ]
+            if not linked_quot_ids:
+                return []
+            items_q = db.query(CRMQuotationItem).join(
+                CRMQuotation, CRMQuotationItem.quotation_id == CRMQuotation.id
+            ).join(
+                CRMLead, CRMQuotation.lead_id == CRMLead.id
+            ).filter(
+                CRMLead.company_id == cid,
+                CRMQuotation.id.in_(linked_quot_ids),
+            )
+        else:
+            items_q = db.query(CRMQuotationItem).join(
+                CRMQuotation, CRMQuotationItem.quotation_id == CRMQuotation.id
+            ).join(
+                CRMLead, CRMQuotation.lead_id == CRMLead.id
+            ).filter(CRMLead.company_id == cid)
+
+        items = items_q.all()
         rows = []
         for it in items:
             q = db.query(CRMQuotation).filter(CRMQuotation.id == it.quotation_id).first()
