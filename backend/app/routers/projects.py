@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from sqlalchemy.orm import Session
 from sqlalchemy import func, Numeric, Boolean, DateTime, String
 from datetime import datetime
@@ -185,6 +185,10 @@ def _serialize_project(db: Session, p: models.Project, include_members=False):
         "scope_of_work": p.scope_of_work,
         "project_avatar": p.project_avatar,
         "attendance_radius_meters": p.attendance_radius_meters,
+        # R2-750: returned so the console can show and edit the site
+        # coordinates. It was persistable only through planning.py and never
+        # readable back from this endpoint at all.
+        "location": p.location,
         "branch_id": str(p.branch_id) if p.branch_id else None,
         "is_pinned": bool(p.is_pinned),
         "progress": progress,
@@ -203,6 +207,35 @@ def _serialize_project(db: Session, p: models.Project, include_members=False):
 
 # ─── schemas ───
 
+def _validate_location(value: Optional[str]) -> Optional[str]:
+    """R2-750: normalise a 'latitude,longitude' pair, or reject it.
+
+    Project.location had no writer on the endpoint that creates real projects
+    (POST /projects/), so all 7 projects in production carry a null location and
+    the attendance geofence never runs -- it lets you configure a radius
+    (attendance_radius_meters, default 500) around a point you cannot specify.
+
+    A malformed pair is rejected rather than stored: a silently unparseable
+    value re-creates the same inertness and is harder to see than an error.
+    """
+    if value is None:
+        return None
+    raw = str(value).strip()
+    if not raw:
+        return None
+    parts = raw.split(",")
+    if len(parts) != 2:
+        raise ValueError("location must be 'latitude,longitude', for example '19.0760,72.8777'")
+    try:
+        lat = float(parts[0].strip())
+        lng = float(parts[1].strip())
+    except ValueError:
+        raise ValueError("location must be 'latitude,longitude' with numeric values")
+    if not (-90.0 <= lat <= 90.0) or not (-180.0 <= lng <= 180.0):
+        raise ValueError("location out of range: latitude -90..90, longitude -180..180")
+    return f"{lat},{lng}"
+
+
 class ProjectCreate(BaseModel):
     company_id: uuid.UUID
     name: str
@@ -219,9 +252,17 @@ class ProjectCreate(BaseModel):
     dimension: Optional[str] = None
     scope_of_work: Optional[str] = None
     attendance_radius_meters: int = Field(500, ge=0, le=100000)
+    # R2-750: site coordinates. This endpoint creates the real projects, so
+    # without this field there is no supported way to place a site on the map.
+    location: Optional[str] = None
     branch_id: Optional[uuid.UUID] = None
     member_ids: List[uuid.UUID] = []
     custom_fields: List[CustomFieldValueInput] = []
+
+    @field_validator("location")
+    @classmethod
+    def _location_is_a_coordinate_pair(cls, v):
+        return _validate_location(v)
 
     @model_validator(mode="after")
     def planned_dates_not_inverted(self):
@@ -251,8 +292,16 @@ class ProjectUpdate(BaseModel):
     scope_of_work: Optional[str] = None
     project_avatar: Optional[str] = None
     attendance_radius_meters: Optional[int] = Field(None, ge=0, le=100000)
+    # R2-750: so coordinates can be added to a project that was created
+    # without them -- which today is every project in production.
+    location: Optional[str] = None
     branch_id: Optional[uuid.UUID] = None
     custom_fields: Optional[List[CustomFieldValueInput]] = None
+
+    @field_validator("location")
+    @classmethod
+    def _location_is_a_coordinate_pair(cls, v):
+        return _validate_location(v)
 
 
 class LocationCreate(BaseModel):
@@ -353,6 +402,8 @@ def create_project(payload: ProjectCreate, db: Session = Depends(get_db), curren
         dimension=payload.dimension,
         scope_of_work=payload.scope_of_work,
         attendance_radius_meters=payload.attendance_radius_meters,
+        # R2-750: persisted on create; planning.py was the only writer before.
+        location=payload.location,
         branch_id=payload.branch_id,
         status="Ongoing",
     )

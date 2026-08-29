@@ -354,8 +354,17 @@ def punch(payload: PunchRequest, db: Session = Depends(get_db), current_user: Us
         distance_m = round(haversine_distance_m(payload.lat, payload.lng, site_lat, site_lng), 2)
         within_geofence = distance_m <= radius
     else:
-        # No site coords configured → allow punch without GPS enforcement
-        within_geofence = True
+        # R2-750: no site coords configured, so nothing was measured. This used
+        # to set within_geofence = True, which stamped every punch
+        # location_verified=True and "Present" on the strength of a measurement
+        # that never happened. Attendance drives payroll and "GPS Verified" is
+        # an assurance shown to whoever reviews the muster, so an unverifiable
+        # punch is recorded as unverified -- not as verified.
+        #
+        # The project can be given coordinates via PUT /projects/{id} (R2-750
+        # added `location` to ProjectCreate/ProjectUpdate); until then the
+        # honest answer is "not verified", never a silently-passing geofence.
+        within_geofence = False
 
     # R2-210/R2-262/R2-728: aware UTC clock so stored/loaded punch values (aware on
     # Postgres) are always compared against the same flavor.

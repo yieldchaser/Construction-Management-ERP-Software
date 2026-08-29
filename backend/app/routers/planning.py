@@ -865,7 +865,15 @@ def create_project_v3(payload: ProjectCreateSchema, db: Session = Depends(get_db
         code=payload.code,
         address=payload.address,
         city=payload.city,
-        location=payload.location or "19.0760,72.8777", # Default location
+        # R2-750: no invented default. This used to fall back to a Mumbai
+        # coordinate, so a Gujarat or Kerala site created through this route got
+        # a geofence that was confidently wrong rather than absent -- worse than
+        # no geofence, because every punch was then measured against the wrong
+        # point and rejected (or, worse, accepted) for the wrong reason. A
+        # project with no coordinates is now honest: punches are recorded as
+        # not GPS-verified until someone sets them (PUT /projects/{id} accepts
+        # `location`).
+        location=payload.location,
         attendance_radius_meters=payload.attendance_radius_meters or 500,
         status="Ongoing",
         health=payload.health or "Good",
