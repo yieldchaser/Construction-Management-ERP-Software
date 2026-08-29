@@ -73,6 +73,8 @@ class WOResponse(BaseModel):
     wo_date: datetime
     status: str
     estimated_work_amount: float
+    billed_amount: float = 0.0
+    progress_pct: Optional[float] = None
     terms: Optional[str] = None
     created_at: datetime
     items: List[WOResponseItem] = []
@@ -280,6 +282,19 @@ def _sequential_deduction_calc(deductions: List[DeductionItemSchema], base: floa
     return details, total_deducted
 
 
+def _compute_wo_billing(db: Session, wo_id: UUID, est_amount: float):
+    # R2-762: Sum total_payable of non-cancelled bills raised against this work order
+    bills = db.query(Bill).filter(
+        Bill.wo_id == wo_id,
+        Bill.status != "Cancelled"
+    ).all()
+    billed_amount = round(sum(float(b.total_payable or 0.0) for b in bills), 2)
+    progress_pct = None
+    if float(est_amount) > 0:
+        progress_pct = round((billed_amount / float(est_amount)) * 100.0, 1)
+    return billed_amount, progress_pct
+
+
 # 1. Work Orders
 @router.get("/work-orders", response_model=List[WOResponse])
 def get_work_orders(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access), current_user: User = Depends(get_current_user)):
@@ -300,7 +315,9 @@ def get_work_orders(project_id: UUID, db: Session = Depends(get_db), _: None = D
             ) for i in items
         ]
         subcontractor_name = resolve_party_name(db, wo.subcontractor_id)
-        res.append(            WOResponse(
+        billed_amt, prog_pct = _compute_wo_billing(db, wo.id, float(wo.estimated_work_amount))
+        res.append(
+            WOResponse(
                 id=wo.id,
                 company_id=wo.company_id,
                 project_id=wo.project_id,
@@ -310,6 +327,8 @@ def get_work_orders(project_id: UUID, db: Session = Depends(get_db), _: None = D
                 wo_date=wo.wo_date,
                 status=wo.status,
                 estimated_work_amount=float(wo.estimated_work_amount),
+                billed_amount=billed_amt,
+                progress_pct=prog_pct,
                 terms=wo.terms,
                 created_at=wo.created_at,
                 items=item_schemas
@@ -380,6 +399,7 @@ def create_work_order(req: WOCreateRequest, db: Session = Depends(get_db), curre
     db.commit()
     db.refresh(wo)
 
+    billed_amt, prog_pct = _compute_wo_billing(db, wo.id, float(wo.estimated_work_amount))
     return WOResponse(
         id=wo.id,
         company_id=wo.company_id,
@@ -389,6 +409,8 @@ def create_work_order(req: WOCreateRequest, db: Session = Depends(get_db), curre
         wo_date=wo.wo_date,
         status=wo.status,
         estimated_work_amount=float(wo.estimated_work_amount),
+        billed_amount=billed_amt,
+        progress_pct=prog_pct,
         terms=wo.terms,
         created_at=wo.created_at,
         items=item_schemas
@@ -434,6 +456,7 @@ def cancel_work_order(wo_id: UUID, db: Session = Depends(get_db), current_user: 
         ) for i in items
     ]
     subcontractor_name = resolve_party_name(db, wo.subcontractor_id)
+    billed_amt, prog_pct = _compute_wo_billing(db, wo.id, float(wo.estimated_work_amount))
     return WOResponse(
         id=wo.id,
         company_id=wo.company_id,
@@ -444,6 +467,8 @@ def cancel_work_order(wo_id: UUID, db: Session = Depends(get_db), current_user: 
         wo_date=wo.wo_date,
         status=wo.status,
         estimated_work_amount=float(wo.estimated_work_amount),
+        billed_amount=billed_amt,
+        progress_pct=prog_pct,
         terms=wo.terms,
         created_at=wo.created_at,
         items=item_schemas

@@ -82,9 +82,10 @@ export default function SubconPage() {
             id: wo.wo_number || wo.id,
             sNo: i + 1,
             subContractor: wo.subcontractor_name || "Unknown",
-            progress: "0%",
+            progress: wo.progress_pct !== null && wo.progress_pct !== undefined ? `${Math.min(100, Math.max(0, wo.progress_pct))}%` : "—",
+            progressPct: wo.progress_pct !== null && wo.progress_pct !== undefined ? Number(wo.progress_pct) : null,
             woValue: Number(wo.estimated_work_amount) || 0,
-            billedValue: 0,
+            billedValue: Number(wo.billed_amount) || 0,
             status: wo.status || "—",
           }))
         );
@@ -256,12 +257,16 @@ export default function SubconPage() {
                       <td className="px-4 py-3 font-sans text-zinc-300">{wo.id}</td>
                       <td className="px-4 py-3 font-semibold text-foreground">{wo.subContractor}</td>
                       <td className="px-4 py-3 text-muted">
-                        <div className="flex items-center gap-2">
-                          <div className="w-20 bg-background h-1.5 rounded-full overflow-hidden border border-border-custom">
-                            <div className="bg-primary h-full" style={{ width: wo.progress }}></div>
+                        {wo.progressPct !== null && wo.progressPct !== undefined ? (
+                          <div className="flex items-center gap-2">
+                            <div className="w-20 bg-background h-1.5 rounded-full overflow-hidden border border-border-custom">
+                              <div className="bg-primary h-full" style={{ width: `${Math.min(100, Math.max(0, wo.progressPct))}%` }}></div>
+                            </div>
+                            <span>{wo.progress}</span>
                           </div>
-                          <span>{wo.progress}</span>
-                        </div>
+                        ) : (
+                          <span>—</span>
+                        )}
                       </td>
                       <td className="px-4 py-3 font-bold text-foreground">{fmt(wo.woValue)}</td>
                       <td className="px-4 py-3 text-zinc-300">{fmt(wo.billedValue)}</td>
