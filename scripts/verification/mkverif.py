@@ -117,6 +117,69 @@ EVIDENCE_CLOSE = {"R2-001", "R2-118", "R2-428"}
 # Verdicts reached by hand, one finding at a time. E1 = code read, E3 = live product.
 # NOT_IN_PROD is a FIFTH verdict, added deliberately - see the header note in the emitted file.
 VERDICTS = {
+    "R2-447": ("CONFIRMED", "PROVED LIVE. The finding's claim was that /planning/tasks/company/"
+               "{cid} - the only source of tasks for the Team Schedule screen - returns 500, so "
+               "the screen renders '0 tasks' and 'Loading schedule...' permanently. E3 2026-08-28 "
+               "against AK Construction: the endpoint returns 200 with 1458 bytes of real task "
+               "rows (the 19s latency was Render cold-start tail, not the endpoint). The route is "
+               "declared at planning.py:240 with response_model List[CompanyTaskResponse]. Team "
+               "Schedule has a populated source again."),
+    "R2-214": ("CONFIRMED", "Fix present on main. The finding's defect was that the green "
+               "'Auditor Approve' button only mutated local state - it approved nothing. "
+               "handleApproveBill (d/billing/page.tsx:424-426) is now async and POSTs to a real "
+               "endpoint, /apis/v3/billing/bills/{id}/approve, wired to the same button (:708). "
+               "The backend side of that endpoint was verified separately under R2-343's second "
+               "clause: approval is permission-gated (billing:approve), 409s a cancelled bill, "
+               "and settlement now requires an approved bill (R2-346)."),
+    "R2-215": ("CONFIRMED", "Fix present on main. The finding's defect was that 'Record Usage' "
+               "decremented stock on screen with a client-generated id (TXN-${Date.now()}) and "
+               "saved nothing. The handler now POSTs to /apis/v3/procurement/transactions "
+               "(d/procurement/page.tsx:489), so the consumption reaches the server. That "
+               "endpoint is also the guarded consume path verified under R2-380 - it enforces "
+               "negative_stock_lock before writing."),
+    "R2-270": ("CONFIRMED", "Fix present on main. The finding's defect was that the console sent "
+               "a users.id into ChatGroup.created_by, a column referencing company_team, so "
+               "group creation always failed. The client no longer sends the field at all - "
+               "d/chat/page.tsx:195 carries the annotation explaining that created_by references "
+               "company_team.id rather than users.id - and the server stamps it from the "
+               "canonical resolver instead (chat.py:144-155, verified under R2-468). The client "
+               "cannot supply a value in the wrong id space because it supplies none."),
+    "R2-416": ("CONFIRMED", "Fix present on main. The finding's defect was that the "
+               "company-level Finance dashboard gated its data effect on a project being "
+               "selected, so it never loaded at company scope. The data effects at "
+               "d/finance/page.tsx:382 and :736 are now both gated on 'if (companyId)', not "
+               "projectId. The one remaining ungated effect (:372) only reads the tab from the "
+               "query string and touches no data."),
+    "R2-423": ("CONFIRMED", "Fix present on main. The four fabricated projects with invented "
+               "clients and personnel are gone: dashboard/page.tsx:166 initialises projects as "
+               "useState<any[]>([]) - an empty array - so a failed fetch renders an honest empty "
+               "state rather than fiction. A grep for the invented project names and for any "
+               "fallback/demo seed array returns nothing."),
+    "R2-426": ("CONFIRMED", "Fix present on main. The '+ Create Demo Request' button that "
+               "created a genuine Rs 45,000 payment request against a real party is gone - a "
+               "grep for 'Demo Request' across d/payment-approval/page.tsx returns nothing, so "
+               "both the control and its handler were removed rather than merely hidden."),
+    "R2-434": ("CONFIRMED", "Fix present on main. The finding's defect was that every inspection "
+               "was attributed to a hardcoded fictional inspector, offered as the only filter "
+               "choice. d/quality/page.tsx:213 now maps the inspector from the record - "
+               "insp.inspected_by, with an em-dash when absent rather than a fabricated name - "
+               "and the filter options are derived from the actual data (:430 builds a Set over "
+               "the mapped inspections, excluding the em-dash placeholder). The server owns the "
+               "field per the register (fda5bd0, inspected_by server-owned)."),
+    "R2-435": ("CONFIRMED", "Fix present on main. The finding's defect was that every drawing pin "
+               "was rejected 422 because the console supplied created_by, and the failure was "
+               "swallowed behind a local-only pin. The client no longer sends it - "
+               "d/drawings/page.tsx:198 carries the annotation that created_by is derived "
+               "server-side from the authenticated user - and the POST body now carries only the "
+               "pin's own fields (:204 x_coordinate etc.), so the 422 cannot recur."),
+    "R2-173": ("CONFIRMED", "Fix present on main. The finding measured the project Transaction "
+               "page reporting Rs 0 received while the server reported Rs 90,000 in. The page now "
+               "sources the company finance summary directly - fetch(getApi('/finance/"
+               "transactions/{cid}')) at p/[project_id]/transaction/page.tsx:165 - and folds "
+               "recorded Payment rows into the cash heads (:213-216) rather than counting "
+               "settlement vouchers alone. Two annotations pin the intent: :308 (R2-490) states "
+               "the In/Out tiles are deliberately labelled as cash, and :318 (R2-173) states the "
+               "page must never present voucher-only cash tiles as if they were complete."),
     "R2-396": ("REGRESSED", "PARTIAL FIX. The guard is real and correct where it landed - "
                "reports/[slug]/page.tsx:669-670 defines csvSafeCell, documented as byte-identical "
                "to the backend _csv_safe_cell, and applies it to every cell before quoting "
