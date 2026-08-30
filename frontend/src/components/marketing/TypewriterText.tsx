@@ -17,8 +17,10 @@ interface TypewriterTextProps {
  * and first paint); the animation only takes over after hydration. Under
  * prefers-reduced-motion the first phrase is shown statically with no caret.
  *
- * D-017: pauses when the tab is hidden (visibilitychange) and resumes when
- * visible, so no timer budget is consumed while the user is on another tab.
+ * D-017: pauses when the tab is hidden (visibilitychange) AND when the element
+ * is scrolled out of view (IntersectionObserver), resuming when both are true
+ * again. Either condition alone stops the timer chain, so no timer budget is
+ * consumed while nobody can see the effect.
  */
 export default function TypewriterText({
   phrases,
@@ -31,6 +33,7 @@ export default function TypewriterText({
 
   const [text, setText] = React.useState(first);
   const [animate, setAnimate] = React.useState(false);
+  const hostRef = React.useRef<HTMLSpanElement | null>(null);
 
   React.useEffect(() => {
     // Respect reduced motion: keep the static first phrase, no animation.
@@ -78,28 +81,53 @@ export default function TypewriterText({
       }
     };
 
+    // Two independent reasons to stop: the tab is hidden, or the element is
+    // scrolled out of view. `paused` is derived from both so that resuming one
+    // while the other still applies does not restart the chain.
+    let hidden = typeof document !== "undefined" && document.hidden;
+    let offscreen = false;
+
+    const sync = () => {
+      const shouldPause = hidden || offscreen;
+      if (shouldPause === paused) return; // no state change, nothing to do
+      paused = shouldPause;
+      // Always clear before (re)scheduling. Without this, resuming from two
+      // sources could leave two timer chains running and type at double speed.
+      clearTimeout(timer);
+      if (!paused) tick();
+    };
+
     const onVisibilityChange = () => {
-      if (document.hidden) {
-        paused = true;
-        clearTimeout(timer);
-      } else {
-        paused = false;
-        tick(); // resume from current state
-      }
+      hidden = document.hidden;
+      sync();
     };
 
     document.addEventListener("visibilitychange", onVisibilityChange);
 
+    let observer: IntersectionObserver | undefined;
+    const host = hostRef.current;
+    if (host && typeof IntersectionObserver !== "undefined") {
+      observer = new IntersectionObserver(
+        (entries) => {
+          offscreen = !entries.some((e) => e.isIntersecting);
+          sync();
+        },
+        { rootMargin: "128px" }, // resume slightly before it scrolls back in
+      );
+      observer.observe(host);
+    }
+
     // Hold on the server rendered first phrase before starting to delete it.
-    timer = setTimeout(tick, holdTime);
+    if (!paused) timer = setTimeout(tick, holdTime);
     return () => {
       clearTimeout(timer);
       document.removeEventListener("visibilitychange", onVisibilityChange);
+      observer?.disconnect();
     };
   }, [animate, first, phrases, typeSpeed, deleteSpeed, holdTime]);
 
   return (
-    <span className={`tw-line${className ? ` ${className}` : ""}`}>
+    <span ref={hostRef} className={`tw-line${className ? ` ${className}` : ""}`}>
       {text}
       {animate && <span className="typewriter-caret" aria-hidden="true" />}
     </span>
