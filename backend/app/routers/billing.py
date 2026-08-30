@@ -98,7 +98,7 @@ class BillCreateRequest(BaseModel):
     company_id: UUID
     project_id: UUID
     party_company_user_id: UUID
-    invoice_number: str
+    invoice_number: Optional[str] = None
     invoice_date: datetime
     due_date: Optional[datetime] = None
     invoice_type: str = Field(..., pattern=INVOICE_TYPE_PATTERN, example="subcon") # sale, purchase, subcon, material_sale, material_return, material_transfer, expense, equipment
@@ -477,6 +477,46 @@ def cancel_work_order(wo_id: UUID, db: Session = Depends(get_db), current_user: 
         created_at=wo.created_at,
         items=item_schemas
     )
+
+# ─── AUTO-GENERATED DOCUMENT NUMBERING ───
+def next_document_number(db: Session, company_id: UUID, invoice_type: str = "purchase") -> str:
+    """Generate next sequential document number per company and invoice type (Onsite Parity 14.9.2)."""
+    prefix_map = {
+        "purchase": "PUR",
+        "sale": "INV",
+        "material_sale": "INV",
+        "subcon": "SUB",
+        "equipment": "EQP",
+        "expense": "EXP",
+        "material_return": "RET",
+        "material_transfer": "TRF",
+        "debit_note": "DN",
+        "credit_note": "CN",
+    }
+    prefix = prefix_map.get(invoice_type, "BILL")
+    year = datetime.now(timezone.utc).year
+    count = db.query(Bill).filter(
+        Bill.company_id == company_id,
+        Bill.invoice_number.like(f"{prefix}-{year}-%"),
+    ).count()
+
+    candidate = f"{prefix}-{year}-{count + 1:04d}"
+    while db.query(Bill).filter(Bill.company_id == company_id, Bill.invoice_number == candidate).first():
+        count += 1
+        candidate = f"{prefix}-{year}-{count + 1:04d}"
+    return candidate
+
+
+@router.get("/next-number/{company_id}")
+def get_next_document_number(
+    company_id: UUID,
+    invoice_type: str = "purchase",
+    db: Session = Depends(get_db),
+    _: None = Depends(verify_company_access),
+):
+    """Retrieve next auto-generated document number for form pre-fill (Onsite Parity 14.9.2)."""
+    return {"invoice_number": next_document_number(db, company_id, invoice_type)}
+
 
 # 2. Bills
 def _bills_query_and_serialize(
@@ -1102,10 +1142,15 @@ def create_bill(req: BillCreateRequest, db: Session = Depends(get_db), current_u
     enforce_required_custom_fields(db, req.company_id, "invoice", [cf.model_dump() for cf in req.custom_fields])
     enforce_required_custom_fields(db, req.company_id, "bill", [cf.model_dump() for cf in req.custom_fields])
 
+    # Resolve or auto-generate invoice number (Onsite Parity 14.9.2)
+    inv_num = (req.invoice_number or "").strip()
+    if not inv_num or inv_num.lower() == "auto":
+        inv_num = next_document_number(db, req.company_id, req.invoice_type)
+
     # Check if invoice number already exists for company
     existing = db.query(Bill).filter(
         Bill.company_id == req.company_id,
-        Bill.invoice_number == req.invoice_number
+        Bill.invoice_number == inv_num
     ).first()
     if existing:
         raise HTTPException(status_code=400, detail="Invoice number already exists for this company")
@@ -1285,7 +1330,7 @@ def create_bill(req: BillCreateRequest, db: Session = Depends(get_db), current_u
         company_id=req.company_id,
         project_id=req.project_id,
         party_company_user_id=req.party_company_user_id,
-        invoice_number=req.invoice_number,
+        invoice_number=inv_num,
         invoice_date=req.invoice_date,
         due_date=req.due_date,
         invoice_type=req.invoice_type,
