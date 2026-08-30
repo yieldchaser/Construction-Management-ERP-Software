@@ -37,6 +37,28 @@ git ls-remote origin main            # cross-check: must equal your HEAD after p
 
 **And actually push.** `git push origin main`. Committing is not landing.
 
+## Before you start — CI is red, and it is NOT yours to fix
+
+The `Apply Supabase Migrations` workflow is failing in 1–3 seconds with:
+
+> *"The job was not started because recent account payments have failed or your spending limit needs
+> to be increased."*
+
+**That is a GitHub Actions billing block on a private repo — the job never starts. It is not a code
+fault, and it is founder-owned (backlog D-021).** Do not try to fix it, do not edit the workflow, and
+do not treat a red badge on `main` as something you caused. `Keep Alive Backend` is red for the same
+reason.
+
+**What this means for you in practice:** while CI is blocked, your migrations are not applied by the
+pipeline. The app has a boot schema-sync that adds missing **columns** on startup, so schema changes
+tend to appear anyway — but it **never runs DATA statements**. A migration that is a pure
+`UPDATE`/`INSERT` will silently not apply, and the schema will look correct while the data is stale.
+This already happened once: R2-759's lowercase normalization sat unapplied while the column-level work
+looked fine, and the new validator then rejected edits to the un-normalized row.
+
+So: **if you write a data migration, say so explicitly in your report** and flag that it needs manual
+application until D-021 is resolved. Schema-only migrations are fine.
+
 ## Task 1 — R2-765: give chat unread counts a real home (small, do this first)
 
 `backend/app/routers/chat.py:71` stores the read watermark in a module-level in-memory dict:
