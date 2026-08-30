@@ -496,7 +496,7 @@ isCode: cl.is_code_reference || "—",
           {tab === "inspections" && (
             <div className="space-y-4">
               {/* KPI row */}
-              <div className="grid grid-cols-4 gap-4 mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                 {[
                   { label: "Total Inspections", val: inspections.length, color: "text-foreground" },
                   { label: "All Pass", val: inspections.filter(i => i.status === "pass").length, color: "text-green-400" },
@@ -675,7 +675,7 @@ isCode: cl.is_code_reference || "—",
 
           {/* ── NCR KANBAN ──────────────────────────────────────────────────── */}
           {tab === "ncr" && (
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* Open */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2 mb-3">
@@ -748,7 +748,7 @@ isCode: cl.is_code_reference || "—",
           {tab === "labtests" && (
             <div className="space-y-4">
               {/* Summary row */}
-              <div className="grid grid-cols-4 gap-4 mb-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-2">
                 {[
                   { label: "Total Tests", val: labTests.length, color: "text-foreground" },
                   { label: "Passed", val: labTests.filter(t => t.pass).length, color: "text-green-400" },
@@ -825,7 +825,7 @@ isCode: cl.is_code_reference || "—",
               <span className="text-sm font-bold text-foreground">{passRate(selectedInspection.passCount, selectedInspection.failCount)}%</span>
             </div>
 
-            <div className="grid grid-cols-3 gap-3 mb-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-5">
               {[
                 { label: "Pass", val: selectedInspection.passCount, color: "text-green-400 bg-green-500/10 border-green-500/20" },
                 { label: "Fail", val: selectedInspection.failCount, color: "text-red-400 bg-red-500/10 border-red-500/20" },
@@ -970,7 +970,7 @@ isCode: cl.is_code_reference || "—",
                   className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none focus:border-secondary"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] uppercase font-bold text-muted block mb-1">Severity</label>
                   <select
@@ -1011,7 +1011,7 @@ isCode: cl.is_code_reference || "—",
               <p className="text-xs text-muted mt-1">Record on-site / lab compressive, slump, or soil test results.</p>
             </div>
             <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] uppercase font-bold text-muted block mb-1">Test Type</label>
                   <input
@@ -1033,7 +1033,7 @@ isCode: cl.is_code_reference || "—",
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                 <div>
                   <label className="text-[10px] uppercase font-bold text-muted block mb-1">Result Value</label>
                   <input
@@ -1065,7 +1065,7 @@ isCode: cl.is_code_reference || "—",
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] uppercase font-bold text-muted block mb-1">Min Acceptable</label>
                   <input

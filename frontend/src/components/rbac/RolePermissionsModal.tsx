@@ -135,7 +135,7 @@ export default function RolePermissionsModal({ role, onClose, onSaved }: Props) 
         checked={checked}
         onChange={onChange}
         disabled={disabled}
-        className="h-3.5 w-3.5 accent-[var(--primary,#E8184C)] rounded border-border-custom"
+        className="h-3.5 w-3.5 accent-primary rounded border-border-custom"
       />
       {label}
     </label>

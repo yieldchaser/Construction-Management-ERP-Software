@@ -183,7 +183,7 @@ export default function LabourPage() {
                         <p className="text-[10px] text-muted">Reliability</p>
                       </div>
                     </div>
-                    <div className="grid grid-cols-4 gap-4 mt-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
                       <div className="bg-elevated rounded-md p-3 text-center">
                         <span className="text-[10px] text-muted block">On-Time</span>
                         <span className="text-sm font-bold text-green-400">{r.on_time_pct.toFixed(1)}%</span>
@@ -209,7 +209,7 @@ export default function LabourPage() {
           )}
 
           {activeTab === "bocw" && (
-            <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg overflow-hidden">
+            <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
               <div className="px-5 py-4 border-b border-border-custom">
                 <h2 className="text-xs font-bold uppercase tracking-wider text-muted">BOCW Records</h2>
               </div>
@@ -235,7 +235,7 @@ export default function LabourPage() {
           )}
 
           {activeTab === "muster" && (
-            <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg overflow-hidden">
+            <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
               <div className="px-5 py-4 border-b border-border-custom">
                 <h2 className="text-xs font-bold uppercase tracking-wider text-muted">Muster Roll</h2>
               </div>
@@ -268,7 +268,7 @@ export default function LabourPage() {
           <div className="bg-card border border-border-custom rounded-lg w-full max-w-md border border-border-custom rounded-md p-6 space-y-4">
             <div><h3 className="text-sm font-extrabold text-foreground">Add Muster Roll Entry</h3></div>
             <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] uppercase font-bold text-muted block mb-1">Date</label>
                   <input type="date" value={musterDate} onChange={(e) => setMusterDate(e.target.value)} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none" />
@@ -278,7 +278,7 @@ export default function LabourPage() {
                   <select value={musterRole} onChange={(e) => setMusterRole(e.target.value)} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none"><option>Mason</option><option>Helper</option><option>Supervisor</option><option>Steel Fixer</option><option>Electrician</option></select>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] uppercase font-bold text-muted block mb-1">Present</label>
                   <input type="number" value={musterPresent} onChange={(e) => setMusterPresent(parseInt(e.target.value) || 0)} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none" />
@@ -288,7 +288,7 @@ export default function LabourPage() {
                   <input type="number" value={musterAbsent} onChange={(e) => setMusterAbsent(parseInt(e.target.value) || 0)} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none" />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] uppercase font-bold text-muted block mb-1">Hours Worked</label>
                   <input type="number" step="0.5" value={musterHours} onChange={(e) => setMusterHours(parseFloat(e.target.value) || 0)} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none" />
@@ -320,7 +320,7 @@ export default function LabourPage() {
                 <label className="text-[10px] uppercase font-bold text-muted block mb-1">Contractor Name</label>
                 <input type="text" value={bocwContractor} onChange={(e) => setBocwContractor(e.target.value)} placeholder="Contractor name" className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none" />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] uppercase font-bold text-muted block mb-1">Month</label>
                   <input type="month" value={bocwMonth} onChange={(e) => setBocwMonth(e.target.value)} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none" />
@@ -330,7 +330,7 @@ export default function LabourPage() {
                   <input type="number" min="0" value={bocwWorkers} onChange={(e) => setBocwWorkers(parseInt(e.target.value) || 0)} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none" />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] uppercase font-bold text-muted block mb-1">Wages Paid</label>
                   <input type="number" min="0" step="0.01" value={bocwWages} onChange={(e) => setBocwWages(parseFloat(e.target.value) || 0)} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none" />

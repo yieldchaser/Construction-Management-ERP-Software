@@ -6,6 +6,8 @@ import { useParams } from "next/navigation";
 import { HELP_CATEGORIES, HELP_MODULE_LINKS, FaqCategory } from "./helpContent";
 import Icon from "@/components/marketing/Icon";
 
+import PageShell from "@/components/layout/PageShell";
+
 export default function HelpPage() {
   const params = useParams();
   const companyId = (params?.company_id as string) || "";
@@ -48,73 +50,76 @@ export default function HelpPage() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-elevated/10">
-      <div className="flex-1 overflow-y-auto p-6 space-y-8">
-        {/* Banner Section */}
-        <div className="relative rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-border-custom p-8 overflow-hidden">
-          <div className="max-w-2xl relative z-10 space-y-2">
-            <h1 className="text-2xl font-extrabold tracking-tight text-foreground">
-              Help Centre
-            </h1>
-            <p className="text-xs text-muted">
-              Answers to common questions about how SiteFlow actually works, grouped
-              by area. Every step below reflects a real module in your account.
-            </p>
+      <div className="flex-1 overflow-y-auto">
+        <PageShell width="wide">
+          {/* Banner Section */}
+          <div className="relative rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-border-custom p-8 overflow-hidden">
+            <div className="relative z-10 space-y-2">
+              <h1 className="text-2xl font-extrabold tracking-tight text-foreground">
+                Help Centre
+              </h1>
+              <p className="text-xs text-muted max-w-2xl">
+                Answers to common questions about how SiteFlow actually works, grouped
+                by area. Every step below reflects a real module in your account.
+              </p>
+            </div>
+            <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-radial from-primary/5 to-transparent blur-3xl pointer-events-none" />
           </div>
-          <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-radial from-primary/5 to-transparent blur-3xl pointer-events-none" />
-        </div>
 
-        {/* Search */}
-        <div className="max-w-2xl relative">
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search help, e.g. 'RA bill', 'attendance', 'Tally', 'PO'..."
-            className="w-full px-5 py-3.5 pl-12 rounded-lg bg-card border border-border-custom text-foreground placeholder:text-muted focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all text-sm shadow-sm"
-          />
-          <svg
-            className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          {/* Search */}
+          <div className="w-full relative">
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search help, e.g. 'RA bill', 'attendance', 'Tally', 'PO'..."
+              className="w-full px-5 py-3.5 pl-12 rounded-lg bg-card border border-border-custom text-foreground placeholder:text-muted focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all text-sm shadow-sm"
             />
-          </svg>
-          {query && (
-            <button
-              onClick={() => setQuery("")}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-muted hover:text-foreground transition-all cursor-pointer"
+            <svg
+              className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              Clear
-            </button>
-          )}
-        </div>
-
-        {/* Module directory */}
-        <div className="max-w-2xl">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-muted mb-1">
-            Modules
-          </h2>
-          <p className="text-xs text-muted mb-3">
-            Direct links to every module not shown in the sidebar.
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {HELP_MODULE_LINKS(companyId).map((m) => (
-              <Link
-                key={m.href}
-                href={m.href}
-                className="rounded-md border border-border-custom bg-card px-3 py-1.5 text-xs font-medium text-muted hover:text-foreground hover:bg-elevated transition-all"
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+            {query && (
+              <button
+                onClick={() => setQuery("")}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-muted hover:text-foreground transition-all cursor-pointer"
               >
-                {m.label}
-              </Link>
-            ))}
+                Clear
+              </button>
+            )}
           </div>
-        </div>
+
+          {/* Module directory / Quick index */}
+          <div className="w-full">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-muted mb-1">
+              Modules Index
+            </h2>
+            <p className="text-xs text-muted mb-3">
+              Quick index of all system modules and workspace feature documentation.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {HELP_MODULE_LINKS(companyId)
+                .filter((m) => !q || m.label.toLowerCase().includes(q))
+                .map((m) => (
+                  <Link
+                    key={m.href}
+                    href={m.href}
+                    className="rounded-md border border-border-custom bg-card px-3 py-1.5 text-xs font-medium text-muted hover:text-foreground hover:bg-elevated transition-all"
+                  >
+                    {m.label}
+                  </Link>
+                ))}
+            </div>
+          </div>
 
         {filtered.length === 0 ? (
           <div className="text-center py-12 border border-dashed border-border-custom rounded-xl bg-card">
@@ -219,6 +224,7 @@ export default function HelpPage() {
             );
           })}
         </div>
+        </PageShell>
       </div>
     </div>
   );

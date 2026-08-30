@@ -736,7 +736,7 @@ export default function ProjectsHomePage() {
             </div>
 
             {/* Filters */}
-            <div className="p-5 bg-elevated/20 border-b border-border-custom grid grid-cols-2 gap-4">
+            <div className="p-5 bg-elevated/20 border-b border-border-custom grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-medium text-muted uppercase tracking-wider">Filter by Project</label>
                 <select

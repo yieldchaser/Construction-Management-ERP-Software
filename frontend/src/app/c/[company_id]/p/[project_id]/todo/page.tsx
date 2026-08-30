@@ -199,7 +199,7 @@ function NewTodoModal({
             <div className="mb-1 text-xs font-medium text-muted">Title *</div>
             <input value={title} onChange={(e) => setTitle(e.target.value)} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <div className="mb-1 text-xs font-medium text-muted">Due Date</div>
               <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />

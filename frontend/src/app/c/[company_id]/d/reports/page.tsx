@@ -235,7 +235,7 @@ export default function ClientReportsPage() {
 
                 {/* Summary remarks */}
                 {selectedReport.summary_markdown && (
-                  <div className="bg-card border border-border-custom rounded-lg p-4 rounded-md border border-border-custom bg-elevated">
+                  <div className="bg-card border border-border-custom rounded-lg p-4 bg-elevated">
                     <h3 className="text-[10px] font-bold text-muted uppercase tracking-wider">
                       Executive Summary Notes
                     </h3>
@@ -246,7 +246,7 @@ export default function ClientReportsPage() {
                 )}
 
                 {/* Embedded PDF Viewer */}
-                <div className="flex-1 bg-card border border-border-custom rounded-lg rounded-lg border border-border-custom overflow-hidden bg-background flex flex-col min-h-[400px]">
+                <div className="flex-1 bg-card border border-border-custom rounded-lg overflow-hidden bg-background flex flex-col min-h-[400px]">
                   <iframe
                     src={`${getApiHost()}/apis/v3/reports/${selectedReport.id}/download#toolbar=0`}
                     className="w-full h-full border-0"

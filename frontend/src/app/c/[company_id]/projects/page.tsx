@@ -681,7 +681,7 @@ function CreateProjectModal({
 
           {step === 2 && (
             <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <Field label="Stage">
                   <input value={stage} onChange={(e) => setStage(e.target.value)} className={inputCls} />
                 </Field>
@@ -689,7 +689,7 @@ function CreateProjectModal({
                   <input value={category} onChange={(e) => setCategory(e.target.value)} className={inputCls} />
                 </Field>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <Field label="Project Value">
                   <input type="number" value={projectValue} onChange={(e) => setProjectValue(e.target.value)} className={inputCls} />
                 </Field>
@@ -697,7 +697,7 @@ function CreateProjectModal({
                   <input type="number" value={attendanceRadius} onChange={(e) => { const v = parseInt(e.target.value); setAttendanceRadius(Number.isNaN(v) ? 500 : v); }} className={inputCls} />
                 </Field>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <Field label="Planned Start Date">
                   <input type="date" value={plannedStart} onChange={(e) => setPlannedStart(e.target.value)} className={inputCls} />
                 </Field>
@@ -705,7 +705,7 @@ function CreateProjectModal({
                   <input type="date" value={plannedEnd} onChange={(e) => setPlannedEnd(e.target.value)} className={inputCls} />
                 </Field>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <Field label="Orientation">
                   <input value={orientation} onChange={(e) => setOrientation(e.target.value)} className={inputCls} />
                 </Field>
@@ -758,7 +758,7 @@ function CreateProjectModal({
                   )}
                 </div>
               </Field>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <CustomFieldsSection
                   fields={customFields.fields}
                   values={customFields.values}
@@ -982,7 +982,7 @@ function ProjectSettingsModal({
               <Field label="Project Name">
                 <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
               </Field>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <Field label="Project Code">
                   <input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} placeholder="e.g. PRJ-001" className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
                 </Field>
@@ -990,7 +990,7 @@ function ProjectSettingsModal({
                   <input type="number" value={form.attendance_radius_meters} onChange={(e) => { const v = parseInt(e.target.value); setForm({ ...form, attendance_radius_meters: Number.isNaN(v) ? 500 : v }); }} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
                 </Field>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <Field label="Planned Start Date">
                   <input type="date" value={form.planned_start_date} onChange={(e) => setForm({ ...form, planned_start_date: e.target.value })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
                 </Field>
@@ -998,7 +998,7 @@ function ProjectSettingsModal({
                   <input type="date" value={form.planned_end_date} onChange={(e) => setForm({ ...form, planned_end_date: e.target.value })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
                 </Field>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <Field label="Stage">
                   <input value={form.stage} onChange={(e) => setForm({ ...form, stage: e.target.value })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
                 </Field>
@@ -1009,7 +1009,7 @@ function ProjectSettingsModal({
               <Field label="Address">
                 <input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
               </Field>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <Field label="City">
                   <input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
                 </Field>
@@ -1026,7 +1026,7 @@ function ProjectSettingsModal({
               <Field label="Scope of Work">
                 <textarea value={form.scope_of_work} onChange={(e) => setForm({ ...form, scope_of_work: e.target.value })} rows={3} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
               </Field>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <CustomFieldsSection
                   fields={customFields.fields}
                   values={customFields.values}

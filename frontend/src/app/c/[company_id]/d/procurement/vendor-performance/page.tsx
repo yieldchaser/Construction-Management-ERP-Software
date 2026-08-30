@@ -62,7 +62,7 @@ export default function VendorPerformancePage() {
           )}
 
           {!loading && vendors.length > 0 && (
-            <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg overflow-hidden">
+            <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-xs text-left">
                   <thead>

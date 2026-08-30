@@ -550,7 +550,7 @@ export default function GanttSchedulerPage() {
               {/* Create Milestone */}
               <form onSubmit={handleCreateMilestone} className="mt-4 bg-card border border-border-custom rounded-lg p-4 space-y-3">
                 <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Add Milestone</h3>
-                <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                   <div className="col-span-2 space-y-1">
                     <label className="text-muted font-semibold">Milestone Name</label>
                     <input
@@ -708,7 +708,7 @@ export default function GanttSchedulerPage() {
               <h2 className="text-xs font-bold text-foreground uppercase tracking-wider">
                 Create WBS Task
               </h2>
-              <form onSubmit={handleCreateTask} className="grid grid-cols-2 gap-3 text-xs">
+              <form onSubmit={handleCreateTask} className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                 <div className="col-span-2 space-y-1">
                   <label className="text-muted font-semibold">Task Name</label>
                   <input
@@ -804,7 +804,7 @@ export default function GanttSchedulerPage() {
           </div>
 
           {/* WBS Task Gantt List */}
-          <div className="bg-card border border-border-custom rounded-lg rounded-lg border border-border-custom p-6 space-y-4">
+          <div className="bg-card border border-border-custom rounded-lg p-6 space-y-4">
             <div>
               <h2 className="text-xs font-bold text-foreground uppercase tracking-wider">WBS Execution Nodes</h2>
               <p className="text-[10px] text-muted">Click a task card below to open its real-time collaboration feed, subtasks and progress takeoff book.</p>
@@ -946,7 +946,7 @@ export default function GanttSchedulerPage() {
                 </div>
 
                 {useTakeoff && (
-                  <div className="grid grid-cols-4 gap-2 bg-input p-3 rounded-lg border border-border-custom text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 bg-input p-3 rounded-lg border border-border-custom text-xs">
                     <div className="space-y-1">
                       <span className="text-[10px] text-muted block">No. (N)</span>
                       <input type="number" value={takeoffN} onChange={(e) => setTakeoffN(parseFloat(e.target.value) || 1)} className="w-full bg-elevated border border-border-custom rounded p-1 text-foreground text-center" />

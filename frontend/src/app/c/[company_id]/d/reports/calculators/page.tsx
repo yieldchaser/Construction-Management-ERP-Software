@@ -1511,7 +1511,7 @@ export default function CalculatorsPage() {
                     </div>
                     <div className="space-y-1">
                       <label className="text-muted">Construction Grade</label>
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                         {(["budget", "standard", "premium"] as const).map((q) => (
                           <button
                             key={q}
@@ -1728,7 +1728,7 @@ export default function CalculatorsPage() {
                       <span className="text-muted text-[10px] uppercase font-bold block">
                         Dry Mix Materials (1.54 Factor)
                       </span>
-                      <div className="grid grid-cols-3 gap-2 mt-3 text-center">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mt-3 text-center">
                         <div className="bg-elevated p-2 rounded">
                           <strong className="text-sm font-bold text-foreground block">
                             {Math.ceil(concCementBags)}
@@ -1805,7 +1805,7 @@ export default function CalculatorsPage() {
                       <span className="text-muted text-[10px] uppercase font-bold block">
                         Dry Mortar Material Split
                       </span>
-                      <div className="grid grid-cols-2 gap-3 mt-2">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
                         <div className="bg-elevated p-2 rounded text-center">
                           <strong className="text-sm font-bold text-foreground block">
                             {brickCementBags.toFixed(1)}
@@ -1843,7 +1843,7 @@ export default function CalculatorsPage() {
                         After deducting {doorsCount} doors and {windowsCount} windows
                       </span>
                     </div>
-                    <div className="bg-input p-4 rounded-md border border-border-custom grid grid-cols-3 gap-2 text-center">
+                    <div className="bg-input p-4 rounded-md border border-border-custom grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 text-center">
                       <div className="bg-elevated p-2 rounded">
                         <strong className="text-sm font-bold text-foreground block">
                           {paintLitres.toFixed(1)} L
@@ -1902,7 +1902,7 @@ export default function CalculatorsPage() {
                         {plasterWetVol.toFixed(3)} m³
                       </strong>
                     </div>
-                    <div className="bg-input p-4 rounded-md border border-border-custom grid grid-cols-2 gap-3 text-center">
+                    <div className="bg-input p-4 rounded-md border border-border-custom grid grid-cols-1 md:grid-cols-2 gap-3 text-center">
                       <div>
                         <span className="text-muted text-[10px] uppercase font-bold block">
                           Cement Bags

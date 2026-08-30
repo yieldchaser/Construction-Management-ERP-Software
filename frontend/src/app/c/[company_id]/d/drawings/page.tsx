@@ -643,7 +643,7 @@ export default function DrawingsPage() {
             </div>
             <div>
               <div className="text-muted mb-1.5">Pin Category</div>
-              <div className="grid grid-cols-2 gap-1.5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
                 {(["RFI", "Clash", "Observation", "Approval"] as PinCategory[]).map(cat => {
                   const m = PIN_META[cat];
                   return (

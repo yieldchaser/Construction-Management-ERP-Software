@@ -192,7 +192,7 @@ export default function WastagePage() {
                   <label className="block text-xs font-medium text-muted mb-1">Material Name</label>
                   <input type="text" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.material_name} onChange={(e) => setForm({...form, material_name: e.target.value})} />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-muted mb-1">Type</label>
                     <select className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.wastage_type} onChange={(e) => setForm({...form, wastage_type: e.target.value})}>
@@ -208,7 +208,7 @@ export default function WastagePage() {
                     <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.quantity} onChange={(e) => setForm({...form, quantity: parseFloat(e.target.value)})} />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-muted mb-1">Unit</label>
                     <input type="text" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.unit} onChange={(e) => setForm({...form, unit: e.target.value})} />

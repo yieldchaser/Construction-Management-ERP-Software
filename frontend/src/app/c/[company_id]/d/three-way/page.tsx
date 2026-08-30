@@ -4,6 +4,9 @@ import { authHeaders, fmtINR } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
+import PageShell from "@/components/layout/PageShell";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 interface Match {
   id: string;
@@ -172,7 +175,8 @@ export default function ThreeWayPage() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex-1 overflow-y-auto">
+        <PageShell width="wide">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-foreground">3-Way Matching</h1>
@@ -180,7 +184,7 @@ export default function ThreeWayPage() {
           </div>
           <button
             onClick={() => { setShowModal(true); setMessage(""); }}
-            className="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-md text-sm font-semibold transition-all"
+            className="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-md text-sm font-semibold transition-all cursor-pointer"
           >
             New Match
           </button>
@@ -192,9 +196,9 @@ export default function ThreeWayPage() {
           </div>
         )}
 
-        <div className="bg-white/5 border border-border-custom rounded-lg overflow-hidden">
+        <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
           <table className="w-full text-left text-sm">
-            <thead className="bg-white/5 text-muted">
+            <thead className="bg-elevated text-muted">
               <tr>
                 <th className="px-6 py-4 font-medium">PO</th>
                 <th className="px-6 py-4 font-medium">GRN</th>
@@ -207,7 +211,20 @@ export default function ThreeWayPage() {
             </thead>
             <tbody className="divide-y divide-border-custom">
               {matches.length === 0 ? (
-                <tr><td colSpan={7} className="px-6 py-8 text-center text-muted">No matches found</td></tr>
+                <tr>
+                  <td colSpan={7} className="p-8">
+                    <EmptyState
+                      icon="check"
+                      title="No 3-way matches found"
+                      description="Reconcile purchase orders, goods receipt notes and vendor invoices."
+                      action={{
+                        label: "New Match",
+                        onClick: () => { setShowModal(true); setMessage(""); },
+                        icon: "add",
+                      }}
+                    />
+                  </td>
+                </tr>
               ) : (
                 matches.map((m) => (
                   <tr key={m.id} className="hover:bg-white/5 transition-colors">
@@ -279,6 +296,7 @@ export default function ThreeWayPage() {
             </div>
           </div>
         )}
+        </PageShell>
       </div>
     </div>
   );

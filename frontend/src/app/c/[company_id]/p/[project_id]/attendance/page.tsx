@@ -672,7 +672,7 @@ export default function AttendancePage() {
               {subTab === "staff" && (
                 <div className="space-y-5">
                   {/* Punch Control Panel */}
-                  <div className="bg-card border border-border-custom rounded-lg rounded-lg border border-border-custom p-5 space-y-4">
+                  <div className="bg-card border border-border-custom rounded-lg p-5 space-y-4">
                     <div className="flex flex-col gap-4 md:flex-row md:items-end justify-between">
                       <div className="space-y-3 flex-1">
                         <label className="block text-xs font-bold text-muted">Select Staff / Labor Employee</label>
@@ -744,7 +744,7 @@ export default function AttendancePage() {
                   </div>
 
                   {/* Log list */}
-                  <div className="bg-card border border-border-custom rounded-lg rounded-lg border border-border-custom overflow-hidden">
+                  <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
                     <div className="px-5 py-3 border-b border-border-custom flex items-center justify-between">
                       <h2 className="text-xs font-bold text-muted uppercase tracking-wider">{strings.workerLog}</h2>
                       <span className="text-[10px] text-emerald-400 font-semibold">● Real-time Logs</span>
@@ -1138,7 +1138,7 @@ export default function AttendancePage() {
               <button onClick={() => setShowLanguageDrawer(false)} className="text-muted hover:text-foreground">✕</button>
             </div>
             
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {Object.keys(LOCALIZATION).map((langName) => (
                 <button
                   key={langName}
@@ -1208,7 +1208,7 @@ export default function AttendancePage() {
 
                   {/* Form Column */}
                   <div className="flex-1 space-y-4 text-xs">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-1">
                         <label className="text-[10px] text-muted uppercase font-bold">Project Code</label>
                         <input
@@ -1229,7 +1229,7 @@ export default function AttendancePage() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-1">
                         <label className="text-[10px] text-muted uppercase font-bold">Project Stage</label>
                         <select
@@ -1257,7 +1257,7 @@ export default function AttendancePage() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-1">
                         <label className="text-[10px] text-muted uppercase font-bold">Start Date</label>
                         <input
@@ -1301,7 +1301,7 @@ export default function AttendancePage() {
                       </select>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-1">
                         <label className="text-[10px] text-muted uppercase font-bold">Attendance Radius (meters)</label>
                         <input
@@ -1322,7 +1322,7 @@ export default function AttendancePage() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-1">
                         <label className="text-[10px] text-muted uppercase font-bold">Project Orientation</label>
                         <input

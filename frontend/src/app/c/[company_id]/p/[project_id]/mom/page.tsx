@@ -323,7 +323,7 @@ export default function MoMPage() {
                   ))}
                 </select>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] uppercase font-bold text-muted block mb-1">Type</label>
                   <select value={form.type} onChange={(e) => setForm(prev => ({ ...prev, type: e.target.value as typeof MOM_TYPES[number] }))}

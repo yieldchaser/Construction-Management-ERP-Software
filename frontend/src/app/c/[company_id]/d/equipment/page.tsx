@@ -513,7 +513,7 @@ export default function EquipmentTrackingPage() {
                     </div>
 
                     {/* Summary kpi strip */}
-                    <div className="grid grid-cols-4 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                       {[
                         { label: "Total Runs", value: completedRuns.length, color: "text-foreground" },
                         { label: "Total Hours", value: completedRuns.reduce((s,r) => s + r.durationHrs, 0).toFixed(1) + " hr", color: "text-primary" },
@@ -761,7 +761,7 @@ export default function EquipmentTrackingPage() {
             </div>
 
             <div className="space-y-3 text-xs">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-muted">Diesel Liters</label>
                   <input type="number" value={fuelLiters} onChange={(e) => setFuelLiters(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" placeholder="e.g. 89" />
@@ -806,7 +806,7 @@ export default function EquipmentTrackingPage() {
                 <input type="text" value={eqName} onChange={(e) => setEqName(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" placeholder="JCB Excavator 3DX" />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-muted">Equipment Code</label>
                   <input type="text" value={eqCode} onChange={(e) => setEqCode(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" placeholder="JCB-3DX-01" />
@@ -817,7 +817,7 @@ export default function EquipmentTrackingPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-muted">Category</label>
                   <select value={eqCategory} onChange={(e) => setEqCategory(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground">

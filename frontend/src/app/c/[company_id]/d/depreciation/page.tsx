@@ -4,6 +4,9 @@ import { authHeaders } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
+import PageShell from "@/components/layout/PageShell";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 interface Schedule {
   id: string;
@@ -139,8 +142,9 @@ export default function DepreciationPage() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-between mb-8">
+      <div className="flex-1 overflow-y-auto">
+        <PageShell width="wide">
+          <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Asset Depreciation</h1>
             <p className="text-muted mt-1">Track asset value decline and maintain depreciation schedules</p>
@@ -198,7 +202,20 @@ export default function DepreciationPage() {
               </thead>
               <tbody className="divide-y divide-border-custom">
                 {schedules.length === 0 ? (
-                  <tr><td colSpan={6} className="px-6 py-8 text-center text-muted">No schedules found</td></tr>
+                  <tr>
+                    <td colSpan={6} className="p-8">
+                      <EmptyState
+                        icon="trending_down"
+                        title="No depreciation schedules found"
+                        description="Create an asset depreciation schedule to track salvage value, life cycle and yearly depreciation."
+                        action={{
+                          label: "New Schedule",
+                          onClick: () => setShowSchedModal(true),
+                          icon: "add",
+                        }}
+                      />
+                    </td>
+                  </tr>
                 ) : (
                   schedules.map((s) => (
                     <tr key={s.id} className="hover:bg-elevated transition-colors">
@@ -234,7 +251,20 @@ export default function DepreciationPage() {
               </thead>
               <tbody className="divide-y divide-border-custom">
                 {entries.length === 0 ? (
-                  <tr><td colSpan={5} className="px-6 py-8 text-center text-muted">No entries found</td></tr>
+                  <tr>
+                    <td colSpan={5} className="p-8">
+                      <EmptyState
+                        icon="ledger"
+                        title="No depreciation entries found"
+                        description="Log depreciation journal entries to calculate monthly asset write-offs."
+                        action={{
+                          label: "New Entry",
+                          onClick: () => setShowEntryModal(true),
+                          icon: "add",
+                        }}
+                      />
+                    </td>
+                  </tr>
                 ) : (
                   entries.map((e) => (
                     <tr key={e.id} className="hover:bg-elevated transition-colors">
@@ -250,6 +280,7 @@ export default function DepreciationPage() {
             </table>
           </div>
         )}
+        </PageShell>
       </div>
 
       {showSchedModal && (
@@ -261,7 +292,7 @@ export default function DepreciationPage() {
                 <label className="block text-xs font-medium text-muted mb-1">Asset ID</label>
                 <input type="text" required className="w-full bg-elevated border border-border-custom rounded-md px-4 py-2 text-foreground" value={schedForm.asset_id} onChange={(e) => setSchedForm({...schedForm, asset_id: e.target.value})} />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-muted mb-1">Method</label>
                   <select className="w-full bg-elevated border border-border-custom rounded-md px-4 py-2 text-foreground" value={schedForm.method} onChange={(e) => setSchedForm({...schedForm, method: e.target.value})}>
@@ -275,7 +306,7 @@ export default function DepreciationPage() {
                   <input type="number" required className="w-full bg-elevated border border-border-custom rounded-md px-4 py-2 text-foreground" value={schedForm.useful_life_years} onChange={(e) => setSchedForm({...schedForm, useful_life_years: parseInt(e.target.value)})} />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-muted mb-1">Salvage Value (₹)</label>
                   <input type="number" required className="w-full bg-elevated border border-border-custom rounded-md px-4 py-2 text-foreground" value={schedForm.salvage_value} onChange={(e) => setSchedForm({...schedForm, salvage_value: parseFloat(e.target.value)})} />
@@ -315,7 +346,7 @@ export default function DepreciationPage() {
                 <label className="block text-xs font-medium text-muted mb-1">Entry Date</label>
                 <input type="date" required className="w-full bg-elevated border border-border-custom rounded-md px-4 py-2 text-foreground" value={entryForm.entry_date} onChange={(e) => setEntryForm({...entryForm, entry_date: e.target.value})} />
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-muted mb-1">Depreciation (₹)</label>
                   <input type="number" required className="w-full bg-elevated border border-border-custom rounded-md px-4 py-2 text-foreground" value={entryForm.depreciation_amount} onChange={(e) => setEntryForm({...entryForm, depreciation_amount: parseFloat(e.target.value)})} />

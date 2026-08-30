@@ -5,6 +5,8 @@ import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
+import PageShell from "@/components/layout/PageShell";
+import { PageSkeleton } from "@/components/ui/Skeleton";
 
 interface BudgetCommitted {
   project_id: string;
@@ -111,21 +113,22 @@ export default function BudgetPage() {
           <button onClick={fetchData} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-elevated cursor-pointer">Refresh</button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 z-10 space-y-6">
+        <div className="flex-1 overflow-y-auto z-10">
+          <PageShell width="wide">
           {error && <div className="p-4 rounded-md bg-red-500/10 border border-red-500/20 text-xs text-red-400">{error}</div>}
 
-          {loading && <div className="flex items-center justify-center h-48 text-muted text-xs">Loading...</div>}
+          {loading && <PageSkeleton />}
 
           {budget && (
             <>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 {[
                   { label: "Total Budget", value: `₹${fmt(budget.total_budget)}`, color: "text-foreground" },
                   { label: "Total Committed", value: `₹${fmt(budget.total_committed)}`, color: "text-amber-400" },
                   { label: "Total Actual", value: `₹${fmt(budget.total_actual)}`, color: "text-primary" },
                   { label: "Committed Variance", value: noBudget ? "—" : `₹${fmt(budget.total_committed_variance)}`, color: noBudget ? "text-muted" : (budget.total_committed_variance >= 0 ? "text-green-400" : "text-red-400") },
                 ].map((s, idx) => (
-                  <div key={idx} className="bg-card border border-border-custom rounded-lg p-4 rounded-md border border-border-custom">
+                  <div key={idx} className="bg-card border border-border-custom rounded-lg p-4">
                     <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">{s.label}</span>
                     <span className={`text-2xl font-extrabold mt-1 block ${s.color}`}>{s.value}</span>
                   </div>
@@ -138,7 +141,7 @@ export default function BudgetPage() {
                 </div>
               )}
 
-              <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg overflow-hidden">
+              <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
                 <div className="px-5 py-4 border-b border-border-custom">
                   <h2 className="text-xs font-bold uppercase tracking-wider text-muted">Committed vs Actuals</h2>
                 </div>
@@ -188,6 +191,7 @@ export default function BudgetPage() {
               </div>
             </>
           )}
+          </PageShell>
         </div>
       </div>
 
@@ -195,7 +199,7 @@ export default function BudgetPage() {
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-card border border-border-custom rounded-lg w-full max-w-md p-6 space-y-4">
             <div><h3 className="text-sm font-extrabold text-foreground">Set Project Budget</h3></div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
                 <label className="text-[10px] uppercase font-bold text-muted block mb-1">Material</label>
                 <input type="number" min="0" value={matBudget} onChange={(e) => setMatBudget(parseFloat(e.target.value) || 0)} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none" />

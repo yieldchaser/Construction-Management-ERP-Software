@@ -119,7 +119,7 @@ export default function ItemWiseSalesReportPage() {
               <Icon name="search" className="absolute left-3 top-2 w-3.5 h-3.5 text-muted" />
             </div>
             <div className="flex items-center gap-2">
-              <button onClick={() => showToast("Exporting Item Wise Sales Report...")} className="px-3 py-1.5 bg-[#FF8A00] hover:bg-[#E07A00] text-white text-xs font-bold rounded-lg inline-flex items-center gap-1.5">
+              <button onClick={() => showToast("Exporting Item Wise Sales Report...")} className="px-3 py-1.5 bg-accent hover:bg-accent-hover text-white text-xs font-bold rounded-lg inline-flex items-center gap-1.5">
                 Download Excel <Icon name="arrow_down" className="w-3.5 h-3.5" />
               </button>
             </div>

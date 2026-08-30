@@ -1114,7 +1114,7 @@ export default function LibraryHubPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 <div className="space-y-1">
                   <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Unit (UOM)</label>
                   <select
@@ -1139,7 +1139,7 @@ export default function LibraryHubPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Standard Cost Price</label>
                   <input
@@ -1161,7 +1161,7 @@ export default function LibraryHubPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">HSN/SAC Code</label>
                   <input
@@ -1239,7 +1239,7 @@ export default function LibraryHubPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Item Code</label>
                   <input
@@ -1264,7 +1264,7 @@ export default function LibraryHubPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">GST Rate (%)</label>
                   <input
@@ -1287,7 +1287,7 @@ export default function LibraryHubPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3 border-t border-border-custom pt-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 border-t border-border-custom pt-3">
                 <div className="space-y-1">
                   <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Unit Cost</label>
                   <input
@@ -1328,7 +1328,7 @@ export default function LibraryHubPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 border-t border-border-custom pt-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-border-custom pt-3">
                 <div className="space-y-1">
                   <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Cost Code Reference</label>
                   <input

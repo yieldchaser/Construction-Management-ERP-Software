@@ -9,6 +9,7 @@ import Icon, { type IconName } from "@/components/marketing/Icon";
 // R2-755: shared CSV guard. Quote-doubling protects the delimiter, not the
 // formula — a leading = + - @ executes when the export opens in Excel/Sheets.
 import { buildCsv } from "@/lib/csv";
+import PageShell from "@/components/layout/PageShell";
 
 interface ReportItem {
   name: string;
@@ -108,6 +109,14 @@ const IMPLEMENTED_REPORT_SLUGS = new Set([
   "warehouse-stock-movement",
   "warehouse-transaction",
 ]);
+
+function isReportImplemented(report: ReportItem): boolean {
+  if (report.viewSlug) {
+    return IMPLEMENTED_REPORT_SLUGS.has(report.viewSlug);
+  }
+  const slug = report.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  return IMPLEMENTED_REPORT_SLUGS.has(slug);
+}
 
 export default function ReportsDashboard() {
   const params = useParams();
@@ -383,7 +392,8 @@ export default function ReportsDashboard() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-elevated/20">
-      <div className="flex-1 overflow-y-auto p-6 space-y-8">
+      <div className="flex-1 overflow-y-auto">
+        <PageShell width="wide">
           
           {/* Filter & Search Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-border-custom">
@@ -418,34 +428,16 @@ export default function ReportsDashboard() {
                       <Icon name={category.icon} className="w-4 h-4 text-muted" />
                       <h3 className="text-sm font-bold text-foreground">{category.title}</h3>
                     </div>
-                    <div className="space-y-1.5">
+                    <div className="space-y-3">
                       {filteredReports.map((report) => {
-                        const isImplemented = !!report.viewSlug && IMPLEMENTED_REPORT_SLUGS.has(report.viewSlug);
-                        const handleClick = () => {
-                          if (!isImplemented) {
-                            showToast(`${report.name} is coming soon!`);
-                            return;
-                          }
-                          if (report.hasView && report.viewSlug) {
-                            router.push(`/c/${companyId}/reports/${report.viewSlug}`);
-                          } else if (report.hasDownload) {
-                            setSelectedReport(report);
-                            setShowModal(true);
-                          }
-                        };
-
+                        const isImplemented = isReportImplemented(report);
                         return (
-                          <div
-                            key={report.name}
-                            onClick={handleClick}
-                            className={`group flex items-center justify-between p-2 rounded-lg transition-all ${
-                              isImplemented ? "hover:bg-elevated cursor-pointer" : "opacity-60 cursor-default"
-                            }`}
-                          >
-                            <span className="text-xs text-muted group-hover:text-foreground transition-colors truncate max-w-[70%]">
+                          <div key={report.name} className="flex items-center justify-between group">
+                            <span className={`text-xs ${isImplemented ? "text-muted group-hover:text-foreground" : "text-muted/50"} transition-colors`}>
                               {report.name}
                             </span>
-                            <div className="flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
+                            
+                            <div className="flex items-center gap-2">
                               {!isImplemented ? (
                                 <span className="text-[10px] bg-border-custom/50 text-muted px-2 py-0.5 rounded font-medium">Coming soon</span>
                               ) : (
@@ -454,7 +446,7 @@ export default function ReportsDashboard() {
                                   {report.hasDownload && (
                                     <button
                                       onClick={() => { setSelectedReport(report); setShowModal(true); }}
-                                      className="inline-flex items-center text-muted hover:text-[#FF8A00] transition-colors"
+                                      className="inline-flex items-center text-muted hover:text-accent transition-colors"
                                       title="Download Report"
                                     >
                                       <Icon name="arrow_down" className="w-4 h-4" />
@@ -482,7 +474,8 @@ export default function ReportsDashboard() {
               );
             })}
           </div>
-        </div>
+        </PageShell>
+      </div>
 
         {/* Dynamic Download Modal */}
         {showModal && selectedReport && (
@@ -546,7 +539,7 @@ export default function ReportsDashboard() {
                       ? "bg-muted cursor-not-allowed"
                       : selectedReport.name === "Staff Monthly Salary Slip" || selectedReport.name === "Staff Salary Report"
                       ? "bg-primary hover:bg-primary/90"
-                      : "bg-[#FF8A00] hover:bg-[#E07A00]"
+                      : "bg-accent hover:bg-accent-hover"
                   }`}
                 >
                   {isExporting ? (

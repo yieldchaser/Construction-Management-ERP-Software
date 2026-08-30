@@ -60,7 +60,7 @@ export default function LandingPage() {
       {/* 2. Value Metrics Bar - Redesigned Floating Glass Deck */}
       <section className="py-8 sm:py-12 px-4 sm:px-6 alx-scroll-fade">
         <div className="max-w-7xl mx-auto bg-gradient-to-r from-white/80 via-sky-50/50 to-white/80 backdrop-blur-md rounded-3xl border border-sky-100/50 py-8 sm:py-12 px-4 sm:px-8 shadow-xl shadow-sky-900/5">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 md:gap-12 divide-y sm:divide-y-0 sm:divide-x divide-sky-100/50">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 md:gap-12 divide-y sm:divide-y-0 sm:divide-x divide-sky-100/50">
             <div className="text-center px-2 sm:px-4 group">
               <div className="font-headline text-3xl sm:text-4xl font-bold text-alx-primary mb-2 group-hover:scale-110 transition-transform">
                 <CountUp value="16" />

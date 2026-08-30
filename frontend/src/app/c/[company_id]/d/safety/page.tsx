@@ -59,24 +59,23 @@ interface PPECheck {
   non_compliant_items: string[];
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
 const SEVERITY_COLOR: Record<string, string> = {
-  Critical: 'rgba(220,38,38,0.15)',
-  High:     'rgba(234,88,12,0.15)',
-  Medium:   'rgba(202,138,4,0.15)',
-  Low:      'rgba(22,163,74,0.15)',
+  Critical: 'rgba(239, 68, 68, 0.15)',
+  High:     'rgba(245, 158, 11, 0.15)',
+  Medium:   'rgba(217, 119, 6, 0.15)',
+  Low:      'rgba(16, 185, 129, 0.15)',
 };
 const SEVERITY_BORDER: Record<string, string> = {
-  Critical: '#dc2626',
-  High:     '#ea580c',
-  Medium:   '#ca8a04',
-  Low:      '#16a34a',
+  Critical: 'var(--danger)',
+  High:     'var(--warning)',
+  Medium:   'var(--chart-3)',
+  Low:      'var(--success)',
 };
 const TYPE_COLOR: Record<string, string> = {
-  'Near Miss': '#7C5CFF',
-  'First Aid': '#0ea5e9',
-  LTI:         '#f59e0b',
-  Fatal:       '#dc2626',
+  'Near Miss': 'var(--primary)',
+  'First Aid': 'var(--info)',
+  LTI:         'var(--warning)',
+  Fatal:       'var(--danger)',
 };
 
 function fmtDate(iso?: string) {
@@ -89,17 +88,17 @@ function DonutGauge({ pct }: { pct: number }) {
   const r = 54;
   const circ = 2 * Math.PI * r;
   const dash = (pct / 100) * circ;
-  const color = pct >= 90 ? '#16a34a' : pct >= 70 ? '#ca8a04' : '#dc2626';
+  const color = pct >= 90 ? 'var(--success)' : pct >= 70 ? 'var(--warning)' : 'var(--danger)';
   return (
     <svg width={140} height={140} viewBox="0 0 140 140">
-      <circle cx={70} cy={70} r={r} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth={16} />
+      <circle cx={70} cy={70} r={r} fill="none" stroke="var(--border)" strokeWidth={16} />
       <circle
         cx={70} cy={70} r={r} fill="none" stroke={color} strokeWidth={16}
         strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
         transform="rotate(-90 70 70)" style={{ transition: 'stroke-dasharray 0.8s ease' }}
       />
-      <text x={70} y={66} textAnchor="middle" fill="#fff" fontSize={22} fontWeight={700}>{pct}%</text>
-      <text x={70} y={84} textAnchor="middle" fill="rgba(255,255,255,0.5)" fontSize={11}>Compliant</text>
+      <text x={70} y={66} textAnchor="middle" fill="var(--foreground)" fontSize={22} fontWeight={700}>{pct}%</text>
+      <text x={70} y={84} textAnchor="middle" fill="var(--muted)" fontSize={11}>Compliant</text>
     </svg>
   );
 }
@@ -108,13 +107,13 @@ function DonutGauge({ pct }: { pct: number }) {
 function MiniBar({ label, value, max, color }: { label: string; value: number; max: number; color: string }) {
   const pct = max > 0 ? (value / max) * 100 : 0;
   return (
-    <div style={{ marginBottom: 10 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-        <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13 }}>{label}</span>
-        <span style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>{value}</span>
+    <div className="mb-2.5">
+      <div className="flex justify-between mb-1">
+        <span className="text-muted text-xs">{label}</span>
+        <span className="text-foreground text-xs font-semibold">{value}</span>
       </div>
-      <div style={{ height: 7, borderRadius: 4, background: 'rgba(255,255,255,0.07)', overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: 4, transition: 'width 0.6s ease' }} />
+      <div className="h-2 rounded-full bg-border-custom overflow-hidden">
+        <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: 9999, transition: 'width 0.6s ease' }} />
       </div>
     </div>
   );
@@ -240,90 +239,147 @@ export default function SafetyPage() {
     { label: 'Toolbox Talks', icon: 'toolbox_talk' },
     { label: 'PPE Compliance', icon: 'safety_vest' },
   ];
-
-  const inputStyle: React.CSSProperties = {
-    width: '100%', padding: '10px 14px', borderRadius: 8,
-    border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.05)',
-    color: '#fff', fontSize: 14, boxSizing: 'border-box',
-  };
-  const labelStyle: React.CSSProperties = { display: 'block', marginBottom: 6, fontSize: 13, color: 'rgba(255,255,255,0.6)' };
-  const fieldStyle: React.CSSProperties = { marginBottom: 14 };
-
   return (
-    <div style={{ minHeight: 0, flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0E0C15', color: '#fff', fontFamily: 'Inter, sans-serif', padding: '32px 40px' }}>
+    <div className="min-h-0 flex-1 flex flex-col overflow-hidden bg-background text-foreground p-6 sm:p-8 font-sans">
       {/* Header */}
-      <div style={{ marginBottom: 28 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-          <div style={{ width: 42, height: 42, borderRadius: 10, background: 'rgba(232,24,76,0.15)', border: '1px solid rgba(232,24,76,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="safety_vest" className="w-5 h-5" /></div>
+      <div className="mb-6">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-10 h-10 rounded-xl bg-danger/15 border border-danger/30 flex items-center justify-center text-danger">
+            <Icon name="safety_vest" className="w-5 h-5" />
+          </div>
           <div>
-            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>HSE / Safety Management</h1>
-            <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,0.45)' }}>Incident tracking, toolbox talks & PPE compliance</p>
+            <h1 className="text-xl font-bold text-foreground">HSE / Safety Management</h1>
+            <p className="text-xs text-muted">Incident tracking, toolbox talks & PPE compliance</p>
           </div>
         </div>
       </div>
 
       {/* Flash */}
       {msg && (
-        <div style={{ padding: '10px 18px', borderRadius: 8, background: 'rgba(124,92,255,0.15)', border: '1px solid rgba(124,92,255,0.4)', marginBottom: 20, fontSize: 14 }}>{msg}</div>
+        <div className="p-3 rounded-lg bg-primary/10 border border-primary/25 mb-5 text-sm text-primary">
+          {msg}
+        </div>
       )}
 
       {/* Tab Bar */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 28, background: 'rgba(255,255,255,0.04)', borderRadius: 12, padding: 4 }}>
+      <div className="flex gap-1 mb-6 bg-card border border-border-custom rounded-xl p-1">
         {tabs.map((t, i) => (
-          <button key={i} onClick={() => setTab(i)} style={{
-            flex: 1, padding: '10px 0', border: 'none', borderRadius: 9, cursor: 'pointer', fontSize: 13, fontWeight: 600,
-            background: tab === i ? 'rgba(232,24,76,0.15)' : 'transparent',
-            color: tab === i ? '#E8184C' : 'rgba(255,255,255,0.5)',
-            borderBottom: tab === i ? '2px solid #E8184C' : '2px solid transparent',
-            transition: 'all 0.2s',
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-          }}><Icon name={t.icon} className="w-4 h-4" />{t.label}</button>
+          <button
+            key={i}
+            onClick={() => setTab(i)}
+            className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-semibold transition-all inline-flex items-center justify-center gap-2 ${
+              tab === i
+                ? "bg-primary/15 text-primary border-b-2 border-primary"
+                : "text-muted hover:text-foreground"
+            }`}
+          >
+            <Icon name={t.icon} className="w-4 h-4" />
+            {t.label}
+          </button>
         ))}
       </div>
 
       {/* ─── Tab 0: Incident Board ────────────────────────────────────────── */}
       {tab === 0 && (
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-            <h2 style={{ margin: 0, fontSize: 17, fontWeight: 600 }}>Incident Board</h2>
-            <button onClick={() => setShowIncidentModal(true)} style={{ padding: '9px 20px', borderRadius: 8, border: 'none', background: '#E8184C', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>+ Report Incident</button>
+          <div className="flex justify-between items-center mb-5">
+            <h2 className="text-base font-semibold text-foreground">Incident Board</h2>
+            <button
+              onClick={() => setShowIncidentModal(true)}
+              className="py-2 px-4 rounded-lg bg-danger text-white text-xs font-semibold hover:opacity-90 transition-opacity"
+            >
+              + Report Incident
+            </button>
           </div>
 
-          {loading ? <p style={{ color: 'rgba(255,255,255,0.4)' }}>Loading…</p> : incidents.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '60px 0', color: 'rgba(255,255,255,0.3)' }}>
-              <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><Icon name="shield" className="w-10 h-10" /></div>
+          {loading ? (
+            <p className="text-muted text-sm">Loading…</p>
+          ) : incidents.length === 0 ? (
+            <div className="text-center py-16 text-muted">
+              <div className="mb-3 flex justify-center">
+                <Icon name="shield" className="w-10 h-10 opacity-40" />
+              </div>
               <p>No incidents logged. Stay safe!</p>
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
-              {incidents.map(inc => (
-                <div key={inc.id} style={{
-                  borderRadius: 14, padding: 20, border: `1px solid ${SEVERITY_BORDER[inc.severity] || '#444'}`,
-                  background: SEVERITY_COLOR[inc.severity] || 'rgba(255,255,255,0.04)',
-                  position: 'relative', transition: 'transform 0.2s',
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
-                    <div>
-                      <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 20, background: TYPE_COLOR[inc.incident_type] || '#555', color: '#fff', marginRight: 8 }}>{inc.incident_type}</span>
-                      <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: 20, background: SEVERITY_COLOR[inc.severity], border: `1px solid ${SEVERITY_BORDER[inc.severity]}`, color: SEVERITY_BORDER[inc.severity] }}>{inc.severity}</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {incidents.map((inc) => (
+                <div
+                  key={inc.id}
+                  className="rounded-xl p-5 border border-border-custom bg-card relative shadow-sm"
+                  style={{
+                    borderLeftColor: SEVERITY_BORDER[inc.severity] || "var(--border)",
+                    borderLeftWidth: "4px",
+                  }}
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex gap-1.5 flex-wrap">
+                      <span
+                        className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white"
+                        style={{ background: TYPE_COLOR[inc.incident_type] || "var(--primary)" }}
+                      >
+                        {inc.incident_type}
+                      </span>
+                      <span
+                        className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                        style={{
+                          background: SEVERITY_COLOR[inc.severity],
+                          color: SEVERITY_BORDER[inc.severity],
+                          border: `1px solid ${SEVERITY_BORDER[inc.severity]}`,
+                        }}
+                      >
+                        {inc.severity}
+                      </span>
                     </div>
-                    <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 20, background: inc.status === 'closed' ? 'rgba(22,163,74,0.15)' : 'rgba(234,88,12,0.15)', color: inc.status === 'closed' ? '#16a34a' : '#ea580c', border: `1px solid ${inc.status === 'closed' ? '#16a34a' : '#ea580c'}`, fontWeight: 600 }}>{inc.status.toUpperCase()}</span>
+                    <span
+                      className={`text-[10px] px-2.5 py-0.5 rounded-full font-semibold ${
+                        inc.status === "closed"
+                          ? "bg-success/15 text-success border border-success/30"
+                          : "bg-warning/15 text-warning border border-warning/30"
+                      }`}
+                    >
+                      {inc.status.toUpperCase()}
+                    </span>
                   </div>
-                  <p style={{ margin: '0 0 8px', fontSize: 14, lineHeight: 1.5, color: 'rgba(255,255,255,0.85)' }}>{inc.description}</p>
-                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', lineHeight: 1.7 }}>
-                    {inc.location && <div className="inline-flex items-center gap-1.5"><Icon name="location_pin" className="w-3.5 h-3.5" />{inc.location}</div>}
-                    {inc.injured_person && <div className="inline-flex items-center gap-1.5"><Icon name="hospital" className="w-3.5 h-3.5" />{inc.injured_person}</div>}
-                    {inc.lost_time_days > 0 && <div className="inline-flex items-center gap-1.5"><Icon name="schedule" className="w-3.5 h-3.5" />{inc.lost_time_days} lost day{inc.lost_time_days > 1 ? 's' : ''}</div>}
-                    <div className="inline-flex items-center gap-1.5"><Icon name="person" className="w-3.5 h-3.5" />{inc.reported_by} · {fmtDate(inc.reported_at)}</div>
+                  <p className="text-sm leading-relaxed text-foreground mb-3">{inc.description}</p>
+                  <div className="text-xs text-muted space-y-1">
+                    {inc.location && (
+                      <div className="inline-flex items-center gap-1.5 mr-3">
+                        <Icon name="location_pin" className="w-3.5 h-3.5" />
+                        {inc.location}
+                      </div>
+                    )}
+                    {inc.injured_person && (
+                      <div className="inline-flex items-center gap-1.5 mr-3">
+                        <Icon name="hospital" className="w-3.5 h-3.5" />
+                        {inc.injured_person}
+                      </div>
+                    )}
+                    {inc.lost_time_days > 0 && (
+                      <div className="inline-flex items-center gap-1.5 mr-3">
+                        <Icon name="schedule" className="w-3.5 h-3.5" />
+                        {inc.lost_time_days} lost day{inc.lost_time_days > 1 ? "s" : ""}
+                      </div>
+                    )}
+                    <div className="inline-flex items-center gap-1.5">
+                      <Icon name="person" className="w-3.5 h-3.5" />
+                      {inc.reported_by} · {fmtDate(inc.reported_at)}
+                    </div>
                   </div>
                   {inc.root_cause && (
-                    <div style={{ marginTop: 10, padding: '8px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.05)', fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>
-                      <strong style={{ color: 'rgba(255,255,255,0.8)' }}>Root Cause: </strong>{inc.root_cause}
+                    <div className="mt-3 p-2.5 rounded-lg bg-elevated text-xs text-muted">
+                      <strong className="text-foreground">Root Cause: </strong>
+                      {inc.root_cause}
                     </div>
                   )}
-                  {inc.status !== 'closed' && (
-                    <button onClick={() => { setShowCloseModal(inc.id); setCloseForm({ root_cause: '', corrective_action: '' }); }}
-                      style={{ marginTop: 12, padding: '7px 16px', borderRadius: 7, border: '1px solid rgba(22,163,74,0.4)', background: 'rgba(22,163,74,0.1)', color: '#16a34a', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                  {inc.status !== "closed" && (
+                    <button
+                      onClick={() => {
+                        setShowCloseModal(inc.id);
+                        setCloseForm({ root_cause: "", corrective_action: "" });
+                      }}
+                      className="mt-3 py-1.5 px-3.5 rounded-lg border border-success/40 bg-success/10 text-success text-xs font-semibold hover:bg-success/20 transition-colors"
+                    >
                       ✓ Close Incident
                     </button>
                   )}
@@ -337,48 +393,80 @@ export default function SafetyPage() {
       {/* ─── Tab 1: LTIF & Stats ──────────────────────────────────────────── */}
       {tab === 1 && (
         <div>
-          <h2 style={{ margin: '0 0 20px', fontSize: 17, fontWeight: 600 }}>LTIF & Safety Statistics</h2>
-          {!stats ? <p style={{ color: 'rgba(255,255,255,0.4)' }}>{loading ? 'Loading…' : 'No data yet.'}</p> : (
+          <h2 className="text-base font-semibold text-foreground mb-5">LTIF & Safety Statistics</h2>
+          {!stats ? (
+            <p className="text-muted text-sm">{loading ? "Loading…" : "No data yet."}</p>
+          ) : (
             <>
               {/* KPI Cards */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 14, marginBottom: 28 }}>
-                {([
-                  { label: 'Total Incidents', value: stats.total_incidents, icon: 'siren', color: '#E8184C' },
-                  { label: 'Open', value: stats.open_incidents, icon: 'warning', color: '#ea580c' },
-                  { label: 'Closed', value: stats.closed_incidents, icon: 'check_circle', color: '#16a34a' },
-                  { label: 'LTI Count', value: stats.lti_count, icon: 'hospital', color: '#f59e0b' },
-                  { label: 'Lost Days', value: stats.total_lost_days, icon: 'calendar', color: '#7C5CFF' },
-                  { label: 'LTIFR', value: stats.ltif, icon: 'trending_up', color: '#0ea5e9' },
-                ] as { label: string; value: number; icon: IconName; color: string }[]).map((k, i) => (
-                  <div key={i} style={{ padding: '18px 20px', borderRadius: 14, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                    <div style={{ marginBottom: 6, color: k.color }}><Icon name={k.icon} className="w-5 h-5" /></div>
-                    <div style={{ fontSize: 28, fontWeight: 800, color: k.color }}>{k.value}</div>
-                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginTop: 4 }}>{k.label}</div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+                {(
+                  [
+                    { label: "Total Incidents", value: stats.total_incidents, icon: "siren", color: "var(--danger)" },
+                    { label: "Open", value: stats.open_incidents, icon: "warning", color: "var(--warning)" },
+                    { label: "Closed", value: stats.closed_incidents, icon: "check_circle", color: "var(--success)" },
+                    { label: "LTI Count", value: stats.lti_count, icon: "hospital", color: "var(--warning)" },
+                    { label: "Lost Days", value: stats.total_lost_days, icon: "calendar", color: "var(--chart-4)" },
+                    { label: "LTIFR", value: stats.ltif, icon: "trending_up", color: "var(--info)" },
+                  ] as { label: string; value: number; icon: IconName; color: string }[]
+                ).map((k, i) => (
+                  <div key={i} className="p-4 rounded-xl bg-card border border-border-custom shadow-sm">
+                    <div className="mb-2" style={{ color: k.color }}>
+                      <Icon name={k.icon} className="w-5 h-5" />
+                    </div>
+                    <div className="text-2xl font-extrabold" style={{ color: k.color }}>
+                      {k.value}
+                    </div>
+                    <div className="text-xs text-muted mt-1">{k.label}</div>
                   </div>
                 ))}
               </div>
 
               {/* Type & Severity Breakdown */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-                <div style={{ padding: 20, borderRadius: 14, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                  <h3 style={{ margin: '0 0 16px', fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,0.7)' }}>BY INCIDENT TYPE</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="p-5 rounded-xl bg-card border border-border-custom shadow-sm">
+                  <h3 className="text-xs font-bold text-muted uppercase tracking-wider mb-4">BY INCIDENT TYPE</h3>
                   {Object.entries(stats.type_breakdown).map(([type, count]) => (
-                    <MiniBar key={type} label={type} value={count} max={stats.total_incidents} color={TYPE_COLOR[type] || '#7C5CFF'} />
+                    <MiniBar
+                      key={type}
+                      label={type}
+                      value={count}
+                      max={stats.total_incidents}
+                      color={TYPE_COLOR[type] || "var(--primary)"}
+                    />
                   ))}
-                  {Object.keys(stats.type_breakdown).length === 0 && <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)' }}>No data yet.</p>}
+                  {Object.keys(stats.type_breakdown).length === 0 && (
+                    <p className="text-xs text-muted">No data yet.</p>
+                  )}
                 </div>
-                <div style={{ padding: 20, borderRadius: 14, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                  <h3 style={{ margin: '0 0 16px', fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,0.7)' }}>BY SEVERITY</h3>
+                <div className="p-5 rounded-xl bg-card border border-border-custom shadow-sm">
+                  <h3 className="text-xs font-bold text-muted uppercase tracking-wider mb-4">BY SEVERITY</h3>
                   {Object.entries(stats.severity_breakdown).map(([sev, count]) => (
-                    <MiniBar key={sev} label={sev} value={count} max={stats.total_incidents} color={SEVERITY_BORDER[sev] || '#7C5CFF'} />
+                    <MiniBar
+                      key={sev}
+                      label={sev}
+                      value={count}
+                      max={stats.total_incidents}
+                      color={SEVERITY_BORDER[sev] || "var(--primary)"}
+                    />
                   ))}
-                  {Object.keys(stats.severity_breakdown).length === 0 && <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)' }}>No data yet.</p>}
+                  {Object.keys(stats.severity_breakdown).length === 0 && (
+                    <p className="text-xs text-muted">No data yet.</p>
+                  )}
                 </div>
               </div>
 
               {/* LTIF Formula */}
-              <div style={{ marginTop: 20, padding: '14px 20px', borderRadius: 12, background: 'rgba(124,92,255,0.08)', border: '1px solid rgba(124,92,255,0.2)', fontSize: 13, color: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Icon name="clipboard" className="w-4 h-4" /> <span><strong style={{ color: '#7C5CFF' }}>LTIFR Formula:</strong> (Number of LTIs × {stats.ltif_basis ? stats.ltif_basis.toLocaleString('en-IN') : '200,000'}) ÷ Total Manhours Worked · Calculated on {stats.total_manhours_used ? stats.total_manhours_used.toLocaleString('en-IN') : '50,000'} manhours basis{stats.manhours_source === 'fallback' ? ' (estimated — no attendance data)' : ''}.</span>
+              <div className="mt-5 p-4 rounded-xl bg-primary/5 border border-primary/20 text-xs text-muted flex items-center gap-2">
+                <Icon name="clipboard" className="w-4 h-4 text-primary shrink-0" />
+                <span>
+                  <strong className="text-primary">LTIFR Formula:</strong> (Number of LTIs ×{" "}
+                  {stats.ltif_basis ? stats.ltif_basis.toLocaleString("en-IN") : "200,000"}) ÷ Total Manhours
+                  Worked · Calculated on{" "}
+                  {stats.total_manhours_used ? stats.total_manhours_used.toLocaleString("en-IN") : "50,000"} manhours
+                  basis
+                  {stats.manhours_source === "fallback" ? " (estimated — no attendance data)" : ""}.
+                </span>
               </div>
             </>
           )}
@@ -388,31 +476,47 @@ export default function SafetyPage() {
       {/* ─── Tab 2: Toolbox Talks ─────────────────────────────────────────── */}
       {tab === 2 && (
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <div className="flex justify-between items-center mb-5">
             <div>
-              <h2 style={{ margin: 0, fontSize: 17, fontWeight: 600 }}>Toolbox Talks</h2>
-              <p style={{ margin: '4px 0 0', fontSize: 13, color: 'rgba(255,255,255,0.45)' }}>{talks.length} session{talks.length !== 1 ? 's' : ''} conducted</p>
+              <h2 className="text-base font-semibold text-foreground">Toolbox Talks</h2>
+              <p className="text-xs text-muted mt-0.5">
+                {talks.length} session{talks.length !== 1 ? "s" : ""} conducted
+              </p>
             </div>
-            <button onClick={() => setShowTalkModal(true)} style={{ padding: '9px 20px', borderRadius: 8, border: 'none', background: '#7C5CFF', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>+ Add Talk</button>
+            <button
+              onClick={() => setShowTalkModal(true)}
+              className="py-2 px-4 rounded-lg bg-primary text-white text-xs font-semibold hover:opacity-90 transition-opacity"
+            >
+              + Add Talk
+            </button>
           </div>
           {talks.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '60px 0', color: 'rgba(255,255,255,0.3)' }}>
-              <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><Icon name="toolbox_talk" className="w-10 h-10" /></div>
+            <div className="text-center py-16 text-muted">
+              <div className="mb-3 flex justify-center">
+                <Icon name="toolbox_talk" className="w-10 h-10 opacity-40" />
+              </div>
               <p>No toolbox talks logged yet.</p>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {talks.map(t => (
-                <div key={t.id} style={{ padding: '16px 20px', borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: 20 }}>
-                  <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(124,92,255,0.15)', border: '1px solid rgba(124,92,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Icon name="toolbox_talk" className="w-5 h-5" /></div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 4 }}>{t.topic}</div>
-                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>Conducted by {t.conducted_by} · {fmtDate(t.conducted_at)}</div>
-                    {t.notes && <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 4 }}>{t.notes}</div>}
+            <div className="flex flex-col gap-3">
+              {talks.map((t) => (
+                <div
+                  key={t.id}
+                  className="p-4 rounded-xl bg-card border border-border-custom flex items-center gap-4 shadow-sm"
+                >
+                  <div className="w-11 h-11 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center text-primary shrink-0">
+                    <Icon name="toolbox_talk" className="w-5 h-5" />
                   </div>
-                  <div style={{ textAlign: 'center', padding: '10px 18px', borderRadius: 10, background: 'rgba(124,92,255,0.1)', border: '1px solid rgba(124,92,255,0.2)' }}>
-                    <div style={{ fontSize: 22, fontWeight: 800, color: '#7C5CFF' }}>{t.attendee_count}</div>
-                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>Attendees</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-sm text-foreground mb-0.5">{t.topic}</div>
+                    <div className="text-xs text-muted">
+                      Conducted by {t.conducted_by} · {fmtDate(t.conducted_at)}
+                    </div>
+                    {t.notes && <div className="text-xs text-muted/80 mt-1">{t.notes}</div>}
+                  </div>
+                  <div className="text-center py-2 px-4 rounded-xl bg-primary/10 border border-primary/20 shrink-0">
+                    <div className="text-xl font-extrabold text-primary">{t.attendee_count}</div>
+                    <div className="text-[10px] text-muted uppercase tracking-wider">Attendees</div>
                   </div>
                 </div>
               ))}
@@ -424,52 +528,96 @@ export default function SafetyPage() {
       {/* ─── Tab 3: PPE Compliance ────────────────────────────────────────── */}
       {tab === 3 && (
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-            <h2 style={{ margin: 0, fontSize: 17, fontWeight: 600 }}>PPE Compliance</h2>
-            <button onClick={() => setShowPPEModal(true)} style={{ padding: '9px 20px', borderRadius: 8, border: 'none', background: '#0ea5e9', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>+ Record Check</button>
+          <div className="flex justify-between items-center mb-5">
+            <h2 className="text-base font-semibold text-foreground">PPE Compliance</h2>
+            <button
+              onClick={() => setShowPPEModal(true)}
+              className="py-2 px-4 rounded-lg bg-info text-white text-xs font-semibold hover:opacity-90 transition-opacity"
+            >
+              + Record Check
+            </button>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 24, alignItems: 'start' }}>
+          <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-6 items-start">
             {/* Donut */}
-            <div style={{ padding: 24, borderRadius: 16, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', textAlign: 'center' }}>
+            <div className="p-6 rounded-2xl bg-card border border-border-custom text-center shadow-sm">
               {ppeChecks.length === 0 ? (
                 <>
-                  <div style={{ width: 140, height: 140, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40, fontWeight: 800, color: 'rgba(255,255,255,0.3)' }}>—</div>
-                  <p style={{ margin: '10px 0 0', fontSize: 13, color: 'rgba(255,255,255,0.45)' }}>Overall Compliance<br />(no checks recorded yet)</p>
+                  <div className="w-[140px] h-[140px] mx-auto flex items-center justify-center text-3xl font-extrabold text-muted">
+                    —
+                  </div>
+                  <p className="mt-3 text-xs text-muted">
+                    Overall Compliance
+                    <br />
+                    (no checks recorded yet)
+                  </p>
                 </>
               ) : (
                 <>
-                  <DonutGauge pct={overallPPE} />
-                  <p style={{ margin: '10px 0 0', fontSize: 13, color: 'rgba(255,255,255,0.45)' }}>Overall Compliance<br />(average of all checks)</p>
+                  <div className="flex justify-center">
+                    <DonutGauge pct={overallPPE} />
+                  </div>
+                  <p className="mt-3 text-xs text-muted">
+                    Overall Compliance
+                    <br />
+                    (average of all checks)
+                  </p>
                 </>
               )}
             </div>
             {/* Check list */}
             <div>
               {ppeChecks.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '60px 0', color: 'rgba(255,255,255,0.3)' }}>
-                  <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><Icon name="safety_vest" className="w-10 h-10" /></div>
+                <div className="text-center py-16 text-muted">
+                  <div className="mb-3 flex justify-center">
+                    <Icon name="safety_vest" className="w-10 h-10 opacity-40" />
+                  </div>
                   <p>No PPE checks recorded yet.</p>
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {ppeChecks.map(c => {
-                    const nc_color = c.compliance_pct >= 90 ? '#16a34a' : c.compliance_pct >= 70 ? '#ca8a04' : '#dc2626';
+                <div className="flex flex-col gap-3">
+                  {ppeChecks.map((c) => {
+                    const nc_color =
+                      c.compliance_pct >= 90
+                        ? "var(--success)"
+                        : c.compliance_pct >= 70
+                        ? "var(--warning)"
+                        : "var(--danger)";
                     return (
-                      <div key={c.id} style={{ padding: '16px 20px', borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                      <div
+                        key={c.id}
+                        className="p-4 rounded-xl bg-card border border-border-custom shadow-sm"
+                      >
+                        <div className="flex justify-between items-center mb-2">
                           <div>
-                            <div style={{ fontWeight: 600, fontSize: 14 }}>Checked by {c.checked_by}</div>
-                            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginTop: 2 }}>{fmtDate(c.check_date)} · {c.total_workers} workers</div>
+                            <div className="font-semibold text-sm text-foreground">Checked by {c.checked_by}</div>
+                            <div className="text-xs text-muted mt-0.5">
+                              {fmtDate(c.check_date)} · {c.total_workers} workers
+                            </div>
                           </div>
-                          <div style={{ fontSize: 26, fontWeight: 800, color: nc_color }}>{c.compliance_pct}%</div>
+                          <div className="text-2xl font-extrabold" style={{ color: nc_color }}>
+                            {c.compliance_pct}%
+                          </div>
                         </div>
-                        <div style={{ height: 6, borderRadius: 4, background: 'rgba(255,255,255,0.07)', overflow: 'hidden', marginBottom: c.non_compliant_items.length > 0 ? 10 : 0 }}>
-                          <div style={{ height: '100%', width: `${c.compliance_pct}%`, background: nc_color, borderRadius: 4, transition: 'width 0.6s ease' }} />
+                        <div className="h-1.5 rounded-full bg-border-custom overflow-hidden mb-2">
+                          <div
+                            style={{
+                              height: "100%",
+                              width: `${c.compliance_pct}%`,
+                              background: nc_color,
+                              borderRadius: 9999,
+                              transition: "width 0.6s ease",
+                            }}
+                          />
                         </div>
                         {c.non_compliant_items.length > 0 && (
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                          <div className="flex flex-wrap gap-1.5 mt-2">
                             {c.non_compliant_items.map((item, i) => (
-                              <span key={i} style={{ fontSize: 11, padding: '3px 10px', borderRadius: 20, background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.3)', color: '#fca5a5' }}>{item}</span>
+                              <span
+                                key={i}
+                                className="text-[10px] px-2.5 py-0.5 rounded-full bg-danger/10 border border-danger/30 text-danger"
+                              >
+                                {item}
+                              </span>
                             ))}
                           </div>
                         )}
@@ -485,50 +633,105 @@ export default function SafetyPage() {
 
       {/* ─── Modal: Report Incident ───────────────────────────────────────── */}
       {showIncidentModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
-          <div style={{ background: '#171520', borderRadius: 16, padding: 28, width: '100%', maxWidth: 520, border: '1px solid rgba(255,255,255,0.1)', maxHeight: '90vh', overflowY: 'auto' }}>
-            <h3 style={{ margin: '0 0 20px', fontSize: 17 }}>Report Safety Incident</h3>
-            <div style={fieldStyle}>
-              <label style={labelStyle}>Incident Type</label>
-              <select value={incidentForm.incident_type} onChange={e => setIncidentForm({ ...incidentForm, incident_type: e.target.value })} style={inputStyle}>
-                {['Near Miss', 'First Aid', 'LTI', 'Fatal'].map(t => <option key={t}>{t}</option>)}
-              </select>
-            </div>
-            <div style={fieldStyle}>
-              <label style={labelStyle}>Severity</label>
-              <select value={incidentForm.severity} onChange={e => setIncidentForm({ ...incidentForm, severity: e.target.value })} style={inputStyle}>
-                {['Low', 'Medium', 'High', 'Critical'].map(s => <option key={s}>{s}</option>)}
-              </select>
-            </div>
-            <div style={fieldStyle}>
-              <label style={labelStyle}>Description *</label>
-              <textarea value={incidentForm.description} onChange={e => setIncidentForm({ ...incidentForm, description: e.target.value })} style={{ ...inputStyle, height: 80, resize: 'vertical' }} placeholder="Describe the incident…" />
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <div style={fieldStyle}>
-                <label style={labelStyle}>Location</label>
-                <input value={incidentForm.location} onChange={e => setIncidentForm({ ...incidentForm, location: e.target.value })} style={inputStyle} placeholder="Block A, 2nd Floor" />
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-card border border-border-custom rounded-2xl p-6 w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
+            <h3 className="text-base font-bold text-foreground mb-4">Report Safety Incident</h3>
+            <div className="space-y-3.5">
+              <div>
+                <label className="text-[10px] uppercase tracking-wider text-muted block mb-1">Incident Type</label>
+                <select
+                  value={incidentForm.incident_type}
+                  onChange={(e) => setIncidentForm({ ...incidentForm, incident_type: e.target.value })}
+                  className="w-full bg-elevated border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary"
+                >
+                  {["Near Miss", "First Aid", "LTI", "Fatal"].map((t) => (
+                    <option key={t}>{t}</option>
+                  ))}
+                </select>
               </div>
-              <div style={fieldStyle}>
-                <label style={labelStyle}>Injured Person</label>
-                <input value={incidentForm.injured_person} onChange={e => setIncidentForm({ ...incidentForm, injured_person: e.target.value })} style={inputStyle} placeholder="Name (if any)" />
+              <div>
+                <label className="text-[10px] uppercase tracking-wider text-muted block mb-1">Severity</label>
+                <select
+                  value={incidentForm.severity}
+                  onChange={(e) => setIncidentForm({ ...incidentForm, severity: e.target.value })}
+                  className="w-full bg-elevated border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary"
+                >
+                  {["Low", "Medium", "High", "Critical"].map((s) => (
+                    <option key={s}>{s}</option>
+                  ))}
+                </select>
               </div>
-              <div style={fieldStyle}>
-                <label style={labelStyle}>Lost Time Days</label>
-                <input type="number" min={0} value={incidentForm.lost_time_days} onChange={e => setIncidentForm({ ...incidentForm, lost_time_days: +e.target.value })} style={inputStyle} />
+              <div>
+                <label className="text-[10px] uppercase tracking-wider text-muted block mb-1">Description *</label>
+                <textarea
+                  value={incidentForm.description}
+                  onChange={(e) => setIncidentForm({ ...incidentForm, description: e.target.value })}
+                  className="w-full h-20 bg-elevated border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary resize-none"
+                  placeholder="Describe the incident…"
+                />
               </div>
-              <div style={fieldStyle}>
-                <label style={labelStyle}>Reported By *</label>
-                <input value={incidentForm.reported_by} onChange={e => setIncidentForm({ ...incidentForm, reported_by: e.target.value })} style={inputStyle} placeholder="Supervisor / HSE Officer" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] uppercase tracking-wider text-muted block mb-1">Location</label>
+                  <input
+                    value={incidentForm.location}
+                    onChange={(e) => setIncidentForm({ ...incidentForm, location: e.target.value })}
+                    className="w-full bg-elevated border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary"
+                    placeholder="Block A, 2nd Floor"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase tracking-wider text-muted block mb-1">Injured Person</label>
+                  <input
+                    value={incidentForm.injured_person}
+                    onChange={(e) => setIncidentForm({ ...incidentForm, injured_person: e.target.value })}
+                    className="w-full bg-elevated border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary"
+                    placeholder="Name (if any)"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase tracking-wider text-muted block mb-1">Lost Time Days</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={incidentForm.lost_time_days}
+                    onChange={(e) => setIncidentForm({ ...incidentForm, lost_time_days: +e.target.value })}
+                    className="w-full bg-elevated border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase tracking-wider text-muted block mb-1">Reported By *</label>
+                  <input
+                    value={incidentForm.reported_by}
+                    onChange={(e) => setIncidentForm({ ...incidentForm, reported_by: e.target.value })}
+                    className="w-full bg-elevated border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary"
+                    placeholder="Supervisor / HSE Officer"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-[10px] uppercase tracking-wider text-muted block mb-1">Date & Time *</label>
+                <input
+                  type="datetime-local"
+                  value={incidentForm.reported_at}
+                  onChange={(e) => setIncidentForm({ ...incidentForm, reported_at: e.target.value })}
+                  className="w-full bg-elevated border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary"
+                />
               </div>
             </div>
-            <div style={fieldStyle}>
-              <label style={labelStyle}>Date & Time *</label>
-              <input type="datetime-local" value={incidentForm.reported_at} onChange={e => setIncidentForm({ ...incidentForm, reported_at: e.target.value })} style={inputStyle} />
-            </div>
-            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 6 }}>
-              <button onClick={() => setShowIncidentModal(false)} style={{ padding: '9px 20px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', color: '#fff', cursor: 'pointer' }}>Cancel</button>
-              <button onClick={submitIncident} style={{ padding: '9px 24px', borderRadius: 8, border: 'none', background: '#E8184C', color: '#fff', fontWeight: 600, cursor: 'pointer' }}>Report</button>
+            <div className="flex gap-2 justify-end mt-6 border-t border-border-custom pt-4">
+              <button
+                onClick={() => setShowIncidentModal(false)}
+                className="py-2 px-4 rounded-lg border border-border-custom text-muted hover:text-foreground text-xs font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitIncident}
+                className="py-2 px-5 rounded-lg bg-danger text-white font-semibold text-xs hover:opacity-90 transition-opacity"
+              >
+                Report
+              </button>
             </div>
           </div>
         </div>
@@ -536,20 +739,42 @@ export default function SafetyPage() {
 
       {/* ─── Modal: Close Incident ────────────────────────────────────────── */}
       {showCloseModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
-          <div style={{ background: '#171520', borderRadius: 16, padding: 28, width: '100%', maxWidth: 480, border: '1px solid rgba(255,255,255,0.1)' }}>
-            <h3 style={{ margin: '0 0 20px', fontSize: 17 }}>Close Incident</h3>
-            <div style={fieldStyle}>
-              <label style={labelStyle}>Root Cause *</label>
-              <textarea value={closeForm.root_cause} onChange={e => setCloseForm({ ...closeForm, root_cause: e.target.value })} style={{ ...inputStyle, height: 80, resize: 'vertical' }} placeholder="Identified root cause of the incident…" />
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-card border border-border-custom rounded-2xl p-6 w-full max-w-md shadow-2xl">
+            <h3 className="text-base font-bold text-foreground mb-4">Close Incident</h3>
+            <div className="space-y-3.5">
+              <div>
+                <label className="text-[10px] uppercase tracking-wider text-muted block mb-1">Root Cause *</label>
+                <textarea
+                  value={closeForm.root_cause}
+                  onChange={(e) => setCloseForm({ ...closeForm, root_cause: e.target.value })}
+                  className="w-full h-20 bg-elevated border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary resize-none"
+                  placeholder="Identified root cause…"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] uppercase tracking-wider text-muted block mb-1">Corrective Action *</label>
+                <textarea
+                  value={closeForm.corrective_action}
+                  onChange={(e) => setCloseForm({ ...closeForm, corrective_action: e.target.value })}
+                  className="w-full h-20 bg-elevated border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary resize-none"
+                  placeholder="Actions taken to prevent recurrence…"
+                />
+              </div>
             </div>
-            <div style={fieldStyle}>
-              <label style={labelStyle}>Corrective Action *</label>
-              <textarea value={closeForm.corrective_action} onChange={e => setCloseForm({ ...closeForm, corrective_action: e.target.value })} style={{ ...inputStyle, height: 80, resize: 'vertical' }} placeholder="Actions taken to prevent recurrence…" />
-            </div>
-            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
-              <button onClick={() => setShowCloseModal(null)} style={{ padding: '9px 20px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', color: '#fff', cursor: 'pointer' }}>Cancel</button>
-              <button onClick={submitClose} style={{ padding: '9px 24px', borderRadius: 8, border: 'none', background: '#16a34a', color: '#fff', fontWeight: 600, cursor: 'pointer' }}>Close Incident</button>
+            <div className="flex gap-2 justify-end mt-6 border-t border-border-custom pt-4">
+              <button
+                onClick={() => setShowCloseModal(null)}
+                className="py-2 px-4 rounded-lg border border-border-custom text-muted hover:text-foreground text-xs font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitClose}
+                className="py-2 px-5 rounded-lg bg-success text-white font-semibold text-xs hover:opacity-90 transition-opacity"
+              >
+                Close Incident
+              </button>
             </div>
           </div>
         </div>
@@ -557,34 +782,72 @@ export default function SafetyPage() {
 
       {/* ─── Modal: Toolbox Talk ──────────────────────────────────────────── */}
       {showTalkModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
-          <div style={{ background: '#171520', borderRadius: 16, padding: 28, width: '100%', maxWidth: 480, border: '1px solid rgba(255,255,255,0.1)' }}>
-            <h3 style={{ margin: '0 0 20px', fontSize: 17 }}>Log Toolbox Talk</h3>
-            <div style={fieldStyle}>
-              <label style={labelStyle}>Topic *</label>
-              <input value={talkForm.topic} onChange={e => setTalkForm({ ...talkForm, topic: e.target.value })} style={inputStyle} placeholder="e.g. Working at Height — Scaffolding Safety" />
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <div style={fieldStyle}>
-                <label style={labelStyle}>Conducted By *</label>
-                <input value={talkForm.conducted_by} onChange={e => setTalkForm({ ...talkForm, conducted_by: e.target.value })} style={inputStyle} placeholder="HSE Manager" />
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-card border border-border-custom rounded-2xl p-6 w-full max-w-md shadow-2xl">
+            <h3 className="text-base font-bold text-foreground mb-4">Log Toolbox Talk</h3>
+            <div className="space-y-3.5">
+              <div>
+                <label className="text-[10px] uppercase tracking-wider text-muted block mb-1">Topic *</label>
+                <input
+                  value={talkForm.topic}
+                  onChange={(e) => setTalkForm({ ...talkForm, topic: e.target.value })}
+                  className="w-full bg-elevated border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary"
+                  placeholder="e.g. Working at Height — Scaffolding Safety"
+                />
               </div>
-              <div style={fieldStyle}>
-                <label style={labelStyle}>Attendees</label>
-                <input type="number" min={0} value={talkForm.attendee_count} onChange={e => setTalkForm({ ...talkForm, attendee_count: +e.target.value })} style={inputStyle} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] uppercase tracking-wider text-muted block mb-1">Conducted By *</label>
+                  <input
+                    value={talkForm.conducted_by}
+                    onChange={(e) => setTalkForm({ ...talkForm, conducted_by: e.target.value })}
+                    className="w-full bg-elevated border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary"
+                    placeholder="HSE Manager"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase tracking-wider text-muted block mb-1">Attendees</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={talkForm.attendee_count}
+                    onChange={(e) => setTalkForm({ ...talkForm, attendee_count: +e.target.value })}
+                    className="w-full bg-elevated border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-[10px] uppercase tracking-wider text-muted block mb-1">Date & Time *</label>
+                <input
+                  type="datetime-local"
+                  value={talkForm.conducted_at}
+                  onChange={(e) => setTalkForm({ ...talkForm, conducted_at: e.target.value })}
+                  className="w-full bg-elevated border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] uppercase tracking-wider text-muted block mb-1">Notes</label>
+                <textarea
+                  value={talkForm.notes}
+                  onChange={(e) => setTalkForm({ ...talkForm, notes: e.target.value })}
+                  className="w-full h-16 bg-elevated border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary resize-none"
+                  placeholder="Any additional notes…"
+                />
               </div>
             </div>
-            <div style={fieldStyle}>
-              <label style={labelStyle}>Date & Time *</label>
-              <input type="datetime-local" value={talkForm.conducted_at} onChange={e => setTalkForm({ ...talkForm, conducted_at: e.target.value })} style={inputStyle} />
-            </div>
-            <div style={fieldStyle}>
-              <label style={labelStyle}>Notes</label>
-              <textarea value={talkForm.notes} onChange={e => setTalkForm({ ...talkForm, notes: e.target.value })} style={{ ...inputStyle, height: 70, resize: 'vertical' }} placeholder="Any additional notes…" />
-            </div>
-            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
-              <button onClick={() => setShowTalkModal(false)} style={{ padding: '9px 20px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', color: '#fff', cursor: 'pointer' }}>Cancel</button>
-              <button onClick={submitTalk} style={{ padding: '9px 24px', borderRadius: 8, border: 'none', background: '#7C5CFF', color: '#fff', fontWeight: 600, cursor: 'pointer' }}>Log Talk</button>
+            <div className="flex gap-2 justify-end mt-6 border-t border-border-custom pt-4">
+              <button
+                onClick={() => setShowTalkModal(false)}
+                className="py-2 px-4 rounded-lg border border-border-custom text-muted hover:text-foreground text-xs font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitTalk}
+                className="py-2 px-5 rounded-lg bg-primary text-white font-semibold text-xs hover:opacity-90 transition-opacity"
+              >
+                Log Talk
+              </button>
             </div>
           </div>
         </div>
@@ -592,34 +855,73 @@ export default function SafetyPage() {
 
       {/* ─── Modal: PPE Check ─────────────────────────────────────────────── */}
       {showPPEModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
-          <div style={{ background: '#171520', borderRadius: 16, padding: 28, width: '100%', maxWidth: 480, border: '1px solid rgba(255,255,255,0.1)' }}>
-            <h3 style={{ margin: '0 0 20px', fontSize: 17 }}>Record PPE Compliance Check</h3>
-            <div style={fieldStyle}>
-              <label style={labelStyle}>Checked By *</label>
-              <input value={ppeForm.checked_by} onChange={e => setPpeForm({ ...ppeForm, checked_by: e.target.value })} style={inputStyle} placeholder="Site Engineer / HSE Officer" />
-            </div>
-            <div style={fieldStyle}>
-              <label style={labelStyle}>Check Date *</label>
-              <input type="date" value={ppeForm.check_date} onChange={e => setPpeForm({ ...ppeForm, check_date: e.target.value })} style={inputStyle} />
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <div style={fieldStyle}>
-                <label style={labelStyle}>Total Workers</label>
-                <input type="number" min={0} value={ppeForm.total_workers} onChange={e => setPpeForm({ ...ppeForm, total_workers: +e.target.value })} style={inputStyle} />
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-card border border-border-custom rounded-2xl p-6 w-full max-w-md shadow-2xl">
+            <h3 className="text-base font-bold text-foreground mb-4">Record PPE Compliance Check</h3>
+            <div className="space-y-3.5">
+              <div>
+                <label className="text-[10px] uppercase tracking-wider text-muted block mb-1">Checked By *</label>
+                <input
+                  value={ppeForm.checked_by}
+                  onChange={(e) => setPpeForm({ ...ppeForm, checked_by: e.target.value })}
+                  className="w-full bg-elevated border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary"
+                  placeholder="Site Engineer / HSE Officer"
+                />
               </div>
-              <div style={fieldStyle}>
-                <label style={labelStyle}>Compliant Workers</label>
-                <input type="number" min={0} value={ppeForm.compliant_workers} onChange={e => setPpeForm({ ...ppeForm, compliant_workers: +e.target.value })} style={inputStyle} />
+              <div>
+                <label className="text-[10px] uppercase tracking-wider text-muted block mb-1">Check Date *</label>
+                <input
+                  type="date"
+                  value={ppeForm.check_date}
+                  onChange={(e) => setPpeForm({ ...ppeForm, check_date: e.target.value })}
+                  className="w-full bg-elevated border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary"
+                />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] uppercase tracking-wider text-muted block mb-1">Total Workers</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={ppeForm.total_workers}
+                    onChange={(e) => setPpeForm({ ...ppeForm, total_workers: +e.target.value })}
+                    className="w-full bg-elevated border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase tracking-wider text-muted block mb-1">Compliant Workers</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={ppeForm.compliant_workers}
+                    onChange={(e) => setPpeForm({ ...ppeForm, compliant_workers: +e.target.value })}
+                    className="w-full bg-elevated border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-[10px] uppercase tracking-wider text-muted block mb-1">Non-Compliant Items (comma-separated)</label>
+                <input
+                  value={ppeForm.non_compliant_items}
+                  onChange={(e) => setPpeForm({ ...ppeForm, non_compliant_items: e.target.value })}
+                  className="w-full bg-elevated border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary"
+                  placeholder="No helmet, No safety vest, No boots"
+                />
               </div>
             </div>
-            <div style={fieldStyle}>
-              <label style={labelStyle}>Non-Compliant Items (comma-separated)</label>
-              <input value={ppeForm.non_compliant_items} onChange={e => setPpeForm({ ...ppeForm, non_compliant_items: e.target.value })} style={inputStyle} placeholder="No helmet, No safety vest, No boots" />
-            </div>
-            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
-              <button onClick={() => setShowPPEModal(false)} style={{ padding: '9px 20px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', color: '#fff', cursor: 'pointer' }}>Cancel</button>
-              <button onClick={submitPPE} style={{ padding: '9px 24px', borderRadius: 8, border: 'none', background: '#0ea5e9', color: '#fff', fontWeight: 600, cursor: 'pointer' }}>Record</button>
+            <div className="flex gap-2 justify-end mt-6 border-t border-border-custom pt-4">
+              <button
+                onClick={() => setShowPPEModal(false)}
+                className="py-2 px-4 rounded-lg border border-border-custom text-muted hover:text-foreground text-xs font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitPPE}
+                className="py-2 px-5 rounded-lg bg-info text-white font-semibold text-xs hover:opacity-90 transition-opacity"
+              >
+                Record
+              </button>
             </div>
           </div>
         </div>

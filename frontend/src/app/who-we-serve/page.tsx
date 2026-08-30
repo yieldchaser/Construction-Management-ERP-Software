@@ -232,7 +232,7 @@ export default function WhoWeServePage() {
       {/* Stat strip */}
       <section className="max-w-5xl mx-auto px-6 pb-24 alx-scroll-fade">
         <div className="rounded-3xl bg-alx-surface-container-lowest shadow-xl shadow-alx-on-surface/5 border border-alx-outline-variant/15 p-8 md:p-12">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4 md:divide-x divide-alx-outline-variant/20 text-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 md:gap-4 md:divide-x divide-alx-outline-variant/20 text-center">
             {STATS.map((stat) => (
               <div key={stat.label} className="flex flex-col items-center px-2">
                 <span className="font-headline text-3xl md:text-4xl font-bold text-alx-primary mb-2">

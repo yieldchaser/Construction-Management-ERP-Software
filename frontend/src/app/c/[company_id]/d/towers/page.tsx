@@ -149,7 +149,7 @@ export default function TowersPage() {
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {towers.map((t) => (
-                  <div key={t.id} className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg p-5 space-y-3">
+                  <div key={t.id} className="bg-card border border-border-custom rounded-lg p-5 space-y-3">
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="text-xs font-extrabold text-foreground uppercase tracking-wider">{t.tower_name}</h3>
@@ -160,7 +160,7 @@ export default function TowersPage() {
                         <button onClick={() => handleDelete(t.id)} className="px-2 py-1 rounded-lg border border-red-500/20 text-[10px] font-bold text-red-400 hover:bg-red-500/10 cursor-pointer">Delete</button>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 text-[10px]">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[10px]">
                       <div><span className="text-muted block">Budget</span><span className="text-foreground font-sans font-bold">₹{fmt(t.budget)}</span></div>
                       <div><span className="text-muted block">Start</span><span className="text-foreground font-sans">{t.start_date ? t.start_date.split("T")[0] : "-"}</span></div>
                       <div><span className="text-muted block">End</span><span className="text-foreground font-sans">{t.end_date ? t.end_date.split("T")[0] : "-"}</span></div>
@@ -168,11 +168,11 @@ export default function TowersPage() {
                   </div>
                 ))}
                 {towers.length === 0 && (
-                  <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg p-6 col-span-full text-center text-muted text-xs">No towers/phases created yet. Create one to track P&L per tower.</div>
+                  <div className="bg-card border border-border-custom rounded-lg p-6 col-span-full text-center text-muted text-xs">No towers/phases created yet. Create one to track P&L per tower.</div>
                 )}
               </div>
 
-              <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg overflow-hidden">
+              <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
                 <div className="px-5 py-4 border-b border-border-custom">
                   <h2 className="text-xs font-bold uppercase tracking-wider text-muted">Consolidated P&L by Tower</h2>
                 </div>
@@ -240,7 +240,7 @@ export default function TowersPage() {
                 <label className="text-muted font-bold">Tower Budget (INR)</label>
                 <input type="number" value={formBudget} onChange={(e) => setFormBudget(parseFloat(e.target.value) || 0)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground font-sans" />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-muted font-bold">Start Date</label>
                   <input type="date" value={formStart} onChange={(e) => setFormStart(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" />

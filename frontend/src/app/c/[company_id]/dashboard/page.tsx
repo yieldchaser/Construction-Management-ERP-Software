@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 import Icon from "@/components/marketing/Icon";
+import PageShell from "@/components/layout/PageShell";
 
 export default function DashboardPage() {
   const params = useParams();
@@ -188,7 +189,7 @@ export default function DashboardPage() {
 
   // Mini SVG icons for each chart type in the picker grid
   const chartTypeIcon = (id: string, active: boolean) => {
-    const c = active ? "#7C5CFF" : "#6b7280";
+    const c = active ? "var(--primary)" : "var(--muted)";
     switch (id) {
       case "pie": return <svg viewBox="0 0 18 18" width="16" height="16"><path d="M9,9L9,2A7,7,0,0,1,16,9Z" fill={c}/><path d="M9,9L16,9A7,7,0,0,1,4.5,14.6Z" fill={c} opacity="0.6"/><path d="M9,9L4.5,14.6A7,7,0,1,1,9,2Z" fill={c} opacity="0.3"/></svg>;
       case "donut": return <svg viewBox="0 0 18 18" width="16" height="16"><path d="M9,2A7,7,0,0,1,16,9" stroke={c} fill="none" strokeWidth="3.5"/><path d="M16,9A7,7,0,0,1,4.5,14.6" stroke={c} fill="none" strokeWidth="3.5" opacity="0.6"/><path d="M4.5,14.6A7,7,0,1,1,9,2" stroke={c} fill="none" strokeWidth="3.5" opacity="0.3"/></svg>;
@@ -229,7 +230,7 @@ export default function DashboardPage() {
         onClick={e => e.stopPropagation()}
         onMouseDown={e => e.stopPropagation()}
       >
-        <div className="grid grid-cols-5 gap-1.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-1.5">
           {ALL.map(ct => (
             <button
               key={ct}
@@ -463,7 +464,8 @@ export default function DashboardPage() {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto p-8 space-y-8">
+        <div className="flex-1 overflow-y-auto">
+          <PageShell width="wide">
           {activeTab === "overview" && (
             <>
               {overviewTab === "operational" && (() => {
@@ -562,7 +564,7 @@ export default function DashboardPage() {
                     </div>
 
                     {/* Summary Counters Grid */}
-                    <div className="grid grid-cols-2 lg:grid-cols-5 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
                       <div className="rounded-md border border-border-custom bg-card p-5 flex flex-col justify-center items-center text-center transition-all">
                         <span className="text-[11px] font-bold text-red-500 [.light-theme_&]:text-red-600 uppercase tracking-wider block mb-1">Not Started Projects</span>
                         <span className="text-2xl font-bold text-foreground">{notStartedCount}</span>
@@ -599,15 +601,15 @@ export default function DashboardPage() {
                             />
                             {/* Slice 1: Healthy */}
                             {healthyCount > 0 && (
-                              <path d={pathHealthy} fill="#26A69A" className="transition-all hover:opacity-90 cursor-pointer" />
+                              <path d={pathHealthy} fill="var(--success)" className="transition-all hover:opacity-90 cursor-pointer" />
                             )}
                             {/* Slice 2: Warning */}
                             {warningCount > 0 && (
-                              <path d={pathWarning} fill="#FFA726" className="transition-all hover:opacity-90 cursor-pointer" />
+                              <path d={pathWarning} fill="var(--warning)" className="transition-all hover:opacity-90 cursor-pointer" />
                             )}
                             {/* Slice 3: Critical */}
                             {criticalCount > 0 && (
-                              <path d={pathCritical} fill="#EF5350" className="transition-all hover:opacity-90 cursor-pointer" />
+                              <path d={pathCritical} fill="var(--danger)" className="transition-all hover:opacity-90 cursor-pointer" />
                             )}
 
                             {/* Callout lines & percentage labels */}
@@ -616,7 +618,7 @@ export default function DashboardPage() {
                                 <path
                                   d={`M ${calloutH1.x} ${calloutH1.y} L ${calloutH2.x} ${calloutH2.y} h -20`}
                                   fill="none"
-                                  stroke="#26A69A"
+                                  stroke="var(--success)"
                                   strokeWidth="1"
                                 />
                                 <rect
@@ -625,13 +627,13 @@ export default function DashboardPage() {
                                   width="32"
                                   height="16"
                                   rx="2"
-                                  fill="#26A69A"
+                                  fill="var(--success)"
                                   className="shadow-sm"
                                 />
                                 <text
                                   x={calloutH2.x - 39}
                                   y={calloutH2.y + 1}
-                                  fill="#fff"
+                                  fill="white"
                                   fontSize="9"
                                   fontWeight="bold"
                                   textAnchor="middle"
@@ -646,7 +648,7 @@ export default function DashboardPage() {
                                 <path
                                   d={`M ${calloutW1.x} ${calloutW1.y} L ${calloutW2.x} ${calloutW2.y} h 20`}
                                   fill="none"
-                                  stroke="#FFA726"
+                                  stroke="var(--warning)"
                                   strokeWidth="1"
                                 />
                                 <rect
@@ -655,13 +657,13 @@ export default function DashboardPage() {
                                   width="32"
                                   height="16"
                                   rx="2"
-                                  fill="#FFA726"
+                                  fill="var(--warning)"
                                   className="shadow-sm"
                                 />
                                 <text
                                   x={calloutW2.x + 39}
                                   y={calloutW2.y + 1}
-                                  fill="#fff"
+                                  fill="white"
                                   fontSize="9"
                                   fontWeight="bold"
                                   textAnchor="middle"
@@ -676,7 +678,7 @@ export default function DashboardPage() {
                                 <path
                                   d={`M ${calloutC1.x} ${calloutC1.y} L ${calloutC2.x} ${calloutC2.y} h 20`}
                                   fill="none"
-                                  stroke="#EF5350"
+                                  stroke="var(--danger)"
                                   strokeWidth="1"
                                 />
                                 <rect
@@ -685,13 +687,13 @@ export default function DashboardPage() {
                                   width="32"
                                   height="16"
                                   rx="2"
-                                  fill="#EF5350"
+                                  fill="var(--danger)"
                                   className="shadow-sm"
                                 />
                                 <text
                                   x={calloutC2.x + 39}
                                   y={calloutC2.y + 1}
-                                  fill="#fff"
+                                  fill="white"
                                   fontSize="9"
                                   fontWeight="bold"
                                   textAnchor="middle"
@@ -715,7 +717,7 @@ export default function DashboardPage() {
                             <text
                               x="160"
                               y="155"
-                              fill="#6b7280"
+                              fill="var(--muted)"
                               fontSize="8"
                               fontWeight="bold"
                               textAnchor="middle"
@@ -744,9 +746,9 @@ export default function DashboardPage() {
                                 type="checkbox"
                                 checked={healthyCount > 0}
                                 readOnly
-                                className="rounded border-border-custom text-[#26A69A] focus:ring-[#26A69A] h-3.5 w-3.5 cursor-pointer"
+                                className="rounded border-border-custom text-success focus:ring-success h-3.5 w-3.5 cursor-pointer"
                               />
-                              <div className="h-2.5 w-2.5 rounded-full bg-[#26A69A]" />
+                              <div className="h-2.5 w-2.5 rounded-full bg-success" />
                               <span className="text-muted font-medium">Healthy</span>
                               <strong className="text-foreground font-bold ml-auto">{healthyCount}</strong>
                             </div>
@@ -756,9 +758,9 @@ export default function DashboardPage() {
                                 type="checkbox"
                                 checked={warningCount > 0}
                                 readOnly
-                                className="rounded border-border-custom text-[#FFA726] focus:ring-[#FFA726] h-3.5 w-3.5 cursor-pointer"
+                                className="rounded border-border-custom text-warning focus:ring-warning h-3.5 w-3.5 cursor-pointer"
                               />
-                              <div className="h-2.5 w-2.5 rounded-full bg-[#FFA726]" />
+                              <div className="h-2.5 w-2.5 rounded-full bg-warning" />
                               <span className="text-muted font-medium">Warning</span>
                               <strong className="text-foreground font-bold ml-auto">{warningCount}</strong>
                             </div>
@@ -768,9 +770,9 @@ export default function DashboardPage() {
                                 type="checkbox"
                                 checked={criticalCount > 0}
                                 readOnly
-                                className="rounded border-border-custom text-[#EF5350] focus:ring-[#EF5350] h-3.5 w-3.5 cursor-pointer"
+                                className="rounded border-border-custom text-danger focus:ring-danger h-3.5 w-3.5 cursor-pointer"
                               />
-                              <div className="h-2.5 w-2.5 rounded-full bg-[#EF5350]" />
+                              <div className="h-2.5 w-2.5 rounded-full bg-danger" />
                               <span className="text-muted font-medium">Critical</span>
                               <strong className="text-foreground font-bold ml-auto">{criticalCount}</strong>
                             </div>
@@ -784,7 +786,7 @@ export default function DashboardPage() {
                       <div className="bg-card border border-border-custom rounded-lg p-5 flex flex-col justify-between transition-all">
                         <div className="space-y-4">
                           <h4 className="text-xs font-bold text-muted uppercase tracking-wider">Last 7 Days Attendance</h4>
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-1">
                               <label className="text-[9px] text-muted uppercase tracking-wider font-bold block">Payroll Type</label>
                               <select className="bg-input border border-border-custom rounded px-2 py-1 text-[11px] text-foreground focus:outline-none w-full">
@@ -839,23 +841,23 @@ export default function DashboardPage() {
                                     return (
                                       <g key={idx}>
                                         {/* Present Bar */}
-                                        <rect x={x} y={presentY} width={barWidth} height={presentHeight || 1} fill="#26A69A" rx="1" className="transition-all hover:opacity-90" />
+                                        <rect x={x} y={presentY} width={barWidth} height={presentHeight || 1} fill="var(--success)" rx="1" className="transition-all hover:opacity-90" />
                                         {day.present > 0 && (
-                                          <text x={x + barWidth / 2} y={presentY - 3} fill="#26A69A" fontSize="7" fontWeight="bold" textAnchor="middle">
+                                          <text x={x + barWidth / 2} y={presentY - 3} fill="var(--success)" fontSize="7" fontWeight="bold" textAnchor="middle">
                                             {day.present}
                                           </text>
                                         )}
 
                                         {/* Absent Bar */}
-                                        <rect x={x + barWidth + 2} y={absentY} width={barWidth} height={absentHeight || 1} fill="#EF5350" rx="1" className="transition-all hover:opacity-90" />
+                                        <rect x={x + barWidth + 2} y={absentY} width={barWidth} height={absentHeight || 1} fill="var(--danger)" rx="1" className="transition-all hover:opacity-90" />
                                         {day.absent > 0 && (
-                                          <text x={x + barWidth + 2 + barWidth / 2} y={absentY - 3} fill="#EF5350" fontSize="7" fontWeight="bold" textAnchor="middle">
+                                          <text x={x + barWidth + 2 + barWidth / 2} y={absentY - 3} fill="var(--danger)" fontSize="7" fontWeight="bold" textAnchor="middle">
                                             {day.absent}
                                           </text>
                                         )}
 
                                         {/* Date Label */}
-                                        <text x={x + barWidth + 1} y="105" fill="#6b7280" fontSize="7" textAnchor="middle" transform={`rotate(-15 ${x + barWidth + 1} 105)`}>
+                                        <text x={x + barWidth + 1} y="105" fill="var(--muted)" fontSize="7" textAnchor="middle" transform={`rotate(-15 ${x + barWidth + 1} 105)`}>
                                           {formattedDate}
                                         </text>
                                       </g>
@@ -871,7 +873,7 @@ export default function DashboardPage() {
                       <div className="bg-card border border-border-custom rounded-lg p-5 flex flex-col justify-between transition-all">
                         <div className="space-y-4">
                           <h4 className="text-xs font-bold text-muted uppercase tracking-wider">Last 7 Days Material Received</h4>
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-1">
                               <label className="text-[9px] text-muted uppercase tracking-wider font-bold block">Material Name</label>
                               <select className="bg-input border border-border-custom rounded px-2 py-1 text-[11px] text-foreground focus:outline-none w-full">
@@ -920,15 +922,15 @@ export default function DashboardPage() {
                                     return (
                                       <g key={idx}>
                                         {/* Material Received Bar */}
-                                        <rect x={x} y={y} width={barWidth} height={barHeight || 1} fill="#5C6BC0" rx="1.5" className="transition-all hover:opacity-90" />
+                                        <rect x={x} y={y} width={barWidth} height={barHeight || 1} fill="var(--primary)" rx="1.5" className="transition-all hover:opacity-90" />
                                         {day.count > 0 && (
-                                          <text x={x + barWidth / 2} y={y - 3} fill="#5C6BC0" fontSize="7" fontWeight="bold" textAnchor="middle">
+                                          <text x={x + barWidth / 2} y={y - 3} fill="var(--primary)" fontSize="7" fontWeight="bold" textAnchor="middle">
                                             {day.count}
                                           </text>
                                         )}
 
                                         {/* Date Label */}
-                                        <text x={x + barWidth / 2} y="105" fill="#6b7280" fontSize="7" textAnchor="middle" transform={`rotate(-15 ${x + barWidth / 2} 105)`}>
+                                        <text x={x + barWidth / 2} y="105" fill="var(--muted)" fontSize="7" textAnchor="middle" transform={`rotate(-15 ${x + barWidth / 2} 105)`}>
                                           {formattedDate}
                                         </text>
                                       </g>
@@ -950,17 +952,17 @@ export default function DashboardPage() {
                       <div className="overflow-x-auto rounded-lg border border-border-custom">
                         <table className="w-full text-left text-xs border-collapse min-w-[1200px]">
                           <thead>
-                            <tr className="bg-[#673AB7] text-white font-semibold text-[11px] tracking-wider uppercase border-b border-[#673AB7]">
-                              <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold text-center w-12">#</th>
-                              <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold">Project Name</th>
-                              <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold">Project Category</th>
-                              <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold">Key Personnel</th>
-                              <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold text-center w-28">Project Status</th>
-                              <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold text-center w-28">Project Health</th>
-                              <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold text-center w-28">Start Date</th>
-                              <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold text-center w-28">End Date</th>
+                            <tr className="bg-primary/90 text-white font-semibold text-[11px] tracking-wider uppercase border-b border-primary">
+                              <th className="px-4 py-3 border-r border-primary-hover font-semibold text-center w-12">#</th>
+                              <th className="px-4 py-3 border-r border-primary-hover font-semibold">Project Name</th>
+                              <th className="px-4 py-3 border-r border-primary-hover font-semibold">Project Category</th>
+                              <th className="px-4 py-3 border-r border-primary-hover font-semibold">Key Personnel</th>
+                              <th className="px-4 py-3 border-r border-primary-hover font-semibold text-center w-28">Project Status</th>
+                              <th className="px-4 py-3 border-r border-primary-hover font-semibold text-center w-28">Project Health</th>
+                              <th className="px-4 py-3 border-r border-primary-hover font-semibold text-center w-28">Start Date</th>
+                              <th className="px-4 py-3 border-r border-primary-hover font-semibold text-center w-28">End Date</th>
                               <th className="px-4 py-3 border-r border-border-custom font-semibold text-right w-24">Progress</th>
-                              <th className="px-4 py-3 border-r border-[#7E57C2] font-semibold">Customer Name</th>
+                              <th className="px-4 py-3 border-r border-primary-hover font-semibold">Customer Name</th>
                               <th className="px-4 py-3 font-semibold">Project Stage</th>
                             </tr>
                           </thead>
@@ -1048,17 +1050,17 @@ export default function DashboardPage() {
                           {/* Segments */}
                           <path
                             d={getArcPath(160, 150, 110, 110, 0, advPaidAngle, 75)}
-                            fill="#5C6BC0"
+                            fill="var(--primary)"
                             className="transition-all duration-300 hover:opacity-90"
                           />
                           <path
                             d={getArcPath(160, 150, 110, 110, advPaidAngle, advPaidAngle + toPayAngle, 75)}
-                            fill="#26A69A"
+                            fill="var(--success)"
                             className="transition-all duration-300 hover:opacity-90"
                           />
                           <path
                             d={getArcPath(160, 150, 110, 110, advPaidAngle + toPayAngle, 180, 75)}
-                            fill="#EF5350"
+                            fill="var(--danger)"
                             className="transition-all duration-300 hover:opacity-90"
                           />
 
@@ -1079,25 +1081,25 @@ export default function DashboardPage() {
 
                           {/* Callout Lines and Labels */}
                           {/* Advance Paid Label (Left) */}
-                          <line x1={line1Start.x} y1={line1Start.y} x2={line1End.x} y2={line1End.y} stroke="#5C6BC0" strokeWidth="1" />
-                          <circle cx={line1Start.x} cy={line1Start.y} r="2" fill="#5C6BC0" />
-                          <rect x={line1End.x - 55} y={line1End.y - 10} width="50" height="16" rx="3" fill="#5C6BC0" />
+                          <line x1={line1Start.x} y1={line1Start.y} x2={line1End.x} y2={line1End.y} stroke="var(--primary)" strokeWidth="1" />
+                          <circle cx={line1Start.x} cy={line1Start.y} r="2" fill="var(--primary)" />
+                          <rect x={line1End.x - 55} y={line1End.y - 10} width="50" height="16" rx="3" fill="var(--primary)" />
                           <text x={line1End.x - 30} y={line1End.y + 2} fill="white" fontSize="8" fontWeight="bold" textAnchor="middle">
                             {formatCompact(advPaid)}
                           </text>
 
                           {/* To Pay Label (Right/Top) */}
-                          <line x1={line2Start.x} y1={line2Start.y} x2={line2End.x} y2={line2End.y} stroke="#26A69A" strokeWidth="1" />
-                          <circle cx={line2Start.x} cy={line2Start.y} r="2" fill="#26A69A" />
-                          <rect x={line2End.x + 5} y={line2End.y - 10} width="50" height="16" rx="3" fill="#26A69A" />
+                          <line x1={line2Start.x} y1={line2Start.y} x2={line2End.x} y2={line2End.y} stroke="var(--success)" strokeWidth="1" />
+                          <circle cx={line2Start.x} cy={line2Start.y} r="2" fill="var(--success)" />
+                          <rect x={line2End.x + 5} y={line2End.y - 10} width="50" height="16" rx="3" fill="var(--success)" />
                           <text x={line2End.x + 30} y={line2End.y + 2} fill="white" fontSize="8" fontWeight="bold" textAnchor="middle">
                             {formatCompact(toPay)}
                           </text>
 
                           {/* To Receive Label (Far Right/Bottom) */}
-                          <line x1={line3Start.x} y1={line3Start.y} x2={line3End.x} y2={line3End.y} stroke="#EF5350" strokeWidth="1" />
-                          <circle cx={line3Start.x} cy={line3Start.y} r="2" fill="#EF5350" />
-                          <rect x={line3End.x + 5} y={line3End.y - 10} width="55" height="16" rx="3" fill="#EF5350" />
+                          <line x1={line3Start.x} y1={line3Start.y} x2={line3End.x} y2={line3End.y} stroke="var(--danger)" strokeWidth="1" />
+                          <circle cx={line3Start.x} cy={line3Start.y} r="2" fill="var(--danger)" />
+                          <rect x={line3End.x + 5} y={line3End.y - 10} width="55" height="16" rx="3" fill="var(--danger)" />
                           <text x={line3End.x + 32.5} y={line3End.y + 2} fill="white" fontSize="8" fontWeight="bold" textAnchor="middle">
                             {formatCompact(toReceive)}
                           </text>
@@ -1113,21 +1115,21 @@ export default function DashboardPage() {
                         <div className="space-y-2">
                           <div className="flex justify-between items-center text-xs">
                             <div className="flex items-center gap-2">
-                              <span className="h-2.5 w-2.5 rounded-sm bg-[#5C6BC0]" />
+                              <span className="h-2.5 w-2.5 rounded-sm bg-primary" />
                               <span className="text-muted font-medium">Advance Paid</span>
                             </div>
                             <span className="font-semibold text-foreground">{formatCompact(advPaid)}</span>
                           </div>
                           <div className="flex justify-between items-center text-xs">
                             <div className="flex items-center gap-2">
-                              <span className="h-2.5 w-2.5 rounded-sm bg-[#26A69A]" />
+                              <span className="h-2.5 w-2.5 rounded-sm bg-success" />
                               <span className="text-muted font-medium">To Pay</span>
                             </div>
                             <span className="font-semibold text-foreground">{formatCompact(toPay)}</span>
                           </div>
                           <div className="flex justify-between items-center text-xs">
                             <div className="flex items-center gap-2">
-                              <span className="h-2.5 w-2.5 rounded-sm bg-[#EF5350]" />
+                              <span className="h-2.5 w-2.5 rounded-sm bg-danger" />
                               <span className="text-muted font-medium">To Receive</span>
                             </div>
                             <span className="font-semibold text-foreground">{formatCompact(toReceive)}</span>
@@ -1137,9 +1139,9 @@ export default function DashboardPage() {
                     </div>
 
                     {/* Bottom metrics grid */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-border-custom">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-border-custom">
                       {/* Advance Paid */}
-                      <div className="bg-emerald-950/10 border border-emerald-500/10 [.light-theme_&]:bg-[#E8F5E9]/60 [.light-theme_&]:border-emerald-200 rounded-lg p-3 flex flex-col items-center justify-center transition-all">
+                      <div className="bg-emerald-950/10 border border-emerald-500/10 [.light-theme_&]:bg-success/10 [.light-theme_&]:border-emerald-200 rounded-lg p-3 flex flex-col items-center justify-center transition-all">
                         <span className="text-[10px] font-bold text-emerald-400 [.light-theme_&]:text-emerald-700 uppercase tracking-wider block text-center">Advance Paid</span>
                         <strong className="text-md font-bold text-emerald-400 [.light-theme_&]:text-emerald-700 mt-1 block text-center">
                           {advPaid > 0 ? advPaid.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"}
@@ -1147,7 +1149,7 @@ export default function DashboardPage() {
                       </div>
 
                       {/* To Pay */}
-                      <div className="bg-red-950/10 border border-red-500/10 [.light-theme_&]:bg-[#FFEBEE]/60 [.light-theme_&]:border-red-200 rounded-lg p-3 flex flex-col items-center justify-center transition-all">
+                      <div className="bg-red-950/10 border border-red-500/10 [.light-theme_&]:bg-danger/10 [.light-theme_&]:border-red-200 rounded-lg p-3 flex flex-col items-center justify-center transition-all">
                         <span className="text-[10px] font-bold text-red-400 [.light-theme_&]:text-red-700 uppercase tracking-wider block text-center">To Pay</span>
                         <strong className="text-md font-bold text-red-400 [.light-theme_&]:text-red-700 mt-1 block text-center">
                           {toPay > 0 ? toPay.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"}
@@ -1155,7 +1157,7 @@ export default function DashboardPage() {
                       </div>
 
                       {/* To Receive */}
-                      <div className="bg-red-950/10 border border-red-500/10 [.light-theme_&]:bg-[#FFEBEE]/60 [.light-theme_&]:border-red-200 rounded-lg p-3 flex flex-col items-center justify-center transition-all">
+                      <div className="bg-red-950/10 border border-red-500/10 [.light-theme_&]:bg-danger/10 [.light-theme_&]:border-red-200 rounded-lg p-3 flex flex-col items-center justify-center transition-all">
                         <span className="text-[10px] font-bold text-red-400 [.light-theme_&]:text-red-700 uppercase tracking-wider block text-center">To Receive</span>
                         <strong className="text-md font-bold text-red-400 [.light-theme_&]:text-red-700 mt-1 block text-center">
                           {toReceive > 0 ? toReceive.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"}
@@ -1177,7 +1179,7 @@ export default function DashboardPage() {
                     <div className="overflow-x-auto">
                       <table className="w-full text-xs text-left border-collapse">
                         <thead>
-                          <tr className="bg-[#673AB7] text-white font-bold uppercase tracking-wider text-[9px]">
+                          <tr className="bg-primary/90 text-white font-bold uppercase tracking-wider text-[9px]">
                             <th className="px-3 py-3 text-center border-r border-white/10 w-10">#</th>
                             <th className="px-4 py-3 border-r border-white/10">Project Name</th>
                             <th className="px-4 py-3 border-r border-white/10">Project Status</th>
@@ -1279,8 +1281,8 @@ export default function DashboardPage() {
                               <svg className="w-full h-full overflow-visible" viewBox="0 0 200 120">
                                 <line x1="20" y1="40" x2="180" y2="40" stroke="var(--border)" strokeWidth="1" />
                                 <line x1="20" y1="90" x2="180" y2="90" stroke="var(--border)" strokeWidth="1" strokeDasharray="3" />
-                                <text x="15" y="43" fill="#6b7280" fontSize="8" textAnchor="end">0</text>
-                                <text x="15" y="93" fill="#6b7280" fontSize="8" textAnchor="end">-{maxVal >= 1000000 ? `${(maxVal/1000000).toFixed(1)}M` : `${Math.round(maxVal/1000)}K`}</text>
+                                <text x="15" y="43" fill="var(--muted)" fontSize="8" textAnchor="end">0</text>
+                                <text x="15" y="93" fill="var(--muted)" fontSize="8" textAnchor="end">-{maxVal >= 1000000 ? `${(maxVal/1000000).toFixed(1)}M` : `${Math.round(maxVal/1000)}K`}</text>
 
                                 {series.map((val: number, idx: number) => {
                                   const x = series.length === 1 ? 85 : 45 + idx * 70;
@@ -1291,11 +1293,11 @@ export default function DashboardPage() {
 
                                   return (
                                     <g key={idx}>
-                                      <rect x={x} y={y} width={width} height={height || 2} fill="#26A69A" rx="2" className="transition-all hover:opacity-90" />
-                                      <text x={x + 15} y={val < 0 ? y + height + 10 : y - 4} fill="#26A69A" fontSize="8" fontWeight="bold" textAnchor="middle">
+                                      <rect x={x} y={y} width={width} height={height || 2} fill="var(--success)" rx="2" className="transition-all hover:opacity-90" />
+                                      <text x={x + 15} y={val < 0 ? y + height + 10 : y - 4} fill="var(--success)" fontSize="8" fontWeight="bold" textAnchor="middle">
                                         {val === 0 ? "0" : val >= 1000000 || val <= -1000000 ? `${(val / 1000000).toFixed(2)}M` : `${(val / 1000).toFixed(1)}K`}
                                       </text>
-                                      <text x={x + 15} y="112" fill="#6b7280" fontSize="7" textAnchor="middle" transform={`rotate(-15 ${x + 15} 112)`}>
+                                      <text x={x + 15} y="112" fill="var(--muted)" fontSize="7" textAnchor="middle" transform={`rotate(-15 ${x + 15} 112)`}>
                                         {months[idx] || ""}
                                       </text>
                                     </g>
@@ -1312,7 +1314,7 @@ export default function DashboardPage() {
                           const totalSales = financialData?.sales_series?.reduce((a: number, b: number) => a + b, 0) || 0;
                           return (
                             <span className={`font-bold px-2 py-0.5 rounded ${
-                              totalSales >= 0 ? "text-emerald-500 bg-emerald-500/10 [.light-theme_&]:bg-[#E8F5E9] text-emerald-600" : "text-red-500 bg-red-500/10 [.light-theme_&]:bg-[#FFEBEE] text-red-700"
+                              totalSales >= 0 ? "text-emerald-500 bg-emerald-500/10 [.light-theme_&]:bg-success/10 text-emerald-600" : "text-red-500 bg-red-500/10 [.light-theme_&]:bg-danger/10 text-red-700"
                             }`}>
                               {totalSales === 0 ? "-" : totalSales.toLocaleString("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })}
                             </span>
@@ -1346,8 +1348,8 @@ export default function DashboardPage() {
                               <svg className="w-full h-full overflow-visible" viewBox="0 0 200 120">
                                 <line x1="20" y1="40" x2="180" y2="40" stroke="var(--border)" strokeWidth="1" />
                                 <line x1="20" y1="90" x2="180" y2="90" stroke="var(--border)" strokeWidth="1" strokeDasharray="3" />
-                                <text x="15" y="43" fill="#6b7280" fontSize="8" textAnchor="end">0</text>
-                                <text x="15" y="93" fill="#6b7280" fontSize="8" textAnchor="end">-{maxVal >= 1000000 ? `${(maxVal/1000000).toFixed(1)}M` : `${Math.round(maxVal/1000)}K`}</text>
+                                <text x="15" y="43" fill="var(--muted)" fontSize="8" textAnchor="end">0</text>
+                                <text x="15" y="93" fill="var(--muted)" fontSize="8" textAnchor="end">-{maxVal >= 1000000 ? `${(maxVal/1000000).toFixed(1)}M` : `${Math.round(maxVal/1000)}K`}</text>
 
                                 {series.map((val: number, idx: number) => {
                                   const x = series.length === 1 ? 85 : 45 + idx * 70;
@@ -1358,11 +1360,11 @@ export default function DashboardPage() {
 
                                   return (
                                     <g key={idx}>
-                                      <rect x={x} y={y} width={width} height={height || 2} fill="#EF5350" rx="2" className="transition-all hover:opacity-90" />
-                                      <text x={x + 15} y={y + height + 10} fill="#EF5350" fontSize="8" fontWeight="bold" textAnchor="middle">
+                                      <rect x={x} y={y} width={width} height={height || 2} fill="var(--danger)" rx="2" className="transition-all hover:opacity-90" />
+                                      <text x={x + 15} y={y + height + 10} fill="var(--danger)" fontSize="8" fontWeight="bold" textAnchor="middle">
                                         {val === 0 ? "0" : `-${val >= 1000000 ? `${(val / 1000000).toFixed(2)}M` : `${(val / 1000).toFixed(1)}K`}`}
                                       </text>
-                                      <text x={x + 15} y="112" fill="#6b7280" fontSize="7" textAnchor="middle" transform={`rotate(-15 ${x + 15} 112)`}>
+                                      <text x={x + 15} y="112" fill="var(--muted)" fontSize="7" textAnchor="middle" transform={`rotate(-15 ${x + 15} 112)`}>
                                         {months[idx] || ""}
                                       </text>
                                     </g>
@@ -1378,7 +1380,7 @@ export default function DashboardPage() {
                         {(() => {
                           const totalExpense = financialData?.expense_series?.reduce((a: number, b: number) => a + b, 0) || 0;
                           return (
-                            <span className="font-bold text-red-500 [.light-theme_&]:text-red-700 bg-red-500/10 [.light-theme_&]:bg-[#FFEBEE] px-2 py-0.5 rounded">
+                            <span className="font-bold text-red-500 [.light-theme_&]:text-red-700 bg-red-500/10 [.light-theme_&]:bg-danger/10 px-2 py-0.5 rounded">
                               {totalExpense === 0 ? "-" : `-${totalExpense.toLocaleString("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })}`}
                             </span>
                           );
@@ -1411,8 +1413,8 @@ export default function DashboardPage() {
                               <svg className="w-full h-full overflow-visible" viewBox="0 0 200 120">
                                 <line x1="20" y1="40" x2="180" y2="40" stroke="var(--border)" strokeWidth="1" />
                                 <line x1="20" y1="90" x2="180" y2="90" stroke="var(--border)" strokeWidth="1" strokeDasharray="3" />
-                                <text x="15" y="43" fill="#6b7280" fontSize="8" textAnchor="end">0</text>
-                                <text x="15" y="93" fill="#6b7280" fontSize="8" textAnchor="end">-{maxVal >= 1000000 ? `${(maxVal/1000000).toFixed(1)}M` : `${Math.round(maxVal/1000)}K`}</text>
+                                <text x="15" y="43" fill="var(--muted)" fontSize="8" textAnchor="end">0</text>
+                                <text x="15" y="93" fill="var(--muted)" fontSize="8" textAnchor="end">-{maxVal >= 1000000 ? `${(maxVal/1000000).toFixed(1)}M` : `${Math.round(maxVal/1000)}K`}</text>
 
                                 {series.map((val: number, idx: number) => {
                                   const x = series.length === 1 ? 85 : 45 + idx * 70;
@@ -1420,7 +1422,7 @@ export default function DashboardPage() {
                                   const ratio = Math.abs(val) / maxVal;
                                   const height = ratio * 50;
                                   const y = val < 0 ? 40 : 40 - height;
-                                  const color = val < 0 ? "#EF5350" : "#26A69A";
+                                  const color = val < 0 ? "var(--danger)" : "var(--success)";
 
                                   return (
                                     <g key={idx}>
@@ -1428,7 +1430,7 @@ export default function DashboardPage() {
                                       <text x={x + 15} y={val < 0 ? y + height + 10 : y - 4} fill={color} fontSize="8" fontWeight="bold" textAnchor="middle">
                                         {val === 0 ? "0" : val >= 1000000 || val <= -1000000 ? `${(val / 1000000).toFixed(2)}M` : `${(val / 1000).toFixed(1)}K`}
                                       </text>
-                                      <text x={x + 15} y="112" fill="#6b7280" fontSize="7" textAnchor="middle" transform={`rotate(-15 ${x + 15} 112)`}>
+                                      <text x={x + 15} y="112" fill="var(--muted)" fontSize="7" textAnchor="middle" transform={`rotate(-15 ${x + 15} 112)`}>
                                         {months[idx] || ""}
                                       </text>
                                     </g>
@@ -1445,7 +1447,7 @@ export default function DashboardPage() {
                           const totalMargin = financialData?.margin_series?.reduce((a: number, b: number) => a + b, 0) || 0;
                           return (
                             <span className={`font-bold px-2 py-0.5 rounded ${
-                              totalMargin >= 0 ? "text-emerald-500 bg-emerald-500/10 [.light-theme_&]:bg-[#E8F5E9] text-emerald-600" : "text-red-500 bg-red-500/10 [.light-theme_&]:bg-[#FFEBEE] text-red-700"
+                              totalMargin >= 0 ? "text-emerald-500 bg-emerald-500/10 [.light-theme_&]:bg-success/10 text-emerald-600" : "text-red-500 bg-red-500/10 [.light-theme_&]:bg-danger/10 text-red-700"
                             }`}>
                               {totalMargin === 0 ? "-" : totalMargin.toLocaleString("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })}
                             </span>
@@ -1484,18 +1486,18 @@ export default function DashboardPage() {
                                 <line x1="20" y1="90" x2="220" y2="90" stroke="var(--border)" strokeWidth="1" />
                                 
                                 {/* Payments In Bar */}
-                                <rect x="60" y={90 - bar1Height} width="40" height={bar1Height} fill="#26A69A" rx="2" className="transition-all hover:opacity-90" />
-                                <text x="80" y={90 - bar1Height - 5} fill="#26A69A" fontSize="8" fontWeight="bold" textAnchor="middle">
+                                <rect x="60" y={90 - bar1Height} width="40" height={bar1Height} fill="var(--success)" rx="2" className="transition-all hover:opacity-90" />
+                                <text x="80" y={90 - bar1Height - 5} fill="var(--success)" fontSize="8" fontWeight="bold" textAnchor="middle">
                                   {totalPaymentIn >= 1000000 ? `${(totalPaymentIn / 1000000).toFixed(2)}M` : totalPaymentIn.toLocaleString()}
                                 </text>
-                                <text x="80" y="105" fill="#6b7280" fontSize="8" textAnchor="middle">Inflow</text>
+                                <text x="80" y="105" fill="var(--muted)" fontSize="8" textAnchor="middle">Inflow</text>
 
                                 {/* Payments Out Bar */}
-                                <rect x="140" y={90 - bar2Height} width="40" height={bar2Height} fill="#EF5350" rx="2" className="transition-all hover:opacity-90" />
-                                <text x="160" y={90 - bar2Height - 5} fill="#EF5350" fontSize="8" fontWeight="bold" textAnchor="middle">
+                                <rect x="140" y={90 - bar2Height} width="40" height={bar2Height} fill="var(--danger)" rx="2" className="transition-all hover:opacity-90" />
+                                <text x="160" y={90 - bar2Height - 5} fill="var(--danger)" fontSize="8" fontWeight="bold" textAnchor="middle">
                                   {totalPaymentOut >= 1000000 ? `${(totalPaymentOut / 1000000).toFixed(2)}M` : totalPaymentOut.toLocaleString()}
                                 </text>
-                                <text x="160" y="105" fill="#6b7280" fontSize="8" textAnchor="middle">Outflow</text>
+                                <text x="160" y="105" fill="var(--muted)" fontSize="8" textAnchor="middle">Outflow</text>
                               </svg>
                             </div>
                           );
@@ -1529,7 +1531,7 @@ export default function DashboardPage() {
                             <div className="space-y-3 py-2 max-h-[160px] overflow-y-auto pr-1">
                               {expenseItems.map((item: any, idx: number) => {
                                 const pct = Math.round((item.value / totalExp) * 100) || 0;
-                                const colors = ["#5C6BC0", "#26A69A", "#EF5350", "#AB47BC", "#FFA726"];
+                                const colors = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"];
                                 const color = colors[idx % colors.length];
                                 return (
                                   <div key={idx} className="space-y-1">
@@ -1738,6 +1740,7 @@ export default function DashboardPage() {
               </div>
             </div>
           )}
+          </PageShell>
         </div>
       </main>
 
@@ -1780,7 +1783,7 @@ export default function DashboardPage() {
             <div className="p-6 space-y-4">
               {wizardStep === 1 ? (
                 <>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <label className="text-[11px] text-muted font-medium">Project Name</label>
                       <input
@@ -1814,7 +1817,7 @@ export default function DashboardPage() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <label className="text-[11px] text-muted font-medium">City</label>
                       <input

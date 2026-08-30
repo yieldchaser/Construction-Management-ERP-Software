@@ -259,6 +259,7 @@ backend/1
 .code-review-graph/
 .kilo/
 .vscode/
+.workbuddy-ai/
 
 # ==============================================================================
 # Frontend Build Outputs & Caches

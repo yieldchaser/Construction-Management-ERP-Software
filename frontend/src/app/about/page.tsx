@@ -208,7 +208,7 @@ export default function AboutPage() {
       {/* Stat strip */}
       <section className="bg-alx-surface-container py-16 border-y border-alx-outline-variant/15 alx-scroll-fade">
         <div className="max-w-6xl mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 divide-x divide-alx-outline-variant/20">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 divide-x divide-alx-outline-variant/20">
             {PROOF_POINTS.map((t, i) => (
               <div key={i} className="text-center px-4">
                 <div className="font-headline text-3xl font-bold text-alx-primary mb-2">

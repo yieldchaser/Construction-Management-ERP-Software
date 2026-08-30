@@ -3,6 +3,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
+import PageShell from "@/components/layout/PageShell";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 type DeleteLog = {
   id: string;
@@ -119,7 +122,8 @@ export default function DeleteLogsPage() {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="flex-1 overflow-y-auto">
+      <PageShell width="wide">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Delete Logs</h1>
@@ -176,7 +180,7 @@ export default function DeleteLogsPage() {
         </div>
         <button
           onClick={fetchLogs}
-          className="px-4 py-2 rounded-md bg-primary text-white text-sm font-medium hover:opacity-90"
+          className="px-4 py-2 rounded-md bg-primary text-white text-sm font-medium hover:opacity-90 cursor-pointer"
         >
           Apply Filters
         </button>
@@ -197,11 +201,16 @@ export default function DeleteLogsPage() {
           </thead>
           <tbody>
             {loading ? (
-              <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-muted">
-                  Loading...
-                </td>
-              </tr>
+              Array.from({ length: 5 }).map((_, i) => (
+                <tr key={i} className="border-t border-border-custom">
+                  <td className="px-4 py-3"><Skeleton className="h-4 w-24" /></td>
+                  <td className="px-4 py-3"><Skeleton className="h-4 w-20" /></td>
+                  <td className="px-4 py-3"><Skeleton className="h-4 w-40" /></td>
+                  <td className="px-4 py-3"><Skeleton className="h-4 w-28" /></td>
+                  <td className="px-4 py-3"><Skeleton className="h-4 w-24" /></td>
+                  <td className="px-4 py-3 text-right"><Skeleton className="h-6 w-16 ml-auto rounded" /></td>
+                </tr>
+              ))
             ) : error ? (
               <tr>
                 <td colSpan={6} className="px-4 py-6 text-center text-red-400">
@@ -210,8 +219,13 @@ export default function DeleteLogsPage() {
               </tr>
             ) : logs.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-muted">
-                  No delete logs found.
+                <td colSpan={6} className="p-6">
+                  <EmptyState
+                    icon="trash"
+                    title="No delete logs found"
+                    description="Deleted records and audit entries will appear here."
+                    compact={true}
+                  />
                 </td>
               </tr>
             ) : (
@@ -248,6 +262,7 @@ export default function DeleteLogsPage() {
           {toast}
         </div>
       )}
+      </PageShell>
     </div>
   );
 }

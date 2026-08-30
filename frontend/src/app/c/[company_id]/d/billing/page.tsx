@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
 import { authHeaders, downloadWithAuth } from "@/lib/siteflow";
+import PageShell from "@/components/layout/PageShell";
 
 // Types
 interface Deduction {
@@ -570,16 +571,17 @@ export default function SubcontractorBillingPage() {
         </div>
 
         {/* Workspace Body */}
-        <div className="flex-1 overflow-y-auto p-6 z-10">
+        <div className="flex-1 overflow-y-auto z-10">
+          <PageShell width="wide">
 
           {/* TAB: RA Bills */}
           {tab === "ra-bills" && (
             <div className="space-y-6">
               
               {/* Quick stats row */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 {kpiCards.map((s, idx) => (
-                  <div key={idx} className="bg-card border border-border-custom rounded-lg p-4 rounded-md border border-border-custom">
+                  <div key={idx} className="bg-card border border-border-custom rounded-lg p-4">
                     <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">{s.label}</span>
                     <span className={`text-2xl font-extrabold mt-1 block ${s.color}`}>{s.value}</span>
                     <span className="text-[10px] text-muted block mt-0.5">{s.sub}</span>
@@ -588,7 +590,7 @@ export default function SubcontractorBillingPage() {
               </div>
 
               {/* Bills List Table */}
-              <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg overflow-hidden">
+              <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
                 <div className="px-5 py-4 border-b border-border-custom">
                   <h2 className="text-xs font-bold uppercase tracking-wider text-muted">Subcontractor RA Bills</h2>
                 </div>
@@ -634,7 +636,7 @@ export default function SubcontractorBillingPage() {
 
               {/* Tower-wise P&L Summary */}
               {pnlData.length > 0 && (
-                <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg overflow-hidden">
+                <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
                   <div className="px-5 py-4 border-b border-border-custom">
                     <h2 className="text-xs font-bold uppercase tracking-wider text-muted">Tower-wise P&L Breakdown</h2>
                   </div>
@@ -754,7 +756,7 @@ export default function SubcontractorBillingPage() {
           {/* TAB: Work Orders */}
           {tab === "wo" && (
             <div className="space-y-6">
-              <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg overflow-hidden">
+              <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
                 <div className="px-5 py-4 border-b border-border-custom">
                   <h2 className="text-xs font-bold uppercase tracking-wider text-muted">Active Work Orders</h2>
                 </div>
@@ -799,7 +801,7 @@ export default function SubcontractorBillingPage() {
           {/* TAB: Debit/Credit Notes */}
           {tab === "notes" && (
             <div className="space-y-6">
-              <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg overflow-hidden">
+              <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
                 <div className="px-5 py-4 border-b border-border-custom">
                   <h2 className="text-xs font-bold uppercase tracking-wider text-muted">Debit & Credit Notes Ledger</h2>
                 </div>
@@ -845,6 +847,7 @@ export default function SubcontractorBillingPage() {
             </div>
           )}
 
+          </PageShell>
         </div>
       </div>
 
@@ -858,7 +861,7 @@ export default function SubcontractorBillingPage() {
             </div>
 
             <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] uppercase font-bold text-muted block mb-1">WO Serial Code</label>
                   <input
@@ -926,7 +929,7 @@ export default function SubcontractorBillingPage() {
               </div>
 
               <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
                     <label className="text-[10px] uppercase font-bold text-muted block mb-1">Bill Serial ID</label>
                     <input
@@ -951,7 +954,7 @@ export default function SubcontractorBillingPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
                     <label className="text-[10px] uppercase font-bold text-muted block mb-1">Billed Subtotal (₹)</label>
                     <input
@@ -972,7 +975,7 @@ export default function SubcontractorBillingPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
                     <label className="text-[10px] uppercase font-bold text-muted block mb-1">TDS Rate Preset</label>
                     <div className="flex gap-1 mb-1.5">
@@ -1071,7 +1074,7 @@ export default function SubcontractorBillingPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
                     <label className="text-[10px] uppercase font-bold text-muted block mb-1">Retention (%)</label>
                     <input

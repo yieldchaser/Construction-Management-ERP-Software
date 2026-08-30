@@ -977,7 +977,7 @@ export default function HRPayrollPage() {
           {tab === "employees" && (
             <div className="space-y-4">
               {/* Summary cards */}
-              <div className="grid grid-cols-4 gap-4 mb-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 {[
                   { label: "Total Active", val: employees.filter(e => e.status === "active").length, color: "text-green-400" },
                   { label: "Total Monthly CTC", val: fmt(employees.reduce((a, e) => a + e.grossMonthly + e.basic * (e.pfEmployerPct ?? 12) / 100, 0)), color: "text-primary" },
@@ -1034,7 +1034,7 @@ export default function HRPayrollPage() {
           {tab === "attendance" && (
             <div className="space-y-4">
               {/* Geofence overview */}
-              <div className="grid grid-cols-4 gap-4 mb-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-2">
                 {[
                   { label: "Present Today", val: attendance.filter(a => a.status.startsWith("Present")).length, color: "text-green-400" },
                   { label: "Within Geofence", val: attendance.filter(a => a.withinGeofence).length, color: "text-blue-400" },
@@ -1262,7 +1262,7 @@ export default function HRPayrollPage() {
                           />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-1.5">
                             <label className="text-[10px] text-muted font-bold uppercase block">Start Time</label>
                             <input
@@ -1390,7 +1390,7 @@ export default function HRPayrollPage() {
               {payrollRun && (
                 <>
                   {/* Summary */}
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {[
                       { label: "Total Gross", val: fmt(payrollRun.totalGross), color: "text-green-400" },
                       { label: "Total Deductions", val: fmt(payrollRun.totalDeductions), color: "text-red-400" },
@@ -1726,7 +1726,7 @@ export default function HRPayrollPage() {
               <h2 className="text-base font-bold text-foreground">Add New Employee</h2>
               <button onClick={() => setShowAddEmp(false)} className="text-muted hover:text-foreground text-xl">✕</button>
             </div>
-            <div className="grid grid-cols-2 gap-3 text-xs">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
               {[
                 { label: "Full Name", type: "text", key: "name", placeholder: "Ramesh Kumar" },
                 { label: "Employee Code", type: "text", key: "code", placeholder: "EMP-005" },
@@ -1801,7 +1801,7 @@ export default function HRPayrollPage() {
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-[10px] text-muted uppercase font-bold block">Start Date</label>
                   <input
@@ -1943,7 +1943,7 @@ export default function HRPayrollPage() {
                 
                 <div>
                   <label className="text-[10px] text-muted uppercase font-bold block mb-1.5">Salary Type</label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {["Daily", "Hourly"].map(t => (
                       <button
                         key={t}

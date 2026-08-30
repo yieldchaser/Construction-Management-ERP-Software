@@ -13,10 +13,22 @@
   --primary: #0284C7;
   --primary-hover: #0369A1;
   --secondary: #14B8A6;
+  --accent: #FF8A00;
+  --accent-hover: #EA580C;
   --success: #10B981;
   --warning: #F59E0B;
   --danger: #EF4444;
   --info: #3B82F6;
+
+  /* Categorical Chart Palette */
+  --chart-1: #0284C7;
+  --chart-2: #10B981;
+  --chart-3: #F59E0B;
+  --chart-4: #8B5CF6;
+  --chart-5: #EC4899;
+  --chart-6: #06B6D4;
+  --chart-7: #F97316;
+  --chart-8: #6366F1;
 }
 
 :root.light-theme {
@@ -32,10 +44,22 @@
   --primary: #0284C7;
   --primary-hover: #0369A1;
   --secondary: #0D9488;
+  --accent: #EA580C;
+  --accent-hover: #C2410C;
   --success: #10B981;
   --warning: #F59E0B;
   --danger: #EF4444;
   --info: #3B82F6;
+
+  /* Categorical Chart Palette (Light Mode - refined contrast) */
+  --chart-1: #0284C7;
+  --chart-2: #059669;
+  --chart-3: #D97706;
+  --chart-4: #7C3AED;
+  --chart-5: #DB2777;
+  --chart-6: #0891B2;
+  --chart-7: #EA580C;
+  --chart-8: #4F46E5;
 }
 
 @theme {
@@ -51,10 +75,21 @@
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
   --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
   --color-info: var(--info);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-chart-6: var(--chart-6);
+  --color-chart-7: var(--chart-7);
+  --color-chart-8: var(--chart-8);
 
   --font-sans: var(--font-sans), system-ui, -apple-system, sans-serif;
 }

@@ -1007,7 +1007,7 @@ export default function DynamicReportViewPage() {
                 </div>
 
                 {/* Conversion Summary Stats */}
-                <div className="grid grid-cols-3 gap-4 pt-4 border-t border-border-custom text-center">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4 border-t border-border-custom text-center">
                   <div className="p-3 bg-white/[0.01] border border-border-custom rounded-lg">
                     <div className="text-[10px] text-muted uppercase font-bold">Total Enquiries</div>
                     <div className="text-lg font-black text-white mt-1">{totalLeadsCount}</div>
@@ -1092,7 +1092,7 @@ export default function DynamicReportViewPage() {
               <div className="min-w-full overflow-x-auto rounded-xl border border-border-custom bg-card">
                 <table className="w-full text-xs">
                 <thead>
-                  <tr className="bg-gradient-to-r from-[#6366f1] to-[#7c3aed] text-white">
+                  <tr className="bg-gradient-to-r from-primary to-primary-hover text-white">
                     <th className="px-3 py-2.5 text-left font-semibold whitespace-nowrap w-12">#</th>
                     {meta.columns.map(col => (
                       <th key={col} className="px-3 py-2.5 text-left font-semibold whitespace-nowrap">

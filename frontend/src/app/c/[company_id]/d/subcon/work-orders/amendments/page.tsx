@@ -95,7 +95,7 @@ export default function WOAmendmentsPage({ params }: { params: { wo_id: string }
         <div className="flex-1 overflow-y-auto p-6 z-10">
           {error && <div className="p-4 rounded-md bg-red-500/10 border border-red-500/20 text-xs text-red-400 mb-4">{error}</div>}
 
-          <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg overflow-hidden">
+          <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
             <div className="px-5 py-4 border-b border-border-custom">
               <h2 className="text-xs font-bold uppercase tracking-wider text-muted">Amendment History</h2>
             </div>

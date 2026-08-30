@@ -417,7 +417,7 @@ export default function ProductionPage() {
                           {batch.status}
                         </span>
                       </div>
-                      <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
+                      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 text-center text-xs">
                         <div className="rounded-md bg-elevated p-2">
                           <div className="text-muted">Plan</div>
                           <div className="mt-1 font-bold text-foreground">{formatQty(batch.planned_output_qty)}</div>
@@ -640,14 +640,14 @@ export default function ProductionPage() {
 
       {showNewRecipeModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg rounded-xl border border-border-custom bg-[#121214] p-6 shadow-2xl">
+          <div className="w-full max-w-lg rounded-xl border border-border-custom bg-card p-6 shadow-2xl">
             <div className="flex items-center justify-between border-b border-border-custom pb-4">
               <h3 className="text-lg font-bold text-foreground">Create Production Recipe</h3>
               <button onClick={() => setShowNewRecipeModal(false)} className="text-muted hover:text-foreground text-lg">&times;</button>
             </div>
             <form onSubmit={handleCreateRecipe} className="mt-4 space-y-4">
               {submitError && <div className="rounded bg-red-500/10 border border-red-500/20 p-3 text-xs text-red-400">{submitError}</div>}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-[10px] uppercase tracking-[0.2em] text-muted block mb-1">Recipe Code</label>
                   <input type="text" value={recipeCode} onChange={(e) => setRecipeCode(e.target.value)} required placeholder="e.g. MIX-M25" className="w-full bg-elevated border border-border-custom rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary" />
@@ -657,7 +657,7 @@ export default function ProductionPage() {
                   <input type="text" value={productName} onChange={(e) => setProductName(e.target.value)} required placeholder="e.g. Concrete M25" className="w-full bg-elevated border border-border-custom rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary" />
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
                   <label className="text-[10px] uppercase tracking-[0.2em] text-muted block mb-1">Mix Type</label>
                   <select value={mixType} onChange={(e) => setMixType(e.target.value)} className="w-full bg-elevated border border-border-custom rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary">
@@ -718,7 +718,7 @@ export default function ProductionPage() {
 
       {showLogBatchModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg rounded-xl border border-border-custom bg-[#121214] p-6 shadow-2xl">
+          <div className="w-full max-w-lg rounded-xl border border-border-custom bg-card p-6 shadow-2xl">
             <div className="flex items-center justify-between border-b border-border-custom pb-4">
               <h3 className="text-lg font-bold text-foreground">Log Production Batch</h3>
               <button onClick={() => setShowLogBatchModal(false)} className="text-muted hover:text-foreground text-lg">&times;</button>
@@ -741,7 +741,7 @@ export default function ProductionPage() {
                   ))}
                 </select>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-[10px] uppercase tracking-[0.2em] text-muted block mb-1">Batch Number</label>
                   <input type="text" value={batchNumber} onChange={(e) => setBatchNumber(e.target.value)} required placeholder="e.g. BATCH-2026-001" className="w-full bg-elevated border border-border-custom rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary" />
@@ -754,7 +754,7 @@ export default function ProductionPage() {
                   </select>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-[10px] uppercase tracking-[0.2em] text-muted block mb-1">Planned Output Qty</label>
                   <input type="number" step="0.01" value={plannedOutputQty} onChange={(e) => setPlannedOutputQty(e.target.value)} required className="w-full bg-elevated border border-border-custom rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary" />

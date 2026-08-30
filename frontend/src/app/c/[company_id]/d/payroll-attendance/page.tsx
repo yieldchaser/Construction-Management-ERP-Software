@@ -629,7 +629,7 @@ function NewPayrollModal({
       <Field label="Name / Designation">
         <input className={inputCls} placeholder="Full name" value={name} onChange={(e) => setName(e.target.value)} />
       </Field>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
         <Field label="Designation">
           <input className={inputCls} value={designation} onChange={(e) => setDesignation(e.target.value)} list="desig-list" />
           <datalist id="desig-list">
@@ -642,7 +642,7 @@ function NewPayrollModal({
           <input className={inputCls} value={department} onChange={(e) => setDepartment(e.target.value)} />
         </Field>
       </div>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
         <Field label="Mobile">
           <input className={inputCls} value={mobile} onChange={(e) => setMobile(e.target.value)} />
         </Field>
@@ -650,7 +650,7 @@ function NewPayrollModal({
           <input className={inputCls} placeholder="12-digit UAN" maxLength={12} value={uan} onChange={(e) => setUan(e.target.value)} />
         </Field>
       </div>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
         <Field label="Basic Salary">
           <input type="number" className={inputCls} value={basic} onChange={(e) => setBasic(parseFloat(e.target.value) || 0)} />
         </Field>
@@ -828,7 +828,7 @@ function PayrollDetailsDrawer({
         </div>
       </Field>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
         <Field label="Shift Hours">
           <div className="flex gap-2">
             <input type="number" className={inputCls} value={shiftHours} onChange={(e) => setShiftHours(parseFloat(e.target.value) || 0)} />
@@ -1443,7 +1443,7 @@ function MyLeavesTab({
         Template: {assignedTemplate.name} · Casual {assignedTemplate.casual_leave_days} · Sick{" "}
         {assignedTemplate.sick_leave_days} · Earned {assignedTemplate.earned_leave_days}
       </p>
-      <div className="mb-4 grid grid-cols-2 gap-2 rounded-md border border-border-custom p-3 md:grid-cols-4">
+      <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 rounded-md border border-border-custom p-3">
         <Field label="Leave Type">
           <select className={inputCls} value={type} onChange={(e) => setType(e.target.value)}>
             <option>Casual</option>

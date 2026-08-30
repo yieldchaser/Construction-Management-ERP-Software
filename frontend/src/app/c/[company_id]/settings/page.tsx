@@ -9,6 +9,7 @@ import RolePermissionsModal, { RoleForEditor } from "@/components/rbac/RolePermi
 import TeamSection from "@/components/rbac/TeamSection";
 import { usePermissions } from "@/context/PermissionsContext";
 import { LOCKED_ROLES } from "@/lib/rbac";
+import PageShell from "@/components/layout/PageShell";
 
 interface CompanySettings {
   id: string;
@@ -1085,174 +1086,175 @@ export default function CompanySettingsPage() {
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 p-8 overflow-y-auto">
-        <header className="flex items-center justify-between border-b border-border-custom pb-6">
-          <div>
-            <h1 className="text-2xl font-black text-foreground tracking-tight">{SECTIONS.find((s) => s.id === activeSection)?.label}</h1>
-            <p className="mt-1 text-xs text-muted">Configure company-wide settings for this organization.</p>
-          </div>
-          <PwaControls />
-        </header>
+      <main className="flex-1 overflow-y-auto">
+        <PageShell width="wide">
+          <header className="flex items-center justify-between border-b border-border-custom pb-6">
+            <div>
+              <h1 className="text-2xl font-black text-foreground tracking-tight">{SECTIONS.find((s) => s.id === activeSection)?.label}</h1>
+              <p className="mt-1 text-xs text-muted">Configure company-wide settings for this organization.</p>
+            </div>
+            <PwaControls />
+          </header>
 
-        {error && (
-          <div className="mt-6 p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-lg">{error}</div>
-        )}
-        {saveStatus === "saved" && (
-          <div className="mt-6 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg">Settings saved successfully</div>
-        )}
-        {saveStatus === "error" && (
-          <div className="mt-6 p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-lg">Failed to save settings. Please try again.</div>
-        )}
+          {error && (
+            <div className="mt-6 p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-lg">{error}</div>
+          )}
+          {saveStatus === "saved" && (
+            <div className="mt-6 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg">Settings saved successfully</div>
+          )}
+          {saveStatus === "error" && (
+            <div className="mt-6 p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-lg">Failed to save settings. Please try again.</div>
+          )}
 
-        <div className="mt-8">
-          {/* ════════════════════════════ COMPANY ════════════════════════════ */}
-          {activeSection === "company" && settings && (
-            <div className="space-y-6">
-              <div className="flex border-b border-border-custom gap-1 bg-elevated p-1 rounded-lg w-max">
-                {([["details", "Company Details"], ["branches", "Branches"], ["business", "Business Profile"]] as const).map(([id, label]) => (
-                  <button key={id} onClick={() => setCompanyTab(id)}
-                    className={`px-5 py-2.5 rounded-md text-xs font-bold transition-all duration-200 ${
-                      companyTab === id ? "bg-primary text-white shadow-lg shadow-primary/10" : "text-muted hover:text-foreground hover:bg-elevated"
-                    }`}>
-                    {label}
-                  </button>
-                ))}
-              </div>
+          <div className="mt-8">
+            {/* ════════════════════════════ COMPANY ════════════════════════════ */}
+            {activeSection === "company" && settings && (
+              <div className="space-y-6">
+                <div className="flex border-b border-border-custom gap-1 bg-elevated p-1 rounded-lg w-max">
+                  {([["details", "Company Details"], ["branches", "Branches"], ["business", "Business Profile"]] as const).map(([id, label]) => (
+                    <button key={id} onClick={() => setCompanyTab(id)}
+                      className={`px-5 py-2.5 rounded-md text-xs font-bold transition-all duration-200 ${
+                        companyTab === id ? "bg-primary text-white shadow-lg shadow-primary/10" : "text-muted hover:text-foreground hover:bg-elevated"
+                      }`}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
 
-              {/* Company Details */}
-              {companyTab === "details" && (
-                <div className="bg-card border border-border-custom rounded-lg max-w-3xl bg-background p-6 rounded-md space-y-6">
-                  <h2 className="text-sm font-bold text-foreground uppercase tracking-wider text-muted border-b border-border-custom pb-3">Company Details</h2>
-                  <div className="grid grid-cols-2 gap-6">
-                    <Field label="Company Name">
-                      <input type="text" value={cDraft.name} onChange={(e) => setCDraft({ ...cDraft, name: e.target.value })}
-                        className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-foreground outline-none" />
+                {/* Company Details */}
+                {companyTab === "details" && (
+                  <div className="bg-card border border-border-custom rounded-lg p-6 space-y-6">
+                    <h2 className="text-sm font-bold text-foreground uppercase tracking-wider text-muted border-b border-border-custom pb-3">Company Details</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <Field label="Company Name">
+                        <input type="text" value={cDraft.name} onChange={(e) => setCDraft({ ...cDraft, name: e.target.value })}
+                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-foreground outline-none" />
+                      </Field>
+                      <Field label="Phone Number">
+                        <input type="text" value={cDraft.phone} onChange={(e) => setCDraft({ ...cDraft, phone: e.target.value })}
+                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-foreground outline-none" placeholder="Company phone number" />
+                      </Field>
+                      <Field label="Legal Business Name">
+                        <input type="text" value={cDraft.legal_business_name} onChange={(e) => setCDraft({ ...cDraft, legal_business_name: e.target.value })}
+                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-foreground outline-none" placeholder="Enter Legal Entity Name" />
+                      </Field>
+                      <Field label="GSTIN">
+                        <input type="text" value={cDraft.gstin} onChange={(e) => { const v = e.target.value.toUpperCase(); setCDraft({ ...cDraft, gstin: v }); setGstinError(v ? !validateGSTIN(v) : false); }}
+                          className={`w-full bg-elevated border rounded-md px-4 py-2.5 text-xs text-foreground outline-none ${gstinError ? "border-rose-500" : "border-border-custom focus:border-primary"}`} placeholder="Enter 15-digit GSTIN" />
+                        {gstinError && <p className="text-[10px] text-rose-400 mt-1">Invalid GSTIN format.</p>}
+                      </Field>
+                    </div>
+                    <Field label="Company Primary Address">
+                      <textarea value={cDraft.billing_address} onChange={(e) => setCDraft({ ...cDraft, billing_address: e.target.value })}
+                        rows={3} className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-foreground outline-none resize-none" placeholder="Registered business address" />
                     </Field>
-                    <Field label="Phone Number">
-                      <input type="text" value={cDraft.phone} onChange={(e) => setCDraft({ ...cDraft, phone: e.target.value })}
-                        className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-foreground outline-none" placeholder="Company phone number" />
-                    </Field>
-                    <Field label="Legal Business Name">
-                      <input type="text" value={cDraft.legal_business_name} onChange={(e) => setCDraft({ ...cDraft, legal_business_name: e.target.value })}
-                        className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-foreground outline-none" placeholder="Enter Legal Entity Name" />
-                    </Field>
-                    <Field label="GSTIN">
-                      <input type="text" value={cDraft.gstin} onChange={(e) => { const v = e.target.value.toUpperCase(); setCDraft({ ...cDraft, gstin: v }); setGstinError(v ? !validateGSTIN(v) : false); }}
-                        className={`w-full bg-elevated border rounded-md px-4 py-2.5 text-xs text-foreground outline-none ${gstinError ? "border-rose-500" : "border-border-custom focus:border-primary"}`} placeholder="Enter 15-digit GSTIN" />
-                      {gstinError && <p className="text-[10px] text-rose-400 mt-1">Invalid GSTIN format.</p>}
-                    </Field>
-                  </div>
-                  <Field label="Company Primary Address">
-                    <textarea value={cDraft.billing_address} onChange={(e) => setCDraft({ ...cDraft, billing_address: e.target.value })}
-                      rows={3} className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-foreground outline-none resize-none" placeholder="Registered business address" />
-                  </Field>
 
-                  {/* Branding upload slots */}
-                  <div>
-                    <h3 className="text-[10px] uppercase tracking-wider text-muted font-bold mb-3">Branding Assets</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {ASSET_LABELS.map(({ type, label }) => {
-                        const url = settings[`${type}_url` as keyof CompanySettings] as string | null | undefined;
-                        return (
-                          <div key={type} className="border border-dashed border-border-custom rounded-lg p-3 flex flex-col items-center gap-2">
-                            <div className="h-20 w-full flex items-center justify-center rounded-md bg-elevated overflow-hidden">
-                              {url ? <img src={url} alt={label} className="max-h-20 max-w-full object-contain" /> : <span className="text-[10px] text-muted">{label}</span>}
+                    {/* Branding upload slots */}
+                    <div>
+                      <h3 className="text-[10px] uppercase tracking-wider text-muted font-bold mb-3">Branding Assets</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                        {ASSET_LABELS.map(({ type, label }) => {
+                          const url = settings[`${type}_url` as keyof CompanySettings] as string | null | undefined;
+                          return (
+                            <div key={type} className="border border-dashed border-border-custom rounded-lg p-3 flex flex-col items-center gap-2">
+                              <div className="h-20 w-full flex items-center justify-center rounded-md bg-elevated overflow-hidden">
+                                {url ? <img src={url} alt={label} className="max-h-20 max-w-full object-contain" /> : <span className="text-[10px] text-muted">{label}</span>}
+                              </div>
+                              <div className="text-[10px] text-muted font-bold">{label}</div>
+                              <input type="file" accept="image/*" id={`up-${type}`} className="hidden"
+                                onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadAsset(type, f); }} />
+                              <label htmlFor={`up-${type}`} className="text-[10px] bg-primary/10 text-primary border border-primary/20 px-3 py-1 rounded-md cursor-pointer hover:bg-primary/20">
+                                {uploading === type ? "Uploading…" : url ? "Replace" : "Upload"}
+                              </label>
                             </div>
-                            <div className="text-[10px] text-muted font-bold">{label}</div>
-                            <input type="file" accept="image/*" id={`up-${type}`} className="hidden"
-                              onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadAsset(type, f); }} />
-                            <label htmlFor={`up-${type}`} className="text-[10px] bg-primary/10 text-primary border border-primary/20 px-3 py-1 rounded-md cursor-pointer hover:bg-primary/20">
-                              {uploading === type ? "Uploading…" : url ? "Replace" : "Upload"}
-                            </label>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end">
+                      <button onClick={saveDetails} disabled={gstinError} className="bg-primary text-white text-xs font-bold px-6 py-2.5 rounded-md disabled:opacity-50">
+                        Save
+                      </button>
                     </div>
                   </div>
+                )}
 
-                  <div className="flex justify-end">
-                    <button onClick={saveDetails} disabled={gstinError} className="bg-primary text-white text-xs font-bold px-6 py-2.5 rounded-md disabled:opacity-50">
-                      Save
-                    </button>
-                  </div>
-                </div>
-              )}
+                {/* Branches */}
+                {companyTab === "branches" && (
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <StatCard label="Total Branches" value={String(branches.length)} />
+                      <StatCard label="Primary Branch" value={primaryBranch ? `${primaryBranch.branch_name}${primaryBranch.city ? ` · ${primaryBranch.city}` : ""}` : "—"} />
+                      <StatCard label="Other Branches" value={String(otherCount)} />
+                    </div>
 
-              {/* Branches */}
-              {companyTab === "branches" && (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-3 gap-4">
-                    <StatCard label="Total Branches" value={String(branches.length)} />
-                    <StatCard label="Primary Branch" value={primaryBranch ? `${primaryBranch.branch_name}${primaryBranch.city ? ` · ${primaryBranch.city}` : ""}` : "—"} />
-                    <StatCard label="Other Branches" value={String(otherCount)} />
-                  </div>
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-sm font-bold text-foreground uppercase tracking-wider text-muted">Company Branches</h2>
+                      <button onClick={() => setShowAddBranch(true)} className="bg-primary text-white text-xs font-bold px-4 py-2.5 rounded-md">+ New Branch</button>
+                    </div>
 
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-sm font-bold text-foreground uppercase tracking-wider text-muted">Company Branches</h2>
-                    <button onClick={() => setShowAddBranch(true)} className="bg-primary text-white text-xs font-bold px-4 py-2.5 rounded-md">+ New Branch</button>
-                  </div>
+                    {showAddBranch && (
+                      <form onSubmit={addBranch} className="bg-card border border-border-custom rounded-lg p-6 space-y-4">
+                        <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">New Branch Details</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <input type="text" placeholder="Branch Name" value={nb.branch_name} onChange={(e) => setNb({ ...nb, branch_name: e.target.value })} required className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
+                          <input type="text" placeholder="Branch GSTIN" value={nb.gstin} onChange={(e) => setNb({ ...nb, gstin: e.target.value })} required className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
+                        </div>
+                        <textarea placeholder="Project Geo Location (Google Address)" value={nb.geo_location} onChange={(e) => setNb({ ...nb, geo_location: e.target.value })} rows={2} className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none resize-none" />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <input type="text" placeholder="Address Line 1" value={nb.address_line1} onChange={(e) => setNb({ ...nb, address_line1: e.target.value })} className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
+                          <input type="text" placeholder="City" value={nb.city} onChange={(e) => setNb({ ...nb, city: e.target.value })} className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
+                          <input type="text" placeholder="State / Province" value={nb.state} onChange={(e) => setNb({ ...nb, state: e.target.value })} className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
+                          <input type="text" placeholder="Zip" value={nb.zip} onChange={(e) => setNb({ ...nb, zip: e.target.value })} className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
+                          <select value={nb.country} onChange={(e) => setNb({ ...nb, country: e.target.value })} className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none">
+                            {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                          </select>
+                        </div>
+                        <div className="flex gap-2 justify-end">
+                          <button type="button" onClick={() => setShowAddBranch(false)} className="text-muted hover:text-foreground text-xs font-bold px-4 py-2">Cancel</button>
+                          <button type="submit" className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-md">Save Branch</button>
+                        </div>
+                      </form>
+                    )}
 
-                  {showAddBranch && (
-                    <form onSubmit={addBranch} className="bg-card border border-border-custom rounded-lg max-w-xl bg-background p-6 rounded-md space-y-4">
-                      <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">New Branch Details</h3>
-                      <div className="grid grid-cols-2 gap-4">
-                        <input type="text" placeholder="Branch Name" value={nb.branch_name} onChange={(e) => setNb({ ...nb, branch_name: e.target.value })} required className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
-                        <input type="text" placeholder="Branch GSTIN" value={nb.gstin} onChange={(e) => setNb({ ...nb, gstin: e.target.value })} required className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
-                      </div>
-                      <textarea placeholder="Project Geo Location (Google Address)" value={nb.geo_location} onChange={(e) => setNb({ ...nb, geo_location: e.target.value })} rows={2} className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none resize-none" />
-                      <div className="grid grid-cols-2 gap-4">
-                        <input type="text" placeholder="Address Line 1" value={nb.address_line1} onChange={(e) => setNb({ ...nb, address_line1: e.target.value })} className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
-                        <input type="text" placeholder="City" value={nb.city} onChange={(e) => setNb({ ...nb, city: e.target.value })} className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
-                        <input type="text" placeholder="State / Province" value={nb.state} onChange={(e) => setNb({ ...nb, state: e.target.value })} className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
-                        <input type="text" placeholder="Zip" value={nb.zip} onChange={(e) => setNb({ ...nb, zip: e.target.value })} className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
-                        <select value={nb.country} onChange={(e) => setNb({ ...nb, country: e.target.value })} className="bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none">
-                          {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                        </select>
-                      </div>
-                      <div className="flex gap-2 justify-end">
-                        <button type="button" onClick={() => setShowAddBranch(false)} className="text-muted hover:text-foreground text-xs font-bold px-4 py-2">Cancel</button>
-                        <button type="submit" className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-md">Save Branch</button>
-                      </div>
-                    </form>
-                  )}
-
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {branches.length === 0 ? (
-                      <div className="col-span-full text-center p-8 border border-dashed border-border-custom rounded-md text-muted text-xs">No branches configured.</div>
-                    ) : branches.map((b) => (
-                      <div key={b.id} className="bg-card border border-border-custom rounded-lg bg-background p-5 rounded-lg space-y-3">
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center gap-3">
-                            <div className="h-9 w-9 rounded-full bg-primary/15 text-primary font-bold flex items-center justify-center text-sm">{b.branch_name.charAt(0).toUpperCase()}</div>
-                            <div className="font-bold text-foreground text-sm">{b.branch_name}</div>
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                      {branches.length === 0 ? (
+                        <div className="col-span-full text-center p-8 border border-dashed border-border-custom rounded-md text-muted text-xs">No branches configured.</div>
+                      ) : branches.map((b) => (
+                        <div key={b.id} className="bg-card border border-border-custom rounded-lg p-5 rounded-lg space-y-3">
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-3">
+                              <div className="h-9 w-9 rounded-full bg-primary/15 text-primary font-bold flex items-center justify-center text-sm">{b.branch_name.charAt(0).toUpperCase()}</div>
+                              <div className="font-bold text-foreground text-sm">{b.branch_name}</div>
+                            </div>
+                            {b.is_primary && <span className="text-[10px] bg-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded-full font-bold">Primary</span>}
                           </div>
-                          {b.is_primary && <span className="text-[10px] bg-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded-full font-bold">Primary</span>}
+                          <div className="text-xs space-y-1">
+                            <div className="text-muted">GSTIN: <span className="font-sans text-muted">{b.gstin}</span></div>
+                            <div className="text-muted line-clamp-2">Address: <span className="text-muted">{b.billing_address}</span></div>
+                            {b.is_primary && <span className="inline-block mt-1 text-[10px] bg-elevated text-muted px-2 py-0.5 rounded-full">Primary Address</span>}
+                          </div>
+                          <div className="flex justify-end">
+                            <button onClick={() => setPrimary(b.id)} disabled={b.is_primary} className="text-[10px] text-muted hover:text-primary disabled:opacity-40 disabled:cursor-default font-bold">
+                              {b.is_primary ? "Primary" : "Set as Primary"}
+                            </button>
+                          </div>
                         </div>
-                        <div className="text-xs space-y-1">
-                          <div className="text-muted">GSTIN: <span className="font-sans text-muted">{b.gstin}</span></div>
-                          <div className="text-muted line-clamp-2">Address: <span className="text-muted">{b.billing_address}</span></div>
-                          {b.is_primary && <span className="inline-block mt-1 text-[10px] bg-elevated text-muted px-2 py-0.5 rounded-full">Primary Address</span>}
-                        </div>
-                        <div className="flex justify-end">
-                          <button onClick={() => setPrimary(b.id)} disabled={b.is_primary} className="text-[10px] text-muted hover:text-primary disabled:opacity-40 disabled:cursor-default font-bold">
-                            {b.is_primary ? "Primary" : "Set as Primary"}
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Business Profile */}
-              {companyTab === "business" && (
-                <div className="space-y-6 max-w-3xl">
+                {/* Business Profile */}
+                {companyTab === "business" && (
+                  <div className="space-y-6">
                   <h2 className="text-sm font-bold text-foreground uppercase tracking-wider text-muted border-b border-border-custom pb-3">Business Profile</h2>
 
                   <SelectorCard title="Avg. Business / Year" options={BUSINESS_SEGMENTS} selected={bSeg} onSelect={setBSeg} />
                   <SelectorCard title="Company Size" options={COMPANY_SIZES} selected={bSize} onSelect={setBSize} />
 
-                  <div className="bg-card border border-border-custom rounded-lg bg-background p-6 rounded-md space-y-3">
+                  <div className="bg-card border border-border-custom rounded-lg p-6 space-y-3">
                     <h3 className="text-[10px] uppercase tracking-wider text-muted font-bold">Construction Type</h3>
                     <div className="flex flex-wrap gap-2">
                       {bTypes.map((t) => (
@@ -1309,7 +1311,7 @@ export default function CompanySettingsPage() {
               </div>
 
               {showAddRole && (
-                <form onSubmit={addRole} className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-4 max-w-xl">
+                <form onSubmit={addRole} className="bg-card border border-border-custom rounded-lg p-6 space-y-4 max-w-xl">
                   <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">New Role</h3>
                   <input type="text" placeholder="Role name (e.g. Safety Officer)" value={roleName}
                     onChange={(e) => setRoleName(e.target.value)} required
@@ -1328,7 +1330,7 @@ export default function CompanySettingsPage() {
               ) : (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {roles.map((r) => (
-                    <div key={r.id} className="bg-card border border-border-custom rounded-lg bg-background p-5 flex items-center gap-3">
+                    <div key={r.id} className="bg-card border border-border-custom rounded-lg p-5 flex items-center gap-3">
                       <div className="h-9 w-9 shrink-0 rounded-full bg-primary/15 text-primary font-bold flex items-center justify-center text-sm">
                         {r.role_name.charAt(0).toUpperCase()}
                       </div>
@@ -1400,7 +1402,7 @@ export default function CompanySettingsPage() {
                   </div>
 
                   {showAddLeave && (
-                    <form onSubmit={createLeaveTemplate} className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-4 max-w-xl">
+                    <form onSubmit={createLeaveTemplate} className="bg-card border border-border-custom rounded-lg p-6 space-y-4 max-w-xl">
                       <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">New Leave Policy</h3>
                       <Field label="Template Name">
                         <input type="text" placeholder="e.g. Standard Leave Policy" value={ltName}
@@ -1440,7 +1442,7 @@ export default function CompanySettingsPage() {
                           ? t.leave_types
                           : [{ type: "Casual", days: t.casual_leave_days }, { type: "Sick", days: t.sick_leave_days }, { type: "Earned", days: t.earned_leave_days }];
                         return (
-                          <div key={t.id} className="bg-card border border-border-custom rounded-lg bg-background p-5 space-y-3">
+                          <div key={t.id} className="bg-card border border-border-custom rounded-lg p-5 space-y-3">
                             <div className="flex items-center justify-between">
                               <div className="font-bold text-foreground text-sm">{t.name}</div>
                               <button onClick={() => deleteLeaveTemplate(t.id)} className="text-[10px] text-muted hover:text-rose-400">Delete</button>
@@ -1467,7 +1469,7 @@ export default function CompanySettingsPage() {
                   </div>
 
                   {showAddHoliday && (
-                    <form onSubmit={createHoliday} className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-4 max-w-xl">
+                    <form onSubmit={createHoliday} className="bg-card border border-border-custom rounded-lg p-6 space-y-4 max-w-xl">
                       <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">New Holiday</h3>
                       <Field label="Holiday Name">
                         <input type="text" placeholder="e.g. Independence Day" value={hName}
@@ -1491,7 +1493,7 @@ export default function CompanySettingsPage() {
                   ) : (
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                       {holidays.map((h) => (
-                        <div key={h.id} className="bg-card border border-border-custom rounded-lg bg-background p-5 flex items-center justify-between">
+                        <div key={h.id} className="bg-card border border-border-custom rounded-lg p-5 flex items-center justify-between">
                           <div>
                             <div className="font-bold text-foreground text-sm">{h.name}</div>
                             <div className="text-xs text-muted">{new Date(h.date).toLocaleDateString("en-IN")}</div>
@@ -1513,8 +1515,8 @@ export default function CompanySettingsPage() {
                   </div>
 
                   {showAddSalary && (
-                    <form onSubmit={createSalaryTemplate} className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-6 max-w-2xl">
-                      <div className="grid grid-cols-2 gap-6">
+                    <form onSubmit={createSalaryTemplate} className="bg-card border border-border-custom rounded-lg p-6 space-y-6 max-w-2xl">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <Field label="Template Name">
                           <input type="text" placeholder="e.g. Grade A Engineer" value={stName}
                             onChange={(e) => setStName(e.target.value)} required
@@ -1608,7 +1610,7 @@ export default function CompanySettingsPage() {
                         <div>Template Name</div><div>Description</div><div>Status</div><div></div>
                       </div>
                       {salaryTemplates.map((t) => (
-                        <div key={t.id} className="bg-card border border-border-custom rounded-lg bg-background p-5 grid grid-cols-[2fr_3fr_1fr_auto] gap-4 items-center">
+                        <div key={t.id} className="bg-card border border-border-custom rounded-lg p-5 grid grid-cols-[2fr_3fr_1fr_auto] gap-4 items-center">
                           <div className="font-bold text-foreground text-sm">{t.name}</div>
                           <div className="text-xs text-muted truncate">{t.description || "—"}</div>
                           <div><span className="text-[10px] bg-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded-full font-bold">{t.status}</span></div>
@@ -1622,12 +1624,12 @@ export default function CompanySettingsPage() {
 
               {/* ── Statutory (PF/ESI/TDS) — bonus section ── */}
               {payrollTab === "statutory" && (
-                <div className="space-y-6 max-w-3xl">
+                <div className="space-y-6">
                   <h2 className="text-sm font-bold text-foreground uppercase tracking-wider text-muted border-b border-border-custom pb-3">Statutory Payroll Defaults</h2>
                   <p className="text-xs text-muted -mt-2">Company-wide default PF / ESI / TDS rates. These are inherited by new employees; per-employee overrides are set on the employee record in HR.</p>
 
-                  <div className="bg-card border border-border-custom rounded-lg bg-background p-6 rounded-md space-y-6">
-                    <div className="grid grid-cols-2 gap-6">
+                  <div className="bg-card border border-border-custom rounded-lg p-6 space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <Field label="PF Employee %">
                         <input type="number" step="0.01" value={pDraft.pf_employee_pct}
                           onChange={(e) => setPDraft({ ...pDraft, pf_employee_pct: Number(e.target.value) })}
@@ -1658,7 +1660,7 @@ export default function CompanySettingsPage() {
                         <label className="flex items-center gap-2 cursor-pointer mt-2">
                           <input type="checkbox" checked={pDraft.is_esi_applicable}
                             onChange={(e) => setPDraft({ ...pDraft, is_esi_applicable: e.target.checked })}
-                            className="h-4 w-4 accent-[#3b82f6]" />
+                            className="h-4 w-4 accent-primary" />
                           <span className="text-xs text-foreground">{pDraft.is_esi_applicable ? "Yes" : "No"}</span>
                         </label>
                       </div>
@@ -1677,10 +1679,10 @@ export default function CompanySettingsPage() {
                     )}
                   </div>
 
-                  <div className="bg-card border border-border-custom rounded-lg bg-background p-6 rounded-md space-y-3">
+                  <div className="bg-card border border-border-custom rounded-lg p-6 space-y-3">
                     <h3 className="text-[10px] uppercase tracking-wider text-muted font-bold">Salary Components (Payslip Structure)</h3>
                     <p className="text-[11px] text-muted">Fixed payslip component layout used by the payroll engine. Earnings and deductions are computed per run; this is a reference view, not an editable definition.</p>
-                    <div className="grid grid-cols-2 gap-6 pt-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                       <div>
                         <div className="text-[10px] uppercase tracking-wider text-emerald-400 font-bold mb-2">Earnings</div>
                         <ul className="text-xs text-muted space-y-1">
@@ -1715,7 +1717,7 @@ export default function CompanySettingsPage() {
                 </div>
 
                 {showAddHoliday && (
-                  <form onSubmit={createHoliday} className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-4 max-w-xl">
+                  <form onSubmit={createHoliday} className="bg-card border border-border-custom rounded-lg p-6 space-y-4 max-w-xl">
                     <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">New Holiday</h3>
                     <Field label="Holiday Name">
                       <input type="text" placeholder="e.g. Independence Day" value={hName}
@@ -1739,7 +1741,7 @@ export default function CompanySettingsPage() {
                 ) : (
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {holidays.map((h) => (
-                      <div key={h.id} className="bg-card border border-border-custom rounded-lg bg-background p-5 flex items-center justify-between">
+                      <div key={h.id} className="bg-card border border-border-custom rounded-lg p-5 flex items-center justify-between">
                         <div>
                           <div className="font-bold text-foreground text-sm">{h.name}</div>
                           <div className="text-xs text-muted">{new Date(h.date).toLocaleDateString("en-IN")}</div>
@@ -1752,7 +1754,7 @@ export default function CompanySettingsPage() {
               </div>
 
               {/* Weekly Off — company default (bonus; not part of /hr/holidays) */}
-              <div className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-4 max-w-xl">
+              <div className="bg-card border border-border-custom rounded-lg p-6 space-y-4">
                 <h2 className="text-sm font-bold text-foreground uppercase tracking-wider text-muted border-b border-border-custom pb-3">Weekly Off</h2>
                 <p className="text-[11px] text-muted -mt-2">Default weekly off day for this company.</p>
                 <Field label="Weekly Off Days">
@@ -1797,7 +1799,7 @@ export default function CompanySettingsPage() {
 
           {/* ════════════════════════════ WORKFLOW CONTROLS ════════════════════════════ */}
           {activeSection === "workflow" && (
-            <div className="space-y-6 max-w-3xl">
+            <div className="space-y-6">
               <div className="flex border-b border-border-custom gap-1 bg-elevated p-1 rounded-lg w-max">
                 {([["entry", "Entry Controls"], ["progress", "Progress Controls"], ["finance", "Finance Controls"], ["material", "Material Controls"]] as const).map(([id, label]) => (
                   <button key={id} onClick={() => setWfTab(id)}
@@ -1900,12 +1902,12 @@ export default function CompanySettingsPage() {
 
               {/* ── PDF Template ── */}
               {docTab === "pdf" && (
-                <div className="space-y-6 max-w-3xl">
+                <div className="space-y-6">
                   <h2 className="text-sm font-bold text-foreground uppercase tracking-wider text-muted border-b border-border-custom pb-3">PDF Template</h2>
 
-                  <div className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-3">
+                  <div className="bg-card border border-border-custom rounded-lg p-6 space-y-3">
                     <h3 className="text-[10px] uppercase tracking-wider text-muted font-bold">Choose your Own PDF Template</h3>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {([
                         { v: "Default", t: "Default", d: "Use the standard SiteFlow PDF template for all company documents." },
                         { v: "Custom", t: "Custom", d: "Use your own uploaded / configured custom PDF template." },
@@ -1923,9 +1925,9 @@ export default function CompanySettingsPage() {
                     <p className="text-[10px] text-muted">When enabled, client portal reports, bills, purchase orders, and BOQ documents render with your configured PDF template, shown as a banner in place of the standard layout. Until a template is configured, these documents use the default layout.</p>
                   </div>
 
-                  <div className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-3">
+                  <div className="bg-card border border-border-custom rounded-lg p-6 space-y-3">
                     <h3 className="text-[10px] uppercase tracking-wider text-muted font-bold">Document Company Name Display</h3>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {([
                         { v: "company", t: "Company Name", d: "Print the parent company name on documents." },
                         { v: "branch", t: "Branch Name", d: "Print the issuing branch name on documents." },
@@ -1946,10 +1948,10 @@ export default function CompanySettingsPage() {
                   {pdfStatus === "saved" && (<div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg">PDF template settings saved</div>)}
                   {pdfStatus === "error" && (<div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-lg">Failed to save PDF template settings</div>)}
 
-                  <div className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-3">
+                  <div className="bg-card border border-border-custom rounded-lg p-6 space-y-3">
                     <h3 className="text-[10px] uppercase tracking-wider text-muted font-bold">ZATCA E-Invoicing (Saudi)</h3>
                     <p className="text-[10px] text-muted">When enabled, sale invoices show a ZATCA Phase 1 QR (TLV base64) and a downloadable UBL 2.1 XML. The VAT registration number is printed in the QR.</p>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {([{ v: true, t: "Enabled", d: "Generate ZATCA QR + XML on sale invoices." }, { v: false, t: "Disabled", d: "No ZATCA e-invoice data." }] as const).map((o) => {
                         const active = Boolean(settings.is_zatca_enable) === o.v;
                         return (
@@ -1988,7 +1990,7 @@ export default function CompanySettingsPage() {
                   ) : (
                     <div className="space-y-5">
                       {TERMS_FIELDS.map((f) => (
-                        <div key={f.key} className="bg-card border border-border-custom rounded-lg bg-background p-5 space-y-2">
+                        <div key={f.key} className="bg-card border border-border-custom rounded-lg p-5 space-y-2">
                           <label className="text-[10px] uppercase tracking-wider text-muted font-bold">{f.label}</label>
                           <textarea value={terms[f.key]} onChange={(e) => setTerms((t) => ({ ...t, [f.key]: e.target.value }))} rows={5}
                             className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-foreground outline-none resize-y font-sans" />
@@ -2008,10 +2010,10 @@ export default function CompanySettingsPage() {
 
               {/* ── Number Format ── */}
               {docTab === "number" && (
-                <div className="space-y-6 max-w-2xl">
+                <div className="space-y-6">
                   <h2 className="text-sm font-bold text-foreground uppercase tracking-wider text-muted border-b border-border-custom pb-3">Number Format</h2>
-                  <div className="bg-card border border-border-custom rounded-lg bg-background p-6 rounded-md space-y-6">
-                    <div className="grid grid-cols-2 gap-6">
+                  <div className="bg-card border border-border-custom rounded-lg p-6 space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <Field label="Currency Decimal Places">
                         <input type="number" min={0} max={6} value={numFmt.currency_decimal_places}
                           onChange={(e) => setNumFmt({ ...numFmt, currency_decimal_places: parseInt(e.target.value || "0", 10) || 0 })}
@@ -2057,7 +2059,7 @@ export default function CompanySettingsPage() {
                   {cfMsg && (<div className={`p-4 text-xs rounded-lg border ${cfMsg.type === "ok" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-rose-500/10 border-rose-500/20 text-rose-400"}`}>{cfMsg.text}</div>)}
 
                   {showAddCf && (
-                    <form onSubmit={addCf} className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-4 max-w-xl">
+                    <form onSubmit={addCf} className="bg-card border border-border-custom rounded-lg p-6 space-y-4 max-w-xl">
                       <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">New Custom Field — {cfEntity}</h3>
                       <Field label="Field Name">
                         <input type="text" placeholder="e.g. Client PO Reference" value={cfDraft.field_name}
@@ -2071,7 +2073,7 @@ export default function CompanySettingsPage() {
                         </select>
                       </Field>
                       <label className="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" checked={cfDraft.set_default} onChange={(e) => setCfDraft({ ...cfDraft, set_default: e.target.checked })} className="h-4 w-4 accent-[#3b82f6]" />
+                        <input type="checkbox" checked={cfDraft.set_default} onChange={(e) => setCfDraft({ ...cfDraft, set_default: e.target.checked })} className="h-4 w-4 accent-primary" />
                         <span className="text-xs text-foreground">Set Default</span>
                       </label>
                       {cfDraft.set_default && (
@@ -2088,7 +2090,7 @@ export default function CompanySettingsPage() {
                     </form>
                   )}
 
-                  <div className="bg-card border border-border-custom rounded-lg bg-background overflow-hidden">
+                  <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
                     <div className="grid grid-cols-[2fr_1.5fr_1fr_2fr] gap-4 px-5 py-3 text-[10px] uppercase tracking-wider text-muted font-bold border-b border-border-custom">
                       <div>Field Name</div><div>Data Type</div><div>Set Default</div><div>Default Value</div>
                     </div>
@@ -2137,9 +2139,9 @@ export default function CompanySettingsPage() {
               )}
 
               {/* New rule block */}
-              <div className="bg-card border border-border-custom rounded-lg bg-background p-5 space-y-4">
+              <div className="bg-card border border-border-custom rounded-lg p-5 space-y-4">
                 <div className="text-[10px] uppercase tracking-wider text-muted font-bold">Add Approval Rule Block — {approvalCat}</div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                   <Field label="Min Amount (₹)">
                     <input type="number" min={0} value={newRule.min_amount}
                       onChange={(e) => setNewRule({ ...newRule, min_amount: parseInt(e.target.value || "0", 10) || 0 })}
@@ -2176,8 +2178,8 @@ export default function CompanySettingsPage() {
                   approvalRulesForCat(approvalCat).map((r) => {
                     const e = ruleEdits[r.id] ?? { min_amount: r.min_amount, max_amount: r.max_amount ?? "", levels: r.levels, approvers: r.approvers };
                     return (
-                      <div key={r.id} className="bg-card border border-border-custom rounded-lg bg-background p-5 space-y-4">
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div key={r.id} className="bg-card border border-border-custom rounded-lg p-5 space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                           <Field label="Min Amount (₹)">
                             <input type="number" min={0} value={e.min_amount}
                               onChange={(ev) => approveEdit(r.id, { min_amount: parseInt(ev.target.value || "0", 10) || 0 })}
@@ -2215,10 +2217,10 @@ export default function CompanySettingsPage() {
 
           {/* ════════════════════════════ INTEGRATIONS ════════════════════════════ */}
           {activeSection === "integrations" && settings && (
-            <div className="space-y-6 max-w-3xl">
+            <div className="space-y-6">
               <h2 className="text-sm font-bold text-foreground uppercase tracking-wider text-muted border-b border-border-custom pb-3">Integrations</h2>
 
-              <div className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-5">
+              <div className="bg-card border border-border-custom rounded-lg p-6 space-y-5">
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-sm font-bold text-foreground">Google Sheets</div>
@@ -2283,7 +2285,7 @@ export default function CompanySettingsPage() {
               </div>
 
               {/* Google Drive */}
-              <div className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-4">
+              <div className="bg-card border border-border-custom rounded-lg p-6 space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-sm font-bold text-foreground">Google Drive</div>
@@ -2309,7 +2311,7 @@ export default function CompanySettingsPage() {
               </div>
 
               {/* Zoho Books */}
-              <div className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-4">
+              <div className="bg-card border border-border-custom rounded-lg p-6 space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-sm font-bold text-foreground">Zoho Books</div>
@@ -2335,7 +2337,7 @@ export default function CompanySettingsPage() {
               </div>
 
               {/* BI Data Export */}
-              <div className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-4">
+              <div className="bg-card border border-border-custom rounded-lg p-6 space-y-4">
                 <div>
                   <div className="text-sm font-bold text-foreground">BI Data Export (PowerBI / Tableau)</div>
                   <div className="text-[10px] text-muted">Create API keys to pull projects, budget variance, and labour productivity feeds as CSV or JSON.</div>
@@ -2384,7 +2386,7 @@ export default function CompanySettingsPage() {
               </div>
 
               {/* Tally */}
-              <div className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-4">
+              <div className="bg-card border border-border-custom rounded-lg p-6 space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-sm font-bold text-foreground">Tally</div>
@@ -2409,17 +2411,17 @@ export default function CompanySettingsPage() {
 
           {/* ════════════════════════════ SUBSCRIPTION ════════════════════════════ */}
           {activeSection === "subscription" && settings && (
-            <div className="space-y-6 max-w-3xl">
+            <div className="space-y-6">
               <h2 className="text-sm font-bold text-foreground uppercase tracking-wider text-muted border-b border-border-custom pb-3">Subscription</h2>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 <StatCard label="Current Plan" value={settings.subscription_plan || "—"} />
                 <StatCard label="Start Date" value={fmtDate(settings.subscription_start)} />
                 <StatCard label="End Date" value={fmtDate(settings.subscription_end)} />
                 <StatCard label="Renewal Date" value={fmtDate(settings.subscription_renewal)} />
               </div>
 
-              <div className="bg-card border border-border-custom rounded-lg bg-background p-6 space-y-3">
+              <div className="bg-card border border-border-custom rounded-lg p-6 space-y-3">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-primary/15 text-primary font-bold flex items-center justify-center text-lg">★</div>
                   <div>
@@ -2442,6 +2444,7 @@ export default function CompanySettingsPage() {
             <Placeholder section={SECTIONS.find((s) => s.id === activeSection)?.label ?? ""} />
           )}
         </div>
+        </PageShell>
       </main>
     </div>
   );
@@ -2523,7 +2526,7 @@ function WfSaveFooter({ status, onSave, savedText, errorText }: {
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-card border border-border-custom rounded-lg bg-background p-5 rounded-lg">
+    <div className="bg-card border border-border-custom rounded-lg p-5 rounded-lg">
       <div className="text-[10px] uppercase tracking-wider text-muted font-bold">{label}</div>
       <div className="mt-2 text-lg font-bold text-foreground truncate">{value}</div>
     </div>
@@ -2532,9 +2535,9 @@ function StatCard({ label, value }: { label: string; value: string }) {
 
 function SelectorCard({ title, options, selected, onSelect }: { title: string; options: string[]; selected: string | null; onSelect: (v: string) => void }) {
   return (
-    <div className="bg-card border border-border-custom rounded-lg bg-background p-6 rounded-md space-y-3">
+    <div className="bg-card border border-border-custom rounded-lg p-6 space-y-3">
       <h3 className="text-[10px] uppercase tracking-wider text-muted font-bold">{title}</h3>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
         {options.map((o) => (
           <button key={o} onClick={() => onSelect(o)} className={`px-4 py-3 rounded-md text-xs font-bold border transition-all ${
             selected === o ? "bg-primary text-white border-primary" : "bg-elevated text-muted border-border-custom hover:border-primary/50"

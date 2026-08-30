@@ -6,6 +6,7 @@ import { authHeaders, fmtINR } from "@/lib/siteflow";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import PwaControls from "@/components/pwa/PwaControls";
+import PageShell from "@/components/layout/PageShell";
 
 interface AnalyticsPoint {
   label: string;
@@ -82,10 +83,10 @@ interface AnalyticsPayload {
 }
 
 const chartColors = {
-  planned: "#7C5CFF",
-  actual: "#E8184C",
-  burn: "#00E5A3",
-  grid: "rgba(255,255,255,0.06)",
+  planned: "var(--primary)",
+  actual: "var(--danger)",
+  burn: "var(--success)",
+  grid: "var(--border)",
 };
 
 function formatCurrency(value: number) {
@@ -159,7 +160,7 @@ function ChartCard({
             return (
               <g key={tick}>
                 <line x1={padding} y1={y} x2={width - padding} y2={y} stroke={chartColors.grid} strokeDasharray="4 6" />
-                <text x="8" y={y + 4} fill="#6b7280" fontSize="10">
+                <text x="8" y={y + 4} fill="var(--muted)" fontSize="10">
                   {tick}%
                 </text>
               </g>
@@ -169,7 +170,7 @@ function ChartCard({
           {labels.map((label, index) => {
             const x = labels.length === 1 ? width / 2 : padding + (index / Math.max(labels.length - 1, 1)) * (width - padding * 2);
             return (
-              <text key={label} x={x} y={height - 6} fill="#6b7280" fontSize="10" textAnchor="middle">
+              <text key={label} x={x} y={height - 6} fill="var(--muted)" fontSize="10" textAnchor="middle">
                 {label}
               </text>
             );
@@ -204,7 +205,7 @@ function ChartCard({
                 cy={y}
                 r={hoveredIndex === idx ? 7 : 4}
                 fill={chartColors.planned}
-                stroke="#0B0910"
+                stroke="var(--card)"
                 strokeWidth={hoveredIndex === idx ? 2 : 0}
                 className="cursor-pointer transition-all duration-150"
                 onMouseEnter={() => setHoveredIndex(idx)}
@@ -224,7 +225,7 @@ function ChartCard({
                 cy={y}
                 r={hoveredIndex === idx ? 7 : 4}
                 fill={chartColors.actual}
-                stroke="#0B0910"
+                stroke="var(--card)"
                 strokeWidth={hoveredIndex === idx ? 2 : 0}
                 className="cursor-pointer transition-all duration-150"
                 onMouseEnter={() => setHoveredIndex(idx)}
@@ -309,20 +310,20 @@ export default function CompanyAnalyticsPage() {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <main className="flex-1 overflow-y-auto">
-        <header className="flex flex-col gap-4 border-b border-border-custom bg-card px-6 py-5 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-foreground">Advanced Analytics Dashboard</h1>
-            <p className="mt-2 max-w-3xl text-sm text-muted">
-              Cross-project KPI view for burn rate, progress cadence, labour productivity, procurement leakage, and subcontractor performance.
-            </p>
-          </div>
-          <div className="w-full max-w-md">
-            <PwaControls />
-          </div>
-        </header>
+        <PageShell width="wide">
+          <header className="flex flex-col gap-4 border-b border-border-custom bg-card px-6 py-5 rounded-lg lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-foreground">Advanced Analytics Dashboard</h1>
+              <p className="mt-2 max-w-3xl text-sm text-muted">
+                Cross-project KPI view for burn rate, progress cadence, labour productivity, procurement leakage, and subcontractor performance.
+              </p>
+            </div>
+            <div className="w-full max-w-md">
+              <PwaControls />
+            </div>
+          </header>
 
-        <div className="space-y-6 p-6">
-          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             {[
               {
                 label: "Budget Variance",
@@ -349,7 +350,7 @@ export default function CompanyAnalyticsPage() {
                 tone: "text-amber-400",
               },
             ].map((card) => (
-              <div key={card.label} className="bg-card border border-border-custom rounded-lg rounded-md border border-border-custom p-5">
+              <div key={card.label} className="bg-card border border-border-custom rounded-lg p-5">
                 <div className="text-[10px] uppercase tracking-[0.24em] text-muted">{card.label}</div>
                 <div className={`mt-3 text-3xl font-black tracking-tight ${card.tone}`}>{card.value}</div>
                 <div className="mt-2 text-xs text-muted">{card.hint}</div>
@@ -357,7 +358,7 @@ export default function CompanyAnalyticsPage() {
             ))}
           </section>
 
-          <section className="grid gap-6 xl:grid-cols-2">
+          <section className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             <ChartCard
               title="S-Curve"
               subtitle="Planned vs actual physical progress from scheduled task completion"
@@ -368,7 +369,7 @@ export default function CompanyAnalyticsPage() {
               actualLabel="Actual"
             />
 
-            <div className="bg-card border border-border-custom rounded-lg rounded-md border border-border-custom p-5">
+            <div className="bg-card border border-border-custom rounded-lg p-5">
               <div className="mb-4 flex items-end justify-between gap-4">
                 <div>
                   <div className="text-[10px] uppercase tracking-[0.24em] text-muted">Budget Burn</div>
@@ -385,7 +386,7 @@ export default function CompanyAnalyticsPage() {
                     return (
                       <g key={tick}>
                         <line x1="28" y1={y} x2="732" y2={y} stroke={chartColors.grid} strokeDasharray="4 6" />
-                        <text x="8" y={y + 4} fill="#6b7280" fontSize="10">
+                        <text x="8" y={y + 4} fill="var(--muted)" fontSize="10">
                           {tick}%
                         </text>
                       </g>
@@ -395,7 +396,7 @@ export default function CompanyAnalyticsPage() {
                   {burnLabels.map((label, index) => {
                     const x = burnLabels.length === 1 ? 380 : 28 + (index / Math.max(burnLabels.length - 1, 1)) * 704;
                     return (
-                      <text key={label} x={x} y="254" fill="#6b7280" fontSize="10" textAnchor="middle">
+                      <text key={label} x={x} y="254" fill="var(--muted)" fontSize="10" textAnchor="middle">
                         {label}
                       </text>
                     );
@@ -422,7 +423,7 @@ export default function CompanyAnalyticsPage() {
                         cy={y}
                         r={hoveredBurnIndex === idx ? 7 : 4}
                         fill={chartColors.burn}
-                        stroke="#0B0910"
+                        stroke="var(--card)"
                         strokeWidth={hoveredBurnIndex === idx ? 2 : 0}
                         className="cursor-pointer transition-all duration-150"
                         onMouseEnter={() => setHoveredBurnIndex(idx)}
@@ -450,8 +451,8 @@ export default function CompanyAnalyticsPage() {
                         {data.budget_burn_series[hoveredBurnIndex].burn_pct}%
                       </span>
                     </div>
-                    <div className="flex items-center justify-between gap-4">
-                      <span className="text-muted">Cumulative:</span>
+                    <div className="flex items-center justify-between gap-4 border-t border-border-custom pt-1 mt-1">
+                      <span className="text-muted">Spend:</span>
                       <span className="font-bold font-sans text-foreground">
                         {formatCurrency(data.budget_burn_series[hoveredBurnIndex].spend)}
                       </span>
@@ -459,25 +460,11 @@ export default function CompanyAnalyticsPage() {
                   </div>
                 )}
               </div>
-              <div className="mt-4 grid grid-cols-3 gap-3 text-xs">
-                <div className="rounded-lg border border-border-custom bg-elevated p-3">
-                  <div className="text-[10px] uppercase tracking-[0.2em] text-muted">Projects</div>
-                  <div className="mt-2 text-lg font-bold text-foreground">{data?.project_count ?? "—"}</div>
-                </div>
-                <div className="rounded-lg border border-border-custom bg-elevated p-3">
-                  <div className="text-[10px] uppercase tracking-[0.2em] text-muted">Tasks Completed</div>
-                  <div className="mt-2 text-lg font-bold text-foreground">{data?.completed_tasks ?? "—"}</div>
-                </div>
-                <div className="rounded-lg border border-border-custom bg-elevated p-3">
-                  <div className="text-[10px] uppercase tracking-[0.2em] text-muted">Area Delivered</div>
-                  <div className="mt-2 text-lg font-bold text-foreground">{data?.labour_productivity.completed_area_m2 ?? "—"} m2</div>
-                </div>
-              </div>
             </div>
           </section>
 
-          <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-            <div className="bg-card border border-border-custom rounded-lg rounded-md border border-border-custom p-5">
+          <section className="grid grid-cols-1 xl:grid-cols-[1.2fr_0.8fr] gap-6">
+            <div className="bg-card border border-border-custom rounded-lg p-5">
               <div className="flex items-end justify-between gap-4">
                 <div>
                   <div className="text-[10px] uppercase tracking-[0.24em] text-muted">Project Scoreboard</div>
@@ -516,9 +503,9 @@ export default function CompanyAnalyticsPage() {
             </div>
 
             <div className="space-y-6">
-              <div className="bg-card border border-border-custom rounded-lg rounded-md border border-border-custom p-5">
+              <div className="bg-card border border-border-custom rounded-lg p-5">
                 <div className="text-[10px] uppercase tracking-[0.24em] text-muted">Labour Intelligence</div>
-                <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                   <div className="rounded-lg border border-border-custom bg-elevated p-4">
                     <div className="text-[10px] uppercase tracking-[0.2em] text-muted">Hours Logged</div>
                     <div className="mt-2 text-2xl font-black text-foreground">{data?.labour_productivity.total_hours ?? "—"}</div>
@@ -530,7 +517,7 @@ export default function CompanyAnalyticsPage() {
                 </div>
               </div>
 
-              <div className="bg-card border border-border-custom rounded-lg rounded-md border border-border-custom p-5">
+              <div className="bg-card border border-border-custom rounded-lg p-5">
                 <div className="text-[10px] uppercase tracking-[0.24em] text-muted">Material Leakage</div>
                 <div className="mt-4 space-y-3">
                   <div>
@@ -569,7 +556,7 @@ export default function CompanyAnalyticsPage() {
             </div>
           </section>
 
-          <section className="bg-card border border-border-custom rounded-lg rounded-md border border-border-custom p-5">
+          <section className="bg-card border border-border-custom rounded-lg p-5">
             <div className="flex items-end justify-between gap-4">
               <div>
                 <div className="text-[10px] uppercase tracking-[0.24em] text-muted">Subcontractor Scorecard</div>
@@ -609,7 +596,7 @@ export default function CompanyAnalyticsPage() {
               Loading analytics...
             </div>
           )}
-        </div>
+        </PageShell>
       </main>
     </div>
   );

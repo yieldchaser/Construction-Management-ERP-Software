@@ -288,7 +288,7 @@ function NewPartyModal({
 
   return (
     <Modal title="New Party" onClose={onClose}>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <Inp label="Party Name *" value={form.name} onChange={(v) => setForm({ ...form, name: v })} />
         <Inp label="Party ID" value={form.party_id_custom} onChange={(v) => setForm({ ...form, party_id_custom: v })} />
         <Inp label="Phone" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} />

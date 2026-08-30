@@ -228,7 +228,7 @@ export default function ProjectDetailLayout({ children }: { children: React.Reac
                 onClick={() => setMoreOpen(false)}
                 aria-hidden="true"
               />
-              <div className="absolute right-0 top-full mt-1 z-50 w-[26rem] max-h-80 overflow-y-auto rounded-md border border-border-custom bg-card shadow-xl p-2 grid grid-cols-2 gap-1">
+              <div className="absolute right-0 top-full mt-1 z-50 w-[26rem] max-h-80 overflow-y-auto rounded-md border border-border-custom bg-card shadow-xl p-2 grid grid-cols-1 md:grid-cols-2 gap-1">
                 {MORE_TABS.map((m) => (
                   <Link
                     key={m.path}

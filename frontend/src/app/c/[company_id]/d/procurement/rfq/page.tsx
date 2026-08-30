@@ -107,7 +107,7 @@ export default function RFQPage() {
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 z-10 space-y-6">
-          <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg overflow-hidden">
+          <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
             <div className="px-5 py-4 border-b border-border-custom">
               <h2 className="text-xs font-bold uppercase tracking-wider text-muted">RFQ List</h2>
             </div>
@@ -131,7 +131,7 @@ export default function RFQPage() {
           </div>
 
           {viewRfqId && comparison.length > 0 && (
-            <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg overflow-hidden">
+            <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
               <div className="px-5 py-4 border-b border-border-custom">
                 <h2 className="text-xs font-bold uppercase tracking-wider text-muted">Side-by-Side Vendor Comparison</h2>
               </div>

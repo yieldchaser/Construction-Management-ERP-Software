@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { getApi, authHeaders, resolveCompanyId, fmtINR } from "@/lib/siteflow";
 import { useCompanySettings } from "@/context/CompanySettingsContext";
+import PageShell from "@/components/layout/PageShell";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -653,7 +654,8 @@ export default function CRMPage() {
   };
 
   return (
-    <div className="p-4">
+    <div className="flex-1 overflow-y-auto">
+      <PageShell width="wide">
       {/* Sub-tabs */}
       <div className="mb-4 flex gap-1 border-b border-border-custom">
         {(["leads", "quotation"] as const).map((t) => (
@@ -1020,7 +1022,7 @@ export default function CRMPage() {
           {/* New Quotation Drawer */}
           {qDrawer && (
             <Drawer title="New Quotation" onClose={() => setQDrawer(false)} width="max-w-4xl">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <Field label="Subject *">
                   <input className={inputCls} value={qForm.subject} onChange={(e) => qSet({ subject: e.target.value })} />
                 </Field>
@@ -1128,7 +1130,7 @@ export default function CRMPage() {
           {/* Detail Drawer */}
           {qDetail && (
             <Drawer title={`Quotation · ${qDetail.qt_no || qDetail.subject}`} onClose={() => setQDetail(null)} width="max-w-4xl">
-              <div className="mb-3 grid grid-cols-2 gap-3 text-sm">
+              <div className="mb-3 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                 <div><span className="text-muted">Subject: </span>{qDetail.subject}</div>
                 <div><span className="text-muted">Date: </span>{fmtDate(qDetail.qt_date)}</div>
                 <div><span className="text-muted">Status: </span>{qDetail.status}</div>
@@ -1177,6 +1179,7 @@ export default function CRMPage() {
           )}
         </div>
       )}
+      </PageShell>
     </div>
   );
 }

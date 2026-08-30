@@ -6,6 +6,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
 import Icon, { type IconName } from "@/components/marketing/Icon";
+import PageShell from "@/components/layout/PageShell";
 
 interface Task {
   id: string;
@@ -192,10 +193,11 @@ export default function DPRPage() {
         </header>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-8 space-y-6 relative">
+        <div className="flex-1 overflow-y-auto relative">
+          <PageShell width="wide">
           
           {/* Dashboard Quick Stats Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             {[
               { label: "Site Staff Present", value: summary.total_workers_deployed || "—", desc: "Clocked via geofence", color: "border-primary/20 bg-primary/5 text-primary" },
               { label: "Equipment Used", value: logs.length > 0 ? `${logs.length} Reports` : "0 Active", desc: "DPR reports logged", color: "border-secondary/20 bg-secondary/5 text-secondary" },
@@ -214,7 +216,7 @@ export default function DPRPage() {
           </div>
 
           {/* DPR Log Timeline Feed */}
-          <div className="bg-card border border-border-custom rounded-lg rounded-lg border border-border-custom p-6 space-y-4">
+          <div className="bg-card border border-border-custom rounded-lg p-6 space-y-4">
             <h3 className="text-xs font-bold text-muted uppercase tracking-wider">Chronological DPR Activity Feed</h3>
             <div className="space-y-4">
               {logs.length === 0 ? (
@@ -240,6 +242,7 @@ export default function DPRPage() {
               )}
             </div>
           </div>
+          </PageShell>
         </div>
       </main>
 
@@ -280,7 +283,7 @@ export default function DPRPage() {
                 <input type="text" value={reportedBy} onChange={(e) => setReportedBy(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" placeholder="e.g. Er. Suresh R (PM)" />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <div className="flex justify-between items-center">
                     <label className="text-muted">Executed Qty</label>
@@ -300,7 +303,7 @@ export default function DPRPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-muted">Weather Condition</label>
                   <select value={weather} onChange={(e) => setWeather(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground">
@@ -328,7 +331,7 @@ export default function DPRPage() {
               {/* Photo uploading slots simulator */}
               <div className="space-y-2 pt-2 border-t border-border-custom">
                 <span className="text-muted font-bold block">Attach Progress Records</span>
-                <div className="grid grid-cols-4 gap-2 text-center text-[10px]">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-center text-[10px]">
                   {PHOTO_SLOTS.map((slot, i) => (
                     <div key={i} className={`p-2.5 rounded-md border border-border-custom bg-gradient-to-tr ${slot.color} flex flex-col items-center justify-center cursor-pointer hover:border-border-custom`}>
                       <Icon name={slot.icon} className="w-5 h-5" />

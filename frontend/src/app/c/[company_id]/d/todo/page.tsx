@@ -394,7 +394,7 @@ export default function ToDoPage() {
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Project</label>
                   <select

@@ -398,7 +398,7 @@ export default function BOQPage() {
                 )}
                 {showInlineD && (
                   <div className="p-3 bg-card border border-border-custom rounded-lg space-y-2">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
                       <input value={inlineD.section_name} onChange={e => setInlineD({ ...inlineD, section_name: e.target.value })} placeholder="Section" className="bg-input border border-border-custom rounded-lg px-2 py-1.5 text-xs text-foreground placeholder-muted" />
                       <input value={inlineD.item_name} onChange={e => setInlineD({ ...inlineD, item_name: e.target.value })} placeholder="Item name *" className="bg-input border border-border-custom rounded-lg px-2 py-1.5 text-xs text-foreground placeholder-muted" />
                       <input value={inlineD.cost_code} onChange={e => setInlineD({ ...inlineD, cost_code: e.target.value })} placeholder="Cost code" className="bg-input border border-border-custom rounded-lg px-2 py-1.5 text-xs text-foreground placeholder-muted" />
@@ -502,7 +502,7 @@ export default function BOQPage() {
           {tab === "variance" && (
             <div className="h-full overflow-y-auto p-5 space-y-4">
               {/* KPI strip */}
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 {[
                   { label: "Total Budget", value: fmt(totalBudget), sub: selectedDoc?.revised_amount != null ? "Latest applied revision" : "Original contract value", color: "text-blue-400" },
                   { label: "Total Actual Spent", value: fmt(totalActual), sub: "As of today", color: "text-foreground" },

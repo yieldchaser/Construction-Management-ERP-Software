@@ -417,7 +417,7 @@ export default function SubconPage() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                       <label className="text-[10px] text-muted uppercase font-bold block mb-1">Bank Name</label>
                       <input

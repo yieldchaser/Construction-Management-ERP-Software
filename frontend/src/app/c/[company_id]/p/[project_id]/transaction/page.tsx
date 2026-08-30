@@ -675,7 +675,7 @@ function NewTransactionModal({
         {TAXONOMY.map((t) => <option key={t.key} value={t.key}>{t.label}</option>)}
       </select>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div className="col-span-2">
           <Lbl>Party (Bill To)</Lbl>
           <select value={partyId} onChange={(e) => setPartyId(e.target.value)} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground">
@@ -744,7 +744,7 @@ function NewTransactionModal({
               ))}
             </div>
             {payMode !== "Cash" && (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <Lbl>Bank Name</Lbl>
                   <input value={bankName} onChange={(e) => setBankName(e.target.value)} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />

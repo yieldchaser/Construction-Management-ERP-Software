@@ -7,6 +7,7 @@ import { useProject } from "@/context/ProjectContext";
 import { getApiHost } from "@/lib/api";
 import { authHeaders, downloadWithAuth } from "@/lib/siteflow";
 import Icon, { type IconName } from "@/components/marketing/Icon";
+import PageShell from "@/components/layout/PageShell";
 
 // Types
 interface IndentItem {
@@ -598,7 +599,8 @@ export default function ProcurementPage() {
         </header>
 
         {/* Content Workspace */}
-        <div className="flex-1 overflow-y-auto p-8 space-y-6">
+        <div className="flex-1 overflow-y-auto">
+          <PageShell width="wide">
           
           {/* TAB 1: INDENTS / REQUISITIONS */}
           {tab === "indent" && (
@@ -850,7 +852,7 @@ export default function ProcurementPage() {
               </div>
 
               {/* Summary Strip */}
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="bg-input border border-border-custom rounded-md p-4">
                   <span className="text-[9px] uppercase text-muted tracking-wider block">Unbilled GRN Count</span>
                   <strong className={`text-xl font-extrabold mt-1 block ${unbilledGRNs.length > 0 ? "text-amber-400" : "text-emerald-400"}`}>{unbilledGRNs.length}</strong>
@@ -963,6 +965,7 @@ export default function ProcurementPage() {
               )}
             </div>
           )}
+          </PageShell>
         </div>
       </main>
 
@@ -991,7 +994,7 @@ export default function ProcurementPage() {
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-muted">Required Quantity</label>
                   <input type="number" value={newIndentQty} onChange={(e) => setNewIndentQty(parseFloat(e.target.value) || 0)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" />
@@ -1171,7 +1174,7 @@ export default function ProcurementPage() {
                         ))}
                       </select>
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       <div className="space-y-1">
                         <label className="text-muted text-[9px]">Quantity ({item.unit})</label>
                         <input type="number" value={item.qty}

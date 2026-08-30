@@ -95,7 +95,7 @@ export default function SubconScorecardsPage() {
           {error && <div className="p-4 rounded-md bg-red-500/10 border border-red-500/20 text-xs text-red-400">{error}</div>}
 
           {/* Comparative Analysis */}
-          <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg overflow-hidden">
+          <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
             <div className="px-5 py-4 border-b border-border-custom">
               <h2 className="text-xs font-bold uppercase tracking-wider text-muted">Comparative Analysis</h2>
             </div>
@@ -137,7 +137,7 @@ export default function SubconScorecardsPage() {
           </div>
 
           {/* Scorecards List */}
-          <div className="bg-card border border-border-custom rounded-lg border border-border-custom rounded-lg overflow-hidden">
+          <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
             <div className="px-5 py-4 border-b border-border-custom">
               <h2 className="text-xs font-bold uppercase tracking-wider text-muted">All Scorecards</h2>
             </div>

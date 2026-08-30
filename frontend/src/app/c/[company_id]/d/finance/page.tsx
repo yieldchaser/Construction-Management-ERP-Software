@@ -9,6 +9,7 @@ import Icon, { type IconName } from "@/components/marketing/Icon";
 // R2-755: shared CSV guard. Quote-doubling protects the delimiter, not the
 // formula — a leading = + - @ executes when the export opens in Excel/Sheets.
 import { buildCsv } from "@/lib/csv";
+import PageShell from "@/components/layout/PageShell";
 
 interface Transaction {
   id: string;
@@ -1138,7 +1139,7 @@ export default function FinancePage() {
                 <div className="absolute right-0 mt-2 w-80 bg-card/95 backdrop-blur-md border border-border-custom rounded-lg shadow-2xl p-5 z-50 space-y-4 text-left max-h-[420px] overflow-y-auto">
                   <div>
                     <div className="text-[9px] font-bold text-success uppercase tracking-widest border-b border-border-custom pb-1 mb-2">Payment</div>
-                    <div className="grid grid-cols-2 gap-1.5 text-[11px]">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5 text-[11px]">
                       {["Payment In", "Payment Out", "Debit Note", "Credit Note", "Party to Party", "Upload Payments"].map(type => (
                         <button key={type} onClick={() => { setSelectedTxnType(type as any); setPartyName(""); setIsDropdownOpen(false); setShowAddModal(true); }}
                           className="py-1 px-2 text-left rounded-lg text-muted hover:text-success hover:bg-success/10 transition-all text-xs cursor-pointer font-semibold">
@@ -1150,7 +1151,7 @@ export default function FinancePage() {
 
                   <div>
                     <div className="text-[9px] font-bold text-primary uppercase tracking-widest border-b border-border-custom pb-1 mb-2">Sales</div>
-                    <div className="grid grid-cols-2 gap-1.5 text-[11px]">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5 text-[11px]">
                       {["Sales Invoice", "Material Sales"].map(type => (
                         <button key={type} onClick={() => { setSelectedTxnType(type as any); setPartyName(""); setIsDropdownOpen(false); setShowAddModal(true); }}
                           className="py-1 px-2 text-left rounded-lg text-muted hover:text-primary hover:bg-primary/10 transition-all text-xs cursor-pointer font-semibold">
@@ -1162,7 +1163,7 @@ export default function FinancePage() {
 
                   <div>
                     <div className="text-[9px] font-bold text-primary uppercase tracking-widest border-b border-border-custom pb-1 mb-2">Expense</div>
-                    <div className="grid grid-cols-2 gap-1.5 text-[11px]">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5 text-[11px]">
                       {["Material Purchase", "Material Return", "Material Transfer", "Sub Con Bill", "Other Expense", "Equipment Expense"].map(type => (
                         <button key={type} onClick={() => { setSelectedTxnType(type as any); setPartyName(""); setIsDropdownOpen(false); setShowAddModal(true); }}
                           className="py-1 px-2 text-left rounded-lg text-muted hover:text-primary hover:bg-primary/10 transition-all text-xs cursor-pointer font-semibold">
@@ -1177,7 +1178,8 @@ export default function FinancePage() {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-5">
+        <div className="flex-1 overflow-y-auto">
+          <PageShell width="wide">
           {/* ── TRANSACTION LEDGER TAB ── */}
           {/* ── TRANSACTION SUB-TAB (COMPANY-WIDE) ── */}
           {tab === "ledger" && (() => {
@@ -1343,7 +1345,7 @@ export default function FinancePage() {
             return (
             <div className="space-y-6 relative h-full flex flex-col">
               {/* Four Cards Metrics Summary Grid */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-card border border-border-custom rounded-lg p-4 flex items-center justify-between shadow-sm relative overflow-hidden">
                   <div className="space-y-1 z-10">
                     <span className="text-[10px] font-bold text-emerald-400/80 uppercase tracking-wider block">Advance Paid</span>
@@ -1478,7 +1480,7 @@ export default function FinancePage() {
                     <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Name *</label>
                     <input value={newParty.name} onChange={(e) => setNewParty({ ...newParty, name: e.target.value })} className="w-full bg-input border border-border-custom rounded-md p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                       <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Phone (w/ country code)</label>
                       <input value={newParty.phone} onChange={(e) => setNewParty({ ...newParty, phone: e.target.value })} placeholder="+91" className="w-full bg-input border border-border-custom rounded-md p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
@@ -1488,7 +1490,7 @@ export default function FinancePage() {
                       <input value={newParty.email} onChange={(e) => setNewParty({ ...newParty, email: e.target.value })} className="w-full bg-input border border-border-custom rounded-md p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                       <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Party Type</label>
                       <select value={newParty.party_type} onChange={(e) => setNewParty({ ...newParty, party_type: e.target.value })} className="w-full bg-input border border-border-custom rounded-md p-2 text-xs text-foreground focus:outline-none focus:border-primary">
@@ -1508,7 +1510,7 @@ export default function FinancePage() {
                     <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Address</label>
                     <textarea value={newParty.address} onChange={(e) => setNewParty({ ...newParty, address: e.target.value })} rows={2} className="w-full bg-input border border-border-custom rounded-md p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                       <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Date of Joining</label>
                       <input type="date" value={newParty.date_of_joining} onChange={(e) => setNewParty({ ...newParty, date_of_joining: e.target.value })} className="w-full bg-input border border-border-custom rounded-md p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
@@ -1690,7 +1692,7 @@ export default function FinancePage() {
           {tab === "cashbook" && (
             <div className="space-y-4">
               <div className="text-xs text-muted">Double-entry book for all site bank accounts & cash boxes.</div>
-              <div className="bg-card border border-border-custom rounded-lg rounded-lg border border-border-custom bg-input overflow-hidden">
+              <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
                 <table className="w-full text-xs text-left">
                   <thead>
                     <tr className="border-b border-border-custom text-muted font-bold uppercase tracking-wider text-[9px]">
@@ -1734,7 +1736,7 @@ export default function FinancePage() {
                 </button>
               </div>
 
-              <div className="bg-card border border-border-custom rounded-lg rounded-lg border border-border-custom bg-input overflow-hidden">
+              <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
                 <table className="w-full text-xs text-left">
                   <thead>
                       <tr className="border-b border-border-custom text-muted font-bold uppercase tracking-wider text-[9px]">
@@ -1866,7 +1868,7 @@ export default function FinancePage() {
                         </div>
 
                         {/* Account Details Sub Grid */}
-                        <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border-custom/50 text-[10px]">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-3 border-t border-border-custom/50 text-[10px]">
                           <div>
                             <span className="text-muted block uppercase font-medium text-[8px] tracking-wider">AC Holder</span>
                             <span className="text-foreground font-semibold mt-0.5 block">{acc.account_holder_name || "—"}</span>
@@ -1903,7 +1905,7 @@ export default function FinancePage() {
           {/* ── PROJECT P&L TAB ── */}
           {tab === "pl" && (
             <div className="space-y-5">
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[
                   { label: "Revenue (Billed)", value: `₹${totalRevenue.toLocaleString("en-IN")}`, color: "text-emerald-400" },
                   { label: "Total Cost", value: `₹${totalCost.toLocaleString("en-IN")}`, color: "text-red-400" },
@@ -1941,7 +1943,7 @@ export default function FinancePage() {
                   )}
                 </div>
                 {tallyConn ? (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                     <div className="rounded-lg border border-border-custom p-3">
                       <div className="text-[10px] uppercase font-bold text-muted">Company</div>
                       <div className="text-foreground font-semibold">{tallyConn.tally_company_name}</div>
@@ -2025,7 +2027,7 @@ export default function FinancePage() {
               {tallyConn && (
                 <div className="bg-card border border-border-custom rounded-lg p-5 space-y-4">
                   <h2 className="text-sm font-bold text-foreground">Export to Tally</h2>
-                  <div className="grid grid-cols-3 gap-3 text-xs">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
                     <div className="rounded-lg border border-border-custom p-3">
                       <div className="text-[10px] uppercase font-bold text-muted">Pending vouchers</div>
                       <div className="text-foreground font-semibold">{tallyPending.count}</div>
@@ -2125,7 +2127,7 @@ export default function FinancePage() {
                   </span>
                 </div>
 
-                <div className="grid grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   {[
                     { label: "Total Budget", value: `₹${totalBudget.toLocaleString()}`, color: "text-foreground" },
                     { label: "Actual Spend", value: `₹${totalActual.toLocaleString()}`, color: "text-primary" },
@@ -2186,6 +2188,7 @@ export default function FinancePage() {
               </div>
             );
           })()}
+          </PageShell>
         </div>
       </div>
 
@@ -2260,7 +2263,7 @@ export default function FinancePage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 bg-input p-4 rounded-md border border-border-custom text-xs font-sans">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-input p-4 rounded-md border border-border-custom text-xs font-sans">
                 <div>
                   <span className="text-muted block uppercase text-[9px] tracking-wider font-sans">Settled Amount</span>
                   <strong className="text-emerald-400 mt-1 block text-sm">₹{(selectedVoucher.settled_amount ?? 0).toLocaleString("en-IN")}</strong>
@@ -2448,7 +2451,7 @@ export default function FinancePage() {
                   </div>
 
                   {addQtyRate && (
-                    <div className="grid grid-cols-2 gap-3 bg-background/25 border border-border-custom/50 rounded-lg p-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-background/25 border border-border-custom/50 rounded-lg p-3">
                       <div>
                         <label className="text-[9px] text-muted uppercase font-bold block mb-1">Quantity</label>
                         <input
@@ -2672,7 +2675,7 @@ export default function FinancePage() {
                     + Add Equipment
                   </button>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                       <label className="text-[10px] text-muted uppercase font-bold block mb-1">Sub Total</label>
                       <input
@@ -2730,7 +2733,7 @@ export default function FinancePage() {
                     )}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                       <label className="text-[10px] text-muted uppercase font-bold block mb-1">Total Amount</label>
                       <input
@@ -2751,7 +2754,7 @@ export default function FinancePage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                       <label className="text-[10px] text-muted uppercase font-bold block mb-1">Net Amount</label>
                       <div className="relative">
@@ -3563,7 +3566,7 @@ export default function FinancePage() {
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div>
                         <label className="text-[10px] text-muted uppercase font-bold block mb-1">Estimate Quantity</label>
                         <input
@@ -3588,7 +3591,7 @@ export default function FinancePage() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div>
                         <label className="text-[10px] text-muted uppercase font-bold block mb-1">Rate Per Unit</label>
                         <input
@@ -3898,7 +3901,7 @@ export default function FinancePage() {
                     {prType?.icon && <Icon name={prType.icon} className="w-3.5 h-3.5" />}{prType?.label}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                       <label className="text-[10px] text-muted uppercase font-bold block mb-1">Request No.*</label>
                       <input
@@ -4019,7 +4022,7 @@ export default function FinancePage() {
             </div>
 
             <div className="space-y-4 text-xs font-sans">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div className="bg-background border border-border-custom rounded-lg p-3">
                   <p className="text-[9px] text-muted uppercase font-bold">Requested Amount</p>
                   <p className="text-foreground font-bold font-sans mt-1">₹{(selectedPR.amount || 0).toLocaleString("en-IN")}</p>
@@ -4126,7 +4129,7 @@ export default function FinancePage() {
             </div>
 
             <div className="space-y-4 text-xs font-sans">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] text-muted uppercase font-bold block mb-1">Payment Date*</label>
                   <input type="date" value={prPayment.date}
@@ -4146,7 +4149,7 @@ export default function FinancePage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] text-muted uppercase font-bold block mb-1">Paid Amount (₹)*</label>
                   <input type="number" value={prPayment.paidAmount}
@@ -4161,7 +4164,7 @@ export default function FinancePage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] text-muted uppercase font-bold block mb-1">TDS (₹)</label>
                   <input type="number" value={prPayment.tds}

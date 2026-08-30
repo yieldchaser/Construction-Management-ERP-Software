@@ -550,7 +550,7 @@ export default function BoqTab() {
                           </div>
                           {showInlineRow && (
                             <div className="mb-4 p-3 bg-card border border-border-custom rounded-lg space-y-2" onClick={(e) => e.stopPropagation()}>
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
                                 <input value={inlineDraft.section_name} onChange={(e) => setInlineDraft({ ...inlineDraft, section_name: e.target.value })} placeholder="Section" className="bg-input border border-border-custom rounded-lg px-2 py-1.5 text-xs text-foreground placeholder-muted" />
                                 <input value={inlineDraft.item_name} onChange={(e) => setInlineDraft({ ...inlineDraft, item_name: e.target.value })} placeholder="Item name *" className="bg-input border border-border-custom rounded-lg px-2 py-1.5 text-xs text-foreground placeholder-muted" />
                                 <input value={inlineDraft.cost_code} onChange={(e) => setInlineDraft({ ...inlineDraft, cost_code: e.target.value })} placeholder="Cost code" className="bg-input border border-border-custom rounded-lg px-2 py-1.5 text-xs text-foreground placeholder-muted" />

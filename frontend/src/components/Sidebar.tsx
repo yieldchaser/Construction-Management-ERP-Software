@@ -1,15 +1,34 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import { getApiHost } from "@/lib/api";
 import { useProject } from "@/context/ProjectContext";
-import Icon from "@/components/marketing/Icon";
+import Icon, { type IconName } from "@/components/marketing/Icon";
 import { usePermissions } from "@/context/PermissionsContext";
 import { useSidebar } from "@/context/SidebarContext";
 import CompanySwitcher from "@/components/CompanySwitcher";
 import { isMissingOrDemoTenant, redirectToLogin } from "@/lib/company-guard";
+
+const GROUPS_STORAGE_KEY = "siteflow_nav_groups_state";
+
+interface NavItem {
+  id: string;
+  label: string;
+  href: string;
+  iconName: IconName;
+  activePattern?: string;
+  permission?: string;
+  anyOf?: string[];
+}
+
+interface NavGroup {
+  id: string;
+  label: string;
+  iconName: IconName;
+  items: NavItem[];
+}
 
 export default function Sidebar() {
   const params = useParams();
@@ -17,8 +36,6 @@ export default function Sidebar() {
   const companyId = params.company_id as string;
 
   useEffect(() => {
-    // D-V1: a missing id (malformed route) or the removed demo tenant id never
-    // resolves into console data; both bounce to /login.
     if (isMissingOrDemoTenant(companyId)) {
       redirectToLogin();
     }
@@ -26,16 +43,417 @@ export default function Sidebar() {
 
   const { activeProjectId, setActiveProjectId, projects, projectContext } = useProject();
   const { can } = usePermissions();
-  const { mobileOpen, closeMobile } = useSidebar();
+  const {
+    mobileOpen,
+    closeMobile,
+    desktopCollapsed,
+    toggleDesktopCollapsed,
+  } = useSidebar();
 
   const [companyName, setCompanyName] = useState("Loading Company...");
-  const [moreOpen, setMoreOpen] = useState(false);
+  const [hoveredFlyout, setHoveredFlyout] = useState<string | null>(null);
 
+  // Define domain groups
+  const domainGroups: NavGroup[] = useMemo(() => [
+    {
+      id: "overview",
+      label: "Overview",
+      iconName: "dashboard",
+      items: [
+        {
+          id: "dashboard",
+          label: "Dashboard",
+          href: `/c/${companyId}/dashboard`,
+          iconName: "dashboard",
+          permission: "dashboard:view",
+          activePattern: "/dashboard",
+        },
+        {
+          id: "project-hub",
+          label: "Project Hub",
+          href: `/c/${companyId}/d/home`,
+          iconName: "home",
+          activePattern: "/d/home",
+        },
+        {
+          id: "analytics",
+          label: "Analytics",
+          href: `/c/${companyId}/analytics`,
+          iconName: "bar_chart",
+          permission: "reports:view",
+          activePattern: "/analytics",
+        },
+        {
+          id: "reports",
+          label: "Reports",
+          href: `/c/${companyId}/reports`,
+          iconName: "document",
+          permission: "reports:view",
+          activePattern: "/reports",
+        },
+      ],
+    },
+    {
+      id: "projects",
+      label: "Projects & Planning",
+      iconName: "folder",
+      items: [
+        {
+          id: "projects-list",
+          label: "Projects",
+          href: `/c/${companyId}/projects`,
+          iconName: "folder",
+          permission: "projects:view",
+          activePattern: "/projects",
+        },
+        {
+          id: "planning",
+          label: "Planning",
+          href: `/c/${companyId}/d/planning`,
+          iconName: "calendar",
+          permission: "planning:view",
+          activePattern: "/d/planning",
+        },
+        {
+          id: "drawings",
+          label: "Drawings",
+          href: `/c/${companyId}/d/drawings`,
+          iconName: "blueprint",
+          permission: "drawings:view",
+          activePattern: "/d/drawings",
+        },
+        {
+          id: "towers",
+          label: "Towers & Phases",
+          href: `/c/${companyId}/d/towers`,
+          iconName: "location_pin",
+          activePattern: "/d/towers",
+        },
+        {
+          id: "team-action",
+          label: "Team Schedule",
+          href: `/c/${companyId}/d/team-action`,
+          iconName: "schedule",
+          permission: "planning:view",
+          activePattern: "/d/team-action",
+        },
+      ],
+    },
+    {
+      id: "site-operations",
+      label: "Site Operations",
+      iconName: "site",
+      items: [
+        {
+          id: "dpr",
+          label: "DPR (Daily Progress)",
+          href: `/c/${companyId}/d/dpr`,
+          iconName: "task_alt",
+          permission: "planning:view",
+          activePattern: "/d/dpr",
+        },
+        {
+          id: "quality",
+          label: "Quality & NCR",
+          href: `/c/${companyId}/d/quality`,
+          iconName: "check_circle",
+          permission: "quality:view",
+          activePattern: "/d/quality",
+        },
+        {
+          id: "safety",
+          label: "Safety",
+          href: `/c/${companyId}/d/safety`,
+          iconName: "shield",
+          permission: "safety:view",
+          activePattern: "/d/safety",
+        },
+        {
+          id: "labour",
+          label: "Labour Management",
+          href: `/c/${companyId}/d/labour`,
+          iconName: "group",
+          permission: "attendance:view",
+          activePattern: "/d/labour",
+        },
+        {
+          id: "attendance",
+          label: "Attendance",
+          href: `/c/${companyId}/d/attendance`,
+          iconName: "clock",
+          permission: "attendance:view",
+          activePattern: "/d/attendance",
+        },
+        {
+          id: "face-recognition",
+          label: "Face Recognition",
+          href: `/c/${companyId}/d/face-recognition`,
+          iconName: "qr_code",
+          permission: "attendance:view",
+          activePattern: "/d/face-recognition",
+        },
+        {
+          id: "equipment",
+          label: "Equipment",
+          href: `/c/${companyId}/d/equipment`,
+          iconName: "truck",
+          permission: "equipment:view",
+          activePattern: "/d/equipment",
+        },
+        {
+          id: "production",
+          label: "Production",
+          href: `/c/${companyId}/d/production`,
+          iconName: "bolt",
+          permission: "production:view",
+          activePattern: "/d/production",
+        },
+        {
+          id: "wastage",
+          label: "Wastage Control",
+          href: `/c/${companyId}/d/wastage`,
+          iconName: "warning",
+          activePattern: "/d/wastage",
+        },
+      ],
+    },
+    {
+      id: "procurement-materials",
+      label: "Procurement & Materials",
+      iconName: "trolley",
+      items: [
+        {
+          id: "procurement",
+          label: "Procurement",
+          href: `/c/${companyId}/d/procurement`,
+          iconName: "trolley",
+          permission: "procurement:view",
+          activePattern: "/d/procurement",
+        },
+        {
+          id: "three-way",
+          label: "Three-Way Match",
+          href: `/c/${companyId}/d/three-way`,
+          iconName: "check",
+          permission: "procurement:view",
+          activePattern: "/d/three-way",
+        },
+        {
+          id: "materials",
+          label: "Materials & Stock",
+          href: `/c/${companyId}/materials`,
+          iconName: "cube",
+          permission: "procurement:view",
+          activePattern: "/materials",
+        },
+        {
+          id: "subcon",
+          label: "Subcontractors",
+          href: `/c/${companyId}/d/subcon`,
+          iconName: "handshake",
+          permission: "subcontractor:view",
+          activePattern: "/d/subcon",
+        },
+        {
+          id: "cost-codes",
+          label: "Cost Codes",
+          href: `/c/${companyId}/cost-codes`,
+          iconName: "tag",
+          permission: "finance:view",
+          activePattern: "/cost-codes",
+        },
+      ],
+    },
+    {
+      id: "finance-billing",
+      label: "Finance & Billing",
+      iconName: "currency_rupee",
+      items: [
+        {
+          id: "finance",
+          label: "Finance",
+          href: `/c/${companyId}/d/finance`,
+          iconName: "ledger",
+          permission: "finance:view",
+          activePattern: "/d/finance",
+        },
+        {
+          id: "billing",
+          label: "Billing & Invoices",
+          href: `/c/${companyId}/d/billing`,
+          iconName: "currency_rupee",
+          permission: "billing:view",
+          activePattern: "/d/billing",
+        },
+        {
+          id: "payroll",
+          label: "Payroll",
+          href: `/c/${companyId}/d/payroll-attendance`,
+          iconName: "credit_card",
+          permission: "payroll:view",
+          activePattern: "/d/payroll-attendance",
+        },
+        {
+          id: "hr",
+          label: "HR & Staff",
+          href: `/c/${companyId}/d/hr`,
+          iconName: "group",
+          permission: "payroll:view",
+          activePattern: "/d/hr",
+        },
+        {
+          id: "budget",
+          label: "Budget",
+          href: `/c/${companyId}/d/budget`,
+          iconName: "bar_chart",
+          permission: "budgeting:view",
+          activePattern: "/d/budget",
+        },
+        {
+          id: "depreciation",
+          label: "Depreciation",
+          href: `/c/${companyId}/d/depreciation`,
+          iconName: "trending_down",
+          permission: "finance:view",
+          activePattern: "/d/depreciation",
+        },
+        {
+          id: "statutory",
+          label: "Statutory",
+          href: `/c/${companyId}/d/statutory`,
+          iconName: "shield",
+          permission: "payroll:view",
+          activePattern: "/d/statutory",
+        },
+      ],
+    },
+    {
+      id: "sales-crm",
+      label: "Sales & CRM",
+      iconName: "sparkles",
+      items: [
+        {
+          id: "crm",
+          label: "CRM & Leads",
+          href: `/c/${companyId}/d/crm`,
+          iconName: "sparkles",
+          permission: "crm:view",
+          activePattern: "/d/crm",
+        },
+      ],
+    },
+    {
+      id: "setup-workspace",
+      label: "Setup & Config",
+      iconName: "settings",
+      items: [
+        {
+          id: "library",
+          label: "Library",
+          href: `/c/${companyId}/d/library`,
+          iconName: "library",
+          permission: "library:view",
+          activePattern: "/d/library",
+        },
+        {
+          id: "custom-fields",
+          label: "Custom Fields",
+          href: `/c/${companyId}/d/custom-fields`,
+          iconName: "edit",
+          anyOf: ["settings:manage"],
+          activePattern: "/d/custom-fields",
+        },
+        {
+          id: "services",
+          label: "Services",
+          href: `/c/${companyId}/d/services`,
+          iconName: "tool",
+          permission: "production:view",
+          activePattern: "/d/services",
+        },
+        {
+          id: "settings",
+          label: "Settings",
+          href: `/c/${companyId}/settings`,
+          iconName: "settings",
+          anyOf: ["settings:manage", "team:manage"],
+          activePattern: "/settings",
+        },
+        {
+          id: "enterprise",
+          label: "Enterprise",
+          href: `/c/${companyId}/enterprise`,
+          iconName: "building",
+          activePattern: "/enterprise",
+        },
+        {
+          id: "delete-logs",
+          label: "Delete Logs",
+          href: `/c/${companyId}/d/delete-logs`,
+          iconName: "trash",
+          permission: "data:delete",
+          activePattern: "/d/delete-logs",
+        },
+        {
+          id: "help",
+          label: "Help & FAQ",
+          href: `/c/${companyId}/d/help`,
+          iconName: "help",
+          activePattern: "/d/help",
+        },
+      ],
+    },
+  ], [companyId]);
+
+  // Group accordion open/close state
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+    if (typeof window === "undefined") {
+      return { overview: true, projects: true };
+    }
+    try {
+      const stored = localStorage.getItem(GROUPS_STORAGE_KEY);
+      if (stored) return JSON.parse(stored);
+    } catch {}
+    return { overview: true, projects: true, "site-operations": true, "procurement-materials": true, "finance-billing": true, "sales-crm": true, "setup-workspace": true };
+  });
+
+  const toggleGroup = useCallback((groupId: string) => {
+    setOpenGroups((prev) => {
+      const next = { ...prev, [groupId]: !prev[groupId] };
+      try {
+        if (typeof window !== "undefined") {
+          localStorage.setItem(GROUPS_STORAGE_KEY, JSON.stringify(next));
+        }
+      } catch (e) {
+        console.warn("Failed to persist group state in localStorage", e);
+      }
+      return next;
+    });
+  }, []);
+
+  // Automatically expand group containing the active path
   useEffect(() => {
-    setMoreOpen(false);
-  }, [pathname]);
+    for (const group of domainGroups) {
+      for (const item of group.items) {
+        const isActive = item.activePattern
+          ? pathname.includes(item.activePattern)
+          : pathname === item.href;
+        if (isActive && !openGroups[group.id]) {
+          setOpenGroups((prev) => {
+            const next = { ...prev, [group.id]: true };
+            try {
+              if (typeof window !== "undefined") {
+                localStorage.setItem(GROUPS_STORAGE_KEY, JSON.stringify(next));
+              }
+            } catch {}
+            return next;
+          });
+        }
+      }
+    }
+  }, [pathname, domainGroups, openGroups]);
 
-  // Company name fetch (project context resolution now lives in ProjectContext).
+  // Company name fetch
   useEffect(() => {
     let isActive = true;
     const cachedName = typeof window !== "undefined" ? localStorage.getItem("company_name") : null;
@@ -44,9 +462,7 @@ export default function Sidebar() {
       return;
     }
 
-    if (!companyId) {
-      return;
-    }
+    if (!companyId) return;
 
     const load = async () => {
       try {
@@ -74,256 +490,13 @@ export default function Sidebar() {
     };
   }, [companyId]);
 
-  interface NavItem {
-    label: string;
-    href: string;
-    icon: React.ReactNode;
-    activePattern?: string;
-    action?: () => void;
-    // Permission key required to see this module (undefined = always visible).
-    // Gating is fail-open: hidden only once permissions are loaded AND withheld.
-    permission?: string;
-    // Alternative: visible if ANY of these permissions is held.
-    anyOf?: string[];
-  }
-
-  const navItems: NavItem[] = [
-    {
-      label: "Dashboard",
-      href: `/c/${companyId}/dashboard`,
-      permission: "dashboard:view",
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-        </svg>
-      ),
-    },
-    {
-      label: "Project Hub",
-      href: `/c/${companyId}/d/home`,
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-        </svg>
-      ),
-      activePattern: "/d/home",
-    },
-    {
-      label: "Report",
-      href: `/c/${companyId}/reports`,
-      permission: "reports:view",
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-      ),
-      activePattern: "/reports",
-    },
-    {
-      label: "Project",
-      href: `/c/${companyId}/projects`,
-      permission: "projects:view",
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-        </svg>
-      ),
-      activePattern: "/projects",
-    },
-    {
-      label: "Team Schedule",
-      href: `/c/${companyId}/d/team-action`,
-      permission: "planning:view",
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-      ),
-      activePattern: "/d/team-action",
-    },
-    {
-      label: "Finance",
-      href: `/c/${companyId}/d/finance`,
-      permission: "finance:view",
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
-      activePattern: "/finance",
-    },
-    {
-      label: "Payroll",
-      href: `/c/${companyId}/d/payroll-attendance`,
-      permission: "payroll:view",
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-        </svg>
-      ),
-      activePattern: "/payroll-attendance",
-    },
-    {
-      label: "CRM",
-      href: `/c/${companyId}/d/crm`,
-      permission: "crm:view",
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-        </svg>
-      ),
-      activePattern: "/crm",
-    },
-    {
-      label: "Library",
-      href: `/c/${companyId}/d/library`,
-      permission: "library:view",
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.168.477 4 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.168.477-4 1.253" />
-        </svg>
-      ),
-      activePattern: "/d/library",
-    },
-    {
-      label: "Services",
-      href: `/c/${companyId}/d/services`,
-      permission: "production:view",
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-        </svg>
-      ),
-      activePattern: "/d/services",
-    },
-    {
-      label: "Setting",
-      href: `/c/${companyId}/settings`,
-      anyOf: ["settings:manage", "team:manage"],
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
-      ),
-      activePattern: "/settings",
-    },
-    {
-      label: "Help",
-      href: `/c/${companyId}/d/help`,
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
-        </svg>
-      ),
-      activePattern: "/d/help",
-    },
-    {
-      label: "Delete Logs",
-      href: `/c/${companyId}/d/delete-logs`,
-      permission: "data:delete",
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-        </svg>
-      ),
-      activePattern: "/d/delete-logs",
-    },
-    {
-      label: "Enterprise",
-      href: `/c/${companyId}/enterprise`,
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1v1H9V7zm5 0h1v1h-1V7zm-5 4h1v1H9v-1zm5 0h1v1h-1v-1zm-5 4h1v1H9v-1zm5 0h1v1h-1v-1z" />
-        </svg>
-      ),
-      activePattern: "/enterprise",
-    },
-  ];
-
-  // Company modules that had no inbound link from primary navigation.
-  const moreNavItems: NavItem[] = [
-    {
-      label: "Analytics",
-      href: `/c/${companyId}/analytics`,
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M16 8v8m-4-5v5m-4-10v10M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z" />
-        </svg>
-      ),
-      activePattern: "/analytics",
-    },
-    {
-      label: "Budget",
-      href: `/c/${companyId}/d/budget`,
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 7h6m-6 4h6m-6 4h4m-7 6h12a2 2 0 002-2V5a2 2 0 00-2-2H6a2 2 0 00-2 2v14a2 2 0 002 2z" />
-        </svg>
-      ),
-      activePattern: "/d/budget",
-    },
-    {
-      label: "Custom Fields",
-      href: `/c/${companyId}/d/custom-fields`,
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
-      activePattern: "/d/custom-fields",
-    },
-    {
-      label: "Depreciation",
-      href: `/c/${companyId}/d/depreciation`,
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
-        </svg>
-      ),
-      activePattern: "/d/depreciation",
-    },
-    {
-      label: "Drawings",
-      href: `/c/${companyId}/d/drawings`,
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-        </svg>
-      ),
-      activePattern: "/d/drawings",
-    },
-    {
-      label: "Statutory",
-      href: `/c/${companyId}/d/statutory`,
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-        </svg>
-      ),
-      activePattern: "/d/statutory",
-    },
-    {
-      label: "Towers",
-      href: `/c/${companyId}/d/towers`,
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
-        </svg>
-      ),
-      activePattern: "/d/towers",
-    },
-    {
-      label: "Wastage",
-      href: `/c/${companyId}/d/wastage`,
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-        </svg>
-      ),
-      activePattern: "/d/wastage",
-    },
-  ];
+  // Filter items by user role permissions
+  const isItemVisible = useCallback((item: NavItem) => {
+    if (!item.permission && !item.anyOf) return true;
+    if (item.permission && can(item.permission)) return true;
+    if (item.anyOf && item.anyOf.some((p) => can(p))) return true;
+    return false;
+  }, [can]);
 
   return (
     <>
@@ -336,174 +509,237 @@ export default function Sidebar() {
         />
       )}
 
-      {/* Responsive Sidebar Container */}
+      {/* Responsive Collapsible Sidebar Container */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 border-r border-border-custom bg-sidebar flex flex-col justify-between h-full shrink-0 transition-transform duration-300 ${
-          mobileOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:static lg:translate-x-0 lg:flex`}
+        className={`fixed inset-y-0 left-0 z-50 border-r border-border-custom bg-sidebar flex flex-col justify-between h-full shrink-0 transition-all duration-300 ${
+          mobileOpen ? "translate-x-0 w-64" : "-translate-x-full"
+        } lg:static lg:translate-x-0 lg:flex ${
+          desktopCollapsed ? "lg:w-16" : "lg:w-64"
+        }`}
       >
-      <div className="flex flex-col overflow-y-auto flex-1">
-        {/* Header */}
-        <div className="p-5 flex items-center gap-3 border-b border-border-custom">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary font-bold text-white text-sm">
-            S
-          </div>
-          <div className="min-w-0 flex-1">
-            <CompanySwitcher currentCompanyId={companyId} fallbackName={companyName} />
-            <span className="text-[11px] text-muted uppercase tracking-wider font-medium">SiteFlow Workspace</span>
-          </div>
-        </div>
-
-        {/* Module Links */}
-        <nav className="p-3 space-y-1 flex-1">
-          {navItems
-            .filter((it) => (!it.permission || can(it.permission)) && (!it.anyOf || it.anyOf.some((p) => can(p))))
-            .map((item, idx) => {
-            const isActive = item.activePattern
-              ? pathname.includes(item.activePattern)
-              : pathname === item.href;
-
-            const content = (
-              <div
-                className={`flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-all cursor-pointer ${
-                  isActive
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-muted hover:text-foreground hover:bg-elevated"
-                }`}
-                onClick={item.action}
-              >
-                <span className="text-sm shrink-0">{item.icon}</span>
-                <span className="truncate">{item.label}</span>
-              </div>
-            );
-
-            const element = item.action ? (
-              <div key={idx}>{content}</div>
-            ) : (
-              <Link href={item.href} prefetch={true} key={idx} className="block">
-                {content}
-              </Link>
-            );
-
-            return (
-              <React.Fragment key={idx}>
-                {element}
-                {(idx === 2 || idx === 4 || idx === 7 || idx === 9) && (
-                  <hr className="my-1.5 border-border-custom/50" />
-                )}
-              </React.Fragment>
-            );
-          })}
-
-          {/* Collapsible group for modules with no other primary-nav entry */}
-          <div className="pt-1 mt-1 border-t border-border-custom/50">
-            <div
-              className={`flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-all cursor-pointer ${
-                moreOpen ? "text-foreground" : "text-muted hover:text-foreground hover:bg-elevated"
-              }`}
-              onClick={() => setMoreOpen((o) => !o)}
-            >
-              <span className="text-sm shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
-                </svg>
-              </span>
-              <span className="truncate">More Modules</span>
-              <span className="ml-auto text-[10px]">{moreOpen ? "▲" : "▼"}</span>
+        <div className="flex flex-col overflow-y-auto flex-1 min-h-0">
+          {/* Header */}
+          <div className="p-3.5 flex items-center gap-3 border-b border-border-custom shrink-0">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary font-bold text-white text-sm shadow-sm">
+              S
             </div>
-            {moreOpen &&
-              moreNavItems.map((item) => {
-                const isActive = item.activePattern
-                  ? pathname.includes(item.activePattern)
-                  : pathname === item.href;
+            {(!desktopCollapsed || mobileOpen) && (
+              <div className="min-w-0 flex-1 animate-fade-in">
+                <CompanySwitcher currentCompanyId={companyId} fallbackName={companyName} />
+                <span className="text-[10px] text-muted uppercase tracking-wider font-medium block truncate">
+                  SiteFlow ERP
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Navigation Accordion Sections */}
+          <nav className="p-2 space-y-3 flex-1 overflow-y-auto">
+            {domainGroups.map((group) => {
+              const visibleItems = group.items.filter(isItemVisible);
+              if (visibleItems.length === 0) return null;
+
+              const isGroupOpen = openGroups[group.id] !== false;
+              const hasActiveChild = visibleItems.some((it) =>
+                it.activePattern ? pathname.includes(it.activePattern) : pathname === it.href
+              );
+
+              // Collapsed Desktop State
+              if (desktopCollapsed && !mobileOpen) {
                 return (
-                  <Link href={item.href} prefetch={true} key={item.label} className="block">
-                    <div
-                      className={`flex items-center gap-3 pl-6 pr-3 py-2 text-sm rounded-md transition-all cursor-pointer ${
-                        isActive
-                          ? "bg-primary/10 text-primary font-medium"
+                  <div
+                    key={group.id}
+                    className="relative group/rail flex flex-col items-center py-1"
+                    onMouseEnter={() => setHoveredFlyout(group.id)}
+                    onMouseLeave={() => setHoveredFlyout(null)}
+                  >
+                    <button
+                      type="button"
+                      className={`h-10 w-10 flex items-center justify-center rounded-lg transition-all ${
+                        hasActiveChild
+                          ? "bg-primary text-white shadow-sm"
                           : "text-muted hover:text-foreground hover:bg-elevated"
                       }`}
+                      title={group.label}
                     >
-                      <span className="text-sm shrink-0">{item.icon}</span>
-                      <span className="truncate">{item.label}</span>
-                    </div>
-                  </Link>
+                      <Icon name={group.iconName} className="w-5 h-5" />
+                    </button>
+
+                    {/* Flyout Popover on Hover */}
+                    {hoveredFlyout === group.id && (
+                      <div className="absolute left-full top-0 ml-2 w-52 bg-card border border-border-custom rounded-lg shadow-xl py-2 z-50 animate-fade-in space-y-0.5">
+                        <div className="px-3 py-1.5 border-b border-border-custom mb-1 flex items-center justify-between">
+                          <span className="text-[11px] font-bold text-foreground uppercase tracking-wider">
+                            {group.label}
+                          </span>
+                        </div>
+                        {visibleItems.map((item) => {
+                          const isActive = item.activePattern
+                            ? pathname.includes(item.activePattern)
+                            : pathname === item.href;
+                          return (
+                            <Link
+                              key={item.id}
+                              href={item.href}
+                              prefetch={true}
+                              className={`flex items-center gap-2.5 px-3 py-1.5 text-xs rounded-md transition-all mx-1.5 ${
+                                isActive
+                                  ? "bg-primary/10 text-primary font-bold"
+                                  : "text-muted hover:text-foreground hover:bg-elevated font-medium"
+                              }`}
+                            >
+                              <Icon name={item.iconName} className="w-4 h-4 shrink-0" />
+                              <span className="truncate">{item.label}</span>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 );
-              })}
+              }
+
+              // Expanded Full Sidebar State
+              return (
+                <div key={group.id} className="space-y-1">
+                  {/* Group Header Button */}
+                  <button
+                    type="button"
+                    onClick={() => toggleGroup(group.id)}
+                    className={`w-full flex items-center justify-between px-2.5 py-1.5 text-[11px] font-bold tracking-wider uppercase rounded-md transition-all cursor-pointer ${
+                      hasActiveChild ? "text-primary" : "text-muted hover:text-foreground hover:bg-elevated/60"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 truncate">
+                      <Icon name={group.iconName} className="w-3.5 h-3.5 shrink-0 opacity-80" />
+                      <span className="truncate">{group.label}</span>
+                    </div>
+                    <span className="text-[9px] opacity-70 ml-1">
+                      {isGroupOpen ? "▼" : "▶"}
+                    </span>
+                  </button>
+
+                  {/* Group Items */}
+                  {isGroupOpen && (
+                    <div className="pl-2 space-y-0.5 animate-fade-in border-l border-border-custom/50 ml-3 my-0.5">
+                      {visibleItems.map((item) => {
+                        const isActive = item.activePattern
+                          ? pathname.includes(item.activePattern)
+                          : pathname === item.href;
+
+                        return (
+                          <Link
+                            key={item.id}
+                            href={item.href}
+                            prefetch={true}
+                            className={`flex items-center gap-2.5 px-2.5 py-1.5 text-xs rounded-md transition-all block ${
+                              isActive
+                                ? "bg-primary/10 text-primary font-semibold border-l-2 border-primary"
+                                : "text-muted hover:text-foreground hover:bg-elevated font-medium"
+                            }`}
+                          >
+                            <Icon name={item.iconName} className="w-3.5 h-3.5 shrink-0" />
+                            <span className="truncate">{item.label}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Sidebar Footer */}
+        <div className="p-2.5 border-t border-border-custom bg-background/30 shrink-0 space-y-2">
+          {(!desktopCollapsed || mobileOpen) && (
+            <>
+              {/* Pinned Projects Selector */}
+              <div>
+                <label className="block text-[9px] font-bold uppercase tracking-wider text-muted mb-1 px-1">
+                  Pinned Project
+                </label>
+                <select
+                  value={activeProjectId}
+                  onChange={(e) => setActiveProjectId(e.target.value)}
+                  className="w-full rounded-md border border-border-custom bg-card px-2 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary cursor-pointer truncate"
+                >
+                  {projects.length === 0 && (
+                    <option value={activeProjectId}>
+                      {projectContext.name && projectContext.name !== "Project Context"
+                        ? `${projectContext.name}${projectContext.code ? ` (${projectContext.code})` : ""}`
+                        : "Loading projects..."}
+                    </option>
+                  )}
+                  {projects.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.project_name || p.name}
+                      {p.project_code || p.code ? ` (${p.project_code || p.code})` : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Quick Access: MOM, To Do, Chat */}
+              <div className="grid grid-cols-3 gap-1">
+                <Link
+                  href={`/c/${companyId}/d/mom`}
+                  prefetch={true}
+                  className={`flex flex-col items-center justify-center py-1.5 border rounded-md text-[10px] font-medium transition-all ${
+                    pathname.includes("/d/mom")
+                      ? "bg-primary/15 border-primary text-primary"
+                      : "bg-card hover:bg-elevated border-border-custom text-muted hover:text-foreground"
+                  }`}
+                >
+                  <Icon name="note" className="w-4 h-4" />
+                  <span className="mt-0.5">MOM</span>
+                </Link>
+                <Link
+                  href={`/c/${companyId}/d/todo`}
+                  prefetch={true}
+                  className={`flex flex-col items-center justify-center py-1.5 border rounded-md text-[10px] font-medium transition-all ${
+                    pathname.includes("/d/todo")
+                      ? "bg-primary/15 border-primary text-primary"
+                      : "bg-card hover:bg-elevated border-border-custom text-muted hover:text-foreground"
+                  }`}
+                >
+                  <Icon name="check" className="w-4 h-4" />
+                  <span className="mt-0.5">To Do</span>
+                </Link>
+                <Link
+                  href={`/c/${companyId}/d/chat`}
+                  prefetch={true}
+                  className={`flex flex-col items-center justify-center py-1.5 border rounded-md text-[10px] font-medium transition-all ${
+                    pathname.includes("/d/chat")
+                      ? "bg-primary/15 border-primary text-primary"
+                      : "bg-card hover:bg-elevated border-border-custom text-muted hover:text-foreground"
+                  }`}
+                >
+                  <Icon name="chat_bubble" className="w-4 h-4" />
+                  <span className="mt-0.5">Chat</span>
+                </Link>
+              </div>
+            </>
+          )}
+
+          {/* Desktop Collapse / Expand Toggle Button */}
+          <div className="hidden lg:flex items-center justify-between pt-1">
+            <button
+              type="button"
+              onClick={toggleDesktopCollapsed}
+              className="w-full flex items-center justify-center gap-2 py-1.5 px-2 rounded-md text-xs font-semibold text-muted hover:text-foreground hover:bg-elevated border border-border-custom/50 transition-all cursor-pointer"
+              title={desktopCollapsed ? "Expand sidebar (Ctrl+B)" : "Collapse sidebar (Ctrl+B)"}
+            >
+              <Icon
+                name={desktopCollapsed ? "chevron_right" : "chevron_left"}
+                className="w-4 h-4 shrink-0"
+              />
+              {!desktopCollapsed && <span className="text-[11px]">Collapse Rail (Ctrl+B)</span>}
+            </button>
           </div>
-        </nav>
-      </div>
-
-      {/* Sidebar Footer: Pinned Projects dropdown + MOM, To Do, Chat */}
-      <div className="p-4 border-t border-border-custom bg-background/25">
-        {/* Pinned Projects */}
-        <div className="mb-4">
-          <label className="block text-[10px] font-bold uppercase tracking-wider text-muted mb-1.5">
-            Pinned Projects
-          </label>
-          <select
-            value={activeProjectId}
-            onChange={(e) => setActiveProjectId(e.target.value)}
-            className="w-full rounded-md border border-border-custom bg-card px-2.5 py-2 text-xs text-foreground focus:outline-none focus:border-primary cursor-pointer"
-          >
-            {projects.length === 0 && (
-              <option value={activeProjectId}>
-                {projectContext.name && projectContext.name !== "Project Context"
-                  ? `${projectContext.name}${projectContext.code ? ` (${projectContext.code})` : ""}`
-                  : "Loading projects..."}
-              </option>
-            )}
-            {projects.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.project_name || p.name}
-                {p.project_code || p.code ? ` (${p.project_code || p.code})` : ""}
-              </option>
-            ))}
-          </select>
         </div>
-
-        {/* MOM, To Do, Chat Grid */}
-        <div className="grid grid-cols-3 gap-1">
-          <Link
-            href={`/c/${companyId}/d/mom`}
-            prefetch={true}
-            className={`flex flex-col items-center justify-center py-2 border rounded-md text-[11px] font-medium transition-all ${
-              pathname.includes("/d/mom")
-                ? "bg-primary/15 border-primary text-primary"
-                : "bg-card hover:bg-elevated border-border-custom text-muted hover:text-foreground"
-            }`}
-          >
-            <Icon name="note" className="w-5 h-5" />
-            <span className="mt-0.5">MOM</span>
-          </Link>
-          <Link
-            href={`/c/${companyId}/d/todo`}
-            prefetch={true}
-            className={`flex flex-col items-center justify-center py-2 border rounded-md text-[11px] font-medium transition-all ${
-              pathname.includes("/d/todo")
-                ? "bg-primary/15 border-primary text-primary"
-                : "bg-card hover:bg-elevated border-border-custom text-muted hover:text-foreground"
-            }`}
-          >
-            <Icon name="check" className="w-5 h-5" />
-            <span className="mt-0.5">To Do</span>
-          </Link>
-          <Link
-            href={`/c/${companyId}/d/chat`}
-            prefetch={true}
-            className={`flex flex-col items-center justify-center py-2 border rounded-md text-[11px] font-medium transition-all ${
-              pathname.includes("/d/chat")
-                ? "bg-primary/15 border-primary text-primary"
-                : "bg-card hover:bg-elevated border-border-custom text-muted hover:text-foreground"
-            }`}
-          >
-            <Icon name="chat_bubble" className="w-5 h-5" />
-            <span className="mt-0.5">Chat</span>
-          </Link>
-        </div>
-      </div>
-    </aside>
+      </aside>
     </>
   );
 }
