@@ -143,8 +143,17 @@ def next_party_id_custom(db: Session, company_id: uuid.UUID) -> str:
 
 
 @router.get("/parties/{company_id}")
-def get_library_parties(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
-    return db.query(models.LibraryParty).filter(models.LibraryParty.company_id == company_id).all()
+def get_library_parties(
+    company_id: uuid.UUID,
+    party_type: Optional[str] = None,
+    db: Session = Depends(get_db),
+    _: None = Depends(verify_company_access),
+):
+    query = db.query(models.LibraryParty).filter(models.LibraryParty.company_id == company_id)
+    if party_type:
+        from sqlalchemy import func
+        query = query.filter(func.lower(models.LibraryParty.party_type) == party_type.strip().lower())
+    return query.all()
 
 @router.post("/parties")
 def create_library_party(payload: PartyCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):

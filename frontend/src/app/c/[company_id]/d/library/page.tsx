@@ -38,6 +38,7 @@ export default function LibraryHubPage() {
   const [activeTab, setActiveTab] = useState<LibraryType>(initialTab);
   const [libraryData, setLibraryData] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [partyTypeFilter, setPartyTypeFilter] = useState("");
   const [toastMessage, setToastMessage] = useState("");
 
   // Drawers
@@ -156,7 +157,11 @@ export default function LibraryHubPage() {
     if (!companyId || !accessToken) return;
     try {
       const endpoint = getEndpoint(activeTab);
-      const res = await fetch(`${apiHost}/apis/v3/library/${endpoint}/${companyId}`, {
+      let url = `${apiHost}/apis/v3/library/${endpoint}/${companyId}`;
+      if (activeTab === "party" && partyTypeFilter) {
+        url += `?party_type=${encodeURIComponent(partyTypeFilter)}`;
+      }
+      const res = await fetch(url, {
         headers: { "Authorization": `Bearer ${accessToken}` }
       });
       if (res.ok) {
@@ -170,7 +175,7 @@ export default function LibraryHubPage() {
 
   useEffect(() => {
     fetchLibraryData();
-  }, [activeTab, companyId, accessToken]);
+  }, [activeTab, companyId, accessToken, partyTypeFilter]);
 
   const handleDeleteItem = async (itemId: string) => {
     try {
@@ -467,15 +472,34 @@ export default function LibraryHubPage() {
           </button>
         </div>
 
-        {/* Search Filter */}
-        <div className="mb-6 shrink-0 max-w-md">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={activeTab === "todo" ? "Search To Do" : `Search ${activeTab.replace("-", " ")} items...`}
-            className="input-field px-4 py-2 text-xs font-semibold focus:outline-none placeholder-muted w-full"
-          />
+        {/* Search & Filter Toolbar */}
+        <div className="mb-6 shrink-0 flex items-center gap-3 flex-wrap">
+          <div className="max-w-md flex-1 min-w-[200px]">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={activeTab === "todo" ? "Search To Do" : `Search ${activeTab.replace("-", " ")} items...`}
+              className="input-field px-4 py-2 text-xs font-semibold focus:outline-none placeholder-muted w-full"
+            />
+          </div>
+          {activeTab === "party" && (
+            <select
+              value={partyTypeFilter}
+              onChange={(e) => setPartyTypeFilter(e.target.value)}
+              className="input-field px-3 py-2 text-xs font-semibold bg-input border border-border-custom text-foreground rounded-md focus:outline-none"
+              title="Filter by Party Type"
+            >
+              <option value="">All Party Types</option>
+              <option value="Supplier">Supplier</option>
+              <option value="Subcontractor">Subcontractor</option>
+              <option value="Client">Client</option>
+              <option value="Contractor">Contractor</option>
+              <option value="Material Supplier">Material Supplier</option>
+              <option value="Equipment Supplier">Equipment Supplier</option>
+              <option value="Labour Contractor">Labour Contractor</option>
+            </select>
+          )}
         </div>
 
         {/* Dynamic Tables Grid */}
