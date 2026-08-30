@@ -10,6 +10,7 @@ from app.database import get_db
 from app.auth import get_current_user, verify_project_access, get_company_membership, require_permission, require_module_view
 from app.models import DailyProgressReport, Task, WarehouseInventory, MaterialTransaction, Project, User
 from app.workflow_controls import enforce_entry_creation_window, enforce_entry_editing_window, enforce_stock_availability, get_company
+from app.inventory_reservation import release_reservation, rereserve_reservation
 from app.routers.delete_logs import log_deletion
 from pydantic import BaseModel, Field
 from app.csv_export import csv_safe_cell as _csv_safe_cell, CSV_FORMULA_PREFIXES as _CSV_FORMULA_PREFIXES
@@ -147,11 +148,8 @@ def create_dpr(req: DPRCreateRequest, db: Session = Depends(get_db), current_use
             WarehouseInventory.material_name == mat.material_name
         ).first()
 
-        released_qty = 0.0
         if inv:
             inv.on_hand_qty = float(inv.on_hand_qty) - mat.quantity
-            released_qty = min(float(inv.reserved_qty), float(mat.quantity))
-            inv.reserved_qty = max(0.0, float(inv.reserved_qty) - released_qty)
             db.add(inv)
         else:
             # Create a warehouse row even if it has negative balance (allow workflow flexibility)
@@ -164,6 +162,8 @@ def create_dpr(req: DPRCreateRequest, db: Session = Depends(get_db), current_use
                 unit=mat.unit
             )
             db.add(new_inv)
+
+        released_qty = release_reservation(db, project_uuid, mat.material_name, mat.quantity)
 
         # Log to material transactions ledger
         txn = MaterialTransaction(
@@ -370,12 +370,9 @@ def delete_dpr(dpr_id: uuid.UUID, db: Session = Depends(get_db), current_user: U
                     ).first()
                     if inv:
                         inv.on_hand_qty = float(inv.on_hand_qty) + qty
-                        if reserved_released > 0:
-                            inv.reserved_qty = min(
-                                float(inv.on_hand_qty),
-                                float(inv.reserved_qty) + reserved_released
-                            )
                         db.add(inv)
+                    if reserved_released > 0:
+                        rereserve_reservation(db, dpr.project_id, name, reserved_released)
     db.query(MaterialTransaction).filter(MaterialTransaction.source_ref_id == dpr.id).delete()
 
     log_deletion(

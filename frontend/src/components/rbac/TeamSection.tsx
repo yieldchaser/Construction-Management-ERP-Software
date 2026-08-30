@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import { getApi, authHeaders } from "@/lib/siteflow";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 interface TeamMember {
   id: string;
@@ -125,9 +126,14 @@ export default function TeamSection({ companyId }: Props) {
       )}
 
       {members.length === 0 ? (
-        <div className="col-span-full text-center p-8 border border-dashed border-border-custom rounded-md text-muted text-xs">
-          No team members found.
-        </div>
+        <EmptyState
+          title="No team members found"
+          description="Invite staff and partners to your workspace and assign granular module roles."
+          action={{
+            label: "+ Add Team Member",
+            href: `/c/${companyId}/d/hr`,
+          }}
+        />
       ) : (
         <div className="overflow-hidden rounded-lg border border-border-custom">
           <table className="w-full text-xs">

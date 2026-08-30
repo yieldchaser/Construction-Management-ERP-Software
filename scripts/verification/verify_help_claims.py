@@ -303,6 +303,18 @@ def verify():
         
     violations = validate_entries(entries, real_routes)
     
+    total_ep_citations = sum(
+        sum(1 for s in e["sources"] if re.match(r'^(GET|POST|PUT|DELETE|PATCH)\s+\S+$', s, re.IGNORECASE))
+        for e in entries
+    )
+    total_file_citations = sum(
+        sum(1 for s in e["sources"] if re.match(r'^[^:]+:\d+$', s))
+        for e in entries
+    )
+    total_labels = sum(len(e.get("labels", [])) for e in entries)
+    
+    print(f"[coverage] Verified totals: {len(entries)} entries, {total_ep_citations} endpoint citations, {total_file_citations} file:line citations, {total_labels} UI labels")
+
     if violations:
         print(f"\n[FAIL] {len(violations)} verification violation(s) found:", file=sys.stderr)
         for v in violations:

@@ -142,12 +142,14 @@ def enforce_stock_availability(
         WarehouseInventory.project_id == project_id,
         WarehouseInventory.material_name == material_name,
     ).first()
-    available = float(inv.on_hand_qty) if inv else 0.0
+    on_hand = float(inv.on_hand_qty) if inv else 0.0
+    reserved = float(inv.reserved_qty) if inv else 0.0
+    available = max(0.0, on_hand - reserved)
     if qty > available:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=(
                 f"{restriction_label}: insufficient stock for '{material_name}' "
-                f"(available {available}, requested {qty})."
+                f"(on hand {on_hand:.1f}, reserved {reserved:.1f}, available {available:.1f}, requested {qty:.1f})."
             ),
         )

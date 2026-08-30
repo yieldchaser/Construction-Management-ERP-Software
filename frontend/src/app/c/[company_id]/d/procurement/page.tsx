@@ -352,6 +352,29 @@ export default function ProcurementPage() {
     }
   };
 
+  // Cancel Indent
+  const handleCancelIndent = async (id: string) => {
+    if (!confirm("Are you sure you want to cancel this indent? Any reserved stock held for this indent will be released.")) {
+      return;
+    }
+    try {
+      const apiHost = getApiHost();
+      const res = await fetch(`${apiHost}/apis/v3/procurement/indents/${id}/cancel`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(`Cancellation failed: ${typeof err.detail === "string" ? err.detail : `HTTP ${res.status}`}`);
+        return;
+      }
+      fetchProcurementData();
+    } catch (err) {
+      console.error("Indent cancel error:", err);
+      alert("Cancellation failed. Check your connection.");
+    }
+  };
+
   // Add Purchase Order Submission (Multi-item support)
   const handleCreatePO = async () => {
     let gross = 0;
@@ -657,7 +680,7 @@ export default function ProcurementPage() {
                               <span className="text-muted font-sans font-bold">{item.qty} {item.unit}</span>
                               {stock && (
                                 <span className="text-[10px] bg-elevated px-2 py-0.5 rounded text-muted font-sans">
-                                  avail: <span className="font-bold text-foreground">{stock.onHand}</span>
+                                  avail: <span className="font-bold text-foreground">{Math.max(0, stock.onHand - stock.reserved)}</span>
                                 </span>
                               )}
                             </div>
@@ -672,6 +695,11 @@ export default function ProcurementPage() {
                         <div className="flex gap-2">
                           <button onClick={() => handleApproveIndent(ind.id)} className="px-3 py-1 bg-success/10 text-success border border-success/20 rounded font-bold hover:bg-success/20">Approve</button>
                           <button onClick={() => handleRejectIndent(ind.id)} className="px-3 py-1 bg-danger/10 text-danger border border-danger/20 rounded font-bold hover:bg-danger/20">Reject</button>
+                        </div>
+                      )}
+                      {(ind.status === "approved" || ind.status === "ordered") && (
+                        <div className="flex gap-2">
+                          <button onClick={() => handleCancelIndent(ind.id)} className="px-3 py-1 bg-danger/10 text-danger border border-danger/20 rounded font-bold hover:bg-danger/20">Cancel Indent</button>
                         </div>
                       )}
                     </div>
@@ -814,7 +842,7 @@ export default function ProcurementPage() {
                         </td>
                         <td className="px-5 py-3 text-muted font-sans">{inv.reserved} {inv.unit}</td>
                         <td className="px-5 py-3 text-foreground font-sans font-semibold">
-                          {(inv.onHand - inv.reserved).toFixed(2)} {inv.unit}
+                          {Math.max(0, inv.onHand - inv.reserved).toFixed(2)} {inv.unit}
                         </td>
                         <td className="px-5 py-3 text-muted font-sans">{inv.minAlertThreshold} {inv.unit}</td>
                         <td className="px-5 py-3">

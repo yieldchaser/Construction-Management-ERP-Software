@@ -698,7 +698,16 @@ export default function LibraryHubPage() {
               <tbody className="divide-y divide-border-custom">
                 {filteredData.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center text-muted font-semibold">No materials registered.</td>
+                    <td colSpan={8} className="p-8">
+                      <EmptyState
+                        title="No materials registered"
+                        description="Add standard materials with units, categories, and HSN codes to your central library."
+                        action={{
+                          label: "+ Add Material",
+                          onClick: () => setIsMaterialDrawerOpen(true),
+                        }}
+                      />
+                    </td>
                   </tr>
                 ) : (
                   filteredData.map((item) => (

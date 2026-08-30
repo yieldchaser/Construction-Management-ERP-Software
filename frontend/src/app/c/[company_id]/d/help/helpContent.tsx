@@ -56,7 +56,7 @@ export const HELP_MODULE_LINKS = (companyId: string): ModuleLink[] => {
     { label: "Reports", href: p("/reports") },
     { label: "Settings", href: p("/settings") },
   ];
-}
+};
 
 function c(companyId: string, path: string): string {
   return `/c/${companyId}${path.startsWith("/") ? path : `/${path}`}`;
@@ -75,23 +75,23 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           a: (
             <>
               <p>
-                Preconditions: Sign up with a verified phone number or email.
+                Sign up with a verified phone number or email address to get started.
               </p>
               <p className="mt-2">
-                Navigation: When you sign in without an active company, you are directed to the onboarding screen at{" "}
+                When you sign in without an active company, you will be directed to the onboarding screen at{" "}
                 <Link className="help-link" href="/onboarding">
                   /onboarding
                 </Link>
                 .
               </p>
               <p className="mt-2">
-                Required fields: Company Name, Phone, City, and Segment (Builder, Contractor, or Project Management). Optional fields: Legal Entity Name, GSTIN, Billing Address, and Logo.
+                Enter your company name, phone, city, and segment (such as builder, contractor, or project management), with optional legal entity details, GSTIN, billing address, and logo.
               </p>
               <p className="mt-2">
-                Save result: Submitting calls <code>POST /apis/v3/auth/onboarding/create-company</code>, creates the company record in the companies table, and assigns your account the Owner role.
+                Saving creates your company workspace and assigns your account as the owner.
               </p>
               <p className="mt-2">
-                Next step: Create your first construction project from the Projects directory.
+                From there you can create your first construction project from the projects directory.
               </p>
             </>
           ),
@@ -106,23 +106,23 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           a: (
             <>
               <p>
-                Preconditions: You must hold the projects:manage or Owner role in the company.
+                You will need permission to manage projects or hold the owner role in your company.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, select{" "}
+                Open the sidebar, select{" "}
                 <Link className="help-link" href={c(companyId, "/projects")}>
                   "Projects"
                 </Link>
                 , and click the "+ Create Project" button in the header.
               </p>
               <p className="mt-2">
-                Required fields: Project Name, Project Code, State (for GST place of supply), and Location (latitude,longitude coordinates). Optional fields: Client Name, Address, City, Planned Start Date, Planned End Date, and Estimated Value.
+                Enter the project name, project code, state for GST place of supply, and map coordinates, along with optional client details, address, dates, and estimated value.
               </p>
               <p className="mt-2">
-                Save result: Submitting calls <code>POST /apis/v3/projects/</code>, inserts the record in the projects table, and sets up the project workspace.
+                Saving creates the new project workspace immediately.
               </p>
               <p className="mt-2">
-                Next step: Switch your active workspace project in the top bar to begin scheduling tasks and uploading drawings.
+                Switch your active project in the top navigation bar to begin scheduling tasks and uploading drawings.
               </p>
             </>
           ),
@@ -138,23 +138,23 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           a: (
             <>
               <p>
-                Preconditions: You must hold the team:manage permission or the Owner role.
+                You will need permission to manage team members or hold the owner role.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, navigate to "Setup & Config", select{" "}
+                Open the sidebar, navigate to "Setup & Config", select{" "}
                 <Link className="help-link" href={c(companyId, "/settings")}>
                   "Settings"
                 </Link>
                 , and choose the "Team" tab.
               </p>
               <p className="mt-2">
-                Required fields: Full Name, Mobile Number or Email, and Assigned Role. Optional fields: Designation and Project Assignments.
+                Provide the member's full name, mobile number or email address, and their assigned role, with optional designation and project assignments.
               </p>
               <p className="mt-2">
-                Save result: Submitting calls <code>POST /apis/v3/auth/team/invite</code>, creates a membership record in company_team, and dispatches an invitation link.
+                Saving sends an invitation link and adds the member to your workspace roster.
               </p>
               <p className="mt-2">
-                Next step: The invited member signs in to access assigned projects under their granted permission scope.
+                The invited member can sign in immediately to access assigned projects under their permissions.
               </p>
             </>
           ),
@@ -170,23 +170,23 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           a: (
             <>
               <p>
-                Preconditions: Owner or settings:manage role required to configure role definitions.
+                You will need permission to manage settings or hold the owner role to configure custom roles.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, navigate to "Setup & Config", select{" "}
+                Open the sidebar, navigate to "Setup & Config", select{" "}
                 <Link className="help-link" href={c(companyId, "/settings")}>
                   "Settings"
                 </Link>
                 , and choose the "Roles & Access" tab.
               </p>
               <p className="mt-2">
-                Required fields: Role Name. Optional fields: Description and Granular Permission Checkboxes across modules.
+                Enter a role name, description, and select the specific module permissions you want to grant or restrict.
               </p>
               <p className="mt-2">
-                Save result: Submitting calls <code>POST /apis/v3/settings/roles/{"{companyId}"}</code>, storing the role policy. Permission updates apply fail-closed enforcement across all API routes.
+                Saving updates the permission policy and applies access controls across all features immediately.
               </p>
               <p className="mt-2">
-                Next step: Assign the configured role to team members under the Team tab.
+                Assign your configured roles to teammates from the "Team" tab.
               </p>
             </>
           ),
@@ -210,23 +210,23 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           a: (
             <>
               <p>
-                Preconditions: You must have an active project selected and hold the budgeting:edit permission.
+                You will need an active project selected and permission to edit budgets.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, select{" "}
+                Open the sidebar, select{" "}
                 <Link className="help-link" href={c(companyId, "/d/budget")}>
                   "Budget"
                 </Link>
                 , and click the "↑ Import Excel" button.
               </p>
               <p className="mt-2">
-                Required fields: An Excel spreadsheet (.xlsx or .xlsm) with columns: Description/Item Name, Qty, Unit, and Rate (or Supply Rate and Installation Rate). Optional fields: Section Name and Cost Code.
+                Provide an Excel spreadsheet with columns for item description, quantity, unit, and rate (or supply and installation rates), along with optional section names and cost codes.
               </p>
               <p className="mt-2">
-                Save result: Uploading calls <code>POST /apis/v3/budgeting/boq/import</code>, parses all rows, validates cost code codes against your library, and creates line items in boq_items.
+                Uploading parses each row, checks cost codes against your library, and creates your bill of quantities line items.
               </p>
               <p className="mt-2">
-                Next step: Link BOQ items to tasks in the Planning Gantt chart or track physical execution against them.
+                From there you can link items directly to tasks in the Gantt chart or track execution progress against them.
               </p>
             </>
           ),
@@ -242,23 +242,23 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           a: (
             <>
               <p>
-                Preconditions: Active project selected; finance:edit or budgeting:edit permission.
+                You will need an active project selected and permission to edit finance or budgets.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, select{" "}
+                Open the sidebar, select{" "}
                 <Link className="help-link" href={c(companyId, "/d/budget")}>
                   "Budget"
                 </Link>
                 , and click the "+ Set Budget" button.
               </p>
               <p className="mt-2">
-                Required fields: Project ID. Optional category budgets: Material Budget, Labour Budget, Subcontractor Budget, and Equipment Budget.
+                Choose the project and set budget limits across major expense heads like materials, labour, subcontractors, and equipment.
               </p>
               <p className="mt-2">
-                Save result: Submitting calls <code>POST /apis/v3/budgeting/allocation</code>, saving head allocations to the project_budgets table.
+                Saving stores your head allocations and sets the cost baseline for the project.
               </p>
               <p className="mt-2">
-                Next step: Track real-time committed versus actual variance on the Analytics and Cost Code Expense Analysis reports.
+                From there you can track committed costs versus actual spending variance across analytical reports.
               </p>
             </>
           ),
@@ -274,23 +274,23 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           a: (
             <>
               <p>
-                Preconditions: Active project selected and planning:view permission.
+                You will need an active project selected and permission to view planning.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, navigate to "Projects & Planning", and select{" "}
+                Open the sidebar, navigate to "Projects & Planning", and select{" "}
                 <Link className="help-link" href={c(companyId, "/d/planning")}>
                   "Planning"
                 </Link>
                 . Choose the "WBS Tasks" tab.
               </p>
               <p className="mt-2">
-                Required fields: Task Name, Start Date, and Duration (in days). Optional fields: Parent Task (for WBS hierarchy), Priority, Assigned To user, and BOQ Item link.
+                Enter the task name, start date, and duration in days, with optional parent tasks for hierarchy, priority, assigned teammate, and linked BOQ items.
               </p>
               <p className="mt-2">
-                Save result: Clicking "Save WBS Task" calls <code>POST /apis/v3/planning/tasks</code>, inserting the schedule task and rendering its interactive bar on the Gantt timeline.
+                Clicking "Save WBS Task" adds the task to your schedule and displays its interactive bar on the Gantt timeline.
               </p>
               <p className="mt-2">
-                Next step: Link dependencies between tasks to automatically compute the Critical Path (CPM) and total float.
+                Link dependencies between tasks to automatically calculate your critical path and schedule float.
               </p>
             </>
           ),
@@ -306,23 +306,23 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           a: (
             <>
               <p>
-                Preconditions: Planning schedule exists for the selected project.
+                You will need a planning schedule set up for your selected project.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, select{" "}
+                Open the sidebar, select{" "}
                 <Link className="help-link" href={c(companyId, "/d/planning")}>
                   "Planning"
                 </Link>
                 , and choose the "Milestones", "Baseline", or "14-Day Lookahead" tab.
               </p>
               <p className="mt-2">
-                Required fields: Milestone Name, Date, and Type (start, inspection, critical, payment, or handover).
+                Enter the milestone name, target date, and type (such as start, inspection, critical, payment, or handover).
               </p>
               <p className="mt-2">
-                Save result: Adding a milestone and clicking "Save Milestone" calls <code>POST /apis/v3/planning/milestones</code>. Setting a baseline snapshots current planned start and end dates for slippage tracking.
+                Clicking "Save Milestone" records key dates, while setting a baseline creates a frozen snapshot of your schedule to track project slippage.
               </p>
               <p className="mt-2">
-                Next step: Use the 3-week Lookahead view for site supervisor weekly execution commitments.
+                Use the lookahead view to review short-term execution commitments with site supervisors.
               </p>
             </>
           ),
@@ -338,23 +338,23 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           a: (
             <>
               <p>
-                Preconditions: Active project selected. Entry date must fall within the company back-dated entry limit.
+                You will need an active project selected, and the entry date must fall within your company's allowed back-dating window.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, navigate to "Site Operations", and select{" "}
+                Open the sidebar, navigate to "Site Operations", and select{" "}
                 <Link className="help-link" href={c(companyId, "/d/dpr")}>
                   "DPR"
                 </Link>
                 . Click "+ Create DPR".
               </p>
               <p className="mt-2">
-                Required fields: Report Date (dpr_date) and Executed Quantity (executed_qty). Optional fields: Associated Task, Weather condition, Workers Deployed, Materials Consumed array, Site Photos, Notes, and Issues.
+                Enter the report date and executed quantity, with optional task links, weather conditions, worker counts, consumed materials, site photos, and notes.
               </p>
               <p className="mt-2">
-                Save result: Submitting calls <code>POST /apis/v3/dpr</code>, saving the progress entry to the daily_progress_reports table and updating cumulative progress metrics.
+                Saving records the daily log, updates cumulative project progress, and draws down warehouse stock for materials consumed.
               </p>
               <p className="mt-2">
-                Next step: Review daily site logs on the DPR Today dashboard summary or export safe CSV logs for client reporting.
+                Review daily site logs on the dashboard summary or export clean CSV reports for your client.
               </p>
             </>
           ),
@@ -378,23 +378,23 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           a: (
             <>
               <p>
-                Preconditions: Active vendor in Library, approved items, and procurement:view permission.
+                You will need active vendors in your library and permission to view procurement.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, navigate to "Procurement & Materials", and select{" "}
+                Open the sidebar, navigate to "Procurement & Materials", and select{" "}
                 <Link className="help-link" href={c(companyId, "/d/three-way")}>
                   "Three-Way Match"
                 </Link>
                 .
               </p>
               <p className="mt-2">
-                Workflow chain: Site raises Indent -&gt; Manager approves -&gt; Purchasing issues PO -&gt; Vendor delivers -&gt; Site creates GRN -&gt; Accounting enters Bill -&gt; Three-Way Match compares PO rate, GRN accepted quantity, and Bill invoiced total.
+                The lifecycle flows from site indent to approved PO, goods receipt at site, and vendor bill entry, where three-way match reconciles ordered rates, accepted quantities, and invoiced totals.
               </p>
               <p className="mt-2">
-                Save result: Fetching views calls <code>GET /apis/v3/three-way/pos/{"{companyId}"}</code>, highlighting discrepancies in red when quantity or price exceed set tolerance thresholds.
+                Loading the comparison highlights discrepancies in red whenever quantities or prices exceed your configured tolerance thresholds.
               </p>
               <p className="mt-2">
-                Next step: Approve matched bills for payment processing or raise debit notes for quantity shortfalls.
+                Approve fully matched bills for payment release, or raise debit notes for material shortfalls.
               </p>
             </>
           ),
@@ -410,23 +410,23 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           a: (
             <>
               <p>
-                Preconditions: The supplier must exist as a Vendor in the Library.
+                The supplier must be registered as a vendor in your library first.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, navigate to "Procurement & Materials", select{" "}
+                Open the sidebar, navigate to "Procurement & Materials", select{" "}
                 <Link className="help-link" href={c(companyId, "/d/procurement")}>
                   "Procurement"
                 </Link>
                 , choose the "Purchase Orders" tab, and click "+ Purchase Order".
               </p>
               <p className="mt-2">
-                Required fields: Vendor, PO Number, PO Date, and at least one Line Item (Material Name, Quantity, Rate, Unit). Optional fields: GST Rate %, Delivery Address, Payment Terms, and Remarks.
+                Select the vendor, enter the PO number and date, and add line items with quantities, units, and unit rates, along with optional GST rates, delivery address, payment terms, and remarks.
               </p>
               <p className="mt-2">
-                Save result: Submitting calls <code>POST /apis/v3/procurement/pos</code>, creating the order in Pending status. Approving it via the Approve button calls <code>POST /apis/v3/procurement/pos/{"{po_id}"}/approve</code> to unlock goods receipt.
+                Saving creates the order in pending status, and clicking the approve action authorizes the order for delivery.
               </p>
               <p className="mt-2">
-                Next step: Receive delivered consignments under the GRN tab against this approved PO.
+                From there you can receive delivered consignments against this approved order under the GRN tab.
               </p>
             </>
           ),
@@ -443,23 +443,23 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           a: (
             <>
               <p>
-                Preconditions: Vendors registered in the Library with contact emails/phones.
+                You will need suppliers registered in your library with email addresses or phone numbers.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, select{" "}
+                Open the sidebar, select{" "}
                 <Link className="help-link" href={c(companyId, "/d/procurement")}>
                   "Procurement"
                 </Link>
                 , open RFQ Management, and click "+ Create RFQ".
               </p>
               <p className="mt-2">
-                Required fields: RFQ Title, Due Date, Selected Vendors, and Line Items with requested quantities and specifications.
+                Enter the RFQ title, due date, participating vendors, and material line items with required quantities and specifications.
               </p>
               <p className="mt-2">
-                Save result: Submitting calls <code>POST /apis/v3/procurement/rfq</code>, creating the RFQ package and generating comparative quotation entry sheets.
+                Saving publishes the package and creates comparative bid entry sheets.
               </p>
               <p className="mt-2">
-                Next step: Record vendor bid responses to generate a side-by-side Commercial Evaluation and convert the winning bid into a Purchase Order.
+                Record supplier price responses to view a side-by-side commercial comparison and convert the winning bid into a purchase order.
               </p>
             </>
           ),
@@ -475,23 +475,23 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           a: (
             <>
               <p>
-                Preconditions: Warehouse locations created under project setup.
+                You will need warehouse locations and materials set up for your project.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, navigate to "Procurement & Materials", and select{" "}
+                Open the sidebar, navigate to "Procurement & Materials", and select{" "}
                 <Link className="help-link" href={c(companyId, "/materials")}>
                   "Materials & Stock"
                 </Link>
                 .
               </p>
               <p className="mt-2">
-                Required fields: Material, Source Warehouse/Project, Destination, and Quantity.
+                Select the material, source warehouse or project, destination, and transfer quantity.
               </p>
               <p className="mt-2">
-                Save result: Posting an issue, receipt, or transfer calls <code>POST /apis/v3/procurement/transactions</code>, adjusting stock balances in warehouse_inventories with negative-stock lock protection.
+                Posting a movement records the stock transaction and updates available and on-hand balances with negative stock protection.
               </p>
               <p className="mt-2">
-                Next step: Monitor minimum reorder thresholds and material consumption against DPR estimates.
+                Track minimum reorder alerts and compare ongoing consumption against project estimates.
               </p>
             </>
           ),
@@ -515,23 +515,23 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           a: (
             <>
               <p>
-                Preconditions: Active project selected; vendor registered in Library.
+                You will need an active project selected and the vendor registered in your library.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, navigate to "Finance & Billing", select{" "}
+                Open the sidebar, navigate to "Finance & Billing", select{" "}
                 <Link className="help-link" href={c(companyId, "/d/billing")}>
                   "Billing & Invoices"
                 </Link>
                 , and click "+ Submit RA Bill".
               </p>
               <p className="mt-2">
-                Required fields: Vendor (party_company_user_id), Invoice Number, Invoice Date, Invoice Type ("material" or "subcon"), and Subtotal. Optional fields: GST %, Deductions (TDS, Retention), and Pre-tax deduction flag.
+                Select the vendor, enter the invoice number, invoice date, type ("material" or "subcon"), and the subtotal amount, with optional GST rates, deduction amounts (TDS and retention), and pre-tax deduction options.
               </p>
               <p className="mt-2">
-                Save result: Submitting calls <code>POST /apis/v3/billing/bills</code>, creating the invoice in Pending status and calculating statutory deductions.
+                Saving creates the bill in pending status and calculates statutory deductions automatically.
               </p>
               <p className="mt-2">
-                Next step: Perform Three-Way Match against PO and GRN before approving the bill for payout.
+                From there you can perform three-way matching against purchase orders and goods receipts before approving for payment.
               </p>
             </>
           ),
@@ -547,23 +547,23 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           a: (
             <>
               <p>
-                Preconditions: Subcontractor party registered; work order contract created.
+                You will need the subcontractor registered in your library with an active work order agreement.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, navigate to "Finance & Billing", select{" "}
+                Open the sidebar, navigate to "Finance & Billing", select{" "}
                 <Link className="help-link" href={c(companyId, "/d/billing")}>
                   "Billing & Invoices"
                 </Link>
                 , and choose the "RA Bills (Subcon)" tab. Click "+ Submit RA Bill".
               </p>
               <p className="mt-2">
-                Required fields: Subcontractor, Invoice Number, Invoice Date, Gross Certified Amount (Subtotal), and GST %. Deductions configured: Retention % (e.g., 5%) and TDS Section (e.g., 1% or 2%).
+                Choose the subcontractor, enter the invoice number, date, gross certified amount, and GST rate, with configured retention percentage and TDS tax section.
               </p>
               <p className="mt-2">
-                Save result: Submitting calls <code>POST /apis/v3/billing/bills</code> with invoice_type "subcon". Retention and TDS are computed on the GST-exclusive base per sequential policy.
+                Saving with invoice type "subcon" calculates retention and TDS on the pre-tax base according to statutory rules.
               </p>
               <p className="mt-2">
-                Next step: Track retained balances in the Retention Ledger for release upon defect liability completion.
+                Track retained balances in the retention register for release upon completion of the defect liability period.
               </p>
             </>
           ),
@@ -579,23 +579,23 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           a: (
             <>
               <p>
-                Preconditions: Company Bank or Cash Account created; finance:edit permission.
+                You will need a bank or cash account set up first, and permission to edit finance.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, select{" "}
+                Open the sidebar, select{" "}
                 <Link className="help-link" href={c(companyId, "/d/finance")}>
                   "Finance"
                 </Link>
                 , choose the "Payment Requests" tab, and click "+ Create Payment Request".
               </p>
               <p className="mt-2">
-                Required fields: Party, Payment Type ("in" for customer receipts, "out" for vendor payouts), Amount, Payment Method (Bank Transfer, Cheque, UPI, Cash), and Payment Date.
+                Fill in the party, whether the payment is "in" for client receipts or "out" for vendor payouts, the amount, the payment method (Bank Transfer, Cheque, UPI, or Cash), and the payment date.
               </p>
               <p className="mt-2">
-                Save result: Submitting calls <code>POST /apis/v3/finance/payments</code>, recording the transaction in financial_transactions and adjusting account balances.
+                Saving records the transaction against that party and updates the account balance.
               </p>
               <p className="mt-2">
-                Next step: Link the payment to open vendor bills or view updated party statement balances.
+                From there you can link the payout to open vendor bills or review updated party statement balances.
               </p>
             </>
           ),
@@ -611,23 +611,23 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           a: (
             <>
               <p>
-                Preconditions: Company staff users assigned petty cash limits.
+                You will need team members assigned site cash handling limits.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, select{" "}
+                Open the sidebar, select{" "}
                 <Link className="help-link" href={c(companyId, "/d/finance")}>
                   "Finance"
                 </Link>
                 , and choose the "Cashbook" tab.
               </p>
               <p className="mt-2">
-                Features: Peer-to-peer (P2P) transfers between team members, petty cash expenses, receipt uploads, and daily site cash reconciliation.
+                Use the cashbook for peer-to-peer transfers between team members, petty cash expenses, receipt image uploads, and daily site cash reconciliations.
               </p>
               <p className="mt-2">
-                Save result: Submitting a peer transfer calls <code>POST /apis/v3/finance/cashbook/p2p</code>, debiting the sender user wallet and crediting the recipient wallet.
+                Submitting a transfer debits the sender's wallet balance and credits the recipient immediately.
               </p>
               <p className="mt-2">
-                Next step: Settle site expenses against approved expense vouchers.
+                Settle site expenses against approved expense vouchers and maintain daily cash tallies.
               </p>
             </>
           ),
@@ -643,26 +643,26 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           a: (
             <>
               <p>
-                Preconditions: Owner role or settings:manage permission.
+                You will need permission to manage settings or hold the owner role.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, navigate to "Setup & Config", select{" "}
+                Open the sidebar, navigate to "Setup & Config", select{" "}
                 <Link className="help-link" href={c(companyId, "/settings")}>
                   "Settings"
                 </Link>
                 , and choose the "Multi Level Approval" tab. Click "Publish Rule Block".
               </p>
               <p className="mt-2">
-                Required fields: Module (PO, Bill, Indent, Payment), Minimum Amount Threshold, and Approver Role sequence (Level 1, Level 2, Level 3).
+                Select the module (such as purchase orders, bills, indents, or payments), set the minimum amount threshold, and arrange the approval role sequence from Level 1 upwards.
               </p>
               <p className="mt-2">
-                Save result: Submitting calls <code>POST /apis/v3/settings/approval-rules/{"{companyId}"}</code>, storing the rule block for amount-range routing.
+                Saving publishes the approval hierarchy for amount-based routing.
               </p>
               <p className="mt-2">
                 Note: The approval rules defined here are not applied to transactions that fall outside the configured threshold.
               </p>
               <p className="mt-2">
-                Next step: Documents trigger approval alerts to authorized approvers before advancing to execution.
+                Transactions meeting the threshold trigger review alerts to authorized approvers before advancing to execution.
               </p>
             </>
           ),
@@ -678,23 +678,23 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           a: (
             <>
               <p>
-                Preconditions: reports:view permission.
+                You will need permission to view company reports.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, and select{" "}
+                Open the sidebar, and select{" "}
                 <Link className="help-link" href={c(companyId, "/analytics")}>
                   "Analytics"
                 </Link>
                 .
               </p>
               <p className="mt-2">
-                Calculation: Revenue recognized from certified client bills minus direct costs (materials issued + labour paid + subcontractor certified + equipment hire) minus indirect allocations.
+                Project profit is calculated by subtracting direct costs (materials issued, labour paid, subcontractor certified bills, and equipment hire) and indirect overheads from certified revenue.
               </p>
               <p className="mt-2">
-                Save result: Loading calls <code>GET /apis/v3/analytics/company/{"{companyId}"}</code>, rendering real-time gross margin %, cost breakdown charts, and budget variance summaries.
+                Opening the dashboard displays real-time gross margin percentages, category expense distributions, and budget variance summaries.
               </p>
               <p className="mt-2">
-                Next step: Drill down into individual cost heads via the Cost Code Expense Analysis report under Reports.
+                Drill down into individual cost items through the detailed cost code expense reports.
               </p>
             </>
           ),
@@ -718,23 +718,23 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           a: (
             <>
               <p>
-                Preconditions: payroll:edit permission or Owner role.
+                You will need permission to edit payroll or hold the owner role.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, navigate to "Finance & Billing", select{" "}
+                Open the sidebar, navigate to "Finance & Billing", select{" "}
                 <Link className="help-link" href={c(companyId, "/d/hr")}>
                   "HR & Staff"
                 </Link>
                 , and click "+ Add Staff".
               </p>
               <p className="mt-2">
-                Required fields: Full Name, Monthly Salary, and Designation. Optional fields: Project Assignment, Phone, Email, UAN (for EPF), PAN, Bank Account Details, and Joining Date.
+                Enter the employee's full name, monthly salary, and job designation, with optional project assignments, phone, email, UAN for provident fund, PAN, bank details, and joining date.
               </p>
               <p className="mt-2">
-                Save result: Submitting calls <code>POST /apis/v3/hr/employees</code>, creating the employee profile in staff_employees with an auto-generated salary structure.
+                Saving creates the employee profile and structures their monthly earnings components.
               </p>
               <p className="mt-2">
-                Next step: Enroll employee biometric templates or configure geofenced mobile attendance punching.
+                Configure geofenced mobile attendance punching or biometric logging for daily tracking.
               </p>
             </>
           ),
@@ -750,23 +750,23 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           a: (
             <>
               <p>
-                Preconditions: Project GPS coordinates and radius (e.g. 500m) configured on the project profile.
+                You will need project GPS coordinates and a boundary radius configured in project settings.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, navigate to "Site Operations", and select{" "}
+                Open the sidebar, navigate to "Site Operations", and select{" "}
                 <Link className="help-link" href={c(companyId, "/d/attendance")}>
                   "Attendance"
                 </Link>
                 .
               </p>
               <p className="mt-2">
-                Punch validation: Mobile punch requests capture real-time GPS coordinates. The backend calculates Haversine distance against project coordinates; out-of-range punches are flagged.
+                Mobile punch requests record real-time GPS coordinates, which the system validates against the project location to flag any out-of-boundary punches.
               </p>
               <p className="mt-2">
-                Save result: Punching calls <code>POST /apis/v3/hr/attendance/punch</code>, logging timestamp, punch type (IN/OUT), and location verification status.
+                Saving a punch records the exact time, punch type (in or out), and location verification status.
               </p>
               <p className="mt-2">
-                Next step: Verified punch records feed directly into the Monthly Payroll calculation engine.
+                Verified attendance logs feed directly into your monthly payroll calculations.
               </p>
             </>
           ),
@@ -782,23 +782,23 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           a: (
             <>
               <p>
-                Preconditions: Subcontractor party and daily labour headcounts active on site.
+                You will need active subcontractor parties and daily labour deployment at the site.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, select{" "}
+                Open the sidebar, select{" "}
                 <Link className="help-link" href={c(companyId, "/d/labour")}>
                   "Labour"
                 </Link>
                 , choose the "Muster Roll" tab, and click "+ Add Muster".
               </p>
               <p className="mt-2">
-                Required fields: Project, Date, Trade / Category (Mason, Carpenter, Helper), and Headcount. Optional fields: Overtime hours and Subcontractor allocation.
+                Select the project, date, trade category (such as mason, carpenter, or helper), and worker headcount, along with optional overtime hours and subcontractor assignments.
               </p>
               <p className="mt-2">
-                Save result: Submitting calls <code>POST /apis/v3/labour/muster-roll</code>, recording labour shifts and generating BOCW compliance registers.
+                Saving logs the daily shift counts and updates your statutory labour compliance registers.
               </p>
               <p className="mt-2">
-                Next step: Compare planned vs actual labour deployment against the DPR and BOQ productivity standards.
+                Compare actual worker deployment against daily progress reports and productivity benchmarks.
               </p>
             </>
           ),
@@ -814,23 +814,23 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           a: (
             <>
               <p>
-                Preconditions: Employees active; monthly attendance logged or full-month policy enabled.
+                You will need active employees and recorded monthly attendance logs.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, navigate to "Finance & Billing", select{" "}
+                Open the sidebar, navigate to "Finance & Billing", select{" "}
                 <Link className="help-link" href={c(companyId, "/d/hr")}>
                   "HR & Staff"
                 </Link>
                 , choose the "Payroll Runs" tab, and click "Compute Payroll".
               </p>
               <p className="mt-2">
-                Required fields: Month (1-12) and Year (YYYY).
+                Select the payroll month and year.
               </p>
               <p className="mt-2">
-                Save result: Submitting calls <code>POST /apis/v3/hr/payroll/run</code>, executing salary computation (Basic, HRA, Allowances minus EPF employee 12%, ESI, PT, and Unpaid Leave deductions) and locking the payroll run.
+                Running payroll calculates gross earnings (basic salary, HRA, allowances) minus statutory deductions (EPF, ESI, professional tax, and unpaid leave days) and finalizes the period.
               </p>
               <p className="mt-2">
-                Next step: Export bank transfer payout sheets and bulk PDF payslips via the Payslips tab.
+                Export bank transfer payout sheets and bulk PDF payslips for your team.
               </p>
             </>
           ),
@@ -846,23 +846,23 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           a: (
             <>
               <p>
-                Preconditions: HR & Staff module enabled; payroll:edit permission.
+                You will need permission to edit payroll or hold the owner role.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, select{" "}
+                Open the sidebar, select{" "}
                 <Link className="help-link" href={c(companyId, "/d/hr")}>
                   "HR & Staff"
                 </Link>
                 , and choose the "Leave Management" tab.
               </p>
               <p className="mt-2">
-                Configuration: Create company-wide leave templates (Casual, Sick, Earned Leave) with annual quotas and carry-forward limits.
+                Create company leave templates with annual allowances and carry-forward rules for casual, sick, and earned leaves.
               </p>
               <p className="mt-2">
-                Save result: Adding templates calls <code>POST /apis/v3/hr/leave-templates/{"{companyId}"}</code>, allocating opening leave balances to enrolled staff.
+                Saving allocates initial leave balances to enrolled employees.
               </p>
               <p className="mt-2">
-                Next step: Approve incoming leave applications; unapproved absences deduct from monthly payroll.
+                Review and approve leave applications, with unapproved absences automatically factored into monthly payroll calculations.
               </p>
             </>
           ),
@@ -886,23 +886,23 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           a: (
             <>
               <p>
-                Preconditions: Equipment module enabled; equipment:edit permission.
+                You will need permission to edit equipment or hold the owner role.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, select{" "}
+                Open the sidebar, select{" "}
                 <Link className="help-link" href={c(companyId, "/d/equipment")}>
                   "Equipment"
                 </Link>
                 , and click "+ Add Equipment".
               </p>
               <p className="mt-2">
-                Required fields: Equipment Name, Asset Code (code), Category (e.g. Earthmoving, Concreting, Crane), and Ownership Type ("Owned" or "Hired"). Optional fields: Registration Number, Hourly Rate, and Current Meter Reading.
+                Enter the equipment name, asset code, category (such as earthmoving, concreting, or crane), and ownership type ("Owned" or "Hired"), with optional registration number, hourly hire rate, and current meter reading.
               </p>
               <p className="mt-2">
-                Save result: Submitting calls <code>POST /apis/v3/equipment</code>, creating the asset record in status "available".
+                Saving registers the machinery in "available" status.
               </p>
               <p className="mt-2">
-                Next step: Deploy the registered equipment to an active construction site.
+                From there you can deploy the registered asset to any active construction site.
               </p>
             </>
           ),
@@ -918,23 +918,23 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           a: (
             <>
               <p>
-                Preconditions: Equipment asset registered and currently in "available" status.
+                You will need the equipment asset registered and currently in "available" status.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, select{" "}
+                Open the sidebar, select{" "}
                 <Link className="help-link" href={c(companyId, "/d/equipment")}>
                   "Equipment"
                 </Link>
                 , select the asset, and click "Start Wizard".
               </p>
               <p className="mt-2">
-                Required fields: Target Project and Start Date. Optional fields: Operator Name and Initial Odometer Reading.
+                Select the target project and deployment start date, with optional operator name and initial odometer reading.
               </p>
               <p className="mt-2">
-                Save result: Submitting calls <code>POST /apis/v3/equipment/{"{equipment_id}"}/deploy</code>, updating asset status to "deployed" and creating an active deployment log.
+                Saving updates the asset status to "deployed" and creates an active deployment record.
               </p>
               <p className="mt-2">
-                Next step: Log daily running hours and fuel consumption; mark return upon project demobilization.
+                Track daily operating hours and fuel logs, and record the return upon project demobilization.
               </p>
             </>
           ),
@@ -950,23 +950,23 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           a: (
             <>
               <p>
-                Preconditions: Equipment currently deployed to an active project.
+                The equipment must be actively deployed to a project.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, select{" "}
+                Open the sidebar, select{" "}
                 <Link className="help-link" href={c(companyId, "/d/equipment")}>
                   "Equipment"
                 </Link>
                 , select the asset, and click "Refuel".
               </p>
               <p className="mt-2">
-                Required fields: Project, Log Date (logged_date), Liters Dispensed (liters), and Cost Per Liter (cost_per_liter). Optional fields: Meter/Odometer Reading and Fuel Slip Photo.
+                Enter the project, log date, dispensed liters, and cost per liter, with optional meter readings and fuel bill receipt photos.
               </p>
               <p className="mt-2">
-                Save result: Submitting calls <code>POST /apis/v3/equipment/{"{equipment_id}"}/fuel</code>, recording fuel cost against the project and calculating km/l or liters/hour efficiency.
+                Saving logs the fuel expense against the project and computes running efficiency metrics.
               </p>
               <p className="mt-2">
-                Next step: Review fuel expense rollups on the Equipment Profitability report.
+                Review operating fuel expenditure on your equipment profitability reports.
               </p>
             </>
           ),
@@ -982,23 +982,23 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           a: (
             <>
               <p>
-                Preconditions: Production module active on manufacturing / RMC plant project.
+                You will need the production module enabled on your manufacturing or batching plant project.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, navigate to "Site Operations", select{" "}
+                Open the sidebar, navigate to "Site Operations", select{" "}
                 <Link className="help-link" href={c(companyId, "/d/production")}>
                   "Production"
                 </Link>
                 , and click "+ New Recipe".
               </p>
               <p className="mt-2">
-                Required fields: Recipe Code, Product Name, Mix Type (e.g. Concrete, Asphalt, Precast), Unit, and Raw Materials list with proportioned design quantities.
+                Enter the recipe code, product name, mix type (such as concrete, asphalt, or precast), unit of measurement, and the proportioned raw materials list.
               </p>
               <p className="mt-2">
-                Save result: Submitting calls <code>POST /apis/v3/production/recipes</code>. When batches run, completing a batch auto-deducts cement, aggregates, and admixtures from plant inventory.
+                Saving stores the mix design, and executing batches automatically deducts cement, aggregates, and admixtures from plant inventory.
               </p>
               <p className="mt-2">
-                Next step: Generate batch dispatch delivery challans for site transit mixer tracking.
+                Generate batch delivery challans for site dispatch and transit tracking.
               </p>
             </>
           ),
@@ -1022,23 +1022,23 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           a: (
             <>
               <p>
-                Preconditions: CRM module enabled; crm:view permission.
+                You will need permission to view CRM or hold the owner role.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, navigate to "Sales & CRM", select{" "}
+                Open the sidebar, navigate to "Sales & CRM", select{" "}
                 <Link className="help-link" href={c(companyId, "/d/crm")}>
                   "CRM & Leads"
                 </Link>
                 , and click "New Lead +".
               </p>
               <p className="mt-2">
-                Required fields: Lead Title, Lead Type (e.g. Commercial, Residential, Infra), Contact Person (contact_name), and Phone Number (phone_no). Optional fields: Client Name, Estimated Value, Source, and Status stage.
+                Enter the lead title, project type (such as commercial, residential, or infrastructure), contact person, and phone number, with optional client name, estimated value, source, and pipeline stage.
               </p>
               <p className="mt-2">
-                Save result: Submitting calls <code>POST /apis/v3/crm/leads</code>, creating the opportunity card on the sales pipeline Kanban board.
+                Saving creates the opportunity card on your sales pipeline board.
               </p>
               <p className="mt-2">
-                Next step: Drag cards across stages (New Lead -&gt; Site Visit -&gt; Proposal -&gt; Won) and prepare Client Quotations.
+                Move cards across stages from initial inquiry to site visit, proposal, and won deals, and prepare client quotations directly from the lead.
               </p>
             </>
           ),
@@ -1054,23 +1054,23 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           a: (
             <>
               <p>
-                Preconditions: Lead record exists; rate cards available in Library.
+                You will need a lead created and standard rate cards configured in your library.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, select{" "}
+                Open the sidebar, select{" "}
                 <Link className="help-link" href={c(companyId, "/d/crm")}>
                   "CRM & Leads"
                 </Link>
-                , open the Lead details modal, switch to the "Quotation" tab, and click "New Quotation +".
+                , open the lead details, switch to the "Quotation" tab, and click "New Quotation +".
               </p>
               <p className="mt-2">
-                Required fields: Quotation Subject, Quotation Number, and Line Items (Item Name, Quantity (qty), Unit Rate, Unit). Optional fields: GST %, Markup %, Terms & Conditions, and Discount.
+                Enter the quotation subject, quote number, and line items with quantities, units, and rates, along with optional GST rates, markup percentages, discounts, and payment terms.
               </p>
               <p className="mt-2">
-                Save result: Submitting calls <code>POST /apis/v3/crm/leads/{"{lead_id}"}/quotations</code>, generating a branded quotation PDF.
+                Saving creates the estimate and generates a branded quotation document.
               </p>
               <p className="mt-2">
-                Next step: Once accepted, convert the quotation into an active Project and Client Sales Invoice with one click.
+                Once approved by the client, convert the accepted quotation directly into an active project and billing invoice.
               </p>
             </>
           ),
@@ -1086,23 +1086,23 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           a: (
             <>
               <p>
-                Preconditions: library:edit permission or Owner role.
+                You will need permission to edit library items or hold the owner role.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, navigate to "Setup & Config", select{" "}
+                Open the sidebar, navigate to "Setup & Config", select{" "}
                 <Link className="help-link" href={c(companyId, "/d/library")}>
                   "Library"
                 </Link>
                 , and choose the "Rate Library" tab. Click "+ Add to Library".
               </p>
               <p className="mt-2">
-                Required fields: Item Name, Item Code, Unit of Measurement, Standard Cost Rate, and Selling Rate. Optional fields: Category and Description.
+                Enter the item name, code, unit of measurement, standard cost rate, and selling price, with optional category and description notes.
               </p>
               <p className="mt-2">
-                Save result: Submitting calls <code>POST /apis/v3/library/rates</code>, registering the master price item.
+                Saving registers the master item in your company price database.
               </p>
               <p className="mt-2">
-                Next step: Pre-fill BOQ imports and quotation builders automatically from standard library rate presets.
+                Use your rate card library to automatically populate BOQ line items and client quotation estimates with preset rates.
               </p>
             </>
           ),
@@ -1126,23 +1126,23 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           a: (
             <>
               <p>
-                Preconditions: Owner role; Tally Prime installed on your accounting machine with Tally XML Server enabled (e.g. port 9000).
+                You will need the owner role, and Tally Prime running on your accounting computer with its XML server enabled.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, select{" "}
+                Open the sidebar, select{" "}
                 <Link className="help-link" href={c(companyId, "/d/finance")}>
                   "Finance"
                 </Link>
                 , and choose the "Tally Sync" tab. Click "Connect Tally".
               </p>
               <p className="mt-2">
-                Required fields: Tally Company Name, Host/Port or SiteFlow Tally Desktop Agent token.
+                Enter your company name in Tally, server port, or your desktop sync agent connection token.
               </p>
               <p className="mt-2">
-                Save result: Configuring connection calls <code>POST /apis/v3/tally/connections</code>. Exporting pending vouchers generates Tally XML import payloads with unique voucher GUID deduplication.
+                Saving the connection allows you to export approved vouchers and generate XML payloads with automatic voucher deduplication.
               </p>
               <p className="mt-2">
-                Next step: Sync ledgers, cost centres, and vendor bills directly into your Tally Prime ledger books.
+                Sync ledgers, cost centers, and vendor bills directly into your Tally Prime accounts.
               </p>
             </>
           ),
@@ -1158,23 +1158,23 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           a: (
             <>
               <p>
-                Preconditions: Active Zoho Books organization with admin API access credentials.
+                You will need an active Zoho Books organization and administrator access.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, navigate to "Setup & Config", select{" "}
+                Open the sidebar, navigate to "Setup & Config", select{" "}
                 <Link className="help-link" href={c(companyId, "/settings")}>
                   "Settings"
                 </Link>
                 , and choose the "Integrations" tab. Under Zoho Books, click "Connect".
               </p>
               <p className="mt-2">
-                OAuth flow: Redirects to Zoho OAuth login via <code>GET /apis/v3/integrations/zoho-books/authorize</code> and saves encrypted refresh tokens in company credentials.
+                Authorize the connection through the Zoho sign-in window to link your accounting organization.
               </p>
               <p className="mt-2">
-                Save result: Automatically pushes approved vendor bills and customer invoices to Zoho Books with chart-of-accounts mapping.
+                Saving the authorization enables automatic synchronization of approved vendor bills and customer invoices with your chart of accounts.
               </p>
               <p className="mt-2">
-                Next step: View real-time sync status badges on the Invoices and Bills dashboards.
+                Check real-time sync status badges directly on your bills and invoices registers.
               </p>
             </>
           ),
@@ -1190,23 +1190,23 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           a: (
             <>
               <p>
-                Preconditions: Google Workspace / Google Account authorized by company administrator.
+                You will need a Google account authorized by your company administrator.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, navigate to "Setup & Config", select{" "}
+                Open the sidebar, navigate to "Setup & Config", select{" "}
                 <Link className="help-link" href={c(companyId, "/settings")}>
                   "Settings"
                 </Link>
                 , and choose the "Integrations" tab. Under Google Drive, click "Connect".
               </p>
               <p className="mt-2">
-                Features: Daily automated database & document backup to your Google Drive folder, plus direct one-click spreadsheet export of attendance and payroll runs.
+                Connect your account to enable daily automated backups of your documents and databases, along with one-click spreadsheet exports for attendance and payroll registers.
               </p>
               <p className="mt-2">
-                Save result: Authorizing via <code>GET /apis/v3/integrations/google-drive/authorize</code> links your designated Google Drive folder for encrypted automated file archives.
+                Authorizing links your designated Drive folder for encrypted automated archives.
               </p>
               <p className="mt-2">
-                Next step: Test a manual backup run to verify destination folder synchronization.
+                Run a test backup to confirm destination folder synchronization.
               </p>
             </>
           ),
@@ -1222,23 +1222,23 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           a: (
             <>
               <p>
-                Preconditions: Enterprise subscription or BI Integration enabled; Owner role.
+                You will need an enterprise plan or BI integration enabled, and hold the owner role.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, navigate to "Setup & Config", select{" "}
+                Open the sidebar, navigate to "Setup & Config", select{" "}
                 <Link className="help-link" href={c(companyId, "/settings")}>
                   "Settings"
                 </Link>
                 , and choose the "Integrations" tab. Under BI Data Export, enter a key label and click "Create".
               </p>
               <p className="mt-2">
-                Required fields: Key Name and Expiration Period (30, 90, 365 days, or Never).
+                Provide a key name and choose an expiration period (such as 30 days, 90 days, 365 days, or never).
               </p>
               <p className="mt-2">
-                Save result: Submitting calls <code>POST /apis/v3/integrations/bi/companies/{"{companyId}"}/keys</code>, generating a secure bearer API token for Power BI, Tableau, or custom dashboards.
+                Saving generates a secure bearer API token for live streaming into Power BI, Tableau, or custom analytics dashboards.
               </p>
               <p className="mt-2">
-                Next step: Connect Power BI Web Connector to feeds like /apis/v3/integrations/bi/feed/{companyId}/budget-variance for automated reporting.
+                Use your key to connect live data feeds for budget variance, inventory levels, and task progress.
               </p>
             </>
           ),
@@ -1262,23 +1262,23 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           a: (
             <>
               <p>
-                Preconditions: Quality Checklist Template created in company setup; quality:edit permission.
+                You will need a quality checklist template set up and permission to edit quality records.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, navigate to "Site Operations", select{" "}
+                Open the sidebar, navigate to "Site Operations", select{" "}
                 <Link className="help-link" href={c(companyId, "/d/quality")}>
                   "Quality & NCR"
                 </Link>
                 , and click "+ New Inspection".
               </p>
               <p className="mt-2">
-                Required fields: Project, Checklist Template (checklist_id), Inspection Title, and Inspection Date. Optional fields: Tower / Location, Photos, and Item Remarks.
+                Select the project, checklist template, inspection title, and date, with optional tower or location details, checklist photos, and item remarks.
               </p>
               <p className="mt-2">
-                Save result: Submitting calls <code>POST /apis/v3/quality/inspections</code>. Failed checklist items automatically generate a Non-Conformance Report (NCR) assigned to the responsible subcontractor.
+                Saving logs the inspection, and any failed checklist items automatically raise a non-conformance report assigned to the responsible contractor.
               </p>
               <p className="mt-2">
-                Next step: Track subcontractor corrective action responses and re-inspect items before closing the NCR.
+                Track contractor corrective actions and re-inspect items before closing the report.
               </p>
             </>
           ),
@@ -1294,23 +1294,23 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           a: (
             <>
               <p>
-                Preconditions: Active project selected; safety:edit permission.
+                You will need an active project selected and permission to edit safety records.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, navigate to "Site Operations", select{" "}
+                Open the sidebar, navigate to "Site Operations", select{" "}
                 <Link className="help-link" href={c(companyId, "/d/safety")}>
                   "Safety"
                 </Link>
                 , and click "+ Report Incident".
               </p>
               <p className="mt-2">
-                Required fields: Incident Title, Incident Type (Near Miss, First Aid, Lost Time, Dangerous Occurrence), Severity (Low, Medium, High, Critical), Description, Reported By user, and Incident Date. Optional fields: Specific Site Location, Root Cause Analysis, and Photos.
+                Enter the incident title, type (such as near miss, first aid, lost time, or dangerous occurrence), severity level, description, reporting user, and incident date, with optional location tags, root cause details, and site photos.
               </p>
               <p className="mt-2">
-                Save result: Submitting calls <code>POST /apis/v3/safety/incidents</code>, creating the safety log in Open status and dispatching high-severity alerts to safety officers.
+                Saving logs the incident in open status and sends high-severity alerts to safety officers immediately.
               </p>
               <p className="mt-2">
-                Next step: Record corrective actions and sign off the closeout review to resolve the incident.
+                Record corrective actions and complete the closeout review to resolve the incident.
               </p>
             </>
           ),

@@ -25,6 +25,7 @@ from app.approvals import (
     PO_FEATURE_TYPE,
 )
 from app.workflow_controls import enforce_stock_availability, enforce_entry_creation_window, get_company, get_default_terms
+from app.inventory_reservation import release_reservation, rereserve_reservation
 from app.utils.pdf_generator import generate_document_pdf
 from app.utils.document_pdf import resolve_pdf_branding, resolve_supplier_tax_details
 from pydantic import BaseModel, Field, field_validator
@@ -347,12 +348,14 @@ def create_indent(req: IndentCreateRequest, db: Session = Depends(get_db), curre
     if existing:
         raise HTTPException(status_code=400, detail="Indent number already exists for this company")
 
+    now = datetime.now(timezone.utc)
     indent = MaterialIndent(
         company_id=req.company_id,
         project_id=req.project_id,
         requested_by=req.requested_by,
         indent_number=req.indent_number,
-        status="pending"
+        status="pending",
+        created_at=now,
     )
     db.add(indent)
     db.flush()
@@ -363,7 +366,8 @@ def create_indent(req: IndentCreateRequest, db: Session = Depends(get_db), curre
             indent_id=indent.id,
             material_name=item.material_name,
             quantity=item.quantity,
-            unit=item.unit
+            unit=item.unit,
+            created_at=now,
         )
         db.add(db_item)
         item_schemas.append(item)
@@ -448,6 +452,55 @@ def reject_indent(indent_id: UUID, db: Session = Depends(get_db), current_user: 
         raise HTTPException(status_code=400, detail=f"Only pending indents can be rejected (current status: {indent.status})")
 
     indent.status = "rejected"
+
+    items = db.query(MaterialIndentItem).filter(MaterialIndentItem.indent_id == indent.id).all()
+    for item in items:
+        if item.reserved_qty and float(item.reserved_qty) > 0:
+            inv = db.query(WarehouseInventory).filter(
+                WarehouseInventory.project_id == indent.project_id,
+                WarehouseInventory.material_name == item.material_name
+            ).first()
+            if inv:
+                inv.reserved_qty = max(0.0, float(inv.reserved_qty) - float(item.reserved_qty))
+                db.add(inv)
+            item.reserved_qty = 0.0
+            db.add(item)
+
+    db.commit()
+    db.refresh(indent)
+
+    items = db.query(MaterialIndentItem).filter(MaterialIndentItem.indent_id == indent.id).all()
+    item_schemas = [
+        IndentItemSchema(
+            material_name=i.material_name,
+            quantity=float(i.quantity),
+            unit=i.unit
+        ) for i in items
+    ]
+    return IndentResponse(
+        id=indent.id,
+        company_id=indent.company_id,
+        project_id=indent.project_id,
+        requested_by=indent.requested_by,
+        approved_by=indent.approved_by,
+        approved_at=indent.approved_at,
+        indent_number=indent.indent_number,
+        status=indent.status,
+        created_at=indent.created_at,
+        items=item_schemas
+    )
+
+@router.post("/indents/{indent_id}/cancel", response_model=IndentResponse)
+def cancel_indent(indent_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    indent = db.query(MaterialIndent).filter(MaterialIndent.id == indent_id).first()
+    if not indent:
+        raise HTTPException(status_code=404, detail="Indent not found")
+    get_company_membership(db, current_user, indent.company_id)
+    require_permission(db, current_user, indent.company_id, "procurement:approve")
+    if indent.status not in ["approved", "ordered"]:
+        raise HTTPException(status_code=400, detail=f"Only approved or ordered indents can be cancelled (current status: {indent.status})")
+
+    indent.status = "cancelled"
 
     items = db.query(MaterialIndentItem).filter(MaterialIndentItem.indent_id == indent.id).all()
     for item in items:
@@ -1262,6 +1315,13 @@ def create_transaction(req: TransactionCreateRequest, db: Session = Depends(get_
         )
         db.add(inv)
         db.flush()
+
+    if req.type not in RECEIVED_TYPES:
+        if req.type in ADJUSTMENT_TYPES:
+            if req.qty < 0:
+                release_reservation(db, req.project_id, req.material_name, abs(req.qty))
+        else:
+            release_reservation(db, req.project_id, req.material_name, req.qty)
 
     db.commit()
     db.refresh(txn)

@@ -1499,8 +1499,15 @@ function MyLeavesTab({
             ))}
             {myLeaves.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-3 py-6 text-center text-muted">
-                  No leave requests yet.
+                <td colSpan={5} className="p-8">
+                  <EmptyState
+                    title="No leave requests yet"
+                    description="Submit a leave application using the form above to track time-off approvals."
+                    action={{
+                      label: "Apply for Leave",
+                      onClick: apply,
+                    }}
+                  />
                 </td>
               </tr>
             )}
@@ -1570,8 +1577,15 @@ function HolidaysTab({ companyId }: { companyId: string }) {
             ))}
             {!loading && holidays.length === 0 && (
               <tr>
-                <td colSpan={3} className="px-3 py-6 text-center text-muted">
-                  No holidays added yet.
+                <td colSpan={3} className="p-8">
+                  <EmptyState
+                    title="No holidays added yet"
+                    description="Configure annual holidays and company-wide time off for accurate payroll processing."
+                    action={{
+                      label: "Go to Holiday Settings",
+                      href: `/c/${companyId}/settings`,
+                    }}
+                  />
                 </td>
               </tr>
             )}
