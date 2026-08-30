@@ -6,8 +6,8 @@ Phase 12 — Equipment & Machinery Tracking Router
 import uuid
 from datetime import datetime, timezone
 from typing import List, Optional
-from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from app.database import get_db
@@ -148,8 +148,20 @@ def add_equipment(payload: EquipmentCreate, db: Session = Depends(get_db), curre
 
 
 @router.get("/{company_id}", response_model=List[EquipmentResponse])
-def list_fleet(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
-    return db.query(Equipment).filter(Equipment.company_id == company_id).order_by(Equipment.created_at.desc()).all()
+def list_fleet(
+    company_id: uuid.UUID,
+    ownership_type: Optional[str] = None,
+    db: Session = Depends(get_db),
+    _: None = Depends(verify_company_access)
+):
+    query = db.query(Equipment).filter(Equipment.company_id == company_id)
+    if ownership_type:
+        ot = ownership_type.strip()
+        # Competitor parity alias: Rented maps to Hired in the fleet schema
+        if ot.lower() == "rented":
+            ot = "Hired"
+        query = query.filter(func.lower(Equipment.ownership_type) == ot.lower())
+    return query.order_by(Equipment.created_at.desc()).all()
 
 
 # ─── Deployment Endpoints ────────────────────────────────────────────────────
