@@ -294,8 +294,20 @@ def get_indents(
     return res
 
 @router.get("/indents/company/{company_id}", response_model=List[IndentResponse])
-def get_company_indents(company_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
-    indents = db.query(MaterialIndent).filter(MaterialIndent.company_id == company_id).all()
+def get_company_indents(
+    company_id: UUID,
+    project_id: Optional[UUID] = None,
+    status: Optional[str] = None,
+    db: Session = Depends(get_db),
+    _: None = Depends(verify_company_access),
+):
+    q = db.query(MaterialIndent).filter(MaterialIndent.company_id == company_id)
+    if project_id:
+        q = q.filter(MaterialIndent.project_id == project_id)
+    if status:
+        from sqlalchemy import func
+        q = q.filter(func.lower(MaterialIndent.status) == status.strip().lower())
+    indents = q.all()
     res = []
     for ind in indents:
         items = db.query(MaterialIndentItem).filter(MaterialIndentItem.indent_id == ind.id).all()

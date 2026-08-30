@@ -1363,9 +1363,22 @@ def _pr_response(db: Session, req: PaymentRequest, payment_row: Optional[Payment
 
 
 @router.get("/payment-requests/{company_id}", response_model=List[PaymentRequestResponse])
-def get_payment_requests(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access), current_user: User = Depends(get_current_user)):
+def get_payment_requests(
+    company_id: uuid.UUID,
+    project_id: Optional[uuid.UUID] = None,
+    status: Optional[str] = None,
+    db: Session = Depends(get_db),
+    _: None = Depends(verify_company_access),
+    current_user: User = Depends(get_current_user),
+):
     require_module_view(db, current_user, company_id, "finance")
-    requests = db.query(PaymentRequest).filter(PaymentRequest.company_id == company_id).all()
+    q = db.query(PaymentRequest).filter(PaymentRequest.company_id == company_id)
+    if project_id:
+        q = q.filter(PaymentRequest.project_id == project_id)
+    if status:
+        from sqlalchemy import func
+        q = q.filter(func.lower(PaymentRequest.status) == status.strip().lower())
+    requests = q.all()
     return [_pr_response(db, r) for r in requests]
 
 
