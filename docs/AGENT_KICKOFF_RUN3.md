@@ -140,9 +140,27 @@ smooth, report it with its measurement and let me decide. Do not decide that you
 - Every fix needs a test that **fails against the unfixed tree at the defect's own assertion**. If it
   passes before your fix, the test is wrong. And make sure the test actually *runs* — a gate that
   crashes before asserting looks like coverage and is worse than none.
-- Run the full backend suite (`python -m pytest` in `backend/`, not just `tests/coverage`) and the
-  frontend build before you claim green. Current baseline: **0 failures, build exit 0.** If either
-  moves, you caused it.
+- **Test cadence — do not run the full suite after every edit.** It is 1,100 tests and the cost is
+  per-test fixture setup, not a few slow tests, so there is nothing to delete. Instead:
+
+  ```bash
+  pip install -r backend/requirements-dev.txt      # once
+  python -m pytest -q -p no:warnings -n 4          # FULL suite, ~65s (was ~214s serial)
+  python -m pytest -q -p no:warnings -n 4 -x       # regression check, stops at first failure
+  python -m pytest -q -p no:warnings tests/coverage/test_<the_one_you_touched>.py   # ~18-30s
+  python -m pytest -q -p no:warnings --lf          # re-run only what just failed
+  ```
+
+  Run the **targeted file** while iterating on a fix; run the **full parallel suite** once per task
+  before you report. `-n 4` was verified stable over three consecutive full runs (68s/63s/67s, zero
+  failures) despite the file-backed SQLite fixtures — but if you ever see a failure that does not
+  reproduce serially, re-run without `-n` before believing it.
+
+  Also run the frontend build before claiming green. Current baseline: **0 failures, build exit 0.**
+  If either moves, you caused it.
+
+- **Do not delete or skip tests to go faster.** They are why this codebase is trustworthy after a
+  599-finding audit. Speed comes from parallelism and cadence, never from coverage.
 - **Never fabricate a value or a store.** If state must persist, it goes in the database — R2-765
   above exists because a feature was built on a process-local dict.
 - **Do not** touch Part D (ops/infra: backups, Render tier, Firebase, production purges), do not change
