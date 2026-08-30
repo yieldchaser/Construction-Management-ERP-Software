@@ -1,6 +1,6 @@
 import uuid
-from datetime import datetime
-from typing import List, Optional
+from datetime import datetime, timezone
+from typing import List, Optional, Dict, Tuple
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -67,6 +67,10 @@ class ChatGroupCreate(BaseModel):
     created_by: Optional[uuid.UUID] = None
 
 
+# (group_id, user_id) -> last_read_at timestamp
+_group_user_last_read: Dict[Tuple[uuid.UUID, uuid.UUID], datetime] = {}
+
+
 class ChatGroupResponse(BaseModel):
     id: uuid.UUID
     company_id: uuid.UUID
@@ -77,6 +81,7 @@ class ChatGroupResponse(BaseModel):
     is_archived: bool
     created_at: datetime
     member_count: int = 0
+    unread_count: int = 0
 
     class Config:
         from_attributes = True
@@ -182,11 +187,44 @@ def list_groups(project_id: uuid.UUID, db: Session = Depends(get_db), current_us
         .group_by(ChatGroupMember.group_id)
         .all()
     )
-    result = [
-        ChatGroupResponse(**{**g.__dict__, "member_count": counts.get(g.id, 0)})
-        for g in groups
-    ]
+    result = []
+    for g in groups:
+        ct = company_team_for(db, g.company_id, current_user)
+        last_read = _group_user_last_read.get((g.id, current_user.id))
+        unread_q = db.query(func.count(ChatMessage.id)).filter(ChatMessage.group_id == g.id)
+        if ct:
+            unread_q = unread_q.filter(ChatMessage.user_id != ct.id)
+        if last_read:
+            unread_q = unread_q.filter(ChatMessage.created_at > last_read)
+        unread_cnt = unread_q.scalar() or 0
+
+        result.append(
+            ChatGroupResponse(
+                id=g.id,
+                company_id=g.company_id,
+                project_id=g.project_id,
+                name=g.name,
+                group_type=g.group_type,
+                created_by=g.created_by,
+                is_archived=g.is_archived,
+                created_at=g.created_at,
+                member_count=counts.get(g.id, 0),
+                unread_count=unread_cnt,
+            )
+        )
     return result
+
+
+@router.post("/groups/{group_id}/read")
+def mark_group_as_read(
+    group_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Mark all messages in a chat group as read for the authenticated user (Onsite Parity 14.9.4 #8)."""
+    verify_group_membership(db, current_user, group_id)
+    _group_user_last_read[(group_id, current_user.id)] = datetime.now(timezone.utc)
+    return {"success": True, "group_id": group_id, "read_at": _group_user_last_read[(group_id, current_user.id)].isoformat()}
 
 
 @router.post("/messages", response_model=ChatMessageResponse, status_code=status.HTTP_201_CREATED)

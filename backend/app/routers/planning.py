@@ -1,4 +1,4 @@
-from uuid import UUID
+from uuid import UUID, uuid4
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -502,6 +502,7 @@ def update_task(task_id: UUID, request: TaskUpdateRequest, db: Session = Depends
     require_permission(db, current_user, project.company_id, "planning:edit")
     enforce_progress_over_estimate(db, project.company_id, request.progress)
 
+    old_status = task.status
     dates_changed = False
 
     if request.name is not None:
@@ -526,6 +527,20 @@ def update_task(task_id: UUID, request: TaskUpdateRequest, db: Session = Depends
             task.progress = 100.0
         elif request.status == "not_started":
             task.progress = 0.0
+
+    if task.status != old_status:
+        # Auto-log status change activity to TaskComment (Onsite Parity 14.9.2)
+        membership = get_company_membership(db, current_user, project.company_id)
+        author_name = getattr(current_user, "name", None) or "System"
+        status_log = TaskComment(
+            id=uuid4(),
+            task_id=task.id,
+            user_id=membership.id,
+            user_name=author_name,
+            message_text=f"Status changed from {old_status} to {task.status}",
+            created_at=datetime.now(timezone.utc),
+        )
+        db.add(status_log)
 
     # Handle duration or start date changes
     if request.start_date is not None or request.duration_days is not None:
