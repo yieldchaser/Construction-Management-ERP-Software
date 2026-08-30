@@ -1,4 +1,4 @@
-# AGENT PROMPT — Close the label gap, fix two content bugs, file three backlog items
+# AGENT PROMPT — Close the label gap, fix two content bugs, file four backlog records
 
 Paste this whole file as the task. Do not stop until the Definition of Done is met.
 
@@ -87,7 +87,7 @@ There are 6 articles describing a SiteFlow mobile app. There is no native Androi
 
 ---
 
-# PART 3 — File three backlog items. Do not implement them.
+# PART 3 — File four backlog records. Do not implement any of them.
 
 Add these to `docs/BACKLOG.md` in the existing table format, with a new `D-0xx` id each. **These are records, not work.** Do not write code for any of them.
 
@@ -121,11 +121,30 @@ There is **no double-counting path**: `reports.py` contains zero references to `
 
 Record the naming mismatch, and record the optional enhancement — a party capability flag (works / labour / both, defaulting every existing row to `both`) if finer filtering is ever wanted. Priority LOW, cosmetic. **Do not rename anything and do not add the flag in this run.**
 
-## 3.3 — The statutory register derives at write time and can go stale
+## 3.3 — Muster roll carries no staleness signal
 
-Following from 3.2: `MusterRoll` rows compute their figures from `AttendanceLog` and `SubcontractorAttendance` **at the moment the register row is created**. Crew rows added for that project-day afterwards do not flow into the already-written register.
+`MusterRoll` computes its figures from `AttendanceLog` and `SubcontractorAttendance` **at the moment the row is created**; `get_muster_roll` then reads the stored row with no recompute. Crew rows entered later that day do not reach the already-written register.
 
-Record the consequence: a statutory register created early in the day can under-report if crew attendance is entered later. Possible resolutions are recomputing on read, or recomputing when a crew row lands on a day that already has a register row. Priority MEDIUM, because this is a statutory document. **Investigate and decide before changing anything; do not implement in this run.**
+**This was investigated and is close to correct.** Freezing is right for a statutory register, which is a point-in-time attestation rather than a live view, and re-posting the same project + contractor + day + role updates the row in place (idempotency per R2-333), so a corrected re-post is the intended recovery path.
+
+The only gap is that **nothing tells anyone the register no longer matches its sources.** Record the suggested fix: on read, compare stored figures against freshly derived ones and surface a "source data changed since this register was written" indicator, leaving the stored row untouched. Priority LOW. **Do not recompute on read and do not mutate stored register rows** — silently changing a signed statutory document is worse than the staleness.
+
+## 3.4 — Two scaffolded fields are exposed but never maintained
+
+Both were found by sweeping every stored aggregate column for a maintenance path. Neither produces a wrong number today; both are dead weight that can mislead.
+
+**`CRMQuotationItem.billed_qty` / `unbilled_qty`** — accepted as user input on quotation-item creation (`crm.py:237-238`) and returned in three response shapes (`crm.py:710, 794, 857`), but **no billing flow ever updates them**, even though `Bill.quotation_id` exists and links bills to quotations. Whatever a user types at quotation time stays there forever. Nothing downstream consumes them: `reports.py` has zero references, and `_rep_unbilled_item` reads GRN items, not quotations.
+
+**`WarehouseInventory.reserved_qty`** — always constructed as `0.0` (`dpr.py:159`, `procurement.py:982, 1230`, `production.py:254`), never incremented or decremented anywhere, yet surfaced in API responses (`procurement.py:1156, 1277`, `production.py:529`) and used in a delete guard (`procurement.py:1266`) that can therefore never trip on it. Inventory reservation was scaffolded and never built.
+
+Record both. The decision for each is the same: either wire the field or stop exposing it as user-settable, so nobody trusts a number nothing maintains. Priority LOW. **Do not implement either in this run.**
+
+## What was checked and found sound — do not "fix" these
+
+Recorded so a later run does not mistake correct code for a defect:
+
+- **Bill payment maintenance is correct.** `paid_amount` is incremented on settlement and decremented on payment delete, status transitions both ways across Paid / Partially Paid / Unpaid, money comparisons use an epsilon, settlement rows are read before the cascade delete removes them, and the bank posting is reversed on non-cash methods (`finance.py:275-340`).
+- **The labour three-layer model is correct**, per 3.2.
 
 ---
 
@@ -148,11 +167,11 @@ Record the consequence: a statutory register created early in the day can under-
 - [ ] Mistitled mobile-app article retitled; `body` untouched. Duplicate-title check across all 86 files reported.
 - [ ] `git status` shows **no changes to any `body` field** under `frontend/src/content/help/`.
 - [ ] The 6 mobile-app articles otherwise unchanged.
-- [ ] Three `D-0xx` rows added to `docs/BACKLOG.md`. No code written for any of them.
+- [ ] Four `D-0xx` rows added to `docs/BACKLOG.md` (3.1 subscription, 3.2 tab naming, 3.3 muster-roll staleness signal, 3.4 the two scaffolded fields). No code written for any of them.
 - [ ] `pytest -n 4` green; `tsc --noEmit` clean; `npm run build` clean; pushed and ancestry-verified.
 
 ## Final report
 
-The validator self-test output, before and after. Every label you changed, with the file:line you read it from. What you found about Add Employee. The duplicate-title check result. The three backlog ids.
+The validator self-test output, before and after. Every label you changed, with the file:line you read it from. What you found about Add Employee. The duplicate-title check result. The four backlog ids.
 
 State plainly what you did not finish. Do not claim a number you did not measure.
