@@ -1189,6 +1189,7 @@ class TransactionRow(BaseModel):
     project_id: Optional[str] = None
     project_name: Optional[str] = None
     ref: str = ""
+    due_date: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -1261,6 +1262,7 @@ def get_company_transactions(company_id: uuid.UUID, db: Session = Depends(get_db
             project_id=str(b.project_id) if b.project_id else None,
             project_name=project_name_by_id.get(b.project_id) if b.project_id else None,
             ref=b.invoice_number or "",
+            due_date=(b.due_date.strftime("%Y-%m-%d") if b.due_date else None),
         ))
 
     for p in payments:

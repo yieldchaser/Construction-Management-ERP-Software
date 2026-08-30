@@ -26,6 +26,9 @@ interface Transaction {
   photo_url?: string;
   settled_amount: number;
   balance_due: number;
+  project_id?: string;
+  project_name?: string;
+  due_date?: string;
 }
 
 interface PLItem {
@@ -1271,6 +1274,7 @@ export default function FinancePage() {
                         <td className="p-3 text-foreground">
                           {t.details}
                           {t.project_id ? <span className="text-[10px] text-muted block">Project: {t.project_name || String(t.project_id).slice(0, 8)}</span> : null}
+                          {t.due_date ? <span className="text-[10px] text-amber-400 block font-medium">Due: {t.due_date}</span> : null}
                         </td>
                         <td className="p-3 text-right font-bold text-foreground">₹{(t.amount || 0).toLocaleString("en-IN")}</td>
                         <td className="p-3">
@@ -2217,8 +2221,18 @@ export default function FinancePage() {
                   </span>
                 )}
                 {selectedVoucher.ref_invoice && (
-                  <div className="text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full inline-block mt-1.5 font-bold">
+                  <div className="text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full inline-block mt-1.5 font-bold mr-1.5">
                     Ref Invoice: {selectedVoucher.ref_invoice}
+                  </div>
+                )}
+                {selectedVoucher.project_name && (
+                  <div className="text-[10px] text-sky-400 bg-sky-500/10 border border-sky-500/20 px-2 py-0.5 rounded-full inline-block mt-1.5 font-bold mr-1.5">
+                    Project: {selectedVoucher.project_name}
+                  </div>
+                )}
+                {selectedVoucher.due_date && (
+                  <div className="text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full inline-block mt-1.5 font-bold">
+                    Due Date: {selectedVoucher.due_date}
                   </div>
                 )}
               </div>

@@ -177,6 +177,7 @@ class BillResponse(BaseModel):
     # R2-371: the purchase order this bill is raised against, null when it was
     # not raised against one.
     po_id: Optional[UUID] = None
+    project_name: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -531,6 +532,7 @@ def get_bills(project_id: UUID, invoice_type: Optional[str] = None, db: Session 
                 match_status=_derive_bill_match_status(db, b),
                 wo_id=b.wo_id,
                 po_id=b.po_id,
+                project_name=project.name if project else None,
             )
         )
     return res
