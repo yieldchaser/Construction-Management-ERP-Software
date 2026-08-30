@@ -39,7 +39,10 @@ def test_pin_R2_036_spend_filters_expense_types():
     towers = _read("app/routers/towers.py")
     scope = _read("app/bill_scope.py")
     assert analytics.count("Bill.invoice_type.in_(EXPENSE_INVOICE_TYPES)") >= 1, "R2-036 operational spend filter regressed"
-    assert "EXPENSE_INVOICE_TYPES" in analytics, "R2-036 project/month spend filters regressed"
+    # R2-036: the per-bill filters moved from the `in EXPENSE_INVOICE_TYPES` form to the
+    # shared is_expense_invoice_type() helper (D3/bill_scope). Pin the helper's call count,
+    # not a bare substring - a substring check passes on the import line alone.
+    assert analytics.count("is_expense_invoice_type(") >= 3, "R2-036 project/month spend filters regressed"
     assert towers.count("_active_bills(db, project_id, REVENUE_INVOICE_TYPES)") >= 2, "R2-036 towers billed filters regressed"
     # R2-723: the expense-type + cancelled filters moved into bill_scope._active_bills.
     assert "Bill.invoice_type.in_(invoice_types)" in scope, "R2-036 shared invoice-type scope filter regressed"
@@ -80,8 +83,10 @@ def test_pin_R2_031_task_status_derives_from_progress():
 
 def test_pin_R2_044_billing_bucket_gates():
     src = _read("app/routers/billing.py")
-    assert "is_revenue_invoice_type" in src or src.count("REVENUE_INVOICE_TYPES") >= 1, "R2-044 revenue bucket gate regressed"
-    assert "is_expense_invoice_type" in src or src.count("EXPENSE_INVOICE_TYPES") >= 1, "R2-044 expense bucket gate regressed"
+    # R2-044: same helper migration as R2-036 above. Count the classifier calls rather than
+    # accepting a single import-line match.
+    assert src.count("is_revenue_invoice_type") >= 2, "R2-044 revenue bucket gate regressed"
+    assert src.count("is_expense_invoice_type") >= 2, "R2-044 expense bucket gate regressed"
 
 
 def test_pin_R2_011_party_type_allowlist_covers_ui_vocabulary():

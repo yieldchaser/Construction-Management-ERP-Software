@@ -1271,6 +1271,7 @@ finding read **as filed** rather than from its register note.
 | **R2-762** | **HIGH** | **subcon register prints `0%` progress and `₹0` billed on every work order from two hardcoded literals; `WOResponse` carries neither field. R2-494's em-dash reached `status` only** | worklist (R2-494) |
 | **R2-763** | **LOW** | **one "Ship To" input posts into `ship_to`, `notes` and `details` across three document types; R2-053's blocking half is fixed, this is its disclosed UI residual** | worklist (R2-053) |
 | **R2-764** | **HIGH** | **cost-code library gate reached payments only — crm quotation items, hr payroll profiles and library materials still write unvalidated codes that roll up nowhere (R2-609 named 4 surfaces, 1 fixed)** | worklist (R2-609) |
+| **R2-765** | **MEDIUM** | **chat unread watermark lives in a module-level in-memory dict — lost on every restart, not shared across workers or devices, never evicts** | run-2 parity Tier 3 Item 13 |
 
 ## FINDING R2-743 — 🔴 CRITICAL: the BI export feed writes user-controlled text straight into CSV cells, so the one export built for external consumption is the one still formula-injectable
 
@@ -2915,3 +2916,53 @@ call it from all four write paths, failing atomically with a 422 naming the unkn
 The enumeration form, not per-file pins: a test that scans for models carrying a `cost_code` column
 and asserts each write path validates against `LibraryCostCode`. Per-file pins are what let three of
 four through here — the same lesson as R2-743 / R2-755 on the CSV guard.
+
+---
+
+## FINDING R2-765 — 🟡 MEDIUM: chat unread counts are tracked in a module-level in-memory dict, so "mark as read" is forgotten on every restart and is not shared between workers or devices
+
+**Source:** verifying run 2's parity Tier 3 Item 13 (`a831ecb`, "task status-change logging and chat
+unread counts"). Filed 2026-08-30.
+
+### The defect
+`backend/app/routers/chat.py:71`:
+
+```python
+_group_user_last_read: Dict[Tuple[uuid.UUID, uuid.UUID], datetime] = {}
+```
+
+That dict is the **only** store for the read watermark. `:226` writes it on mark-as-read and `:193`
+reads it when computing `unread_count`. There is no column behind it — `ChatGroupMember`
+(`models.py:1816-1823`) carries `id, group_id, user_id, role, joined_at` and nothing else, and no
+migration adds one.
+
+### Why it does not work
+1. **It is lost on every restart.** This service runs on Render, which recycles containers on every
+   deploy and on idle. After each one, every message in every group is unread again for everyone.
+2. **It is per-process.** Under more than one uvicorn/gunicorn worker, marking a group read on worker A
+   leaves worker B still counting those messages. Which answer a user gets depends on which worker
+   serves the request, so the badge flickers between two values on refresh.
+3. **It is not per-user-per-device in any durable sense** — the same account on phone and laptop shares
+   a process-local entry that neither device can rely on.
+4. **It never evicts.** The dict grows one entry per (group, user) pair for the life of the process.
+
+The sibling half of the same commit is done correctly for contrast: task status-change logging writes
+a real `TaskComment` row (`planning.py:584-592`). Only the chat watermark is in memory.
+
+### Severity
+MEDIUM. Nothing is miscomputed and no money is involved — the count is arithmetically right for the
+data it has. But the feature is presented as working and does not survive a deploy, which is the
+"looks implemented, is not" class this audit exists to eliminate. It is also the only remaining
+in-memory store introduced in run 2 (checked — a diff scan over `backend/app/` finds no other
+module-level dict).
+
+### Fix
+Add `last_read_at = Column(DateTime(timezone=True), nullable=True)` to `ChatGroupMember`, with an
+additive migration (nullable, no backfill — NULL means "never read", which is what the current code
+already treats a missing entry as). Write it in the mark-as-read endpoint and read it in
+`list_groups`. Delete the module-level dict.
+
+### Gate this needs
+A test asserting the watermark survives a new session/process — write it, discard the app instance,
+re-read, and assert the count is still zero. That fails today by construction, because the store dies
+with the process.
