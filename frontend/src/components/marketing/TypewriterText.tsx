@@ -16,6 +16,9 @@ interface TypewriterTextProps {
  * The full first phrase is present in the server rendered HTML (good for SEO
  * and first paint); the animation only takes over after hydration. Under
  * prefers-reduced-motion the first phrase is shown statically with no caret.
+ *
+ * D-017: pauses when the tab is hidden (visibilitychange) and resumes when
+ * visible, so no timer budget is consumed while the user is on another tab.
  */
 export default function TypewriterText({
   phrases,
@@ -45,8 +48,12 @@ export default function TypewriterText({
     let charIndex = first.length;
     let deleting = false;
     let timer: ReturnType<typeof setTimeout>;
+    // When the page is hidden we stop scheduling new ticks; when it becomes
+    // visible again we resume from where we were.
+    let paused = false;
 
     const tick = () => {
+      if (paused) return; // tab is hidden — don't reschedule until resume
       const current = phrases[phraseIndex];
 
       if (!deleting) {
@@ -71,9 +78,24 @@ export default function TypewriterText({
       }
     };
 
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        paused = true;
+        clearTimeout(timer);
+      } else {
+        paused = false;
+        tick(); // resume from current state
+      }
+    };
+
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
     // Hold on the server rendered first phrase before starting to delete it.
     timer = setTimeout(tick, holdTime);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
   }, [animate, first, phrases, typeSpeed, deleteSpeed, holdTime]);
 
   return (
