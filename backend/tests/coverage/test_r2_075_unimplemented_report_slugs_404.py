@@ -33,9 +33,9 @@ def test_known_slug_is_200_and_unimplemented_slug_is_404(
     assert body["rows"] == []
     assert body["errors"] == []
 
-    # Catalogue-style slug with no backend handler: loud 404 naming it,
+    # Slug with no backend handler: loud 404 naming it,
     # never a silent empty 200 (R2-075).
-    slug = "monthly-pl"
+    slug = "unimplemented-sample-report"
     assert slug not in reports_mod._REPORT_HANDLERS
     resp = client.get(
         f"{DATA_URL}/{slug}?company_id={company.id}",

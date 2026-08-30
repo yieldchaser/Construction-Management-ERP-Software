@@ -249,6 +249,42 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
     filters: [{ label: "Project Name", type: "select", options: ["All"] }, { label: "Date", type: "date" }, { label: "Material Name", type: "select", options: ["All"] }],
     columns: ['Project Name', 'Material Name', 'UOM', 'Date', 'Opening Qty', 'Stock In', 'Stock Out', 'Closing Qty']
   },
+  "dpr": {
+    title: "Daily Progress Report",
+    hasDownload: true,
+    filters: [{ label: "Project Name", type: "select", options: ["All"] }, { label: "DPR Date", type: "date" }, { label: "Task Name", type: "select", options: ["All"] }],
+    columns: ['Project Name', 'DPR Date', 'Task Name', 'Progress Qty', 'Workers Count', 'Material Used']
+  },
+  "item-wise-sales": {
+    title: "Item Wise Sales Report",
+    hasDownload: true,
+    filters: [{ label: "Invoice Date", type: "date" }, { label: "Client Name", type: "select", options: ["All"] }, { label: "Project Name", type: "select", options: ["All"] }, { label: "Sale Type", type: "select", options: ["All"] }],
+    columns: ['Client Name', 'Invoice Date', 'Item Name', 'Unit', 'Quantity', 'Item Rate', 'Tax %', 'Total Amount', 'Invoice Created']
+  },
+  "company-attendance": {
+    title: "Company Attendance Report",
+    hasDownload: true,
+    filters: [{ label: "Date", type: "date" }, { label: "Project Name", type: "select", options: ["All"] }, { label: "Department", type: "select", options: ["All"] }, { label: "Status", type: "select", options: ["All"] }],
+    columns: ['Date', 'Employee Code', 'Employee Name', 'Designation', 'Department', 'Project Name', 'Punch In', 'Punch Out', 'Status', 'Hours Worked', 'Overtime Hours', 'Geofence Status']
+  },
+  "staff-monthly-salary-slip": {
+    title: "Staff Monthly Salary Slip",
+    hasDownload: true,
+    filters: [{ label: "Month", type: "select", options: ["All"] }, { label: "Employee Name", type: "select", options: ["All"] }, { label: "Department", type: "select", options: ["All"] }],
+    columns: ['Month', 'Employee Code', 'Employee Name', 'Designation', 'Department', 'UAN', 'Bank Account No.', 'Days Present', 'Basic Pay', 'HRA', 'Allowances', 'Gross Pay', 'PF Deduction', 'ESI Deduction', 'TDS', 'Total Deductions', 'Net Pay (INR)']
+  },
+  "staff-muster-roll": {
+    title: "Staff Muster Roll",
+    hasDownload: true,
+    filters: [{ label: "Date", type: "date" }, { label: "Project Name", type: "select", options: ["All"] }, { label: "Labor Role / Designation", type: "select", options: ["All"] }],
+    columns: ['Date', 'Project Name', 'Labor Role / Designation', 'Workers Present', 'Workers Absent', 'Total Workers', 'Hours Worked', 'Overtime Hours', 'Notes']
+  },
+  "staff-punch-report": {
+    title: "Staff Punch Report",
+    hasDownload: true,
+    filters: [{ label: "Punch Date", type: "date" }, { label: "Project Name", type: "select", options: ["All"] }, { label: "Punch Type", type: "select", options: ["All"] }, { label: "Face Verified", type: "select", options: ["All"] }],
+    columns: ['Punch Time', 'Employee Code', 'Employee Name', 'Project Name', 'Punch Type', 'Face Verified', 'Confidence Score', 'Geofence Status', 'Latitude', 'Longitude']
+  },
   "attendance-salary": {
     title: "Attendance & Salary Report",
     hasDownload: false,

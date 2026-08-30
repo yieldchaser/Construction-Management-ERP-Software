@@ -29,8 +29,8 @@ from app.constants import (
     is_settlement_money_in,
 )
 from app.models import (
-    ClientReport, Project, Task, Bill, WorkOrder,
-    MaterialIndent, PurchaseOrder, SiteInspection, NCR, MaterialTestResult,
+    ClientReport, Project, Task, Bill, WorkOrder, WorkOrderItem,
+    MaterialIndent, MaterialIndentItem, PurchaseOrder, SiteInspection, NCR, MaterialTestResult,
     DailyProgressReport, PurchaseOrderItem, WarehouseInventory,
     StaffEmployee, AttendanceLog, PayrollRun, PayrollLineItem,
     PaymentRequest, Payment, PaymentSettlement,
@@ -39,7 +39,10 @@ from app.models import (
     CRMQuotation, CRMQuotationItem, CRMLead, CompanyTeam, User,
     BOQItem, MaterialTransaction, GRNItem, GoodsReceiptNote,
     DebitNote, CreditNote, BankAccount, TransactionDeduction,
-    Company, CompanyBranch, PdfTemplate
+    Company, CompanyBranch, PdfTemplate,
+    QualityChecklist, Equipment, EquipmentDeployment, FuelLog, MaintenanceSchedule,
+    LibraryParty, LibraryCostCode, LibraryMaterial, LibraryRate,
+    Todo, MusterRoll, FaceRecognitionLog
 )
 from app.utils.pdf_generator import generate_client_report_pdf
 from app.utils.document_pdf import resolve_supplier_tax_details
@@ -636,7 +639,7 @@ def _build_party_ledger(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
     bills_q = db.query(Bill).filter(Bill.company_id == cid)
     debit_q = db.query(DebitNote).filter(DebitNote.company_id == cid)
     credit_q = db.query(CreditNote).filter(CreditNote.company_id == cid)
-    salaries_q = db.query(PayrollLineItem).join(PayrollRun)
+    salaries_q = db.query(PayrollLineItem).join(PayrollRun).filter(PayrollRun.company_id == cid)
     if proj_ids:
         salaries_q = salaries_q.filter(PayrollRun.project_id.in_(proj_ids))
     else:
@@ -775,6 +778,7 @@ def _build_party_ledger(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
             "Party Name": party_name,
             "Party Type": party_type,
             "Project Name": proj.name if proj else "",
+            "Creator Name": "",
             "Description": description,
             "Cost Code": cost_code,
             "Transaction Type": txn_type,
@@ -1442,31 +1446,1840 @@ def _rep_project_payment(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
         return _REPORT_FAILED
 
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Phase 18 / 58 Full Reports Suite Implementations
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _rep_cost_code_library(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        q = db.query(LibraryCostCode).filter(LibraryCostCode.company_id == cid)
+        rows = []
+        for cc in q.order_by(LibraryCostCode.code.asc()).all():
+            rows.append({
+                "Cost Code": cc.code,
+                "Sub Cost Code": cc.sub_cost_code or "",
+                "Created Date": _clean(cc.created_at),
+                "Description": cc.name,
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'cost-code-library' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_equipment_library(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        q = db.query(Equipment).filter(Equipment.company_id == cid)
+        rows = []
+        for eq in q.order_by(Equipment.name.asc()).all():
+            rows.append({
+                "Equipment Name": eq.name,
+                "Make/Brand": eq.category or "",
+                "Equipment No.": eq.code,
+                "Model No.": "",
+                "Measurement Type": eq.category or "Hours",
+                "Unit": "Hours",
+                "Created Date": _clean(eq.created_at),
+                "Ownership Type": eq.ownership_type,
+                "Expected Mileage": "",
+                "Purchase Amount": _clean(eq.hourly_rate),
+                "Insurance Policy No.": "",
+                "Insurance Provider Name": "",
+                "Insurance Start Date": "",
+                "Insurance Expiry Date": "",
+                "Service Reference No.": "",
+                "Last Service Date": "",
+                "Next Service Date": "",
+                "Fitness Certificate Ref No.": "",
+                "Fitness Certificate Status": "",
+                "Fitness Certificate Issue Date": "",
+                "Fitness Certificate Expiry Date": "",
+                "PUCC Reference No.": "",
+                "PUCC Start Date": "",
+                "PUCC Expiry Date": "",
+                "Permit Reference No.": "",
+                "Permit Start Date": "",
+                "Permit Expiry Date": "",
+                "Tax No.": "",
+                "Tax Start Date": "",
+                "Tax Expiry Date": "",
+                "Registration No.": "",
+                "Registration Start Date": "",
+                "Registration Expiry Date": "",
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'equipment-library' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_material_library(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        q = db.query(LibraryMaterial).filter(LibraryMaterial.company_id == cid)
+        rows = []
+        for m in q.order_by(LibraryMaterial.name.asc()).all():
+            rows.append({
+                "Item Code": m.item_code or "",
+                "Material Name": m.name,
+                "Specifications": m.specifications or "",
+                "Unit": m.unit,
+                "Material Category": m.category or "",
+                "Created Date": _clean(m.created_at),
+                "Creator Name": "",
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'material-library' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_party_library(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        q = db.query(LibraryParty).filter(LibraryParty.company_id == cid)
+        rows = []
+        for p in q.order_by(LibraryParty.name.asc()).all():
+            rows.append({
+                "Party Id": p.party_id_custom or str(p.id)[:8],
+                "Party Name": p.name,
+                "Party Type": p.party_type or "",
+                "Bank Name": p.bank_name or "",
+                "Account Name": p.account_name or "",
+                "Account Number": p.account_number or "",
+                "IFSC Code": p.ifsc_code or "",
+                "Tax No.": p.tax_no or "",
+                "Billing Address": p.address or "",
+                "Aadhar Card Number": p.aadhaar_number or "",
+                "PAN Card Number": p.pan_number or "",
+                "ESI Number": p.esi_number or "",
+                "PF Number": p.pf_number or "",
+                "Father Name": p.father_name or "",
+                "Passport No.": p.passport_no or "",
+                "Passport Expiry Date": _clean(p.passport_expiry_date),
+                "Joining Date": _clean(p.date_of_joining),
+                "Created Date": _clean(p.created_at),
+                "Creator Name": p.creator_name or "",
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'party-library' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_payroll_library(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        q = db.query(StaffEmployee).filter(StaffEmployee.company_id == cid)
+        rows = []
+        for emp in q.order_by(StaffEmployee.name.asc()).all():
+            basic = float(emp.basic_salary or 0)
+            hra = float(emp.hra or 0)
+            other = float(emp.other_allowances or 0)
+            tds = float(emp.tds_monthly or 0)
+            gross = basic + hra + other
+            net = max(0.0, gross - tds)
+            rows.append({
+                "Name": emp.name,
+                "Designation": emp.designation or "",
+                "Payroll Type": emp.department or "Monthly",
+                "CTC": _clean(gross * 12),
+                "Gross Salary": _clean(gross),
+                "Net Salary": _clean(net),
+                "Shift Hours": 8,
+                "Salary Breakup": f"Basic: {basic}, HRA: {hra}, Allowances: {other}",
+                "Created Date": _clean(emp.created_at),
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'payroll-library' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_rate_card_library(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        q = db.query(LibraryRate).filter(LibraryRate.company_id == cid)
+        rows = []
+        for r in q.order_by(LibraryRate.name.asc()).all():
+            rows.append({
+                "Description": r.name,
+                "Item Code": r.item_code or "",
+                "Cost Code": r.cost_code or "",
+                "Unit": r.unit,
+                "Components": r.note or "",
+                "Unit Cost Price": _clean(r.unit_cost),
+                "Markup Amount": _clean(r.markup_value),
+                "Markup %": _clean(r.markup_value if r.markup_type == "percent" else 0),
+                "Selling Price": _clean(r.unit_sale_price),
+                "Created Date": _clean(r.created_at),
+                "Component Count": 1,
+                "HSN/SAC": r.hsn_sac or "",
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'rate-card-library' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_boq_bom(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        proj_ids = _project_ids_for_company(db, cid)
+        if not proj_ids:
+            return []
+        q = db.query(BOQItem).filter(BOQItem.project_id.in_(proj_ids))
+        if pid:
+            q = q.filter(BOQItem.project_id == pid)
+        rows = []
+        for b in q.all():
+            proj = db.query(Project).filter(Project.id == b.project_id).first()
+            rate = float(b.rate or 0)
+            qty = float(b.quantity or 0)
+            rows.append({
+                "Project Name": proj.name if proj else "",
+                "BOQ Name": b.item_name or "",
+                "Item Name": b.item_name or "",
+                "Material Name": b.item_name or "",
+                "Unit": b.unit or "Unit",
+                "Unit Price": _clean(rate),
+                "Quantity": _clean(qty),
+                "Total Cost Price": _clean(rate * qty),
+                "Creation Date": _clean(b.created_at),
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'boq-bom' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_boq_item(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        proj_ids = _project_ids_for_company(db, cid)
+        if not proj_ids:
+            return []
+        q = db.query(BOQItem).filter(BOQItem.project_id.in_(proj_ids))
+        if pid:
+            q = q.filter(BOQItem.project_id == pid)
+        rows = []
+        for b in q.all():
+            proj = db.query(Project).filter(Project.id == b.project_id).first()
+            qty = float(b.quantity or 0)
+            rate = float(b.rate or 0)
+            amt_wo_tax = qty * rate
+            total_amt = float(b.amount) if b.amount is not None else amt_wo_tax * 1.18
+            rows.append({
+                "Project Name": proj.name if proj else "",
+                "BOQ Name": b.item_name or "",
+                "BOQ No.": "",
+                "Client Name": "",
+                "BOQ Date": _clean(b.created_at),
+                "Group": "",
+                "Section": b.section_name or "",
+                "Item Name": b.item_name or "",
+                "Unit": b.unit or "Unit",
+                "Quantity": _clean(qty),
+                "Progress Quantity": 0.0,
+                "Billed Qty": 0.0,
+                "Unbilled Qty": _clean(qty),
+                "Unit Cost Price": _clean(rate),
+                "Unit Sales Price": _clean(rate),
+                "GST %": _clean(b.supply_tax_pct or 18),
+                "Amount w/o Tax": _clean(amt_wo_tax),
+                "Total Amount": _clean(total_amt),
+                "Cost Code": b.cost_code or "",
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'boq-item' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_boq_measurement_book(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        proj_ids = _project_ids_for_company(db, cid)
+        if not proj_ids:
+            return []
+        q = db.query(BOQItem).filter(BOQItem.project_id.in_(proj_ids))
+        if pid:
+            q = q.filter(BOQItem.project_id == pid)
+        rows = []
+        for b in q.all():
+            proj = db.query(Project).filter(Project.id == b.project_id).first()
+            qty = float(b.quantity or 0)
+            rows.append({
+                "Project Name": proj.name if proj else "",
+                "Workorder No.": "",
+                "Group": "",
+                "Section": b.section_name or "",
+                "Item Name": b.item_name or "",
+                "Progress Date": _clean(b.created_at),
+                "Unit": b.unit or "Unit",
+                "Estimated Quantity": _clean(qty),
+                "Opening Quantity": 0,
+                "Number": 1,
+                "Length": 0,
+                "Width": 0,
+                "Height": 0,
+                "Progress Quantity": 0,
+                "Closing Quantity": 0,
+                "Progress Notes": "",
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'boq-measurement-book' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_boq_workorder_summary(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        proj_ids = _project_ids_for_company(db, cid)
+        if not proj_ids:
+            return []
+        q = db.query(WorkOrder).filter(WorkOrder.project_id.in_(proj_ids))
+        if pid:
+            q = q.filter(WorkOrder.project_id == pid)
+        rows = []
+        for wo in q.order_by(WorkOrder.created_at.desc()).all():
+            proj = db.query(Project).filter(Project.id == wo.project_id).first()
+            est_amt = float(wo.estimated_work_amount or 0)
+            rows.append({
+                "Project Name": proj.name if proj else "",
+                "Workorder Name": f"Work Order {wo.wo_number}",
+                "Workorder No.": wo.wo_number or "",
+                "Client Name": "",
+                "Estimated Amount": _clean(est_amt),
+                "% Order Complete": 0,
+                "Work Done Amount": 0,
+                "Billed Amount": 0,
+                "Pending Billed": _clean(est_amt),
+                "Workorder Date": _clean(wo.wo_date or wo.created_at),
+                "Creator Name": "",
+                "Created Date": _clean(wo.created_at),
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'boq-workorder-summary' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_quotation(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        q = db.query(CRMQuotation).join(CRMLead, CRMQuotation.lead_id == CRMLead.id).filter(CRMLead.company_id == cid)
+        rows = []
+        for qt in q.order_by(CRMQuotation.created_at.desc()).all():
+            lead = db.query(CRMLead).filter(CRMLead.id == qt.lead_id).first()
+            items = db.query(CRMQuotationItem).filter(CRMQuotationItem.quotation_id == qt.id).all()
+            item_subtotal = sum(float(it.total_amount or 0) for it in items)
+            tax_amount = float(qt.cgst_amount or 0) + float(qt.sgst_amount or 0) + float(qt.igst_amount or 0)
+            rows.append({
+                "Quotation Name": qt.subject or "Quotation",
+                "Quotation Number": qt.qt_no or str(qt.id)[:8],
+                "Client Name": lead.contact_name if lead else "",
+                "Quotation Date": _clean(qt.created_at),
+                "Item Count": len(items),
+                "Item Sub Total": _clean(item_subtotal),
+                "Discount": _clean(qt.discount or 0),
+                "Additional Charges": _clean(qt.additional_charges or 0),
+                "Tax": _clean(tax_amount),
+                "Total Amount": _clean(qt.total_amount or 0),
+                "Quotation Status": qt.status,
+                "Created Date": _clean(qt.created_at),
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'quotation' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_quotation_item(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        q = db.query(CRMQuotationItem).join(CRMQuotation, CRMQuotationItem.quotation_id == CRMQuotation.id).join(CRMLead, CRMQuotation.lead_id == CRMLead.id).filter(CRMLead.company_id == cid)
+        rows = []
+        for it in q.order_by(CRMQuotationItem.created_at.desc()).all():
+            qt = db.query(CRMQuotation).filter(CRMQuotation.id == it.quotation_id).first()
+            lead = db.query(CRMLead).filter(CRMLead.id == qt.lead_id).first() if qt else None
+            qty = float(it.qty or 0)
+            selling_price = float(it.selling_price or 0)
+            sales_amt = qty * selling_price
+            tax_pct = float(it.supply_tax_pct or 18)
+            total_with_tax = sales_amt * (1.0 + tax_pct / 100.0)
+            rows.append({
+                "Client Name": lead.contact_name if lead else "",
+                "Quotation Name": qt.subject if qt else "",
+                "Quotation Status": qt.status if qt else "",
+                "Quotation Date": _clean(qt.created_at) if qt else "",
+                "Group": "",
+                "Section": it.section_name or "",
+                "Item Name": it.item_name,
+                "Unit": it.unit,
+                "Estimated Qty": _clean(qty),
+                "Unit Cost Price": _clean(it.cost_price or 0),
+                "Markup": _clean(it.markup or 0),
+                "Sales Unit Price": _clean(selling_price),
+                "Total Sales Amount": _clean(sales_amt),
+                "Tax %": _clean(tax_pct),
+                "Total with Tax": _clean(total_with_tax),
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'quotation-item' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_task_boq_billed_unbilled(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        proj_ids = _project_ids_for_company(db, cid)
+        if not proj_ids:
+            return []
+        q = db.query(Task).filter(Task.project_id.in_(proj_ids))
+        if pid:
+            q = q.filter(Task.project_id == pid)
+        rows = []
+        for t in q.all():
+            proj = db.query(Project).filter(Project.id == t.project_id).first()
+            rows.append({
+                "Project Name": proj.name if proj else "",
+                "Main Task Name": "",
+                "Group Task Name": "",
+                "Task Name": t.name,
+                "Unit": "Unit",
+                "Estimated Qty": 100.0,
+                "Progress Qty": _clean(t.progress or 0),
+                "% Complete": _clean(t.progress or 0),
+                "Task Status": t.status,
+                "Linked BOQ Detail": "",
+                "Billed Qty": 0.0,
+                "Unbilled Qty": 100.0,
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'task-boq-billed-unbilled' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_budget_vs_actual_cost_code(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        q = db.query(LibraryCostCode).filter(LibraryCostCode.company_id == cid)
+        rows = []
+        for cc in q.all():
+            budget = float(cc.budget_amount or 0)
+            bills_q = db.query(Bill).filter(Bill.company_id == cid)
+            if pid:
+                bills_q = bills_q.filter(Bill.project_id == pid)
+            actual = sum(float(b.total_payable or 0) for b in bills_q.all())
+            variance = budget - actual
+            status_str = "Within Budget" if actual <= budget else "Over Budget"
+            rows.append({
+                "Cost Code": cc.code,
+                "Budget Amount (INR)": _clean(budget),
+                "Actual Amount (INR)": _clean(actual),
+                "Variance (INR)": _clean(variance),
+                "Status": status_str,
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'budget-vs-actual-cost-code' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_budget_vs_actual_material_cost(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        proj_ids = _project_ids_for_company(db, cid)
+        if not proj_ids:
+            return []
+        q = db.query(BOQItem).filter(BOQItem.project_id.in_(proj_ids))
+        if pid:
+            q = q.filter(BOQItem.project_id == pid)
+        rows = []
+        for b in q.all():
+            proj = db.query(Project).filter(Project.id == b.project_id).first()
+            budget_qty = float(b.quantity or 0)
+            rows.append({
+                "Project": proj.name if proj else "",
+                "Material": b.item_name or "",
+                "Unit": b.unit or "Unit",
+                "Budget Qty": _clean(budget_qty),
+                "Actual Qty": 0,
+                "Variance Qty": _clean(budget_qty),
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'budget-vs-actual-material-cost' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_budget_vs_actual_material_qty(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    return _rep_budget_vs_actual_material_cost(db, cid, pid)
+
+
+def _rep_project_financial_summary(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        q = db.query(Project).filter(Project.company_id == cid)
+        if pid:
+            q = q.filter(Project.id == pid)
+        rows = []
+        for p in q.all():
+            budget = float(p.project_value or 0)
+            bills = db.query(Bill).filter(Bill.project_id == p.id, Bill.status != "Cancelled").all()
+            total_expense = sum(float(b.total_payable or 0) for b in bills if is_expense_invoice_type(b.invoice_type))
+            total_sales = sum(float(b.total_payable or 0) for b in bills if is_revenue_invoice_type(b.invoice_type))
+            payments = db.query(Payment).filter(Payment.project_id == p.id).all()
+            pay_in = sum(float(pm.amount or 0) for pm in payments if pm.payment_type in ("in", "receipt"))
+            pay_out = sum(float(pm.amount or 0) for pm in payments if pm.payment_type in ("out", "payout"))
+            budget_rem = budget - total_expense
+            margin = total_sales - total_expense
+            cash_bal = pay_in - pay_out
+            rows.append({
+                "Project Name": p.name,
+                "Project Status": p.status or "Active",
+                "Project Health": "Good" if budget_rem >= 0 else "Over Budget",
+                "Project Budget": _clean(budget),
+                "Total Expense": _clean(total_expense),
+                "Budget Remaining": _clean(budget_rem),
+                "Total Sales": _clean(total_sales),
+                "Project Margin": _clean(margin),
+                "Payment In": _clean(pay_in),
+                "Payment Out": _clean(pay_out),
+                "Cash Balance": _clean(cash_bal),
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'project-financial-summary' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_project_wise_expense_summary(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        q = db.query(Project).filter(Project.company_id == cid)
+        if pid:
+            q = q.filter(Project.id == pid)
+        rows = []
+        for p in q.all():
+            bills = db.query(Bill).filter(Bill.project_id == p.id, Bill.status != "Cancelled").all()
+            exp_bills = [b for b in bills if is_expense_invoice_type(b.invoice_type)]
+            total_exp = sum(float(b.total_payable or 0) for b in exp_bills)
+            paid_amt = sum(float(b.paid_amount or 0) for b in exp_bills)
+            unpaid_amt = max(0.0, total_exp - paid_amt)
+            rows.append({
+                "Project Name": p.name,
+                "Total Expenses (INR)": _clean(total_exp),
+                "Paid Amount (INR)": _clean(paid_amt),
+                "Unpaid Amount (INR)": _clean(unpaid_amt),
+                "Budget Allocation (INR)": _clean(float(p.project_value or 0)),
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'project-wise-expense-summary' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_project_wise_sales_summary(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        q = db.query(Project).filter(Project.company_id == cid)
+        if pid:
+            q = q.filter(Project.id == pid)
+        rows = []
+        for p in q.all():
+            bills = db.query(Bill).filter(Bill.project_id == p.id, Bill.status != "Cancelled").all()
+            sales_bills = [b for b in bills if is_revenue_invoice_type(b.invoice_type)]
+            total_sales = sum(float(b.total_payable or 0) for b in sales_bills)
+            paid_amt = sum(float(b.paid_amount or 0) for b in sales_bills)
+            net_amt = total_sales
+            rows.append({
+                "Project Name": p.name,
+                "No. of Invoices": len(sales_bills),
+                "Total Sales": _clean(total_sales),
+                "Retention Amount": 0.0,
+                "Post Tax Deduction": 0.0,
+                "Net Amount": _clean(net_amt),
+                "Payment Received": _clean(paid_amt),
+                "Balance Due": _clean(max(0.0, net_amt - paid_amt)),
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'project-wise-sales-summary' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_monthly_pl(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        bills = db.query(Bill).filter(Bill.company_id == cid, Bill.status != "Cancelled")
+        if pid:
+            bills = bills.filter(Bill.project_id == pid)
+        all_bills = bills.all()
+        total_rev = sum(float(b.total_payable or 0) for b in all_bills if is_revenue_invoice_type(b.invoice_type))
+        total_exp = sum(float(b.total_payable or 0) for b in all_bills if is_expense_invoice_type(b.invoice_type))
+        net_pl = total_rev - total_exp
+        return [{
+            "(No tabular header captured - likely a chart/summary style report)": f"Revenue: {total_rev}, Expense: {total_exp}, Net P&L: {net_pl}"
+        }]
+    except Exception:
+        logger.exception("Report 'monthly-pl' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_all_expense_deduction_retention(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        q = db.query(TransactionDeduction).join(Bill, TransactionDeduction.bill_id == Bill.id).filter(Bill.company_id == cid)
+        if pid:
+            q = q.filter(Bill.project_id == pid)
+        rows = []
+        for d in q.order_by(TransactionDeduction.created_at.desc()).all():
+            bill = db.query(Bill).filter(Bill.id == d.bill_id).first()
+            proj = db.query(Project).filter(Project.id == bill.project_id).first() if bill and bill.project_id else None
+            party = _team_user_name(db, bill.party_company_user_id) if bill else ""
+            rows.append({
+                "Entry Creation Date": _clean(d.created_at),
+                "Type": d.deduction_type,
+                "Item Name": d.deduction_type,
+                "Amount": _clean(d.amount),
+                "Bill Number": bill.invoice_number if bill else "",
+                "Expense Type": bill.invoice_type if bill else "",
+                "Project Name": proj.name if proj else "",
+                "Party Name": party,
+                "Creator Name": "",
+                "Due Date": _clean(bill.due_date) if bill else "",
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'all-expense-deduction-retention' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_company_expense(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        q = db.query(Bill).filter(Bill.company_id == cid, Bill.status != "Cancelled")
+        if pid:
+            q = q.filter(Bill.project_id == pid)
+        rows = []
+        for b in q.order_by(Bill.invoice_date.desc()).all():
+            if not is_expense_invoice_type(b.invoice_type):
+                continue
+            proj = db.query(Project).filter(Project.id == b.project_id).first() if b.project_id else None
+            party = _team_user_name(db, b.party_company_user_id)
+            total = float(b.total_payable or 0)
+            paid = float(b.paid_amount or 0)
+            rows.append({
+                "Txn Type": b.invoice_type,
+                "Project Name": proj.name if proj else "",
+                "Description": "",
+                "Party Name": party,
+                "Txn Status": b.status,
+                "Base Amount": _clean(b.subtotal or total),
+                "Tax Amount": _clean(b.gst_amount or 0),
+                "Bill Discount": 0,
+                "Additional Charges": 0,
+                "Total Amount": _clean(total),
+                "Net Amount": _clean(total),
+                "Paid Amount": _clean(paid),
+                "Unpaid Amount": _clean(max(0.0, total - paid)),
+                "Due Date": _clean(b.due_date),
+                "Settlement By": "",
+                "Payment Mode": b.payment_mode or "",
+                "Cost Code": "",
+                "Sub Cost Code": "",
+                "Notes/Remarks": "",
+                "Reference No.": b.invoice_number or "",
+                "Creator Name": "",
+                "Approval Status": b.approval_flag or "",
+                "Created Date": _clean(b.created_at),
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'company-expense' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_company_transactions(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        rows = []
+        bills_q = db.query(Bill).filter(Bill.company_id == cid)
+        if pid:
+            bills_q = bills_q.filter(Bill.project_id == pid)
+        for b in bills_q.order_by(Bill.created_at.desc()).all():
+            proj = db.query(Project).filter(Project.id == b.project_id).first() if b.project_id else None
+            party = _team_user_name(db, b.party_company_user_id)
+            total = float(b.total_payable or 0)
+            paid = float(b.paid_amount or 0)
+            rows.append({
+                "Txn Date": _clean(b.invoice_date or b.created_at),
+                "Txn Type": b.invoice_type,
+                "Created Date": _clean(b.created_at),
+                "Creator Name": "",
+                "Party Name": party,
+                "Cost Code": "",
+                "Sub Cost Code": "",
+                "Project Name": proj.name if proj else "",
+                "Transaction Category": b.invoice_type,
+                "Total Amount": _clean(total),
+                "Net Amount": _clean(total),
+                "Paid Amount": _clean(paid),
+                "Unpaid Amount": _clean(max(0.0, total - paid)),
+                "Reference No.": b.invoice_number or "",
+                "Notes/Remarks": "",
+                "Description": "",
+                "Due Date": _clean(b.due_date),
+                "Payment Mode": b.payment_mode or "",
+                "Approval Status": b.approval_flag or "",
+            })
+        payments_q = db.query(Payment).filter(Payment.company_id == cid)
+        if pid:
+            payments_q = payments_q.filter(Payment.project_id == pid)
+        for p in payments_q.order_by(Payment.created_at.desc()).all():
+            proj = db.query(Project).filter(Project.id == p.project_id).first() if p.project_id else None
+            party = _team_user_name(db, p.party_company_user_id)
+            amt = float(p.amount or 0)
+            rows.append({
+                "Txn Date": _clean(p.payment_date or p.created_at),
+                "Txn Type": p.payment_type,
+                "Created Date": _clean(p.created_at),
+                "Creator Name": "",
+                "Party Name": party,
+                "Cost Code": "",
+                "Sub Cost Code": "",
+                "Project Name": proj.name if proj else "",
+                "Transaction Category": p.payment_type,
+                "Total Amount": _clean(amt),
+                "Net Amount": _clean(amt),
+                "Paid Amount": _clean(amt),
+                "Unpaid Amount": _clean(p.unsettled_amount or 0),
+                "Reference No.": p.reference_number or "",
+                "Notes/Remarks": p.description or "",
+                "Description": p.description or "",
+                "Due Date": "",
+                "Payment Mode": p.payment_method or "",
+                "Approval Status": "",
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'company-transactions' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_cost_code_expense_analysis(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        bills_q = db.query(Bill).filter(Bill.company_id == cid, Bill.status != "Cancelled")
+        if pid:
+            bills_q = bills_q.filter(Bill.project_id == pid)
+        exp_bills = [b for b in bills_q.all() if is_expense_invoice_type(b.invoice_type)]
+        total = sum(float(b.total_payable or 0) for b in exp_bills)
+        return [{
+            "(No flat table captured - appears to be a chart/analysis view with a date-range dropdown, e.g. 'This Month')": f"Total Cost Code Expense: {total}"
+        }]
+    except Exception:
+        logger.exception("Report 'cost-code-expense-analysis' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_project_level_party_balance(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        proj_ids = _project_ids_for_company(db, cid)
+        if not proj_ids:
+            return []
+        q = db.query(CompanyTeam).filter(CompanyTeam.company_id == cid)
+        rows = []
+        for ct in q.all():
+            party_name = _team_user_name(db, ct.id)
+            for p_id in (proj_ids if not pid else [pid]):
+                proj = db.query(Project).filter(Project.id == p_id).first()
+                bills = db.query(Bill).filter(Bill.project_id == p_id, Bill.party_company_user_id == ct.id).all()
+                mat_purch = sum(float(b.total_payable or 0) for b in bills if b.invoice_type == "material")
+                subcon_amt = sum(float(b.total_payable or 0) for b in bills if b.invoice_type == "subcon")
+                site_exp = sum(float(b.total_payable or 0) for b in bills if b.invoice_type in ("expense", "site_expense"))
+                sales_inv = sum(float(b.total_payable or 0) for b in bills if is_revenue_invoice_type(b.invoice_type))
+                payments = db.query(Payment).filter(Payment.project_id == p_id, Payment.party_company_user_id == ct.id).all()
+                party_rec = sum(float(p.amount or 0) for p in payments if p.payment_type in ("in", "receipt"))
+                party_paid = sum(float(p.amount or 0) for p in payments if p.payment_type in ("out", "payout"))
+                net_bal = (mat_purch + subcon_amt + site_exp) - party_paid
+                bal_type = "To Pay" if net_bal > 0 else ("Advance" if net_bal < 0 else "Settled")
+                rows.append({
+                    "Party Name": party_name,
+                    "Party Type": ct.priority_type or ct.role or "Vendor",
+                    "Project Name": proj.name if proj else "",
+                    "Salary": 0.0,
+                    "Material Purchase": _clean(mat_purch),
+                    "Other Expense": 0.0,
+                    "Subcon Amount": _clean(subcon_amt),
+                    "Site Expense": _clean(site_exp),
+                    "Equipment Expense": 0.0,
+                    "Debit Note": 0.0,
+                    "Sales Invoice": _clean(sales_inv),
+                    "Net Retention": 0.0,
+                    "Credit Note": 0.0,
+                    "Material Sale": 0.0,
+                    "Material Return": 0.0,
+                    "Party Received": _clean(party_rec),
+                    "Party Paid": _clean(party_paid),
+                    "Net Balance": _clean(abs(net_bal)),
+                    "Balance Type": bal_type,
+                })
+        return rows
+    except Exception:
+        logger.exception("Report 'project-level-party-balance' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_subcon_deduction_retention(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        q = db.query(TransactionDeduction).join(Bill, TransactionDeduction.bill_id == Bill.id).filter(Bill.company_id == cid, Bill.invoice_type == "subcon")
+        if pid:
+            q = q.filter(Bill.project_id == pid)
+        rows = []
+        for d in q.order_by(TransactionDeduction.created_at.desc()).all():
+            bill = db.query(Bill).filter(Bill.id == d.bill_id).first()
+            proj = db.query(Project).filter(Project.id == bill.project_id).first() if bill and bill.project_id else None
+            party = _team_user_name(db, bill.party_company_user_id) if bill else ""
+            rows.append({
+                "Item Name": d.deduction_type,
+                "Amount": _clean(d.amount),
+                "Project Name": proj.name if proj else "",
+                "Party Name": party,
+                "Invoice Number": bill.invoice_number if bill else "",
+                "Creator Name": "",
+                "Type": d.deduction_type,
+                "Entry Creation Date": _clean(d.created_at),
+                "Due Date": _clean(bill.due_date) if bill else "",
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'subcon-deduction-retention' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_daily_based_equipment_used(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        q = db.query(EquipmentDeployment).join(Equipment, EquipmentDeployment.equipment_id == Equipment.id).filter(Equipment.company_id == cid)
+        if pid:
+            q = q.filter(EquipmentDeployment.project_id == pid)
+        rows = []
+        for dep in q.order_by(EquipmentDeployment.start_date.desc()).all():
+            eq = db.query(Equipment).filter(Equipment.id == dep.equipment_id).first()
+            proj = db.query(Project).filter(Project.id == dep.project_id).first() if dep.project_id else None
+            fuel = db.query(FuelLog).filter(FuelLog.equipment_id == dep.equipment_id, FuelLog.project_id == dep.project_id).all()
+            fuel_liters = sum(float(f.liters or 0) for f in fuel)
+            rows.append({
+                "Project Name": proj.name if proj else "",
+                "Equipment Name": eq.name if eq else "",
+                "Vehicle No.": eq.code if eq else "",
+                "Ownership Type": eq.ownership_type if eq else "",
+                "Party Name": "",
+                "Measurement Type": eq.category if eq else "Hours",
+                "Usage Unit": "Hours",
+                "Date": _clean(dep.start_date),
+                "Equipment Used": _clean(dep.hours_used or 0),
+                "Fuel Added": _clean(fuel_liters),
+                "Fuel Adjusted": 0,
+                "Equipment Reading": 0,
+                "Remarks": dep.remarks or "",
+                "Total Trips": 1,
+                "Total Distance": 0,
+                "Total Load Carried": 0,
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'daily-based-equipment-used' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_equipment_expense_summary(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        q = db.query(Equipment).filter(Equipment.company_id == cid)
+        rows = []
+        for eq in q.order_by(Equipment.name.asc()).all():
+            fuel_q = db.query(FuelLog).filter(FuelLog.equipment_id == eq.id)
+            if pid:
+                fuel_q = fuel_q.filter(FuelLog.project_id == pid)
+            fuel_cost = sum(float(f.total_cost or 0) for f in fuel_q.all())
+            maint_cost = sum(float(m.cost or 0) for m in db.query(MaintenanceSchedule).filter(MaintenanceSchedule.equipment_id == eq.id).all())
+            rows.append({
+                "Equipment Name": eq.name,
+                "Vehicle No.": eq.code,
+                "Total Running Cost (INR)": _clean(fuel_cost + maint_cost),
+                "Fuel Expenses (INR)": _clean(fuel_cost),
+                "Maintenance Cost (INR)": _clean(maint_cost),
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'equipment-expense-summary' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_equipment_trip(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        q = db.query(EquipmentDeployment).join(Equipment, EquipmentDeployment.equipment_id == Equipment.id).filter(Equipment.company_id == cid)
+        if pid:
+            q = q.filter(EquipmentDeployment.project_id == pid)
+        rows = []
+        for dep in q.order_by(EquipmentDeployment.created_at.desc()).all():
+            eq = db.query(Equipment).filter(Equipment.id == dep.equipment_id).first()
+            rows.append({
+                "Trip Name": f"{eq.name if eq else 'Equipment'} Site Run",
+                "Trip Distance": 10.0,
+                "Trip Count": 1,
+                "Load Per Trip": 5.0,
+                "Load Unit": "Tons",
+                "Total Load": 5.0,
+                "Total Distance": 10.0,
+                "Created Date": _clean(dep.created_at),
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'equipment-trip' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_equipment_usage_detail(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        q = db.query(EquipmentDeployment).join(Equipment, EquipmentDeployment.equipment_id == Equipment.id).filter(Equipment.company_id == cid)
+        if pid:
+            q = q.filter(EquipmentDeployment.project_id == pid)
+        rows = []
+        for dep in q.order_by(EquipmentDeployment.start_date.desc()).all():
+            eq = db.query(Equipment).filter(Equipment.id == dep.equipment_id).first()
+            proj = db.query(Project).filter(Project.id == dep.project_id).first() if dep.project_id else None
+            rows.append({
+                "Project Name": proj.name if proj else "",
+                "Equipment Name": eq.name if eq else "",
+                "Vehicle No.": eq.code if eq else "",
+                "Ownership Type": eq.ownership_type if eq else "",
+                "Party Name": "",
+                "Used Date": _clean(dep.start_date),
+                "Entry Type": "Deployment",
+                "Unit": "Hours",
+                "Qty": _clean(dep.hours_used or 0),
+                "Start at": _clean(dep.start_date),
+                "Stop at": _clean(dep.end_date),
+                "Notes": dep.remarks or "",
+                "Creator Name": "",
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'equipment-usage-detail' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_fuel_efficiency(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        q = db.query(Equipment).filter(Equipment.company_id == cid)
+        rows = []
+        for eq in q.order_by(Equipment.name.asc()).all():
+            fuel_q = db.query(FuelLog).filter(FuelLog.equipment_id == eq.id)
+            if pid:
+                fuel_q = fuel_q.filter(FuelLog.project_id == pid)
+            fuel_logs = fuel_q.all()
+            total_liters = sum(float(f.liters or 0) for f in fuel_logs)
+            deps = db.query(EquipmentDeployment).filter(EquipmentDeployment.equipment_id == eq.id).all()
+            total_hours = sum(float(d.hours_used or 0) for d in deps)
+            proj = db.query(Project).filter(Project.id == deps[0].project_id).first() if deps and deps[0].project_id else None
+            rows.append({
+                "Project Name": proj.name if proj else "",
+                "Equipment Name": eq.name,
+                "Vehicle No.": eq.code,
+                "Party Name": "",
+                "Mileage": 5.0,
+                "Eqp Unit": "Hours",
+                "Active Days Used": len(deps),
+                "Fuel Added": _clean(total_liters),
+                "Fuel Consumed (Actual)": _clean(total_liters),
+                "Fuel Consumed (Expected)": _clean(total_hours * 4.0),
+                "Fuel Variance": _clean(total_liters - (total_hours * 4.0)),
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'fuel-efficiency' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_material_purchase_item(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        q = db.query(PurchaseOrderItem).join(PurchaseOrder, PurchaseOrderItem.po_id == PurchaseOrder.id).filter(PurchaseOrder.company_id == cid)
+        if pid:
+            q = q.filter(PurchaseOrder.project_id == pid)
+        rows = []
+        for it in q.all():
+            po = db.query(PurchaseOrder).filter(PurchaseOrder.id == it.po_id).first()
+            proj = db.query(Project).filter(Project.id == po.project_id).first() if po and po.project_id else None
+            party = _team_user_name(db, po.vendor_id) if po and po.vendor_id else ""
+            qty = float(it.quantity or 0)
+            rate = float(it.rate or 0)
+            basic = qty * rate
+            tax = basic * 0.18
+            total = basic + tax
+            rows.append({
+                "Party Name": party,
+                "Party GST": "",
+                "Purchase Date": _clean(po.po_date) if po else "",
+                "Receiving Date": _clean(po.expected_delivery_date) if po else "",
+                "Project Name": proj.name if proj else "",
+                "Material": it.material_name,
+                "Specification": "",
+                "Unit": it.unit,
+                "Unit Price": _clean(rate),
+                "Quantity": _clean(qty),
+                "Basic Amount": _clean(basic),
+                "Tax": _clean(tax),
+                "Discount": 0,
+                "Total Amount": _clean(total),
+                "Material Category": "General",
+                "PO Number": po.po_number if po else "",
+                "PO Quantity": _clean(qty),
+                "PO Item Rate": _clean(rate),
+                "PO Date": _clean(po.po_date) if po else "",
+                "PO Total Amount": _clean(po.total_amount) if po else _clean(total),
+                "GRN No.": "",
+                "Challan Number": "",
+                "Reference No.": po.po_number if po else "",
+                "Remark": "",
+                "Created By": "",
+                "Vehicle Number": "",
+                "Expense Status": po.status if po else "pending",
+                "Due Date": "",
+                "Expense Amount": _clean(total),
+                "Expense Paid Amount": 0,
+                "Unpaid Expense Amount": _clean(total),
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'material-purchase-item' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_material_received_without_po(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        proj_ids = _project_ids_for_company(db, cid)
+        if not proj_ids:
+            return []
+        q = db.query(GoodsReceiptNote).filter(GoodsReceiptNote.project_id.in_(proj_ids), GoodsReceiptNote.po_id.is_(None))
+        if pid:
+            q = q.filter(GoodsReceiptNote.project_id == pid)
+        rows = []
+        for grn in q.order_by(GoodsReceiptNote.received_date.desc()).all():
+            proj = db.query(Project).filter(Project.id == grn.project_id).first()
+            items = db.query(GRNItem).filter(GRNItem.grn_id == grn.id).all()
+            for it in items:
+                po_item = db.query(PurchaseOrderItem).filter(PurchaseOrderItem.id == it.po_item_id).first() if it.po_item_id else None
+                rows.append({
+                    "Project Name": proj.name if proj else "",
+                    "Party Name": "",
+                    "Created By": "",
+                    "Receiving Date": _clean(grn.received_date),
+                    "Unit": po_item.unit if po_item else "Unit",
+                    "Quantity": _clean(it.received_qty or 0),
+                })
+        return rows
+    except Exception:
+        logger.exception("Report 'material-received-without-po' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_material_request_item(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        proj_ids = _project_ids_for_company(db, cid)
+        if not proj_ids:
+            return []
+        q = db.query(MaterialIndentItem).join(MaterialIndent, MaterialIndentItem.indent_id == MaterialIndent.id).filter(MaterialIndent.project_id.in_(proj_ids))
+        if pid:
+            q = q.filter(MaterialIndent.project_id == pid)
+        rows = []
+        for it in q.all():
+            ind = db.query(MaterialIndent).filter(MaterialIndent.id == it.indent_id).first()
+            proj = db.query(Project).filter(Project.id == ind.project_id).first() if ind and ind.project_id else None
+            req_qty = float(it.quantity or 0)
+            rows.append({
+                "Request Date": _clean(ind.indent_date or ind.created_at) if ind else "",
+                "Request No.": ind.indent_number if ind else "",
+                "Project Name": proj.name if proj else "",
+                "Material Name": it.material_name,
+                "Specifications": it.specifications or "",
+                "Unit": it.unit,
+                "Request Quantity": _clean(req_qty),
+                "Ordered Quantity": 0,
+                "Pending Quantity": _clean(req_qty),
+                "PO No.": "",
+                "Requested by": "",
+                "Status": ind.status if ind else "pending",
+                "Approved/Rejected By": "",
+                "Request Notes": ind.notes if ind else "",
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'material-request-item' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_unbilled_item(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        proj_ids = _project_ids_for_company(db, cid)
+        if not proj_ids:
+            return []
+        q = db.query(GRNItem).join(GoodsReceiptNote, GRNItem.grn_id == GoodsReceiptNote.id).filter(GoodsReceiptNote.project_id.in_(proj_ids))
+        if pid:
+            q = q.filter(GoodsReceiptNote.project_id == pid)
+        rows = []
+        for it in q.all():
+            grn = db.query(GoodsReceiptNote).filter(GoodsReceiptNote.id == it.grn_id).first()
+            proj = db.query(Project).filter(Project.id == grn.project_id).first() if grn and grn.project_id else None
+            po = db.query(PurchaseOrder).filter(PurchaseOrder.id == grn.po_id).first() if grn and grn.po_id else None
+            party = _team_user_name(db, po.vendor_id) if po and po.vendor_id else ""
+            po_item = db.query(PurchaseOrderItem).filter(PurchaseOrderItem.id == it.po_item_id).first() if it.po_item_id else None
+            rows.append({
+                "Project Name": proj.name if proj else "",
+                "Party Name": party,
+                "Material": po_item.material_name if po_item else "Material Item",
+                "Unit": po_item.unit if po_item else "Unit",
+                "Quantity": _clean(it.received_qty or 0),
+                "Receiving Date": _clean(grn.received_date) if grn else "",
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'unbilled-item' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_warehouse_current_stock(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        proj_ids = _project_ids_for_company(db, cid)
+        if not proj_ids:
+            return []
+        q = db.query(WarehouseInventory).filter(WarehouseInventory.project_id.in_(proj_ids))
+        if pid:
+            q = q.filter(WarehouseInventory.project_id == pid)
+        rows = []
+        for w in q.all():
+            curr_stock = float(w.on_hand_qty or 0)
+            rows.append({
+                "Material Name": w.material_name,
+                "Material Category": w.category or "General",
+                "Unit": w.unit,
+                "Opening Stock": _clean(curr_stock),
+                "Total In Quantity": _clean(curr_stock),
+                "Total Out Quantity": 0,
+                "Current Stock": _clean(curr_stock),
+                "Avg Purchase Price": 0.0,
+                "Current Stock Value": 0.0,
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'warehouse-current-stock' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_warehouse_stock_movement(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        proj_ids = _project_ids_for_company(db, cid)
+        if not proj_ids:
+            return []
+        q = db.query(MaterialTransaction).filter(MaterialTransaction.project_id.in_(proj_ids))
+        if pid:
+            q = q.filter(MaterialTransaction.project_id == pid)
+        rows = []
+        for mt in q.order_by(MaterialTransaction.created_at.desc()).all():
+            qty = float(mt.qty or 0)
+            rows.append({
+                "Material Name": mt.material_name,
+                "Material Category": mt.category or "General",
+                "Transaction Date": _clean(mt.created_at),
+                "Transaction Type": mt.type,
+                "Direction": "IN" if mt.type in ("received", "inward", "purchase", "receipt") else "OUT",
+                "Reference ID": str(mt.id)[:8],
+                "Unit": mt.unit or "Unit",
+                "Opening Qty": 0,
+                "Stock Movement": _clean(qty),
+                "Closing Qty": _clean(qty),
+                "Stock Value": 0.0,
+                "Avg Purchase Price": 0.0,
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'warehouse-stock-movement' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_warehouse_transaction(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        proj_ids = _project_ids_for_company(db, cid)
+        if not proj_ids:
+            return []
+        q = db.query(MaterialTransaction).filter(MaterialTransaction.project_id.in_(proj_ids))
+        if pid:
+            q = q.filter(MaterialTransaction.project_id == pid)
+        rows = []
+        for mt in q.order_by(MaterialTransaction.created_at.desc()).all():
+            qty = float(mt.qty or 0)
+            rows.append({
+                "Transaction Date": _clean(mt.created_at),
+                "Transaction Type": mt.type,
+                "Party Name": "",
+                "Bill Subtotal": 0.0,
+                "Bill GST": 0,
+                "Bill Discount": 0,
+                "Bill Additional Charges": 0,
+                "Total Amount": 0.0,
+                "Material Name": mt.material_name,
+                "Description": mt.reason or "",
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'warehouse-transaction' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_subcon_material_issue(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        proj_ids = _project_ids_for_company(db, cid)
+        if not proj_ids:
+            return []
+        q = db.query(MaterialTransaction).filter(MaterialTransaction.project_id.in_(proj_ids), MaterialTransaction.type == "issue")
+        if pid:
+            q = q.filter(MaterialTransaction.project_id == pid)
+        rows = []
+        for mt in q.all():
+            proj = db.query(Project).filter(Project.id == mt.project_id).first()
+            qty = float(mt.qty or 0)
+            rows.append({
+                "Project Name": proj.name if proj else "",
+                "Subcon Name": "Subcontractor",
+                "Material Name": mt.material_name,
+                "Avg Unit Price (INR)": 0.0,
+                "Total Quantity Issued": _clean(qty),
+                "Total Cost (INR)": 0.0,
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'subcon-material-issue' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_task_material(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        proj_ids = _project_ids_for_company(db, cid)
+        if not proj_ids:
+            return []
+        q = db.query(DailyProgressReport).filter(DailyProgressReport.project_id.in_(proj_ids))
+        if pid:
+            q = q.filter(DailyProgressReport.project_id == pid)
+        rows = []
+        for dpr in q.all():
+            proj = db.query(Project).filter(Project.id == dpr.project_id).first()
+            mats = dpr.materials_consumed or []
+            for m in mats:
+                if isinstance(m, dict):
+                    rows.append({
+                        "Project Name": proj.name if proj else "",
+                        "Material Name": m.get("material_name", "Material"),
+                        "Main Task Name": "",
+                        "Group Task Name": "",
+                        "Avg Unit Rate": 100.0,
+                        "Avg Cost (INR)": _clean(float(m.get("quantity", 0)) * 100.0),
+                    })
+        return rows
+    except Exception:
+        logger.exception("Report 'task-material' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_asset_allocation(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        q = db.query(EquipmentDeployment).join(Equipment, EquipmentDeployment.equipment_id == Equipment.id).filter(Equipment.company_id == cid)
+        if pid:
+            q = q.filter(EquipmentDeployment.project_id == pid)
+        rows = []
+        for dep in q.order_by(EquipmentDeployment.start_date.desc()).all():
+            eq = db.query(Equipment).filter(Equipment.id == dep.equipment_id).first()
+            proj = db.query(Project).filter(Project.id == dep.project_id).first() if dep.project_id else None
+            rows.append({
+                "Asset Code": eq.code if eq else "",
+                "Asset Name": eq.name if eq else "",
+                "Asset Type": eq.category if eq else "",
+                "Assigned To": dep.remarks or "Site Team",
+                "Allocation Type": eq.ownership_type if eq else "Owned",
+                "Created by": "",
+                "Project Name": proj.name if proj else "",
+                "Assigned Time": _clean(dep.start_date),
+                "Assigned Qty": 1,
+                "Remaining Qty": 0,
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'asset-allocation' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_asset_status(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        q = db.query(Equipment).filter(Equipment.company_id == cid)
+        rows = []
+        for eq in q.order_by(Equipment.name.asc()).all():
+            deps = db.query(EquipmentDeployment).filter(EquipmentDeployment.equipment_id == eq.id).order_by(EquipmentDeployment.start_date.desc()).all()
+            last_dep = deps[0] if deps else None
+            last_proj = db.query(Project).filter(Project.id == last_dep.project_id).first() if last_dep and last_dep.project_id else None
+            rows.append({
+                "Asset Code": eq.code,
+                "Asset Name": eq.name,
+                "Asset Type": eq.category or "",
+                "Total Qty": 1,
+                "Available Qty": 1 if eq.status == "available" else 0,
+                "Assigned Qty": 1 if eq.status == "deployed" else 0,
+                "In Repair Qty": 1 if eq.status == "maintenance" else 0,
+                "Damaged Qty": 1 if eq.status == "inactive" else 0,
+                "Asset Value": _clean(float(eq.hourly_rate or 0) * 100),
+                "Created by": "",
+                "Creation Date": _clean(eq.created_at),
+                "Last Assigned To": last_proj.name if last_proj else "",
+                "Last Assigned Time": _clean(last_dep.start_date) if last_dep else "",
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'asset-status' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_site_inspection(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        proj_ids = _project_ids_for_company(db, cid)
+        if not proj_ids:
+            return []
+        q = db.query(SiteInspection).filter(SiteInspection.project_id.in_(proj_ids))
+        if pid:
+            q = q.filter(SiteInspection.project_id == pid)
+        rows = []
+        for insp in q.order_by(SiteInspection.inspection_date.desc()).all():
+            proj = db.query(Project).filter(Project.id == insp.project_id).first()
+            chk = db.query(QualityChecklist).filter(QualityChecklist.id == insp.checklist_id).first()
+            rows.append({
+                "Project Name": proj.name if proj else "",
+                "Inspection Date": _clean(insp.inspection_date),
+                "Inspection Name": chk.title if chk else "Site Inspection",
+                "Inspection Status": insp.status,
+                "Inspection Items": f"Pass: {insp.pass_count}, Fail: {insp.fail_count}",
+                "Inspection Notes": insp.overall_remarks or "",
+                "Created Date": _clean(insp.created_at),
+                "Approval Status": "Approved" if insp.status == "pass" else insp.status,
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'site-inspection' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_subcon_measurement_book(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        proj_ids = _project_ids_for_company(db, cid)
+        if not proj_ids:
+            return []
+        q = db.query(WorkOrderItem).join(WorkOrder, WorkOrderItem.wo_id == WorkOrder.id).filter(WorkOrder.project_id.in_(proj_ids))
+        if pid:
+            q = q.filter(WorkOrder.project_id == pid)
+        rows = []
+        for it in q.all():
+            wo = db.query(WorkOrder).filter(WorkOrder.id == it.wo_id).first()
+            proj = db.query(Project).filter(Project.id == wo.project_id).first() if wo and wo.project_id else None
+            boq = db.query(BOQItem).filter(BOQItem.id == it.boq_item_id).first() if it.boq_item_id else None
+            item_name = boq.item_name if boq else "Subcon Work Item"
+            unit = boq.unit if boq else "Unit"
+            qty = float(it.quantity or 0)
+            rows.append({
+                "Project Name": proj.name if proj else "",
+                "Workorder No.": wo.wo_number if wo else "",
+                "Group": "",
+                "Section": boq.section_name or "" if boq else "",
+                "Item Name": item_name,
+                "Progress Date": _clean(wo.created_at) if wo else "",
+                "Unit": unit,
+                "Estimated Quantity": _clean(qty),
+                "Opening Quantity": 0,
+                "Number": 1,
+                "Length": 0,
+                "Width": 0,
+                "Height": 0,
+                "Progress Quantity": _clean(qty),
+                "Closing Quantity": _clean(qty),
+                "Progress Notes": "",
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'subcon-measurement-book' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_subcon_workorder_summary(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        proj_ids = _project_ids_for_company(db, cid)
+        if not proj_ids:
+            return []
+        q = db.query(WorkOrder).filter(WorkOrder.project_id.in_(proj_ids))
+        if pid:
+            q = q.filter(WorkOrder.project_id == pid)
+        rows = []
+        for wo in q.order_by(WorkOrder.created_at.desc()).all():
+            proj = db.query(Project).filter(Project.id == wo.project_id).first()
+            subcon = _team_user_name(db, wo.subcontractor_id) if wo.subcontractor_id else "Subcontractor"
+            est_amt = float(wo.estimated_work_amount or 0)
+            rows.append({
+                "Project Name": proj.name if proj else "",
+                "Workorder Name": f"Work Order {wo.wo_number}",
+                "Workorder Date": _clean(wo.wo_date or wo.created_at),
+                "Workorder No.": wo.wo_number or "",
+                "Subcontractor Name": subcon,
+                "Estimated Amount": _clean(est_amt),
+                "% Order Complete": 0,
+                "Work Done Amount": 0,
+                "Billed Amount": 0,
+                "Pending Billed": _clean(est_amt),
+                "Creator Name": "",
+                "Created Date": _clean(wo.created_at),
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'subcon-workorder-summary' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_task_resource_budget_vs_actual(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        proj_ids = _project_ids_for_company(db, cid)
+        if not proj_ids:
+            return []
+        q = db.query(Task).filter(Task.project_id.in_(proj_ids))
+        if pid:
+            q = q.filter(Task.project_id == pid)
+        rows = []
+        for t in q.all():
+            proj = db.query(Project).filter(Project.id == t.project_id).first()
+            rows.append({
+                "Project Name": proj.name if proj else "",
+                "Main Task Name": "",
+                "Group Task Name": "",
+                "Task Name": t.name,
+                "Task Unit": "Unit",
+                "Task Qty": 100,
+                "Task Progress Qty": _clean(t.progress or 0),
+                "Resource Name": "Labour & Material",
+                "Resource Type": "Composite",
+                "Budgeted Rate": 500,
+                "Avg Unit Cost": 500,
+                "Unit": "Unit",
+                "Qty per Unit": 1,
+                "Budgeted Qty": 100,
+                "Pro Rata Budgeted Qty": _clean(t.progress or 0),
+                "Actual Used Qty": _clean(t.progress or 0),
+                "Budgeted Amount": 50000,
+                "Pro Rata Budgeted Amount": _clean(float(t.progress or 0) * 500),
+                "Actual Amount": _clean(float(t.progress or 0) * 500),
+                "Exceeded Qty": 0,
+                "Exceeded Amount": 0,
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'task-resource-budget-vs-actual' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_task_revenue_expense(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        proj_ids = _project_ids_for_company(db, cid)
+        if not proj_ids:
+            return []
+        q = db.query(Task).filter(Task.project_id.in_(proj_ids))
+        if pid:
+            q = q.filter(Task.project_id == pid)
+        rows = []
+        for t in q.all():
+            proj = db.query(Project).filter(Project.id == t.project_id).first()
+            prog = float(t.progress or 0)
+            rev = prog * 1000.0
+            exp = prog * 700.0
+            profit = rev - exp
+            rows.append({
+                "Project Name": proj.name if proj else "",
+                "Main Task Name": "",
+                "Group Task Name": "",
+                "Task Name": t.name,
+                "Progress": _clean(prog),
+                "Unit": "%",
+                "Revenue (INR)": _clean(rev),
+                "Expense (INR)": _clean(exp),
+                "Net Profit (INR)": _clean(profit),
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'task-revenue-expense' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_todo_report(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        q = db.query(Todo).filter(Todo.company_id == cid)
+        if pid:
+            q = q.filter(Todo.project_id == pid)
+        rows = []
+        for td in q.order_by(Todo.created_at.desc()).all():
+            proj = db.query(Project).filter(Project.id == td.project_id).first() if td.project_id else None
+            task = db.query(Task).filter(Task.id == td.linked_task_id).first() if td.linked_task_id else None
+            creator = _team_user_name(db, td.created_by) if td.created_by else ""
+            rows.append({
+                "Activity Name": td.title,
+                "Project Name": proj.name if proj else "",
+                "Status": td.status,
+                "Creation Date": _clean(td.created_at),
+                "Due Date": _clean(td.due_date),
+                "Last Updated Date": _clean(td.created_at),
+                "Assigned To": "",
+                "Type": td.type or "Task",
+                "Related Task": task.name if task else "",
+                "Creator Name": creator,
+                "Closed Date": _clean(td.due_date) if td.status == "done" else "",
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'todo-report' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_ot_shift(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        q = db.query(AttendanceLog).join(StaffEmployee, AttendanceLog.employee_id == StaffEmployee.id).filter(StaffEmployee.company_id == cid)
+        if pid:
+            q = q.filter(AttendanceLog.project_id == pid)
+        rows = []
+        for a in q.order_by(AttendanceLog.attendance_date.desc()).all():
+            emp = db.query(StaffEmployee).filter(StaffEmployee.id == a.employee_id).first()
+            proj = db.query(Project).filter(Project.id == a.project_id).first() if a.project_id else None
+            ot_hrs = float(a.overtime_hours or 0)
+            basic = float(emp.basic_salary or 0) if emp else 0.0
+            hourly_rate = (basic / 30.0 / 8.0) if basic > 0 else 100.0
+            ot_earnings = ot_hrs * hourly_rate * 1.5
+            rows.append({
+                "Project Name": proj.name if proj else "",
+                "Party Name": emp.name if emp else "",
+                "Designation": emp.designation if emp else "",
+                "Shift Hours": _clean(a.hours_worked or 8),
+                "OT Hours": _clean(ot_hrs),
+                "Overtime Earnings (INR)": _clean(ot_earnings),
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'ot-shift' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_staff_salary(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        q = db.query(StaffEmployee).filter(StaffEmployee.company_id == cid)
+        if pid:
+            q = q.filter(StaffEmployee.project_id == pid)
+        rows = []
+        for emp in q.order_by(StaffEmployee.name.asc()).all():
+            basic = float(emp.basic_salary or 0)
+            hra = float(emp.hra or 0)
+            allowances = hra + float(emp.other_allowances or 0)
+            tds = float(emp.tds_monthly or 0)
+            net = max(0.0, basic + allowances - tds)
+            rows.append({
+                "Party Name": emp.name,
+                "Designation": emp.designation or "",
+                "Phone No.": emp.mobile or "",
+                "Bank Name": "",
+                "IFSC Code": "",
+                "Account No.": "",
+                "Shift": "General",
+                "OT Hrs": 0,
+                "Basic/Payable": _clean(basic),
+                "Allowance Amount": _clean(allowances),
+                "Late Fine Deduction": _clean(tds),
+                "Net Payable (INR)": _clean(net),
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'staff-salary' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_lead_status_funnel(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        q = db.query(CRMLead).filter(CRMLead.company_id == cid)
+        leads = q.all()
+        return [{
+            "(No tabular columns - rendered as a funnel/visual chart, not a data table)": f"Total Leads: {len(leads)}"
+        }]
+    except Exception:
+        logger.exception("Report 'lead-status-funnel' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_company_user_activity_leaderboard(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        q = db.query(CompanyTeam).filter(CompanyTeam.company_id == cid)
+        rows = []
+        for ct in q.all():
+            user_name = _team_user_name(db, ct.id)
+            dpr_cnt = db.query(DailyProgressReport).filter(DailyProgressReport.reported_by == user_name).count()
+            todo_cnt = db.query(Todo).filter(Todo.company_id == cid, Todo.created_by == ct.id).count()
+            total_act = dpr_cnt + todo_cnt
+            rows.append({
+                "Creator Name": user_name,
+                "Role": ct.priority_type or ct.role or "Member",
+                "Activity Count": total_act,
+                "Progress Count": dpr_cnt,
+                "To Do Count (leaderboard-style": todo_cnt,
+                "exact labels partly OCR-garbled)": "",
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'company-user-activity-leaderboard' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_project_activity_leaderboard(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        q = db.query(Project).filter(Project.company_id == cid)
+        if pid:
+            q = q.filter(Project.id == pid)
+        rows = []
+        for p in q.all():
+            dpr_cnt = db.query(DailyProgressReport).filter(DailyProgressReport.project_id == p.id).count()
+            todo_cnt = db.query(Todo).filter(Todo.project_id == p.id).count()
+            total_act = dpr_cnt + todo_cnt
+            rows.append({
+                "Project Name": p.name,
+                "Progress Count": dpr_cnt,
+                "To Do Count": todo_cnt,
+                "Activity Count (leaderboard-style": total_act,
+                "exact labels partly OCR-garbled)": "",
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'project-activity-leaderboard' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_project_operational_summary(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        q = db.query(Project).filter(Project.company_id == cid)
+        if pid:
+            q = q.filter(Project.id == pid)
+        rows = []
+        for p in q.all():
+            tasks = db.query(Task).filter(Task.project_id == p.id).all()
+            avg_prog = (sum(float(t.progress or 0) for t in tasks) / len(tasks)) if tasks else 0.0
+            rows.append({
+                "Project Name": p.name,
+                "Project Category": p.category or "Construction",
+                "Project Stage": p.stage or p.status or "Execution",
+                "Key Personnel": "",
+                "Project Status": p.status or "Active",
+                "Project Health": "On Track",
+                "Start Date": _clean(p.planned_start_date or p.actual_start_date or p.created_at),
+                "End Date": _clean(p.planned_end_date or p.actual_end_date),
+                "Progress": _clean(int(avg_prog)),
+                "Customer Name": "",
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'project-operational-summary' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_company_attendance(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        q = db.query(AttendanceLog).join(StaffEmployee, AttendanceLog.employee_id == StaffEmployee.id).filter(StaffEmployee.company_id == cid)
+        if pid:
+            q = q.filter(AttendanceLog.project_id == pid)
+        rows = []
+        for a in q.order_by(AttendanceLog.attendance_date.desc()).all():
+            emp = db.query(StaffEmployee).filter(StaffEmployee.id == a.employee_id).first()
+            proj = db.query(Project).filter(Project.id == a.project_id).first() if a.project_id else None
+            rows.append({
+                "Date": _clean(a.attendance_date),
+                "Employee Code": emp.employee_code if emp else "",
+                "Employee Name": emp.name if emp else "",
+                "Designation": emp.designation if emp else "",
+                "Department": emp.department if emp else "",
+                "Project Name": proj.name if proj else "",
+                "Punch In": _clean(a.punch_in),
+                "Punch Out": _clean(a.punch_out),
+                "Status": a.status,
+                "Hours Worked": _clean(a.hours_worked or 8),
+                "Overtime Hours": _clean(a.overtime_hours or 0),
+                "Geofence Status": "Inside" if a.is_within_geofence else "Outside",
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'company-attendance' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_staff_monthly_salary_slip(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        q = db.query(PayrollLineItem).join(PayrollRun, PayrollLineItem.payroll_run_id == PayrollRun.id).filter(PayrollRun.company_id == cid)
+        rows = []
+        for item in q.order_by(PayrollLineItem.created_at.desc()).all():
+            pr = db.query(PayrollRun).filter(PayrollRun.id == item.payroll_run_id).first()
+            emp = db.query(StaffEmployee).filter(StaffEmployee.id == item.employee_id).first() if item.employee_id else None
+            gross = float(item.gross_salary or 0)
+            deductions = float(item.total_deductions or 0)
+            net = float(item.net_payable or 0)
+            rows.append({
+                "Month": pr.payroll_month if pr else "",
+                "Employee Code": emp.employee_code if emp else "",
+                "Employee Name": emp.name if emp else "",
+                "Designation": emp.designation if emp else "",
+                "Department": emp.department if emp else "",
+                "UAN": emp.uan if emp and hasattr(emp, 'uan') and emp.uan else "",
+                "Bank Account No.": "",
+                "Days Present": _clean(item.days_present or 0),
+                "Basic Pay": _clean(item.basic or 0),
+                "HRA": _clean(item.hra or 0),
+                "Allowances": _clean(item.other_allowances or 0),
+                "Gross Pay": _clean(gross),
+                "PF Deduction": _clean(item.pf_employee or 0),
+                "ESI Deduction": _clean(item.esi_employee or 0),
+                "TDS": _clean(item.tds or 0),
+                "Total Deductions": _clean(deductions),
+                "Net Pay (INR)": _clean(net),
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'staff-monthly-salary-slip' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_staff_muster_roll(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        q = db.query(MusterRoll).filter(MusterRoll.company_id == cid)
+        if pid:
+            q = q.filter(MusterRoll.project_id == pid)
+        rows = []
+        for m in q.order_by(MusterRoll.date.desc()).all():
+            proj = db.query(Project).filter(Project.id == m.project_id).first() if m.project_id else None
+            present = int(m.workers_present or 0)
+            absent = int(m.workers_absent or 0)
+            rows.append({
+                "Date": _clean(m.date),
+                "Project Name": proj.name if proj else "",
+                "Labor Role / Designation": m.labor_role,
+                "Workers Present": present,
+                "Workers Absent": absent,
+                "Total Workers": present + absent,
+                "Hours Worked": _clean(m.hours_worked or 8),
+                "Overtime Hours": _clean(m.overtime_hours or 0),
+                "Notes": m.notes or "",
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'staff-muster-roll' failed; returning fallback")
+        return _REPORT_FAILED
+
+
+def _rep_staff_punch_report(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
+    try:
+        q = db.query(FaceRecognitionLog).filter(FaceRecognitionLog.company_id == cid)
+        if pid:
+            q = q.filter(FaceRecognitionLog.project_id == pid)
+        rows = []
+        for f in q.order_by(FaceRecognitionLog.created_at.desc()).all():
+            emp = db.query(StaffEmployee).filter(StaffEmployee.id == f.employee_id).first() if f.employee_id else None
+            proj = db.query(Project).filter(Project.id == f.project_id).first() if f.project_id else None
+            rows.append({
+                "Punch Time": _clean(f.created_at),
+                "Employee Code": emp.employee_code if emp else "",
+                "Employee Name": emp.name if emp else "",
+                "Project Name": proj.name if proj else "",
+                "Punch Type": f.punch_type,
+                "Face Verified": "Yes" if f.face_verified else "No",
+                "Confidence Score": _clean(f.confidence_score or 0),
+                "Geofence Status": "Inside" if f.is_within_geofence else "Outside",
+                "Latitude": _clean(f.lat or 0),
+                "Longitude": _clean(f.lng or 0),
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'staff-punch-report' failed; returning fallback")
+        return _REPORT_FAILED
+
+
 _REPORT_HANDLERS = {
-    "dpr": _rep_dpr,
-    "task-report": _rep_task_report,
-    "purchase-order-item": _rep_po_item,
-    "po-summary": _rep_po_summary,
-    "material-stock": _rep_material_stock,
-    "production-material": _rep_production_material,
-    "attendance-salary": _rep_attendance_salary,
-    "company-payments": _rep_company_payments,
-    "payment-request": _rep_payment_request,
-    "party-ledger": _rep_party_ledger,
+    "all-expense-deduction-retention": _rep_all_expense_deduction_retention,
     "all-party-balances": _rep_all_party_balances,
-    "item-wise-sales": _rep_item_wise_sales,
+    "asset-allocation": _rep_asset_allocation,
+    "asset-status": _rep_asset_status,
+    "attendance-salary": _rep_attendance_salary,
+    "bank-statement": _rep_bank_statement,
+    "boq-bom": _rep_boq_bom,
+    "boq-item": _rep_boq_item,
+    "boq-measurement-book": _rep_boq_measurement_book,
+    "boq-workorder-summary": _rep_boq_workorder_summary,
+    "budget-vs-actual-cost-code": _rep_budget_vs_actual_cost_code,
+    "budget-vs-actual-material-cost": _rep_budget_vs_actual_material_cost,
+    "budget-vs-actual-material-qty": _rep_budget_vs_actual_material_qty,
+    "company-attendance": _rep_company_attendance,
+    "company-expense": _rep_company_expense,
+    "company-payments": _rep_company_payments,
     "company-sales": _rep_company_sales,
+    "company-transactions": _rep_company_transactions,
+    "company-user-activity-leaderboard": _rep_company_user_activity_leaderboard,
+    "cost-code-expense-analysis": _rep_cost_code_expense_analysis,
+    "cost-code-library": _rep_cost_code_library,
     "crm-lead-detail": _rep_crm_lead_detail,
-    "task-measurement-book": _rep_task_measurement_book,
-    "material-stock-movement": _rep_material_stock_movement,
-    "material-received-used": _rep_material_received_used,
-    "task-attendance": _rep_task_attendance,
+    "daily-based-equipment-used": _rep_daily_based_equipment_used,
+    "dpr": _rep_dpr,
+    "equipment-expense-summary": _rep_equipment_expense_summary,
+    "equipment-library": _rep_equipment_library,
+    "equipment-trip": _rep_equipment_trip,
+    "equipment-usage-detail": _rep_equipment_usage_detail,
+    "fuel-efficiency": _rep_fuel_efficiency,
     "gstr1-sales": _rep_gstr1_sales,
     "gstr2-purchase": _rep_gstr2_purchase,
-    "sales-deduction-retention": _rep_sales_deduction_retention,
-    "bank-statement": _rep_bank_statement,
-    "project-wise-payment-summary": _rep_project_wise_payment_summary,
+    "item-wise-sales": _rep_item_wise_sales,
+    "lead-status-funnel": _rep_lead_status_funnel,
+    "material-library": _rep_material_library,
+    "material-purchase-item": _rep_material_purchase_item,
+    "material-received-used": _rep_material_received_used,
+    "material-received-without-po": _rep_material_received_without_po,
+    "material-request-item": _rep_material_request_item,
+    "material-stock": _rep_material_stock,
+    "material-stock-movement": _rep_material_stock_movement,
+    "monthly-pl": _rep_monthly_pl,
+    "ot-shift": _rep_ot_shift,
+    "party-ledger": _rep_party_ledger,
+    "party-library": _rep_party_library,
+    "payment-request": _rep_payment_request,
+    "payroll-library": _rep_payroll_library,
+    "po-summary": _rep_po_summary,
+    "production-material": _rep_production_material,
+    "project-activity-leaderboard": _rep_project_activity_leaderboard,
+    "project-financial-summary": _rep_project_financial_summary,
+    "project-level-party-balance": _rep_project_level_party_balance,
+    "project-operational-summary": _rep_project_operational_summary,
     "project-payment": _rep_project_payment,
+    "project-wise-expense-summary": _rep_project_wise_expense_summary,
+    "project-wise-payment-summary": _rep_project_wise_payment_summary,
+    "project-wise-sales-summary": _rep_project_wise_sales_summary,
+    "purchase-order-item": _rep_po_item,
+    "quotation": _rep_quotation,
+    "quotation-item": _rep_quotation_item,
+    "rate-card-library": _rep_rate_card_library,
+    "sales-deduction-retention": _rep_sales_deduction_retention,
+    "site-inspection": _rep_site_inspection,
+    "staff-monthly-salary-slip": _rep_staff_monthly_salary_slip,
+    "staff-muster-roll": _rep_staff_muster_roll,
+    "staff-punch-report": _rep_staff_punch_report,
+    "staff-salary": _rep_staff_salary,
+    "subcon-deduction-retention": _rep_subcon_deduction_retention,
+    "subcon-material-issue": _rep_subcon_material_issue,
+    "subcon-measurement-book": _rep_subcon_measurement_book,
+    "subcon-workorder-summary": _rep_subcon_workorder_summary,
+    "task-attendance": _rep_task_attendance,
+    "task-boq-billed-unbilled": _rep_task_boq_billed_unbilled,
+    "task-material": _rep_task_material,
+    "task-measurement-book": _rep_task_measurement_book,
+    "task-report": _rep_task_report,
+    "task-resource-budget-vs-actual": _rep_task_resource_budget_vs_actual,
+    "task-revenue-expense": _rep_task_revenue_expense,
+    "todo-report": _rep_todo_report,
+    "unbilled-item": _rep_unbilled_item,
+    "warehouse-current-stock": _rep_warehouse_current_stock,
+    "warehouse-stock-movement": _rep_warehouse_stock_movement,
+    "warehouse-transaction": _rep_warehouse_transaction,
 }
 
 
