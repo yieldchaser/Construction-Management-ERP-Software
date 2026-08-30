@@ -614,12 +614,12 @@ def get_bills(
     if not project_id and not company_id:
         raise HTTPException(status_code=400, detail="Either project_id or company_id is required")
     if project_id:
-        verify_project_access(project_id, db, current_user)
+        verify_project_access(project_id, current_user, db)
         project = db.query(Project).filter(Project.id == project_id).first()
         require_module_view(db, current_user, project.company_id, "billing")
         query = db.query(Bill).filter(Bill.project_id == project_id)
     else:
-        verify_company_access(company_id, db, current_user)
+        verify_company_access(company_id, current_user, db)
         require_module_view(db, current_user, company_id, "billing")
         query = db.query(Bill).filter(Bill.company_id == company_id)
 
