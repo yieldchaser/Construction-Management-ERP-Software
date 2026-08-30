@@ -1821,6 +1821,10 @@ class ChatGroupMember(Base):
     user_id = Column(UUID(as_uuid=True), ForeignKey("company_team.id", ondelete="CASCADE"), nullable=False)
     role = Column(String(50), default="member", nullable=False)  # admin, member, viewer
     joined_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+    # R2-765: persisted read watermark — NULL means the user has never read this group.
+    # Written by POST /chat/groups/{group_id}/read, used by list_groups to compute
+    # unread_count. Nullable, additive, no backfill needed.
+    last_read_at = Column(DateTime(timezone=True), nullable=True)
 
 
 # ─────────────────────────────────────────────────────────────────────────────

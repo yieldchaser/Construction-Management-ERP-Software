@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, timezone
-from typing import List, Optional, Dict, Tuple
+from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -66,9 +66,6 @@ class ChatGroupCreate(BaseModel):
     group_type: str = "general"
     created_by: Optional[uuid.UUID] = None
 
-
-# (group_id, user_id) -> last_read_at timestamp
-_group_user_last_read: Dict[Tuple[uuid.UUID, uuid.UUID], datetime] = {}
 
 
 class ChatGroupResponse(BaseModel):
@@ -190,7 +187,16 @@ def list_groups(project_id: uuid.UUID, db: Session = Depends(get_db), current_us
     result = []
     for g in groups:
         ct = company_team_for(db, g.company_id, current_user)
-        last_read = _group_user_last_read.get((g.id, current_user.id))
+        # R2-765: read watermark from DB (persisted), not from in-memory dict.
+        # ct.id is the company_team foreign key used in chat_group_members.user_id.
+        last_read = None
+        if ct:
+            member_row = db.query(ChatGroupMember).filter(
+                ChatGroupMember.group_id == g.id,
+                ChatGroupMember.user_id == ct.id,
+            ).first()
+            if member_row:
+                last_read = member_row.last_read_at
         unread_q = db.query(func.count(ChatMessage.id)).filter(ChatMessage.group_id == g.id)
         if ct:
             unread_q = unread_q.filter(ChatMessage.user_id != ct.id)
@@ -221,10 +227,15 @@ def mark_group_as_read(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Mark all messages in a chat group as read for the authenticated user (Onsite Parity 14.9.4 #8)."""
-    verify_group_membership(db, current_user, group_id)
-    _group_user_last_read[(group_id, current_user.id)] = datetime.now(timezone.utc)
-    return {"success": True, "group_id": group_id, "read_at": _group_user_last_read[(group_id, current_user.id)].isoformat()}
+    """Mark all messages in a chat group as read for the authenticated user (Onsite Parity 14.9.4 #8).
+    R2-765: watermark is persisted to ChatGroupMember.last_read_at, not a module-level dict."""
+    membership = verify_group_membership(db, current_user, group_id)
+    now = datetime.now(timezone.utc)
+    # verify_group_membership returns the member row keyed by company_team id;
+    # update it directly to avoid a second query.
+    membership.last_read_at = now
+    db.commit()
+    return {"success": True, "group_id": group_id, "read_at": now.isoformat()}
 
 
 @router.post("/messages", response_model=ChatMessageResponse, status_code=status.HTTP_201_CREATED)
