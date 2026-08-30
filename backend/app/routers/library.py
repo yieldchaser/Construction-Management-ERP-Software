@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Query
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from sqlalchemy.orm import Session
 from sqlalchemy import Numeric
 from datetime import datetime
@@ -85,6 +85,13 @@ class MaterialCreate(BaseModel):
     item_code: Optional[str] = Field(None, max_length=100)
     specifications: Optional[str] = None
 
+    @model_validator(mode="after")
+    def validate_dual_units(self):
+        if self.alternate_unit and self.alternate_unit.strip():
+            if self.alternate_unit.strip().lower() == self.unit.strip().lower():
+                raise ValueError("Alternate unit must differ from base unit")
+        return self
+
 class RateCreate(BaseModel):
     company_id: uuid.UUID
     name: str = Field(..., max_length=255)
@@ -125,6 +132,44 @@ def _parse_optional_datetime(value: Optional[str]) -> Optional[datetime]:
             continue
 
     return None
+
+
+# ─── UNITS MASTER ───
+STANDARD_CONSTRUCTION_UNITS = [
+    {"code": "Bag", "name": "Bags (Cement / Dry Mix)", "category": "Packaging"},
+    {"code": "MT", "name": "Metric Tonnes", "category": "Weight"},
+    {"code": "Kg", "name": "Kilograms", "category": "Weight"},
+    {"code": "Ton", "name": "Tonnes", "category": "Weight"},
+    {"code": "Quintal", "name": "Quintals (100 kg)", "category": "Weight"},
+    {"code": "Nos", "name": "Numbers / Pieces", "category": "Count"},
+    {"code": "Sq.Ft", "name": "Square Feet", "category": "Area"},
+    {"code": "Sq.M", "name": "Square Meters", "category": "Area"},
+    {"code": "Cu.M", "name": "Cubic Meters (Cum)", "category": "Volume"},
+    {"code": "Cu.Ft", "name": "Cubic Feet (Cft)", "category": "Volume"},
+    {"code": "Brass", "name": "Brass (100 Cu.Ft)", "category": "Volume"},
+    {"code": "Ltr", "name": "Liters", "category": "Liquid Volume"},
+    {"code": "Bundle", "name": "Bundles (Rebar / Pipes)", "category": "Packaging"},
+    {"code": "Trip", "name": "Trips (Dumpers / Tankers)", "category": "Logistics"},
+    {"code": "R.Ft", "name": "Running Feet", "category": "Length"},
+    {"code": "R.M", "name": "Running Meters", "category": "Length"},
+    {"code": "Hour", "name": "Hours (Plant & Machinery)", "category": "Time"},
+    {"code": "Day", "name": "Days / Shifts", "category": "Time"},
+]
+
+
+@router.get("/units")
+def get_library_units(
+    search: Optional[str] = None,
+    response: Response = None,
+):
+    """Standard Construction Unit Master with search support (Onsite Parity 14.9.4 #10)."""
+    units = STANDARD_CONSTRUCTION_UNITS
+    if search and search.strip():
+        term = search.strip().lower()
+        units = [u for u in units if term in u["code"].lower() or term in u["name"].lower() or term in u["category"].lower()]
+    if response is not None:
+        response.headers["X-Total-Count"] = str(len(units))
+    return units
 
 
 # ─── PARTIES ───
