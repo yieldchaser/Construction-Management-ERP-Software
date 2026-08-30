@@ -36,22 +36,22 @@
       {
         "title": "Choose wall type and coats",
         "body": "Select Interior or Exterior and the number of coats (1, 2 standard, or 3) before entering dimensions.",
-        "imageSlot": "/marketing/calculators/paint-quantity-calculator.png"
+        "imageSlot": "/marketing/calculators/paint-quantity-calculator.webp"
       },
       {
         "title": "Enter room dimensions",
         "body": "Enter room length, width, and height in feet. Add more rooms as needed; each room's area is summed.",
-        "imageSlot": "/marketing/calculators/paint-quantity-calculator-2.png"
+        "imageSlot": "/marketing/calculators/paint-quantity-calculator-2.webp"
       },
       {
         "title": "Deduct doors and windows",
         "body": "Enable deductions and enter counts. Each door subtracts 21 sqft and each window 12 sqft from the total wall area.",
-        "imageSlot": "/marketing/calculators/paint-quantity-calculator-3.png"
+        "imageSlot": "/marketing/calculators/paint-quantity-calculator-3.webp"
       },
       {
         "title": "Calculate and read output",
         "body": "The tool divides paintable area by the coverage rate, multiplies by coats, adds 10% wastage, and shows paint litres plus primer litres.",
-        "imageSlot": "/marketing/calculators/paint-quantity-calculator-4.png"
+        "imageSlot": "/marketing/calculators/paint-quantity-calculator-4.webp"
       }
     ],
     "referenceTable": {

@@ -120,7 +120,7 @@ export default async function ResourcesIndexPage() {
         <div className="absolute inset-0 z-0 alx-hero-wash pointer-events-none" />
         <div className="absolute inset-0 z-0 opacity-40 pointer-events-none">
           <Image
-            src="/marketing/resources/resources-hero.png"
+            src="/marketing/resources/resources-hero.webp"
             alt=""
             fill
             sizes="100vw"

@@ -36,22 +36,22 @@
       {
         "title": "Enter wall dimensions and thickness",
         "body": "Provide wall length and height in metres, then choose wall thickness: 230 mm (9-inch full brick) or 115 mm (4.5-inch half brick).",
-        "imageSlot": "/marketing/calculators/brick-calculator-for-wall.png"
+        "imageSlot": "/marketing/calculators/brick-calculator-for-wall.webp"
       },
       {
         "title": "Pick brick size and mortar mix",
         "body": "Select the brick specification (Modular 190 x 90 x 90 mm or Traditional 230 x 110 x 75 mm) and the cement to sand mortar mix (1:6 internal, 1:4 external).",
-        "imageSlot": "/marketing/calculators/brick-calculator-for-wall-2.png"
+        "imageSlot": "/marketing/calculators/brick-calculator-for-wall-2.webp"
       },
       {
         "title": "Apply wastage buffer",
         "body": "Choose a wastage buffer of 5%, 10%, or 15% to cover breakage, cutting, and handling, then calculate material yield.",
-        "imageSlot": "/marketing/calculators/brick-calculator-for-wall-3.png"
+        "imageSlot": "/marketing/calculators/brick-calculator-for-wall-3.webp"
       },
       {
         "title": "Read the output",
         "body": "The tool returns bricks required (nos), cement in 50 kg bags, and sand in cubic metres derived from the selected mortar ratio.",
-        "imageSlot": "/marketing/calculators/brick-calculator-for-wall-4.png"
+        "imageSlot": "/marketing/calculators/brick-calculator-for-wall-4.webp"
       }
     ],
     "referenceTable": {

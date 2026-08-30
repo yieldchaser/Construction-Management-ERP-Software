@@ -28,22 +28,22 @@
       {
         "title": "Select your concrete grade",
         "body": "Choose the nominal mix grade specified in your BOQ or structural drawing, from M5 up to M25. Each grade maps to a fixed cement, sand and aggregate ratio. M20, for example, uses 1:1.5:3.",
-        "imageSlot": "/marketing/calculators/concrete-mix-calculator.png"
+        "imageSlot": "/marketing/calculators/concrete-mix-calculator.webp"
       },
       {
         "title": "Enter the wet concrete volume",
         "body": "Enter the finished, wet volume you need to pour, in cubic metres. This is the actual volume of concrete once it is placed and compacted, before any dry material allowance is added.",
-        "imageSlot": "/marketing/calculators/concrete-mix-calculator-2.png"
+        "imageSlot": "/marketing/calculators/concrete-mix-calculator-2.webp"
       },
       {
         "title": "Set your water-cement ratio",
         "body": "Adjust the water-cement ratio if your mix design calls for it. A ratio of 0.4 to 0.6 covers most nominal mixes. A lower ratio increases strength but reduces workability on site.",
-        "imageSlot": "/marketing/calculators/concrete-mix-calculator-3.png"
+        "imageSlot": "/marketing/calculators/concrete-mix-calculator-3.webp"
       },
       {
         "title": "Read your live material estimate",
         "body": "The results panel updates as you type: cement in bags and kilograms, sand and aggregate in cubic metres, and total water in litres, all derived from the 1.54 dry volume factor.",
-        "imageSlot": "/marketing/calculators/concrete-mix-calculator-4.png"
+        "imageSlot": "/marketing/calculators/concrete-mix-calculator-4.webp"
       }
     ],
     "referenceTable": {

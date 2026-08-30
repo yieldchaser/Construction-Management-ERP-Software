@@ -36,22 +36,22 @@
       {
         "title": "Choose structure type",
         "body": "Select Column, One-Way Slab or Two-Way Slab from the Structure Type dropdown. This sets which dimensions the calculator expects.",
-        "imageSlot": "/marketing/calculators/steel-calculator-for-construction.png"
+        "imageSlot": "/marketing/calculators/steel-calculator-for-construction.webp"
       },
       {
         "title": "Enter bar diameter and total length",
         "body": "Enter the bar diameter in mm and the total length of steel in metres. Standard diameters are 8, 10, 12, 16, 20 and 25 mm.",
-        "imageSlot": "/marketing/calculators/steel-calculator-for-construction-2.png"
+        "imageSlot": "/marketing/calculators/steel-calculator-for-construction-2.webp"
       },
       {
         "title": "Apply the wastage margin",
         "body": "Keep the 5% wastage margin on for standard site work, or turn it off. Raise it to 8 to 10% for complex layouts with many laps and offcuts.",
-        "imageSlot": "/marketing/calculators/steel-calculator-for-construction-3.png"
+        "imageSlot": "/marketing/calculators/steel-calculator-for-construction-3.webp"
       },
       {
         "title": "Read the weight and optional cost",
         "body": "The output pane shows Total Weight Estimate in kg. Add a price per kg to convert that weight into a material cost estimate.",
-        "imageSlot": "/marketing/calculators/steel-calculator-for-construction-4.png"
+        "imageSlot": "/marketing/calculators/steel-calculator-for-construction-4.webp"
       }
     ],
     "referenceTable": {

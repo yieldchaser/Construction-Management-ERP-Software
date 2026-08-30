@@ -119,7 +119,7 @@ export default async function HelpCenterPage() {
         <div className="absolute inset-0 z-0 alx-hero-wash pointer-events-none" />
         <div className="absolute inset-0 z-0 opacity-40 pointer-events-none">
           <Image
-            src="/marketing/help/help-hero.png"
+            src="/marketing/help/help-hero.webp"
             alt=""
             fill
             sizes="100vw"

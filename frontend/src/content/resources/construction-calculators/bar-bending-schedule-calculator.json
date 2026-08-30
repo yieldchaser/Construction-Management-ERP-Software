@@ -36,22 +36,22 @@
       {
         "title": "Select the bar shape",
         "body": "Pick Straight Bar, Bent-up Bar or Stirrup (Rectangular). The shape determines which hook and bend deductions apply.",
-        "imageSlot": "/marketing/calculators/bar-bending-schedule-calculator.png"
+        "imageSlot": "/marketing/calculators/bar-bending-schedule-calculator.webp"
       },
       {
         "title": "Set diameter, span, cover and bar count",
         "body": "Choose the bar diameter (8, 10, 12, 16, 20 or 25 mm) and enter the clear span in metres, the nominal cover in mm and the number of bars.",
-        "imageSlot": "/marketing/calculators/bar-bending-schedule-calculator-2.png"
+        "imageSlot": "/marketing/calculators/bar-bending-schedule-calculator-2.webp"
       },
       {
         "title": "Generate schedule metrics",
         "body": "Click Generate Schedule Metrics to get the cutting length, total weight in kg and net cost from the entered dimensions and standard bend deductions.",
-        "imageSlot": "/marketing/calculators/bar-bending-schedule-calculator-3.png"
+        "imageSlot": "/marketing/calculators/bar-bending-schedule-calculator-3.webp"
       },
       {
         "title": "Verify against the weight table",
         "body": "Cross-check the per-metre weight against the IS 1786 unit-weight table (for example 12 mm = 0.888 kg/m) before releasing the schedule to the fabrication yard.",
-        "imageSlot": "/marketing/calculators/bar-bending-schedule-calculator-4.png"
+        "imageSlot": "/marketing/calculators/bar-bending-schedule-calculator-4.webp"
       }
     ],
     "referenceTable": {

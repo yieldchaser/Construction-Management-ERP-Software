@@ -65,12 +65,12 @@ const CATEGORY_STYLES: Record<BlogCategory, CategoryStyle> = {
 // Real category header photos, one per editorial category. Falls back to the
 // in-code gradient band + glyph when a category has no matching file.
 const CATEGORY_IMAGES: Record<BlogCategory, string> = {
-  "Financial Ledger": "/marketing/blog/cat-financial-ledger.png",
-  "Procurement & Materials": "/marketing/blog/cat-procurement.png",
-  "Compliance & Workforce": "/marketing/blog/cat-compliance.png",
-  Technology: "/marketing/blog/cat-technology.png",
-  "Site Execution": "/marketing/blog/cat-site-execution.png",
-  Insights: "/marketing/blog/cat-insights.png",
+  "Financial Ledger": "/marketing/blog/cat-financial-ledger.webp",
+  "Procurement & Materials": "/marketing/blog/cat-procurement.webp",
+  "Compliance & Workforce": "/marketing/blog/cat-compliance.webp",
+  Technology: "/marketing/blog/cat-technology.webp",
+  "Site Execution": "/marketing/blog/cat-site-execution.webp",
+  Insights: "/marketing/blog/cat-insights.webp",
 };
 
 function CategoryMotif({ category, className }: { category: BlogCategory; className?: string }) {
