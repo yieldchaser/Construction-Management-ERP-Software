@@ -50,15 +50,15 @@ audit. They are the highest-value items here because they are both a competitor 
 
 | # | Onsite feature | Verdict | Evidence / note |
 |---|---|---|---|
-| 1 | Subcontractor WO shows billed value at a glance | **MISSING** | `WOResponse` (`billing.py:65-77`) has no `billed_amount`; the console prints a hardcoded ₹0. **This is our R2-762** — fixing that finding delivers this feature. `Bill.wo_id` exists (`models.py:677`) so the data is one SUM away. |
+| 1 | Subcontractor WO shows billed value at a glance | **HAVE** | Shipped in R2-762. `WOResponse` has `billed_amount` computed from active bills. |
 | 2 | Unread message counts on the task list | **MISSING** | Zero occurrences of `unread` in models or routers. Needs a per-user read-watermark per chat group. |
-| 3 | Download equipment expense bills as PDF | **MISSING** | No PDF endpoint in `equipment.py`. The generator machinery exists (`resolve_supplier_tax_details`, used by 4 documents) so this is a new endpoint on proven rails, not new infrastructure. |
+| 3 | Download equipment expense bills as PDF | **HAVE** | Shipped in Tier 2 Item 9 via `GET /equipment/expenses/{bill_id}/pdf`. |
 | 4 | Downloaded files keep their original file name | **PARTIAL** | `downloadWithAuth` exists and is shared across three surfaces (our R2-454 fix); confirm it sets the anchor `download` attribute from the server's `Content-Disposition` rather than a synthetic name. |
 | 5 | "Rented equipment" field at stock level | **MISSING** | No `rented`/`rental` anywhere in models. Owned-vs-rented is a real distinction for plant costing — it changes whether depreciation or hire charge applies. |
 | 6 | Search + pagination on party document lists | **MISSING** | No pagination anywhere in the backend (`offset`/`skip` absent from models and list endpoints). This is a **systemic** gap, not a party-list one: every list endpoint returns everything. Worth treating as a platform item. |
-| 7 | Filters on company-level payment requests | **PARTIAL** | The company-level endpoint exists (`finance.py`, `/finance/payment-requests/{cid}`); filters are not implemented. |
-| 8 | Project name shown on settled/unsettled bills | **PARTIAL** | `Bill.project_id` exists; the settle view does not resolve and show the name. Cheap. |
-| 9 | Expense due dates visible while settling | **PARTIAL** | `Bill.due_date` exists and is used by the subcontractor on-time metric (`analytics.py`); not surfaced in the settle UI. Cheap. |
+| 7 | Filters on company-level payment requests | **HAVE** | Shipped in Tier 2 Item 8 with `project_id` and `status` query filters on `GET /finance/payment-requests/{company_id}`. |
+| 8 | Project name shown on settled/unsettled bills | **HAVE** | Shipped in Tier 2 Item 6 (`project_name` included on bills and transaction rows, surfaced in settlement view). |
+| 9 | Expense due dates visible while settling | **HAVE** | Shipped in Tier 2 Item 6 (`due_date` included on transaction rows and surfaced in settlement view). |
 | 10 | Search for units | **MISSING** | No unit master exists — units are free-text strings on materials. Related to our R2-297 (unit change locked while stock exists) and R2-488 (per-unit stock breakdown): both would be sturdier with a unit master. |
 | 11 | OT rate editable at the attendance level | **PARTIAL** | `overtime_rate` exists as a column (`models.py:1629`) but is set at the profile level, not per attendance row. |
 | 12 | Subcontractor rate library | **MISSING** | No `SubcontractorRate` model. We have `LibraryParty` and a cost-code library; this is a rate card per subcontractor per item. |
@@ -78,10 +78,10 @@ Published as "fixes and improvements" with no detail. Nothing to gap-check.
 | Auto-fill Bill From/To and Ship From/To on party select, across Purchases, Sales, Subcon Bills, Equipment Expense | **MISSING** | No auto-fill; and the current state is worse than absent — **R2-763** found ONE "Ship To" input posting into `ship_to`, `notes` and `details` across three document types. Fix R2-763 and build this together; they touch the same modal. |
 | Equipment shift marking (mark, delete) | **MISSING** | `EquipmentDeployment` records hours (our R2-357) but has no shift concept. |
 | Auto-generated bill numbers (purchases, subcon, expenses, credit/debit notes, material returns) | **PARTIAL** | Numbering settings exist (`grn_numbering`, validated per our R2-546) and `next_party_id_custom` proves the sequence pattern (our R2-440). Not extended to bills. Note **R2-745's invoice-number clash 409** already exists on the conversion path — an auto-numberer must respect it. |
-| Vendor tagging at party creation (Equipment Supplier / Subcontractor / Material Supplier) | **PARTIAL** | `LibraryParty.party_type` exists (`models.py:2031`, "Supplier, Subcontractor, Client") but is free text with no enforced vocabulary — the same shape as the `priority` gap in **R2-759**. Constrain it when you build the filter. |
-| Project-wise filters on pending approvals and material requests | **PARTIAL** | Both collections exist; filters do not. |
+| Vendor tagging at party creation (Equipment Supplier / Subcontractor / Material Supplier) | **HAVE** | Shipped with constrained vocabulary in Party Library creation and filtering (Tier 2 Item 7). |
+| Project-wise filters on pending approvals and material requests | **HAVE** | Shipped in Tier 2 Item 8 (`GET /procurement/indents/company/{company_id}?project_id=...&status=...`). |
 | Revamped Payment Detail page | **n/a** | UI polish, no functional claim. |
-| Payment Request page at company level (mobile) | **HAVE** | `/finance/payment-requests/{cid}` is company-level and permission-gated. |
+| Payment Request page at company level (mobile) | **HAVE** | `/finance/payment-requests/{cid}` is company-level and permission-gated, now with `project_id` and `status` filtering (Tier 2 Item 8). |
 | Task chat: unread per user, status-change logs with comments | **PARTIAL** | Chat and task comments exist (`chat.py`, `planning.py:735-752`, with server-stamped authorship per our R2-455). Unread counts are missing (see 14.9.4 #2); status-change logging is missing. |
 
 ## 14.9.1
@@ -89,13 +89,13 @@ Published as "fixes and improvements" with no detail. Nothing to gap-check.
 | Onsite feature | Verdict | Evidence / note |
 |---|---|---|
 | Company Branch selection in Projects | **HAVE** | Branch model plus branch masthead precedence in 5 routers, verified under our R2-403/R2-607. |
-| Location tracking for Task Progress & Inspections | **MISSING** | Geofencing exists for attendance only (`is_within_geofence` on two models). Blocked in practice by **R2-750** — the project API cannot store site coordinates at all, so *any* geofence feature is inert until that lands. **Fix R2-750 first.** |
+| Location tracking for Task Progress & Inspections | **MISSING** | Geofencing exists for attendance only (`is_within_geofence` on two models). Site coordinates now supported on Projects via R2-750. |
 | Material Request warnings and restriction controls | **HAVE** | `po_restriction` (our R2-478) and `negative_stock_lock` (our R2-254) both enforced. |
 | Created & Approval timestamps in Approval History | **HAVE** | `ApprovalAction` carries `level`, `action`, `approver_user_id`, `approver_label`, `comment`, `created_at` (`models.py:1522-1534`). |
 | DPR AI Insights downloadable | **MISSING** | No AI insight generation anywhere. A genuine product decision, not a gap to close reflexively. |
-| Party Type filter in Party Library | **PARTIAL** | Column exists, filter does not. Pair with the vendor-tagging vocabulary above. |
+| Party Type filter in Party Library | **HAVE** | Shipped in Tier 2 Item 7 (backend query parameter `party_type` + UI dropdown selector). |
 | Material Request & Receipt timestamps | **HAVE** | Indents and GRNs carry timestamps. |
-| Custom Fields for Leads and Other Expenses | **PARTIAL — cheap and specific** | The backend **already supports six entity types**: `CUSTOM_FIELD_ENTITY_TYPES = ("project", "task", "bill", "invoice", "lead", "vendor")` (`custom_fields.py:14`), with a model map at `:19`. The console builder was deliberately cut to project/invoice by our **R2-156** fix, because those were the wired types. Re-widening the select to `lead` and `vendor` is most of this feature — **but verify each added type renders end to end before offering it**, or you re-create the false affordance R2-156 removed. |
+| Custom Fields for Leads and Other Expenses | **HAVE** | Shipped in Tier 2 Item 5: builder re-widened to `lead` and `vendor`, validated end-to-end. |
 | Material Unit management with Dual Unit support | **MISSING** | No unit master, no secondary unit. See 14.9.4 #10. |
 | Add Fuel entries directly from Petrol Pumps | **MISSING** | `FuelLog` exists with odometer and date guards (our R2-570) but no vendor/pump linkage. |
 | Duplicate entry validation for invoices, bills, challans, transfers, E-Way Bills | **PARTIAL** | Invoice-number clash 409 exists (`crm.py`), three-way PO/GRN uniqueness exists with a DB constraint (our R2-594). No challan or E-Way concept at all. |
@@ -124,21 +124,18 @@ item). If push is competitively required, that parked item becomes a real backlo
 
 ## Recommended sequencing
 
-**Tier 1 — ships as a by-product of fixing our own defects.** No new design work; these are already
-in the remediation plan.
+**Tier 1 — ships as a by-product of fixing our own defects.** [COMPLETED & SHIPPED in Batches 1 & 2]
+1. Subcon WO billed value (**R2-762**) — SHIPPED
+2. Bill To / Ship To field separation (**R2-763**) — SHIPPED
+3. Cost-code tagging integrity (**R2-764**) — SHIPPED
+4. Project site coordinates (**R2-750**) — SHIPPED
 
-1. Subcon WO billed value (**R2-762**)
-2. Bill To / Ship To field separation (**R2-763**) — then add the auto-fill on top
-3. Cost-code tagging integrity (**R2-764**)
-4. Project site coordinates (**R2-750**) — unblocks *any* location feature
-
-**Tier 2 — cheap, backend already supports it.** Roughly a day each.
-
-5. Custom fields for `lead` and `vendor` (re-widen the R2-156 select, verifying each type renders)
-6. Project name on settled/unsettled bills; expense due dates in the settle view
-7. Party-type filter, with the vocabulary constrained on the way in (avoid the R2-759 shape)
-8. Filters on company-level payment requests and pending approvals
-9. Equipment expense bill PDF (reuse the four-document generator)
+**Tier 2 — cheap, backend already supports it.** [COMPLETED & SHIPPED in Batch 4]
+5. Custom fields for `lead` and `vendor` — SHIPPED (`fffb5ed`)
+6. Project name on settled/unsettled bills; expense due dates in the settle view — SHIPPED (`d22da01`)
+7. Party-type filter, with the vocabulary constrained on the way in — SHIPPED (`b62f212`)
+8. Filters on company-level payment requests and indents — SHIPPED (`eb2498b`)
+9. Equipment expense bill PDF — SHIPPED (`be4a9c7`)
 
 **Tier 3 — platform work, worth doing once and properly.**
 
