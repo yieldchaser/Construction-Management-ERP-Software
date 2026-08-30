@@ -1,0 +1,565 @@
+{
+  "orphans": [],
+  "referenced": [
+    {
+      "rel": "resources/glossary/construction-hero.png",
+      "sizeBytes": 8958905,
+      "sizeMB": "8.54"
+    },
+    {
+      "rel": "marketing/landing/feature-dpr-phones.png",
+      "sizeBytes": 4313110,
+      "sizeMB": "4.11"
+    },
+    {
+      "rel": "marketing/calculators/concrete-volume-calculator-3.png",
+      "sizeBytes": 2116411,
+      "sizeMB": "2.02"
+    },
+    {
+      "rel": "marketing/blog/cat-compliance.png",
+      "sizeBytes": 2031187,
+      "sizeMB": "1.94"
+    },
+    {
+      "rel": "marketing/mocks/mock-line-chart.png",
+      "sizeBytes": 1991074,
+      "sizeMB": "1.90"
+    },
+    {
+      "rel": "marketing/blog/cat-site-execution.png",
+      "sizeBytes": 1970508,
+      "sizeMB": "1.88"
+    },
+    {
+      "rel": "marketing/blog/cat-insights.png",
+      "sizeBytes": 1964599,
+      "sizeMB": "1.87"
+    },
+    {
+      "rel": "marketing/mocks/mock-ticket.png",
+      "sizeBytes": 1852126,
+      "sizeMB": "1.77"
+    },
+    {
+      "rel": "marketing/mocks/mock-dependency-graph.png",
+      "sizeBytes": 1835075,
+      "sizeMB": "1.75"
+    },
+    {
+      "rel": "marketing/mocks/mock-gantt-bars.png",
+      "sizeBytes": 1827236,
+      "sizeMB": "1.74"
+    },
+    {
+      "rel": "marketing/calculators/concrete-mix-calculator-4.png",
+      "sizeBytes": 1686990,
+      "sizeMB": "1.61"
+    },
+    {
+      "rel": "marketing/blog/cat-procurement.png",
+      "sizeBytes": 1663493,
+      "sizeMB": "1.59"
+    },
+    {
+      "rel": "marketing/blog/cat-technology.png",
+      "sizeBytes": 1533136,
+      "sizeMB": "1.46"
+    },
+    {
+      "rel": "marketing/help/help-hero.png",
+      "sizeBytes": 1476475,
+      "sizeMB": "1.41"
+    },
+    {
+      "rel": "marketing/resources/resources-hero.png",
+      "sizeBytes": 1464311,
+      "sizeMB": "1.40"
+    },
+    {
+      "rel": "marketing/blog/cat-financial-ledger.png",
+      "sizeBytes": 1435040,
+      "sizeMB": "1.37"
+    },
+    {
+      "rel": "marketing/who-we-serve/segment-infrastructure.png",
+      "sizeBytes": 1339794,
+      "sizeMB": "1.28"
+    },
+    {
+      "rel": "marketing/who-we-serve/segment-civil.png",
+      "sizeBytes": 1326327,
+      "sizeMB": "1.26"
+    },
+    {
+      "rel": "marketing/calculators/paint-quantity-calculator-3.png",
+      "sizeBytes": 1289465,
+      "sizeMB": "1.23"
+    },
+    {
+      "rel": "marketing/calculators/concrete-mix-calculator.png",
+      "sizeBytes": 1281240,
+      "sizeMB": "1.22"
+    },
+    {
+      "rel": "marketing/who-we-serve/segment-builders.png",
+      "sizeBytes": 1275576,
+      "sizeMB": "1.22"
+    },
+    {
+      "rel": "marketing/calculators/steel-calculator-for-construction.png",
+      "sizeBytes": 1262650,
+      "sizeMB": "1.20"
+    },
+    {
+      "rel": "marketing/landing/feature-finance.png",
+      "sizeBytes": 1255758,
+      "sizeMB": "1.20"
+    },
+    {
+      "rel": "marketing/landing/hero-dashboard.png",
+      "sizeBytes": 1254397,
+      "sizeMB": "1.20"
+    },
+    {
+      "rel": "marketing/calculators/brick-calculator-for-wall-3.png",
+      "sizeBytes": 1252411,
+      "sizeMB": "1.19"
+    },
+    {
+      "rel": "marketing/calculators/concrete-mix-calculator-2.png",
+      "sizeBytes": 1237706,
+      "sizeMB": "1.18"
+    },
+    {
+      "rel": "marketing/who-we-serve/segment-interior.png",
+      "sizeBytes": 1225384,
+      "sizeMB": "1.17"
+    },
+    {
+      "rel": "marketing/products/hero-financial.png",
+      "sizeBytes": 1223320,
+      "sizeMB": "1.17"
+    },
+    {
+      "rel": "marketing/calculators/paint-quantity-calculator-2.png",
+      "sizeBytes": 1216438,
+      "sizeMB": "1.16"
+    },
+    {
+      "rel": "marketing/products/hero-field-ops.png",
+      "sizeBytes": 1182747,
+      "sizeMB": "1.13"
+    },
+    {
+      "rel": "marketing/products/hero-supply-chain.png",
+      "sizeBytes": 1168251,
+      "sizeMB": "1.11"
+    },
+    {
+      "rel": "marketing/landing/feature-procurement.png",
+      "sizeBytes": 1150250,
+      "sizeMB": "1.10"
+    },
+    {
+      "rel": "marketing/calculators/brick-calculator-for-wall.png",
+      "sizeBytes": 1131946,
+      "sizeMB": "1.08"
+    },
+    {
+      "rel": "marketing/calculators/concrete-volume-calculator.png",
+      "sizeBytes": 1129380,
+      "sizeMB": "1.08"
+    },
+    {
+      "rel": "marketing/calculators/house-construction-cost-calculator-3.png",
+      "sizeBytes": 1101146,
+      "sizeMB": "1.05"
+    },
+    {
+      "rel": "marketing/calculators/paint-quantity-calculator.png",
+      "sizeBytes": 1071061,
+      "sizeMB": "1.02"
+    },
+    {
+      "rel": "marketing/calculators/house-construction-cost-calculator.png",
+      "sizeBytes": 1065432,
+      "sizeMB": "1.02"
+    },
+    {
+      "rel": "marketing/calculators/brick-calculator-for-wall-4.png",
+      "sizeBytes": 1065336,
+      "sizeMB": "1.02"
+    },
+    {
+      "rel": "marketing/landing/feature-planning.png",
+      "sizeBytes": 1024795,
+      "sizeMB": "0.98"
+    },
+    {
+      "rel": "marketing/calculators/bar-bending-schedule-calculator.png",
+      "sizeBytes": 1015032,
+      "sizeMB": "0.97"
+    },
+    {
+      "rel": "marketing/calculators/house-construction-cost-calculator-4.png",
+      "sizeBytes": 1004128,
+      "sizeMB": "0.96"
+    },
+    {
+      "rel": "marketing/calculators/bar-bending-schedule-calculator-3.png",
+      "sizeBytes": 890342,
+      "sizeMB": "0.85"
+    },
+    {
+      "rel": "marketing/calculators/bar-bending-schedule-calculator-2.png",
+      "sizeBytes": 871978,
+      "sizeMB": "0.83"
+    },
+    {
+      "rel": "resources/glossary/construction-hero.webp",
+      "sizeBytes": 552578,
+      "sizeMB": "0.53"
+    },
+    {
+      "rel": "marketing/calculators/concrete-mix-calculator-3.png",
+      "sizeBytes": 412898,
+      "sizeMB": "0.39"
+    },
+    {
+      "rel": "marketing/calculators/concrete-volume-calculator-2.png",
+      "sizeBytes": 371039,
+      "sizeMB": "0.35"
+    },
+    {
+      "rel": "marketing/calculators/bar-bending-schedule-calculator-4.png",
+      "sizeBytes": 363708,
+      "sizeMB": "0.35"
+    },
+    {
+      "rel": "marketing/calculators/steel-calculator-for-construction-4.png",
+      "sizeBytes": 354419,
+      "sizeMB": "0.34"
+    },
+    {
+      "rel": "marketing/calculators/paint-quantity-calculator-4.png",
+      "sizeBytes": 337620,
+      "sizeMB": "0.32"
+    },
+    {
+      "rel": "marketing/calculators/house-construction-cost-calculator-2.png",
+      "sizeBytes": 324971,
+      "sizeMB": "0.31"
+    },
+    {
+      "rel": "marketing/calculators/steel-calculator-for-construction-3.png",
+      "sizeBytes": 298146,
+      "sizeMB": "0.28"
+    },
+    {
+      "rel": "marketing/calculators/brick-calculator-for-wall-2.png",
+      "sizeBytes": 297621,
+      "sizeMB": "0.28"
+    },
+    {
+      "rel": "marketing/calculators/steel-calculator-for-construction-2.png",
+      "sizeBytes": 268022,
+      "sizeMB": "0.26"
+    },
+    {
+      "rel": "marketing/calculators/concrete-volume-calculator-4.png",
+      "sizeBytes": 253597,
+      "sizeMB": "0.24"
+    },
+    {
+      "rel": "marketing/landing/feature-dpr-phones.webp",
+      "sizeBytes": 215754,
+      "sizeMB": "0.21"
+    },
+    {
+      "rel": "marketing/calculators/concrete-volume-calculator-3.webp",
+      "sizeBytes": 213528,
+      "sizeMB": "0.20"
+    },
+    {
+      "rel": "marketing/who-we-serve/segment-infrastructure.webp",
+      "sizeBytes": 133842,
+      "sizeMB": "0.13"
+    },
+    {
+      "rel": "marketing/who-we-serve/segment-civil.webp",
+      "sizeBytes": 128896,
+      "sizeMB": "0.12"
+    },
+    {
+      "rel": "marketing/calculators/concrete-mix-calculator.webp",
+      "sizeBytes": 127720,
+      "sizeMB": "0.12"
+    },
+    {
+      "rel": "marketing/blog/cat-compliance.webp",
+      "sizeBytes": 127062,
+      "sizeMB": "0.12"
+    },
+    {
+      "rel": "marketing/who-we-serve/segment-builders.webp",
+      "sizeBytes": 125568,
+      "sizeMB": "0.12"
+    },
+    {
+      "rel": "marketing/calculators/steel-calculator-for-construction.webp",
+      "sizeBytes": 123276,
+      "sizeMB": "0.12"
+    },
+    {
+      "rel": "marketing/blog/cat-insights.webp",
+      "sizeBytes": 120408,
+      "sizeMB": "0.11"
+    },
+    {
+      "rel": "marketing/who-we-serve/segment-interior.webp",
+      "sizeBytes": 118152,
+      "sizeMB": "0.11"
+    },
+    {
+      "rel": "marketing/products/hero-financial.webp",
+      "sizeBytes": 116994,
+      "sizeMB": "0.11"
+    },
+    {
+      "rel": "marketing/blog/cat-site-execution.webp",
+      "sizeBytes": 111080,
+      "sizeMB": "0.11"
+    },
+    {
+      "rel": "marketing/products/hero-field-ops.webp",
+      "sizeBytes": 102036,
+      "sizeMB": "0.10"
+    },
+    {
+      "rel": "marketing/products/hero-supply-chain.webp",
+      "sizeBytes": 102030,
+      "sizeMB": "0.10"
+    },
+    {
+      "rel": "marketing/mocks/mock-line-chart.webp",
+      "sizeBytes": 101424,
+      "sizeMB": "0.10"
+    },
+    {
+      "rel": "marketing/landing/hero-dashboard.webp",
+      "sizeBytes": 98230,
+      "sizeMB": "0.09"
+    },
+    {
+      "rel": "marketing/landing/feature-procurement.webp",
+      "sizeBytes": 97074,
+      "sizeMB": "0.09"
+    },
+    {
+      "rel": "marketing/blog/cat-technology.webp",
+      "sizeBytes": 93714,
+      "sizeMB": "0.09"
+    },
+    {
+      "rel": "marketing/landing/feature-finance.webp",
+      "sizeBytes": 93396,
+      "sizeMB": "0.09"
+    },
+    {
+      "rel": "marketing/calculators/brick-calculator-for-wall.webp",
+      "sizeBytes": 90860,
+      "sizeMB": "0.09"
+    },
+    {
+      "rel": "marketing/mocks/mock-ticket.webp",
+      "sizeBytes": 89318,
+      "sizeMB": "0.09"
+    },
+    {
+      "rel": "marketing/calculators/paint-quantity-calculator.webp",
+      "sizeBytes": 88918,
+      "sizeMB": "0.08"
+    },
+    {
+      "rel": "marketing/calculators/concrete-volume-calculator-4.webp",
+      "sizeBytes": 85842,
+      "sizeMB": "0.08"
+    },
+    {
+      "rel": "marketing/calculators/paint-quantity-calculator-3.webp",
+      "sizeBytes": 79294,
+      "sizeMB": "0.08"
+    },
+    {
+      "rel": "marketing/blog/cat-procurement.webp",
+      "sizeBytes": 79226,
+      "sizeMB": "0.08"
+    },
+    {
+      "rel": "marketing/calculators/concrete-volume-calculator.webp",
+      "sizeBytes": 77854,
+      "sizeMB": "0.07"
+    },
+    {
+      "rel": "marketing/mocks/mock-gantt-bars.webp",
+      "sizeBytes": 76192,
+      "sizeMB": "0.07"
+    },
+    {
+      "rel": "marketing/calculators/house-construction-cost-calculator.webp",
+      "sizeBytes": 75932,
+      "sizeMB": "0.07"
+    },
+    {
+      "rel": "marketing/calculators/concrete-mix-calculator-4.webp",
+      "sizeBytes": 74672,
+      "sizeMB": "0.07"
+    },
+    {
+      "rel": "marketing/calculators/brick-calculator-for-wall-3.webp",
+      "sizeBytes": 71146,
+      "sizeMB": "0.07"
+    },
+    {
+      "rel": "marketing/calculators/paint-quantity-calculator-2.webp",
+      "sizeBytes": 69174,
+      "sizeMB": "0.07"
+    },
+    {
+      "rel": "marketing/calculators/concrete-mix-calculator-2.webp",
+      "sizeBytes": 68996,
+      "sizeMB": "0.07"
+    },
+    {
+      "rel": "marketing/blog/cat-financial-ledger.webp",
+      "sizeBytes": 68500,
+      "sizeMB": "0.07"
+    },
+    {
+      "rel": "marketing/landing/feature-planning.webp",
+      "sizeBytes": 63914,
+      "sizeMB": "0.06"
+    },
+    {
+      "rel": "marketing/mocks/mock-dependency-graph.webp",
+      "sizeBytes": 63718,
+      "sizeMB": "0.06"
+    },
+    {
+      "rel": "marketing/calculators/bar-bending-schedule-calculator.webp",
+      "sizeBytes": 62944,
+      "sizeMB": "0.06"
+    },
+    {
+      "rel": "marketing/calculators/house-construction-cost-calculator-2.webp",
+      "sizeBytes": 53614,
+      "sizeMB": "0.05"
+    },
+    {
+      "rel": "marketing/calculators/house-construction-cost-calculator-3.webp",
+      "sizeBytes": 53556,
+      "sizeMB": "0.05"
+    },
+    {
+      "rel": "marketing/resources/resources-hero.webp",
+      "sizeBytes": 53052,
+      "sizeMB": "0.05"
+    },
+    {
+      "rel": "marketing/calculators/brick-calculator-for-wall-4.webp",
+      "sizeBytes": 51858,
+      "sizeMB": "0.05"
+    },
+    {
+      "rel": "marketing/calculators/steel-calculator-for-construction-2.webp",
+      "sizeBytes": 51544,
+      "sizeMB": "0.05"
+    },
+    {
+      "rel": "marketing/calculators/concrete-volume-calculator-2.webp",
+      "sizeBytes": 51118,
+      "sizeMB": "0.05"
+    },
+    {
+      "rel": "marketing/calculators/brick-calculator-for-wall-2.webp",
+      "sizeBytes": 46654,
+      "sizeMB": "0.04"
+    },
+    {
+      "rel": "marketing/help/help-hero.webp",
+      "sizeBytes": 43010,
+      "sizeMB": "0.04"
+    },
+    {
+      "rel": "marketing/calculators/concrete-mix-calculator-3.webp",
+      "sizeBytes": 41588,
+      "sizeMB": "0.04"
+    },
+    {
+      "rel": "marketing/calculators/steel-calculator-for-construction-4.webp",
+      "sizeBytes": 39914,
+      "sizeMB": "0.04"
+    },
+    {
+      "rel": "marketing/calculators/bar-bending-schedule-calculator-3.webp",
+      "sizeBytes": 39892,
+      "sizeMB": "0.04"
+    },
+    {
+      "rel": "marketing/calculators/bar-bending-schedule-calculator-2.webp",
+      "sizeBytes": 38326,
+      "sizeMB": "0.04"
+    },
+    {
+      "rel": "marketing/calculators/bar-bending-schedule-calculator-4.webp",
+      "sizeBytes": 35864,
+      "sizeMB": "0.03"
+    },
+    {
+      "rel": "marketing/calculators/house-construction-cost-calculator-4.webp",
+      "sizeBytes": 35016,
+      "sizeMB": "0.03"
+    },
+    {
+      "rel": "marketing/calculators/paint-quantity-calculator-4.webp",
+      "sizeBytes": 34820,
+      "sizeMB": "0.03"
+    },
+    {
+      "rel": "marketing/calculators/steel-calculator-for-construction-3.webp",
+      "sizeBytes": 32930,
+      "sizeMB": "0.03"
+    },
+    {
+      "rel": "images/logo.svg",
+      "sizeBytes": 17245,
+      "sizeMB": "0.02"
+    },
+    {
+      "rel": "next.svg",
+      "sizeBytes": 1375,
+      "sizeMB": "0.00"
+    },
+    {
+      "rel": "globe.svg",
+      "sizeBytes": 1035,
+      "sizeMB": "0.00"
+    },
+    {
+      "rel": "file.svg",
+      "sizeBytes": 391,
+      "sizeMB": "0.00"
+    },
+    {
+      "rel": "window.svg",
+      "sizeBytes": 385,
+      "sizeMB": "0.00"
+    },
+    {
+      "rel": "vercel.svg",
+      "sizeBytes": 128,
+      "sizeMB": "0.00"
+    }
+  ]
+}
