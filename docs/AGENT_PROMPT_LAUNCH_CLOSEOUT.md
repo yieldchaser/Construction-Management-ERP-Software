@@ -2,7 +2,7 @@
 
 Paste this whole file as the task. Do not stop until the Definition of Done is met.
 
-**This supersedes `docs/AGENT_PROMPT_HELP_AND_README.md`.** Parts 3 and 4 below are that document, unchanged in substance. Do Parts 1 and 2 first.
+**This supersedes `docs/AGENT_PROMPT_HELP_AND_README.md`** — that file is obsolete; ignore it. Note the scope change: Part 3 covers the **console help only**, not the marketing help.
 
 ---
 
@@ -14,11 +14,28 @@ Paste this whole file as the task. Do not stop until the Definition of Done is m
 
 **Creating a component is not the deliverable. Replacing the call sites is.** Three times on this project a shared component was built, reported done, and left with zero adopters.
 
+## What you cannot do, and who does it instead
+
+You have **no browser and no Sentry access.** Do not attempt either, and do not claim a result that would require them.
+
+Specifically, these are **not yours** — they are handled separately and you should neither block on them nor fake them:
+
+| Out of your reach | Who does it |
+|---|---|
+| Reading or resolving Sentry issues | Handled separately. Part 1 below already contains the full diagnosis; you do not need Sentry to fix the bug. |
+| Authenticated probes against **production** | Handled separately. A valid session token is required and you do not have one. |
+| Screenshots, visual confirmation, "does it look right" | Handled separately. |
+| Driving the running UI by clicking through it | Handled separately. See Phase 3.2 for what you do instead. |
+
+Everything else is yours: reading code, editing code, running the backend locally, seeding a local database, calling the local API over HTTP, running the test suite, and building the frontend. `curl` and `python urllib` against **`localhost`** are fine and expected. A browser is not.
+
+When a step would need one of the four rows above, write what you did verify, state plainly what you could not, and move on. Do not invent the result.
+
 ---
 
-# PART 1 — Live production bugs (Sentry)
+# PART 1 — Live production bugs
 
-Sentry is logging real errors from the reports API in production. Two are confirmed; there may be more.
+Sentry is logging real errors from the reports API in production. Two were investigated and are fully diagnosed below, so you do not need Sentry access to act on them. There may be more of the same class, which Phase 1.3 finds statically.
 
 ## Bug 1.1 — `cost-code-expense-analysis` is broken in production. CONFIRMED.
 
@@ -36,13 +53,13 @@ So the loop raises on the first bill, the `except Exception` swallows it, Sentry
 
 Fix it properly. Find where cost code actually lives for an expense (check the `CostCode` model and how other handlers resolve it — `_rep_company_payments` and `_rep_project_payment` both read `p.cost_code` off a payment object successfully, so follow that path), and join correctly. Do not paper over it with `getattr(b, "cost_code", None)`; that silently returns "General Expense" for every row and produces a report that looks fine and means nothing.
 
-## Bug 1.2 — `indent_date` — already fixed, verify only.
+## Bug 1.2 — `indent_date` — already fixed. Do nothing.
 
-Sentry: `AttributeError: 'MaterialIndent' object has no attribute 'indent_date'`, 3 events, ~3h old.
+Sentry logged `AttributeError: 'MaterialIndent' object has no attribute 'indent_date'` in `app.routers.reports`, 3 events, several hours old.
 
-`indent_date` entered in commit `346e438` and was removed in `1191042`. It no longer exists anywhere in `backend/`. I probed `material-request-item` live and it returns real rows, which also confirms Render is running current `main`.
+This was already investigated. `indent_date` entered in commit `346e438` and was removed in `1191042`. It no longer exists anywhere in `backend/`, and `material-request-item` was probed against production and returns real rows.
 
-**This is a stale Sentry event.** Confirm, then resolve it in Sentry rather than changing code. Do not "fix" code that is already correct.
+**It is a stale event and needs no code change.** Confirm with `grep -rn "indent_date" backend/` returning nothing, and move on. Resolving it in Sentry is handled separately. **Do not "fix" code that is already correct** — that is how regressions get introduced.
 
 ## Phase 1.3 — Sweep for the rest of this bug class
 
@@ -65,9 +82,15 @@ Then re-run the seeded suite in `tests/coverage/test_unproven_16_reports.py` and
 
 Also: the API response carries an `errors` key alongside `rows`. Check whether it is populated on these failures and surfaced in the UI. A report that fails should say so, not render an empty table that reads as "no data".
 
-## Phase 1.4 — Clear the board
+## Phase 1.4 — Prove it locally
 
-Re-probe all 82 reports live after the fixes. Then check Sentry again and confirm the feed is clean. Report the before/after Sentry issue count.
+You cannot probe production and you cannot read Sentry. Do the equivalent locally, which is stronger anyway because you control the data:
+
+1. Run the backend against a local database seeded with the fixtures from `tests/coverage/test_unproven_16_reports.py`.
+2. Call **all 82** report handlers and record, per slug: row count, and whether the returned keys exactly match `REPORT_METADATA.columns`.
+3. Assert **zero** exceptions are raised or swallowed across all 82. A handler that logs and returns `_REPORT_FAILED` counts as a failure, not a pass — that is precisely the bug being fixed.
+
+Report the full 82-row table. The production re-probe and the Sentry check are handled separately once your work lands.
 
 ---
 
@@ -139,10 +162,12 @@ Give light `--border` a value one step darker than `--elevated` — around `#D1D
 
 ### Verify
 
+You have no browser, so verify this statically and precisely. The visual pass is handled separately.
+
 - `grep -rn "inset_0_1px_0\|inset 0 1px 0" frontend/src` → **0**.
-- No `box-shadow` on any selected/active inline element.
-- Screenshot the sidebar with an item selected, a tab control, and a card, in **light and dark**, and confirm no rim or halo on any of them.
-- Confirm the light-mode hairline is visible on an elevated surface after the token fix.
+- `grep -rn "box-shadow" frontend/src --include=*.tsx` → every survivor is on a modal, drawer, popover or the flyout. List them by file and name why each floats.
+- Report the `shadow-*` counts before and after, per variant.
+- For the token fix, compute and report the contrast ratio of the new light `--border` against both `#FFFFFF` and `#E5E7EB`, and confirm the dark `--border` value is byte-identical to before.
 
 ## Still banned, from previous rounds
 
@@ -160,14 +185,19 @@ This is not a copy-editing task. It is a **verification** task with a writing de
 
 **This project has been burned by fabricated content before** — a content-integrity audit previously found and fixed 81 fabricated CMS files. Do not add to that. An unverifiable step gets deleted, never guessed.
 
-## What exists
+## Scope: console help only
 
-| System | Location | Size |
-|---|---|---|
-| **Console help** (`/c/{id}/d/help`) | `frontend/src/app/c/[company_id]/d/help/helpContent.tsx` | 36 Q&A entries, 8 areas, 810 lines |
-| **Marketing help** (`/help/...`) | `frontend/src/content/help/**/*.json` | 86 articles, 15 categories |
+**In scope — the only file whose content you may change:**
 
-Marketing shape: `{title, metaTitle, metaDescription, canonical, slug, category, type, author, publishDate, body}`. Console shape: `{q, a: JSX, text}` where `text` is the search keyword blob.
+`frontend/src/app/c/[company_id]/d/help/helpContent.tsx` — the in-app help at `/c/{id}/d/help`. 36 Q&A entries across 8 areas, 810 lines. Shape: `{q, a: JSX, text}`, where `text` is the search keyword blob.
+
+**Explicitly OUT of scope — do not edit:**
+
+`frontend/src/content/help/**/*.json` — the 86 public marketing help articles. **Leave these entirely alone.** They are not part of this task.
+
+This is not arbitrary. Those files carry WordPress-exported HTML bodies of ~31KB each, full of generated classes (`wp-block-paragraph`, `wp-elements-<hash>`, palette classes), rendered through `dangerouslySetInnerHTML` and then parsed by `annotateHeadingsForToc()` to build each page's table of contents. Editing that markup can silently break the TOC, drop styling, or render malformed. They took a long time to get right. **Do not touch them, do not "clean them up", do not reformat them, and do not fix their em dashes.**
+
+If your work on the console help reveals that a marketing article is factually wrong, **write it down in `docs/HELP_CONTENT_AUDIT.md` under a "Marketing help — flagged, not changed" heading** and leave the file untouched. That list is a deliverable; acting on it is not.
 
 ### The problem, concretely
 
@@ -200,15 +230,25 @@ Write to `docs/WORKFLOW_TRUTH_MAP.md`, one section per module. **This is the fil
 
 Use the knowledge-graph MCP tools (`semantic_search_nodes`, `query_graph`) before grepping.
 
-### Phase 3.2 — Walk every workflow in the running app
+### Phase 3.2 — Execute every workflow against the local API
 
-A map derived only from source will still be wrong: rendering conditions, permission gates and disabled states are not obvious from code.
+A map derived only from reading source will be wrong in places. It has to be executed. You cannot click through the UI, so execute it at the layer you do control: **the API.**
 
-**Actually perform each workflow end to end.** Confirm every label and step order. Reality wins over the map.
+For each workflow in the map:
 
-Where a workflow cannot be completed — missing prerequisite, genuine bug, dead end — record it in `docs/BACKLOG.md` as a `D-0xx` and mark the workflow `UNVERIFIED`. Do not write help for a workflow you could not complete. **This phase is also the real bug pass**, and its findings matter as much as the help.
+1. Run the backend locally against a seeded database.
+2. **Actually perform the workflow over HTTP, in order**, with the same call sequence the UI makes. Create the prerequisites, then the record, then whatever transition moves it forward.
+3. Confirm the preconditions you wrote are the real ones — omit one and check the call actually fails. A precondition you asserted but never tested is a guess.
+4. Confirm the required-field list by omitting each field and observing which produce a 422.
+5. Confirm the state transitions land the record in the status you claimed.
 
-### Phase 3.3 — Grade all 122 items
+This is stronger than clicking for everything except the visual layer, because it tests what the server truly enforces rather than what the form happens to mark required.
+
+**For the UI labels**, read them verbatim from the JSX — button text, tab text, field labels — and quote them exactly. Note in the map that labels are source-derived. The visual pass that confirms them on screen is handled separately; flag anything you are unsure of rather than smoothing it over.
+
+Where a workflow cannot be completed — missing prerequisite, genuine bug, dead end — record it in `docs/BACKLOG.md` as a `D-0xx` and mark the workflow `UNVERIFIED`. **Do not write help for a workflow you could not execute.** This phase is also the real bug pass, and its findings matter as much as the help.
+
+### Phase 3.3 — Grade all 36 console entries
 
 One verdict each:
 
@@ -245,7 +285,7 @@ Before finishing, re-read every article and ask: *did I verify this, or infer it
 - **No em dashes.** Period or comma instead. They read as AI-generated.
 - No emoji in help copy.
 - Plain, direct, second person. "Click Save."
-- Console entries short and scannable; depth in marketing articles; link across.
+- Console entries short and scannable. Where an existing marketing article already covers a topic in depth, link to it rather than duplicating; do not edit it.
 - Update the `text` search blob on every console entry you touch or search stops finding it.
 
 ---
@@ -296,22 +336,22 @@ Do not invent benchmarks, user counts, or roadmap promises.
 
 **Part 1**
 - [ ] `cost-code-expense-analysis` returns real grouped rows, with cost code resolved from where it actually lives, not a `getattr` default.
-- [ ] `indent_date` confirmed already fixed; Sentry issue resolved, no code change.
+- [ ] `indent_date` confirmed already fixed by grep; no code change made.
 - [ ] A reflection test over all 82 handlers asserts every model attribute access exists on its model class. Committed and passing.
 - [ ] The 16 empty reports classified: genuinely empty vs crashing. Table reported.
 - [ ] Report failures surface as errors in the UI, not as an empty table.
-- [ ] All 82 re-probed live; Sentry feed clean. Before/after issue count reported.
+- [ ] All 82 handlers executed against a seeded local database; zero exceptions raised or swallowed; full 82-row table reported.
 
 **Part 2**
 - [ ] All 25 bevel sites converted to the background-step treatment; `grep -rn "inset_0_1px_0\|inset 0 1px 0" frontend/src` returns 0.
 - [ ] No `box-shadow` on any selected/active inline element; the 244 generic `shadow-*` uses audited against inline-versus-floating.
 - [ ] Light `--border` darkened so hairlines stay visible on `--elevated`; dark theme unchanged.
-- [ ] Screenshots of a selected sidebar row, a tab control and a card in light and dark, showing no rim or halo.
+- [ ] Surviving `box-shadow` uses listed by file, each justified as a floating element; `shadow-*` counts reported before and after.
 
 **Part 3**
 - [ ] `docs/WORKFLOW_TRUTH_MAP.md` covers every sidebar module with verbatim labels, preconditions, required fields, endpoints, permissions, success criteria.
 - [ ] Every workflow walked in the running app; divergences corrected; uncompletable ones `UNVERIFIED` and filed as `D-0xx`.
-- [ ] `docs/HELP_CONTENT_AUDIT.md` grades all 122 items with reasons; counts reported.
+- [ ] `docs/HELP_CONTENT_AUDIT.md` grades all 36 console entries with reasons; counts reported. Marketing articles listed under "flagged, not changed" only.
 - [ ] All non-ACCURATE items rewritten, deleted or merged; every module has a verified how-to; coverage fraction reported.
 - [ ] Every article clears the five-point bar; every step traces to code; `text` blobs updated.
 
@@ -324,8 +364,8 @@ Do not invent benchmarks, user counts, or roadmap promises.
 
 ## Final report
 
-Part 1: what was broken, the fix, the 16-report classification table, Sentry before/after.
-Part 2: the bevel count before and after, and the light/dark screenshots.
+Part 1: what was broken, the fix, the 16-report classification table, and the 82-row local execution table.
+Part 2: the bevel count before and after, the surviving shadows with justification, and the new light --border contrast numbers.
 Part 3: verdict counts, coverage fraction, every `D-0xx` filed with what was broken.
 Part 4: what you removed and why.
 
