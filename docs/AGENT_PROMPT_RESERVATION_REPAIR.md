@@ -133,6 +133,60 @@ The subscription-billing row landed as `R2-336` in the findings table. It belong
 
 ---
 
+## PART 7 — The help answers read like API documentation
+
+All 37 console help answers use one rigid template: `Preconditions:` / `Navigation:` / `Required fields:` / `Optional fields:` / `Save result:` / `Next step:`. Counted in `helpContent.tsx`: 37, 37, 30, 19, 37, 37. Every answer, no exceptions.
+
+The reader is a site manager or an office admin, not an engineer. Today the Payment answer tells them their click "calls `POST /apis/v3/finance/payments`, recording the transaction in financial_transactions". That is a sentence about our database, in a document meant to help someone raise a payment.
+
+**The information is right. The voice is wrong.** Do not change what any answer claims. Change how it reads.
+
+### What comes out
+
+1. **The six labelled prefixes.** Delete the labels. Keep the running order, because that order is the shape of the task: what you need first, where to click, what to fill in, what happens when you save, where to go next.
+2. **Every `<code>METHOD /path</code>` in an answer body.** All 37 have one. The endpoint stays in that entry's `sources` array, where the validator already checks it independently of the body, so removing it from the prose loses no enforcement.
+3. **Raw database table names.** Five leak today: `warehouse_inventories`, `staff_employees`, `financial_transactions`, `company_team`, `boq_items`. Say what the user sees instead, e.g. "updates that account's balance".
+4. **Raw permission keys.** `finance:edit permission` becomes "permission to edit finance".
+5. **Em dashes.** House rule. Use a period or a comma.
+
+### The model
+
+Before:
+
+> Preconditions: Company Bank or Cash Account created; finance:edit permission.
+> Navigation: Open the sidebar, select "Finance", choose the "Payment Requests" tab, and click "+ Create Payment Request".
+> Required fields: Party, Payment Type ("in" for customer receipts, "out" for vendor payouts), Amount, Payment Method (Bank Transfer, Cheque, UPI, Cash), and Payment Date.
+> Save result: Submitting calls `POST /apis/v3/finance/payments`, recording the transaction in financial_transactions and adjusting account balances.
+> Next step: Link the payment to open vendor bills or view updated party statement balances.
+
+After:
+
+> You will need a bank or cash account set up first, and permission to edit finance.
+>
+> Go to "Finance" in the sidebar, open the "Payment Requests" tab, and click "+ Create Payment Request".
+>
+> Fill in the party, whether the money is coming in or going out, the amount, how it is being paid (bank transfer, cheque, UPI or cash), and the date.
+>
+> Saving it records the payment against that party and updates the account balance.
+>
+> From there you can link it to an open vendor bill, or check the party's statement to see the new balance.
+
+Same five beats, same facts, no labels, nothing about our stack.
+
+### Two things that must not change
+
+**Keep every UI label in double quotes.** The validator extracts labels with `re.findall(r'"([^"\n]+)"', a_clean)`. It only sees double-quoted strings. Switch a label to `<strong>` or backticks and that label silently stops being verified, while the run still prints `[PASS]`. If you want bold, you must first extend the extractor to read `<strong>` content as well **and** add a self-test case proving the extension catches a fabricated bold label. Otherwise quotes stay. They also help the reader, since they mark exactly what to look for on screen.
+
+**Verification coverage must not fall.** The validator reports `[PASS]` today without ever saying how much it checked, so a rewrite that quietly drops labels would still read as green. Make it print the totals it verified: entries, endpoint citations, file:line citations and UI labels. Record those four numbers **before** you start rewriting, and assert at the end that none of them decreased. Paste both sets in your report.
+
+### How to do the rewrite
+
+**One entry at a time, by hand.** Do not write a script that regenerates answers from a template. Every fabrication in this project's history came from a generator emitting whole files from a template, and that is exactly what produced the voice being fixed here.
+
+You are rewording, not researching. If a rewrite makes you want to state something the old answer did not say, either drop it or open the cited file, confirm it, and add the citation to `sources`. A claim without a citation is a fabrication.
+
+---
+
 ## Definition of done
 
 1. `POST /indents/{id}/cancel` exists, releases, and is reachable from the procurement UI.
@@ -141,6 +195,8 @@ The subscription-billing row landed as `R2-336` in the findings table. It belong
 4. `MaterialIndentItem.reserved_qty` and `WarehouseInventory.reserved_qty` can never disagree.
 5. Every new test in Part 4 was **run against the unfixed tree and observed to fail** before the fix. Report each result. A test you did not watch fail is not a closure.
 6. Four empty states converted; the six listed exclusions untouched.
-7. `pytest tests/coverage`, `npx tsc --noEmit`, and a clean `npm run build` after `rm -rf .next` all pass. Paste the real counts.
+7. All 37 help answers rewritten in plain language, one at a time. Zero occurrences of `Preconditions:`, `Navigation:`, `Required fields:`, `Optional fields:`, `Save result:`, `Next step:` remain in `helpContent.tsx`. Zero `<code>METHOD /path</code>` in any answer body, and every one of those endpoints still present in that entry's `sources`.
+8. `verify_help_claims.py` passes, self-test included, and prints four coverage totals that are all greater than or equal to the pre-rewrite numbers. Paste before and after.
+9. `pytest tests/coverage`, `npx tsc --noEmit`, and a clean `npm run build` after `rm -rf .next` all pass. Paste the real counts.
 
 No migration is needed. `reserved_qty` already exists on both tables.
