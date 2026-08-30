@@ -97,34 +97,35 @@ There is **no payment processor anywhere in the backend** — no Stripe, no Razo
 
 Record: payment collection is currently a manual, out-of-product process. Before launch, either wire a payment provider or confirm that manual invoicing is the intended model. Priority MEDIUM, founder decision.
 
-## 3.2 — One party flag serves two different commercial relationships
+## 3.2 — The "Labour Contractor" tab is misnamed for what it holds
 
-A works subcontractor and a labour contractor are different relationships. A works subcontractor takes a Work Order for a scope and is paid on RA bills against measured progress. A labour contractor supplies daily headcount and is paid on muster roll against attendance.
+**Read this whole item before acting. The underlying architecture was investigated and is correct; only a label is wrong.**
 
-The codebase models the **activities** separately but the **party** as one thing:
-
-- `CompanyTeam.priority_type` has only two values in use: `"partner"` and `"subcontractor"`.
-- `/apis/v3/billing/subcontractors` filters solely on `priority_type == "subcontractor"` (`billing.py:1804`).
-- Works behaviour hangs off Work Orders; labour behaviour off `SubcontractorAttendance` (`labor_role`, `worker_count`, `shift_multiplier`, `overtime_hours`) and `MusterRoll`.
-
-Consequence: **every works subcontractor appears in the Attendance → Labour Contractor list, and every labour thekedar appears in the works-subcontractor list.** Nothing breaks, and one firm often is both in Indian practice, so the shared party master is defensible. The missing piece is a capability flag.
-
-Record the suggested fix so it is on the record but **do not build it**: add a capability field to the party (works / labour / both), default every existing row to `both` so nothing disappears from any list, and filter each surface by it. Priority MEDIUM.
-
-## 3.3 — Two parallel tables model the same labour event
-
-`SubcontractorAttendance` and `MusterRoll` both record daily labour supply, with near-identical semantics and different column names:
+The labour data model is a deliberate three-layer design, carrying finding id R2-507:
 
 ```
-SubcontractorAttendance : subcontractor_id, attendance_date, labor_role,
-                          worker_count, shift_multiplier, overtime_hours
-MusterRoll              : contractor_id,   date,            labor_role,
-                          workers_present, workers_absent,  hours_worked, overtime_hours
+AttendanceLog            individual employee punches        1 row = 1 person
+SubcontractorAttendance  subcontractor crew counts          1 row = N workers
+MusterRoll               statutory register, per project-day summary,
+                         DERIVED from the two above when its fields are left null
+BOCWRecord               statutory BOCW register
 ```
 
-Both foreign-key to `company_team.id`, so `subcontractor_id` and `contractor_id` point at the same entity under different names. Both are live: `SubcontractorAttendance` is written through the subcon routes, `MusterRoll` through `POST /apis/v3/labour/muster-roll`.
+`_derive_day_figures` in `backend/app/routers/labour.py` sums employee punches and crew counts into the register so, in the code's own words, "a diligent site never re-keys the register". It even handles the subtlety that a crew row is N workers rather than one person.
 
-Record the risk: the same day's labour can be entered in both places, and any report that sums across them will double-count. **Investigate before consolidating** — they may have diverged deliberately, and `MusterRoll` additionally feeds the statutory `BOCWRecord` register. Priority MEDIUM. Do not consolidate them in this run.
+There is **no double-counting path**: `reports.py` contains zero references to `SubcontractorAttendance` and reads only the derived `MusterRoll`.
+
+`CompanyTeam.priority_type == "subcontractor"` covering every engaged firm is likewise defensible: the same firm sends crew some days and bills a Work Order other months, which is normal Indian construction practice.
+
+**So the only real defect is naming.** The Attendance tab is labelled "Labour Contractor", but it lists every subcontractor and writes crew counts to `POST /apis/v3/subcon/attendance`. It is a subcontractor crew register, not a separate labour-contractor entity.
+
+Record the naming mismatch, and record the optional enhancement — a party capability flag (works / labour / both, defaulting every existing row to `both`) if finer filtering is ever wanted. Priority LOW, cosmetic. **Do not rename anything and do not add the flag in this run.**
+
+## 3.3 — The statutory register derives at write time and can go stale
+
+Following from 3.2: `MusterRoll` rows compute their figures from `AttendanceLog` and `SubcontractorAttendance` **at the moment the register row is created**. Crew rows added for that project-day afterwards do not flow into the already-written register.
+
+Record the consequence: a statutory register created early in the day can under-report if crew attendance is entered later. Possible resolutions are recomputing on read, or recomputing when a crew row lands on a day that already has a register row. Priority MEDIUM, because this is a statutory document. **Investigate and decide before changing anything; do not implement in this run.**
 
 ---
 
