@@ -5,14 +5,18 @@ import { authHeaders } from "@/lib/siteflow";
 import React, { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Icon, { type IconName } from "@/components/marketing/Icon";
+import SegmentedTabs from "@/components/ui/Tabs";
+import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
 const STATUS_MAP: Record<string, string> = {
-  Present: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-  present: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-  Absent: "bg-red-500/10 text-red-400 border-red-500/20",
-  absent: "bg-red-500/10 text-red-400 border-red-500/20",
-  "Half Day": "bg-amber-500/10 text-amber-400 border-amber-500/20",
-  half_day: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-  "half day": "bg-amber-500/10 text-amber-400 border-amber-500/20",
+  Present: "bg-success/10 text-success border-success/20",
+  present: "bg-success/10 text-success border-success/20",
+  Absent: "bg-danger/10 text-danger border-danger/20",
+  absent: "bg-danger/10 text-danger border-danger/20",
+  "Half Day": "bg-warning/10 text-warning border-warning/20",
+  half_day: "bg-warning/10 text-warning border-warning/20",
+  "half day": "bg-warning/10 text-warning border-warning/20",
 };
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -603,46 +607,45 @@ export default function AttendancePage() {
           {exportMsg}
         </div>
       )}
-      {/* ── Attendance sub-navigation (top tabs) ── */}
-      <div className="flex items-center gap-1 px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto">
-        {([
-          { key: "today", label: strings.todayTab, icon: "calendar" },
-          { key: "payroll", label: strings.payrollTab, icon: "banknote" },
-        ] as { key: string; label: string; icon: IconName }[]).map(item => (
-          <button key={item.key} onClick={() => setTab(item.key as typeof tab)}
-            className={`whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-all inline-flex items-center gap-1.5 ${tab === item.key ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-elevated"}`}>
-            <Icon name={item.icon} className="w-3.5 h-3.5" />{item.label}
+      <PageHeader
+        title={strings.title}
+        subtitle={strings.subtitle}
+      >
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 text-xs text-muted bg-elevated border border-border-custom px-3 py-1.5 rounded-lg"><Icon name="location_pin" className="w-3.5 h-3.5" />{geofenceBadge}</span>
+          <button
+            onClick={() => {
+              fetchProjectSettings();
+              setIsSettingsModalOpen(true);
+            }}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/20 hover:bg-primary/30 border border-border-custom text-primary font-bold text-xs transition-all cursor-pointer"
+          >
+            <Icon name="settings" className="w-3.5 h-3.5" />Project Settings
           </button>
-        ))}
+          <button onClick={() => setShowLanguageDrawer(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-input border border-border-custom text-muted hover:text-foreground text-xs font-bold transition-all cursor-pointer">
+            <Icon name="globe" className="w-3.5 h-3.5" />Language: <strong className="text-primary">{lang}</strong>
+          </button>
+        </div>
+      </PageHeader>
+
+      {/* ── Attendance sub-navigation (top tabs) ── */}
+      <div className="px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto">
+        <SegmentedTabs
+          tabs={[
+            { id: "today", label: strings.todayTab, icon: <Icon name="calendar" className="w-3.5 h-3.5" /> },
+            { id: "payroll", label: strings.payrollTab, icon: <Icon name="banknote" className="w-3.5 h-3.5" /> },
+          ]}
+          activeTab={tab}
+          onChange={(t) => setTab(t as any)}
+        />
       </div>
 
       {/* Main Container */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="border-b border-border-custom bg-background px-6 py-3 flex items-center justify-between">
-          <div>
-            <h1 className="text-sm font-bold text-foreground">{strings.title}</h1>
-            <p className="text-[10px] text-muted">{strings.subtitle}</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="inline-flex items-center gap-1.5 text-xs text-muted bg-elevated border border-border-custom px-3 py-1.5 rounded-lg"><Icon name="location_pin" className="w-4 h-4" />{geofenceBadge}</span>
-            <button
-              onClick={() => {
-                fetchProjectSettings();
-                setIsSettingsModalOpen(true);
-              }}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/20 hover:bg-primary/30 border border-border-custom text-primary font-bold text-xs transition-all cursor-pointer"
-            >
-              <Icon name="settings" className="w-4 h-4" />Project Settings
-            </button>
-            <button onClick={() => setShowLanguageDrawer(true)} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-input border border-border-custom text-muted hover:text-foreground text-xs font-bold transition-all cursor-pointer">
-              <Icon name="globe" className="w-4 h-4" />Language: <strong className="text-primary">{lang}</strong>
-            </button>
-          </div>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-6 space-y-5">
-          {!isOnline && (
-            <div className="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-md text-xs flex items-center gap-2">
+        <div className="flex-1 overflow-y-auto">
+          <PageShell width="wide">
+            {!isOnline && (
+            <div className="p-3 bg-warning/10 border border-warning/20 text-warning rounded-md text-xs flex items-center gap-2">
               <Icon name="warning" className="w-4 h-4 shrink-0" /> You are offline. Showing cached data. Some actions may be delayed.
             </div>
           )}
@@ -747,7 +750,7 @@ export default function AttendancePage() {
                   <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
                     <div className="px-5 py-3 border-b border-border-custom flex items-center justify-between">
                       <h2 className="text-xs font-bold text-muted uppercase tracking-wider">{strings.workerLog}</h2>
-                      <span className="text-[10px] text-emerald-400 font-semibold">● Real-time Logs</span>
+                      <span className="text-[10px] text-success font-semibold">● Real-time Logs</span>
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full text-xs">
@@ -778,9 +781,9 @@ export default function AttendancePage() {
                                   <td className="px-5 py-3 text-muted font-bold">{log.shift_multiplier || 1.0}x</td>
                                   <td className="px-5 py-3">
                                     {log.location_verified ? (
-                                      <span className="text-emerald-400">✓ Yes</span>
+                                      <span className="text-success">✓ Yes</span>
                                     ) : (
-                                      <span className="text-red-400 font-bold uppercase text-[9px] tracking-wider bg-red-400/10 border border-red-500/20 px-2 py-0.5 rounded-full">
+                                      <span className="text-danger font-bold uppercase text-[9px] tracking-wider bg-danger/10 border border-danger/20 px-2 py-0.5 rounded-full">
                                         Location (Not Verified)
                                       </span>
                                     )}
@@ -1032,7 +1035,7 @@ export default function AttendancePage() {
                                 className="bg-elevated border border-border-custom rounded px-1.5 py-0.5 text-[10px] text-foreground w-12 text-center" placeholder="0" />
                             </td>
                             <td className="py-2.5 px-3 text-center font-sans text-muted">₹{row.allowance || 0}</td>
-                            <td className="py-2.5 pr-4 text-right font-sans font-bold text-emerald-400">₹{daily.toLocaleString("en-IN")}</td>
+                            <td className="py-2.5 pr-4 text-right font-sans font-bold text-success">₹{daily.toLocaleString("en-IN")}</td>
                           </tr>
                         );
                       })}
@@ -1088,17 +1091,17 @@ export default function AttendancePage() {
                                 <span className="inline-flex items-center gap-1.5">
                                   {emp.employee_name}
                                   {emp.attendance_source === "assumed" && (
-                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30" title="Attendance was assumed (no punch/leave recorded) — not measured">Assumed</span>
+                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold bg-warning/10 text-warning border border-warning/20" title="Attendance was assumed (no punch/leave recorded) — not measured">Assumed</span>
                                   )}
                                 </span>
-                                {emp.attendance_source === "assumed" && <div className="text-[8px] text-amber-400/70 font-normal">no punch on file</div>}
+                                {emp.attendance_source === "assumed" && <div className="text-[8px] text-warning/70 font-normal">no punch on file</div>}
                               </td>
                               <td className="py-3 px-3 text-muted">{emp.employee_designation || "—"}</td>
                               <td className="py-3 px-3 text-right font-sans text-foreground">₹{emp.gross_salary.toLocaleString("en-IN")}</td>
-                              <td className="py-3 px-3 text-right font-sans text-red-400">₹{emp.pf_employee.toLocaleString("en-IN")}</td>
-                              <td className="py-3 px-3 text-right font-sans text-red-400">₹{emp.esi_employee.toLocaleString("en-IN")}</td>
-                              <td className="py-3 px-3 text-right font-sans text-red-400">₹{emp.tds.toLocaleString("en-IN")}</td>
-                              <td className="py-3 px-3 text-right font-bold font-sans text-emerald-400">₹{emp.net_payable.toLocaleString("en-IN")}</td>
+                              <td className="py-3 px-3 text-right font-sans text-danger">₹{emp.pf_employee.toLocaleString("en-IN")}</td>
+                              <td className="py-3 px-3 text-right font-sans text-danger">₹{emp.esi_employee.toLocaleString("en-IN")}</td>
+                              <td className="py-3 px-3 text-right font-sans text-danger">₹{emp.tds.toLocaleString("en-IN")}</td>
+                              <td className="py-3 px-3 text-right font-bold font-sans text-success">₹{emp.net_payable.toLocaleString("en-IN")}</td>
                               <td className="py-3 pr-5 text-center">
                                 <button onClick={() => window.print()}
                                   className="inline-flex items-center gap-1 px-2.5 py-1 text-[9px] font-bold bg-primary/10 border border-primary/20 text-primary rounded-lg hover:bg-primary/20 transition-all">
@@ -1113,10 +1116,10 @@ export default function AttendancePage() {
                        <tr className="border-t-2 border-border-custom bg-background">
                          <td colSpan={2} className="py-3 pl-5 font-bold text-foreground">TOTAL PAYROLL</td>
                          <td className="py-3 px-3 text-right font-bold font-sans text-foreground">₹{payslips.reduce((s: number, e: any) => s + (e.gross_salary || 0), 0).toLocaleString("en-IN")}</td>
-                         <td className="py-3 px-3 text-right font-bold font-sans text-red-400">₹{payslips.reduce((s: number, e: any) => s + (e.pf_employee || 0), 0).toLocaleString("en-IN")}</td>
-                         <td className="py-3 px-3 text-right font-bold font-sans text-red-400">₹{payslips.reduce((s: number, e: any) => s + (e.esi_employee || 0), 0).toLocaleString("en-IN")}</td>
-                         <td className="py-3 px-3 text-right font-bold font-sans text-red-400">₹{payslips.reduce((s: number, e: any) => s + (e.tds || 0), 0).toLocaleString("en-IN")}</td>
-                         <td className="py-3 px-3 text-right font-black font-sans text-emerald-400 text-sm">₹{payslips.reduce((s: number, e: any) => s + (e.net_payable || 0), 0).toLocaleString("en-IN")}</td>
+                         <td className="py-3 px-3 text-right font-bold font-sans text-danger">₹{payslips.reduce((s: number, e: any) => s + (e.pf_employee || 0), 0).toLocaleString("en-IN")}</td>
+                         <td className="py-3 px-3 text-right font-bold font-sans text-danger">₹{payslips.reduce((s: number, e: any) => s + (e.esi_employee || 0), 0).toLocaleString("en-IN")}</td>
+                         <td className="py-3 px-3 text-right font-bold font-sans text-danger">₹{payslips.reduce((s: number, e: any) => s + (e.tds || 0), 0).toLocaleString("en-IN")}</td>
+                         <td className="py-3 px-3 text-right font-black font-sans text-success text-sm">₹{payslips.reduce((s: number, e: any) => s + (e.net_payable || 0), 0).toLocaleString("en-IN")}</td>
                          <td />
                        </tr>
                      </tfoot>
@@ -1125,7 +1128,7 @@ export default function AttendancePage() {
               </div>
             </div>
           )}
-
+          </PageShell>
         </div>
       </div>
 
@@ -1143,7 +1146,7 @@ export default function AttendancePage() {
                 <button
                   key={langName}
                   onClick={() => { setLang(langName); setShowLanguageDrawer(false); }}
-                  className={`inline-flex items-center gap-2 py-3 px-4 border rounded-md text-xs font-bold text-left transition-all ${lang === langName ? "bg-primary/10 border-primary text-primary" : "bg-input border-border-custom text-muted hover:bg-elevated hover:text-foreground"}`}
+                  className={`inline-flex items-center gap-2 py-3 px-4 border rounded-md text-xs font-bold text-left transition-all ${lang === langName ? "bg-elevated text-foreground font-semibold shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)] border-border-custom" : "bg-card border-border-custom text-muted hover:bg-elevated hover:text-foreground"}`}
                 >
                   <Icon name="globe" className="w-4 h-4" />{langName}
                 </button>
@@ -1351,7 +1354,11 @@ export default function AttendancePage() {
                   </div>
                    <div className="divide-y divide-border-custom/50 bg-elevated/20 border border-border-custom rounded-xl p-3 text-xs">
                      {teamMembers.length === 0 ? (
-                       <div className="py-2 text-center text-muted">No team members found for this company.</div>
+                       <EmptyState
+                         title="No team members found"
+                         description="No team members assigned to this company yet."
+                         className="py-4"
+                       />
                      ) : (
                        teamMembers.map((m) => (
                          <div key={m.id} className="py-2 flex justify-between">

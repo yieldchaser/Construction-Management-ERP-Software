@@ -8,6 +8,8 @@ import { getApiHost } from "@/lib/api";
 import { authHeaders, downloadWithAuth } from "@/lib/siteflow";
 import Icon, { type IconName } from "@/components/marketing/Icon";
 import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
+import SegmentedTabs from "@/components/ui/Tabs";
 
 // Types
 interface IndentItem {
@@ -550,21 +552,20 @@ export default function ProcurementPage() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      {/* ── Procurement sub-navigation (top tabs) ── */}
-      <div className="flex items-center gap-1 px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto">
-        {([
-          { key: "po", label: "PO", icon: "description" },
-          { key: "indent", label: "Indent", icon: "inbox" },
-          { key: "inventory", label: "Inventory", icon: "package" },
-          { key: "ledger", label: "Ledger", icon: "receipt" },
-          { key: "unbilled", label: "Unbilled", icon: "warning" },
-        ] as { key: string; label: string; icon: IconName }[]).map(item => (
-          <button key={item.key} onClick={() => setTab(item.key as any)}
-            className={`whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-all inline-flex items-center gap-1.5 ${tab === item.key ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-elevated"}`}>
-            <Icon name={item.icon} className="w-3.5 h-3.5" />{item.label}
-          </button>
-        ))}
-        <Link href={`/c/${companyId}/d/procurement/vendor-performance`} className="whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-all text-muted hover:text-foreground hover:bg-elevated inline-flex items-center gap-1.5">
+      {/* ── Top Bar Switcher ── */}
+      <div className="px-6 py-2 border-b border-border-custom bg-card shrink-0 flex items-center justify-between overflow-x-auto gap-3">
+        <SegmentedTabs
+          tabs={[
+            { id: "po", label: "PO", icon: <Icon name="description" className="w-3.5 h-3.5" /> },
+            { id: "indent", label: "Indent", icon: <Icon name="inbox" className="w-3.5 h-3.5" /> },
+            { id: "inventory", label: "Inventory", icon: <Icon name="package" className="w-3.5 h-3.5" /> },
+            { id: "ledger", label: "Ledger", icon: <Icon name="receipt" className="w-3.5 h-3.5" /> },
+            { id: "unbilled", label: "Unbilled", icon: <Icon name="warning" className="w-3.5 h-3.5" /> },
+          ]}
+          activeTab={tab}
+          onChange={(t) => setTab(t as any)}
+        />
+        <Link href={`/c/${companyId}/d/procurement/vendor-performance`} className="whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-all text-muted hover:text-foreground hover:bg-elevated inline-flex items-center gap-1.5 shrink-0 border border-border-custom">
           <Icon name="bar_chart" className="w-3.5 h-3.5" />Vendor Performance
         </Link>
       </div>
@@ -572,31 +573,29 @@ export default function ProcurementPage() {
       {/* Main Framework */}
       <main className="flex-1 flex flex-col overflow-hidden h-full">
         {isOffline && (
-          <div className="px-6 py-2.5 bg-amber-500/10 border-b border-amber-500/20 text-amber-400 text-xs">
+          <div className="px-6 py-2.5 bg-warning/10 border-b border-warning/20 text-warning text-xs">
             Using demo procurement data — backend connection unavailable
           </div>
         )}
-        <header className="h-16 border-b border-border-custom px-8 flex items-center justify-between bg-card shrink-0">
-          <div className="flex items-center gap-4">
-            <h1 className="text-sm font-bold text-foreground uppercase tracking-wider">Site Material Procurement</h1>
-            <span className="h-4 w-px bg-elevated" />
-            <span className="text-xs font-medium text-muted">SiteFlow workflows</span>
-          </div>
-          <div className="flex gap-2">
-            <button onClick={() => { setSelectedRFQItem(""); setShowRFQDrawer(true); }} className="px-4 py-2 border border-primary/20 hover:bg-primary/10 rounded-md text-xs font-bold text-primary transition-all inline-flex items-center gap-1.5">
+        <PageHeader
+          title="Site Material Procurement"
+          subtitle="SiteFlow purchase orders, indents and inventory workflows"
+        >
+          <div className="flex items-center gap-2">
+            <button onClick={() => { setSelectedRFQItem(""); setShowRFQDrawer(true); }} className="px-3.5 py-1.5 border border-primary/20 hover:bg-primary/10 rounded-md text-xs font-bold text-primary transition-all inline-flex items-center gap-1.5 cursor-pointer">
               <Icon name="bolt" className="w-3.5 h-3.5" />Compare RFQs
             </button>
-            <button onClick={() => setShowIndentModal(true)} className="px-4 py-2 border border-border-custom hover:bg-elevated rounded-md text-xs font-bold text-foreground transition-all">
+            <button onClick={() => setShowIndentModal(true)} className="px-3.5 py-1.5 border border-border-custom hover:bg-elevated rounded-md text-xs font-bold text-foreground transition-all cursor-pointer">
               + Material Indent
             </button>
-            <button onClick={() => setShowPOModal(true)} className="px-4 py-2 border border-border-custom hover:bg-elevated rounded-md text-xs font-bold text-foreground transition-all">
+            <button onClick={() => setShowPOModal(true)} className="px-3.5 py-1.5 border border-border-custom hover:bg-elevated rounded-md text-xs font-bold text-foreground transition-all cursor-pointer">
               + Purchase Order
             </button>
-            <button onClick={() => setShowUseModal(true)} className="px-4 py-2 bg-primary rounded-md text-xs font-bold text-white hover:opacity-90 transition-all shadow-lg">
+            <button onClick={() => setShowUseModal(true)} className="px-3.5 py-1.5 bg-primary rounded-md text-xs font-bold text-white hover:opacity-90 transition-all shadow-md cursor-pointer">
               Log Usage
             </button>
           </div>
-        </header>
+        </PageHeader>
 
         {/* Content Workspace */}
         <div className="flex-1 overflow-y-auto">
@@ -615,7 +614,7 @@ export default function ProcurementPage() {
                     <div className="flex justify-between items-center text-xs">
                       <strong className="text-foreground font-extrabold">{ind.indentNumber}</strong>
                       <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
-                        ind.status === "approved" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                        ind.status === "approved" ? "bg-success/10 text-success border border-success/20" : "bg-warning/10 text-warning border border-warning/20"
                       }`}>{ind.status}</span>
                     </div>
 
@@ -626,7 +625,7 @@ export default function ProcurementPage() {
                         return (
                           <div key={i} className="text-xs flex justify-between items-center">
                             <div>
-                              <span className="text-zinc-300 block font-bold">{item.name} (Req Qty: {item.qty} {item.unit})</span>
+                              <span className="text-muted block font-bold">{item.name} (Req Qty: {item.qty} {item.unit})</span>
                               {item.specOverride && <span className="text-[10px] text-muted block">Spec: {item.specOverride}</span>}
                               {item.photoUrl && (
                                 <div className="flex items-center gap-2">
@@ -641,7 +640,7 @@ export default function ProcurementPage() {
                             </div>
                             <div className="text-right">
                               <span className="text-[9px] uppercase text-muted block">Warehouse Stock</span>
-                              <strong className={`font-sans font-bold ${stock && stock.onHand < stock.minAlertThreshold ? "text-red-400" : "text-emerald-400"}`}>
+                              <strong className={`font-sans font-bold ${stock && stock.onHand < stock.minAlertThreshold ? "text-danger" : "text-success"}`}>
                                 {stock ? `${stock.onHand} ${stock.unit}` : "No stock logs"}
                               </strong>
                             </div>
@@ -652,7 +651,7 @@ export default function ProcurementPage() {
 
                     {ind.status === "pending" && (
                       <div className="flex gap-2 justify-end border-t border-border-custom pt-3">
-                        <button onClick={() => handleApproveIndent(ind.id)} className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 rounded-lg text-[10px] font-bold inline-flex items-center gap-1.5">
+                        <button onClick={() => handleApproveIndent(ind.id)} className="px-3 py-1.5 bg-success/10 hover:bg-success/10 border border-success/20 text-success rounded-lg text-[10px] font-bold inline-flex items-center gap-1.5">
                           <Icon name="thumbs_up" className="w-3 h-3" />Approve Indent
                         </button>
                       </div>
@@ -691,25 +690,25 @@ export default function ProcurementPage() {
                         pos.map((po) => (
                           <tr key={po.id} className="border-b border-border-custom hover:bg-elevated transition-all align-top">
                             <td className="px-5 py-3 font-sans font-bold text-foreground whitespace-nowrap">{po.poNumber}</td>
-                            <td className="px-5 py-3 text-zinc-200 whitespace-nowrap">{po.vendor}</td>
+                            <td className="px-5 py-3 text-foreground whitespace-nowrap">{po.vendor}</td>
                             <td className="px-5 py-3 space-y-1">
                               {po.items.map((item, i) => (
-                                <div key={i} className="text-zinc-300">
-                                  <span className="font-semibold text-zinc-100">{item.name}</span>{" "}
+                                <div key={i} className="text-muted">
+                                  <span className="font-semibold text-foreground">{item.name}</span>{" "}
                                   <span className="text-muted">{item.qty} {item.unit} @ ₹{item.rate.toLocaleString("en-IN")}</span>
                                 </div>
                               ))}
                             </td>
                             <td className="px-5 py-3">
                               <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border ${
-                                po.approvalFlag === "approved" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
-                                po.approvalFlag === "rejected" ? "bg-red-500/10 text-red-400 border border-red-500/20" :
-                                "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                                po.approvalFlag === "approved" ? "bg-success/10 text-success border-success/20" :
+                                po.approvalFlag === "rejected" ? "bg-danger/10 text-danger border border-danger/20" :
+                                "bg-warning/10 text-warning border border-warning/20"
                               }`}>{po.approvalFlag}</span>
                             </td>
                             <td className="px-5 py-3">
                               <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border ${
-                                po.status === "received" || po.status === "closed" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-primary/10 text-primary border border-primary/20"
+                                po.status === "received" || po.status === "closed" ? "bg-success/10 text-success border border-success/20" : "bg-primary/10 text-primary border border-primary/20"
                               }`}>{po.status}</span>
                             </td>
                             <td className="px-5 py-3 text-right font-sans font-bold text-foreground whitespace-nowrap">₹{po.totalAmount.toLocaleString("en-IN")}</td>
@@ -724,7 +723,7 @@ export default function ProcurementPage() {
                                       alert(`Download failed (${e instanceof Error ? e.message : "unknown error"}).`);
                                     }
                                   }}
-                                  className="px-3 py-1.5 bg-elevated hover:bg-elevated border border-border-custom text-zinc-300 rounded-lg text-[10px] font-bold cursor-pointer"
+                                  className="px-3 py-1.5 bg-elevated hover:bg-elevated border border-border-custom text-muted rounded-lg text-[10px] font-bold cursor-pointer"
                                 >
                                   PDF
                                 </button>
@@ -734,7 +733,7 @@ export default function ProcurementPage() {
                                   </button>
                                 )}
                                 {po.status === "sent" && po.approvalFlag === "approved" && (
-                                  <button onClick={() => handleOpenGRNModal(po)} className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 rounded-lg text-[10px] font-bold inline-flex items-center gap-1.5">
+                                  <button onClick={() => handleOpenGRNModal(po)} className="px-3 py-1.5 bg-success/10 hover:bg-success/10 border border-success/20 text-success rounded-lg text-[10px] font-bold inline-flex items-center gap-1.5">
                                     <Icon name="truck" className="w-3 h-3" />Record GRN
                                   </button>
                                 )}
@@ -776,18 +775,18 @@ export default function ProcurementPage() {
                       <tr key={idx} className="border-b border-border-custom hover:bg-elevated transition-all">
                         <td className="px-5 py-3 font-bold text-foreground">{inv.name}</td>
                         <td className="px-5 py-3 text-muted font-sans uppercase">{inv.unit}</td>
-                        <td className={`px-5 py-3 font-sans font-bold ${inv.onHand < 0 ? "text-red-400 font-extrabold" : "text-zinc-200"}`}>
+                        <td className={`px-5 py-3 font-sans font-bold ${inv.onHand < 0 ? "text-danger font-extrabold" : "text-foreground"}`}>
                           {inv.onHand} {inv.unit}
                         </td>
                         <td className="px-5 py-3 text-muted font-sans">{inv.reserved} {inv.unit}</td>
                         <td className="px-5 py-3 text-muted font-sans">{inv.minAlertThreshold} {inv.unit}</td>
                         <td className="px-5 py-3">
                           {inv.onHand < 0 ? (
-                            <span className="px-2 py-0.5 rounded bg-red-500/10 border border-red-500/20 text-red-400 font-bold uppercase text-[9px]">Negative stock context</span>
+                            <span className="px-2 py-0.5 rounded bg-danger/10 border border-danger/20 text-danger font-bold uppercase text-[9px]">Negative stock context</span>
                           ) : inv.onHand < inv.minAlertThreshold ? (
-                            <span className="px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-400 font-bold uppercase text-[9px]">Reorder Alert</span>
+                            <span className="px-2 py-0.5 rounded bg-warning/10 border border-warning/20 text-warning font-bold uppercase text-[9px]">Reorder Alert</span>
                           ) : (
-                            <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-bold uppercase text-[9px]">Healthy</span>
+                            <span className="px-2 py-0.5 rounded bg-success/10 border border-success/20 text-success font-bold uppercase text-[9px]">Healthy</span>
                           )}
                         </td>
                       </tr>
@@ -823,7 +822,7 @@ export default function ProcurementPage() {
                     transactions.map((txn, idx) => (
                       <tr key={idx} className="border-b border-border-custom hover:bg-elevated transition-all">
                         <td className="px-5 py-3 font-bold text-foreground">{txn.materialName}</td>
-                        <td className={`px-5 py-3 font-sans font-bold ${txn.type === "used" ? "text-amber-400" : "text-emerald-400"}`}>
+                        <td className={`px-5 py-3 font-sans font-bold ${txn.type === "used" ? "text-warning" : "text-success"}`}>
                           {txn.type === "used" ? "-" : "+"}{txn.qty} {txn.unit}
                         </td>
                         <td className="px-5 py-3 capitalize">{txn.type}</td>
@@ -847,7 +846,7 @@ export default function ProcurementPage() {
                   <p className="text-[10px] text-muted mt-1 max-w-lg">GRNs received from vendors but not yet linked to a Material Purchase invoice. Review and mark as billed to reconcile Accounts Payable. Unmatched GRNs inflate stock figures without a corresponding payable.</p>
                 </div>
                 {unbilledGRNs.length === 0 && (
-                  <span className="text-[10px] px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full font-bold">✓ All GRNs Reconciled</span>
+                  <span className="text-[10px] px-3 py-1.5 bg-success/10 border border-success/20 text-success rounded-full font-bold">✓ All GRNs Reconciled</span>
                 )}
               </div>
 
@@ -855,17 +854,17 @@ export default function ProcurementPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="bg-input border border-border-custom rounded-md p-4">
                   <span className="text-[9px] uppercase text-muted tracking-wider block">Unbilled GRN Count</span>
-                  <strong className={`text-xl font-extrabold mt-1 block ${unbilledGRNs.length > 0 ? "text-amber-400" : "text-emerald-400"}`}>{unbilledGRNs.length}</strong>
+                  <strong className={`text-xl font-extrabold mt-1 block ${unbilledGRNs.length > 0 ? "text-warning" : "text-success"}`}>{unbilledGRNs.length}</strong>
                 </div>
                 <div className="bg-input border border-border-custom rounded-md p-4">
                   <span className="text-[9px] uppercase text-muted tracking-wider block">Unbilled Value (est.)</span>
-                  <strong className={`text-xl font-extrabold mt-1 block font-sans ${unbilledGRNs.length > 0 ? "text-amber-400" : "text-emerald-400"}`}>
+                  <strong className={`text-xl font-extrabold mt-1 block font-sans ${unbilledGRNs.length > 0 ? "text-warning" : "text-success"}`}>
                     ₹{unbilledGRNs.reduce((s, g) => s + g.items.reduce((a, i) => a + i.qty * i.rate, 0), 0).toLocaleString()}
                   </strong>
                 </div>
                 <div className="bg-input border border-border-custom rounded-md p-4">
                   <span className="text-[9px] uppercase text-muted tracking-wider block">Vendors Pending</span>
-                  <strong className="text-xl font-extrabold mt-1 block text-zinc-200">{Object.keys(unbilledByVendor).length}</strong>
+                  <strong className="text-xl font-extrabold mt-1 block text-foreground">{Object.keys(unbilledByVendor).length}</strong>
                 </div>
               </div>
 
@@ -876,15 +875,15 @@ export default function ProcurementPage() {
                 Object.values(unbilledByVendor).map(group => (
                   <div key={group.vendor} className="bg-background border border-border-custom rounded-lg overflow-hidden">
                     {/* Vendor header */}
-                    <div className="flex items-center justify-between px-5 py-3 bg-amber-500/5 border-b border-amber-500/10">
+                    <div className="flex items-center justify-between px-5 py-3 bg-warning/5 border-b border-warning/10">
                       <div className="flex items-center gap-3">
-                        <span className="text-[9px] font-extrabold uppercase tracking-widest text-amber-500 inline-flex items-center gap-1"><Icon name="warning" className="w-3 h-3" />Unbilled</span>
+                        <span className="text-[9px] font-extrabold uppercase tracking-widest text-warning inline-flex items-center gap-1"><Icon name="warning" className="w-3 h-3" />Unbilled</span>
                         <span className="text-xs font-bold text-foreground">{group.vendor}</span>
                         <span className="text-[9px] text-muted">{group.grns.length} GRN{group.grns.length > 1 ? "s" : ""} pending</span>
                       </div>
                       <div className="text-right">
                         <span className="text-[9px] text-muted block">Est. Unbilled Value</span>
-                        <strong className="text-sm font-extrabold text-amber-400 font-sans">₹{group.totalValue.toLocaleString()}</strong>
+                        <strong className="text-sm font-extrabold text-warning font-sans">₹{group.totalValue.toLocaleString()}</strong>
                       </div>
                     </div>
 
@@ -913,21 +912,21 @@ export default function ProcurementPage() {
                               <td className="px-5 py-3 text-muted">{grn.receivedDate}</td>
                               <td className="px-5 py-3">
                                 {grn.items.map((item, i) => (
-                                  <div key={i} className="text-zinc-300">
+                                  <div key={i} className="text-muted">
                                     {item.name}: <span className="font-sans font-bold">{item.qty} {item.unit}</span> @ ₹{item.rate.toLocaleString()}
                                   </div>
                                 ))}
                               </td>
                               <td className="px-5 py-3 text-center">
-                                <span className={`inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full border ${threeWay.match ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-red-500/10 border-red-500/20 text-red-400"}`}>
+                                <span className={`inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full border ${threeWay.match ? "bg-success/10 border-success/20 text-success" : "bg-danger/10 border-danger/20 text-danger"}`}>
                                   {threeWay.match ? "✓" : <Icon name="warning" className="w-3 h-3" />} {threeWay.text}
                                 </span>
                               </td>
-                              <td className="px-5 py-3 text-right font-sans font-bold text-amber-400">₹{grnValue.toLocaleString("en-IN")}</td>
+                              <td className="px-5 py-3 text-right font-sans font-bold text-warning">₹{grnValue.toLocaleString("en-IN")}</td>
                               <td className="px-5 py-3 text-right">
                                 <button
                                   onClick={() => handleMarkAsBilled(grn.id)}
-                                  className="px-3 py-1.5 text-[10px] font-bold bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 rounded-lg transition-all"
+                                  className="px-3 py-1.5 text-[10px] font-bold bg-success/10 hover:bg-success/10 border border-success/20 text-success rounded-lg transition-all"
                                 >
                                   ✓ Mark as Billed
                                 </button>
@@ -954,7 +953,7 @@ export default function ProcurementPage() {
                             <td className="px-5 py-3 text-muted">{grn.vendor}</td>
                             <td className="px-5 py-3 text-muted">{grn.receivedDate}</td>
                             <td className="px-5 py-3 text-right">
-                              <span className="text-[9px] px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 rounded-full font-bold">BILLED</span>
+                              <span className="text-[9px] px-2 py-0.5 bg-success/10 border border-success/20 text-success rounded-full font-bold">BILLED</span>
                             </td>
                           </tr>
                         ))}
@@ -1013,7 +1012,7 @@ export default function ProcurementPage() {
             </div>
 
             <div className="flex gap-2 justify-end border-t border-border-custom pt-4">
-              <button onClick={() => setShowIndentModal(false)} className="px-4 py-2 bg-zinc-800 text-muted hover:text-foreground rounded-md">Cancel</button>
+              <button onClick={() => setShowIndentModal(false)} className="px-4 py-2 bg-elevated text-muted hover:text-foreground rounded-md">Cancel</button>
               <button onClick={handleCreateIndent} className="px-5 py-2.5 bg-primary text-white font-bold rounded-md">Submit Indent</button>
             </div>
           </div>
@@ -1076,7 +1075,7 @@ export default function ProcurementPage() {
             </div>
 
             <div className="flex gap-2 justify-end border-t border-border-custom pt-4">
-              <button onClick={() => { setShowGRNModal(false); setSelectedPOForGRN(null); }} className="px-4 py-2 bg-zinc-800 text-muted hover:text-foreground rounded-md">Cancel</button>
+              <button onClick={() => { setShowGRNModal(false); setSelectedPOForGRN(null); }} className="px-4 py-2 bg-elevated text-muted hover:text-foreground rounded-md">Cancel</button>
               <button onClick={handleCreateGRN} className="px-5 py-2.5 bg-primary text-white font-bold rounded-md">Record GRN Items</button>
             </div>
           </div>
@@ -1115,7 +1114,7 @@ export default function ProcurementPage() {
             </div>
 
             <div className="flex gap-2 justify-end border-t border-border-custom pt-4">
-              <button onClick={() => setShowUseModal(false)} className="px-4 py-2 bg-zinc-800 text-muted hover:text-foreground rounded-md">Cancel</button>
+              <button onClick={() => setShowUseModal(false)} className="px-4 py-2 bg-elevated text-muted hover:text-foreground rounded-md">Cancel</button>
               <button onClick={handleRecordUsage} className="px-5 py-2.5 bg-primary text-white font-bold rounded-md">Record Usage</button>
             </div>
           </div>
@@ -1157,7 +1156,7 @@ export default function ProcurementPage() {
                 {poFormItems.map((item, idx) => (
                   <div key={idx} className="bg-elevated p-3 rounded-lg border border-border-custom space-y-2 relative">
                     <button type="button" onClick={() => setPoFormItems(poFormItems.filter((_, i) => i !== idx))}
-                      className="absolute top-2 right-2 text-muted hover:text-red-400">✕</button>
+                      className="absolute top-2 right-2 text-muted hover:text-danger">✕</button>
                     <div className="space-y-1">
                       <label className="text-muted text-[9px]">Item Name</label>
                       <select value={item.name}
@@ -1201,7 +1200,7 @@ export default function ProcurementPage() {
             </div>
 
             <div className="flex gap-2 justify-end border-t border-border-custom pt-4">
-              <button onClick={() => setShowPOModal(false)} className="px-4 py-2 bg-zinc-800 text-muted hover:text-foreground rounded-md">Cancel</button>
+              <button onClick={() => setShowPOModal(false)} className="px-4 py-2 bg-elevated text-muted hover:text-foreground rounded-md">Cancel</button>
               <button onClick={handleCreatePO} className="px-5 py-2.5 bg-primary text-white font-bold rounded-md">Save PO Draft</button>
             </div>
           </div>

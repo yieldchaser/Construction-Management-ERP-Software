@@ -3,6 +3,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { getApi, authHeaders } from "@/lib/siteflow";
+import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
+import { TableSkeleton } from "@/components/ui/Skeleton";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type StockRow = {
@@ -159,28 +163,29 @@ export default function MaterialTab() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      <header className="h-14 border-b border-border-custom bg-card px-6 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-3">
-          <h1 className="text-sm font-bold text-foreground">Material Stock</h1>
-          <div className="text-[10px] text-muted">
+      <PageHeader
+        title="Material Stock"
+        subtitle={
+          <span>
             Current Stock = <span className="text-primary font-semibold">Received − Consumed + Adjusted</span>
-          </div>
-        </div>
+          </span>
+        }
+      >
         <div className="flex items-center gap-2">
           <button
             onClick={() => setModalType("used")}
-            className="px-3 py-1.5 bg-rose-600/90 text-foreground text-xs font-bold rounded-lg hover:opacity-90 transition-all"
+            className="px-3.5 py-1.5 bg-danger/90 text-foreground text-xs font-bold rounded-lg hover:opacity-90 transition-all cursor-pointer"
           >
             − Issue
           </button>
           <button
             onClick={() => setModalType("received")}
-            className="px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:opacity-90 transition-all"
+            className="px-3.5 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:opacity-90 transition-all cursor-pointer"
           >
             + Receive
           </button>
         </div>
-      </header>
+      </PageHeader>
 
       <div className="px-5 py-3 border-b border-border-custom shrink-0 flex flex-wrap gap-3">
         <div className="px-3 py-1.5 rounded-lg bg-elevated border border-border-custom text-[11px]">
@@ -189,29 +194,31 @@ export default function MaterialTab() {
         </div>
         <div className="px-3 py-1.5 rounded-lg bg-elevated border border-border-custom text-[11px]">
           <span className="text-muted">Received</span>{" "}
-          <span className="text-emerald-400 font-bold font-sans">{unitBreakdown((e) => e.recv)}</span>
+          <span className="text-success font-bold font-sans">{unitBreakdown((e) => e.recv)}</span>
         </div>
         <div className="px-3 py-1.5 rounded-lg bg-elevated border border-border-custom text-[11px]">
           <span className="text-muted">Consumed</span>{" "}
-          <span className="text-amber-400 font-bold font-sans">{unitBreakdown((e) => e.cons)}</span>
+          <span className="text-warning font-bold font-sans">{unitBreakdown((e) => e.cons)}</span>
         </div>
         <div className="px-3 py-1.5 rounded-lg bg-elevated border border-border-custom text-[11px]">
           <span className="text-muted">Over-consumed</span>{" "}
-          <span className={negCount > 0 ? "text-rose-400 font-bold font-sans" : "text-muted font-sans"}>
+          <span className={negCount > 0 ? "text-danger font-bold font-sans" : "text-muted font-sans"}>
             {negCount}
           </span>
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto p-5">
-        {loading && <div className="p-10 text-center text-muted text-xs">Loading material stock…</div>}
-        {error && !loading && <div className="p-10 text-center text-rose-400 text-xs">{error}</div>}
-        {!loading && !error && rows.length === 0 && (
-          <div className="p-10 text-center text-muted text-xs">
-            No material movements yet. Use <span className="text-primary font-bold">+ Receive</span> to log
-            stock or <span className="text-rose-400 font-bold">− Issue</span> to consume it.
-          </div>
-        )}
+      <div className="flex-1 overflow-auto">
+        <PageShell width="wide">
+          {loading && <TableSkeleton rows={5} cols={7} />}
+          {error && !loading && <div className="p-10 text-center text-danger text-xs">{error}</div>}
+          {!loading && !error && rows.length === 0 && (
+            <EmptyState
+              title="No material movements yet"
+              description="Use '+ Receive' to log stock or '− Issue' to consume it."
+              action={{ label: "+ Receive", onClick: () => setModalType("received") }}
+            />
+          )}
 
         {!loading &&
           !error &&
@@ -250,18 +257,18 @@ export default function MaterialTab() {
                           <td className="py-2.5 pl-4 pr-2 font-sans text-muted">{i + 1}</td>
                           <td className="py-2.5 px-2 text-foreground font-medium">{r.material_name}</td>
                           <td className="py-2.5 px-2 text-center text-muted">{r.unit || "—"}</td>
-                          <td className="py-2.5 px-2 text-right font-sans text-emerald-400">
+                          <td className="py-2.5 px-2 text-right font-sans text-success">
                             {num(r.received)}
                           </td>
-                          <td className="py-2.5 px-2 text-right font-sans text-amber-400">
+                          <td className="py-2.5 px-2 text-right font-sans text-warning">
                             {num(r.consumed)}
                           </td>
                           <td className="py-2.5 px-2 text-right font-sans font-semibold">
-                            <span className={neg ? "text-rose-400" : zero ? "text-muted" : "text-foreground"}>
+                            <span className={neg ? "text-danger" : zero ? "text-muted" : "text-foreground"}>
                               {num(r.current_stock)}
                             </span>
                             {neg && (
-                              <span className="ml-2 text-[9px] uppercase text-rose-400 border border-rose-500/40 rounded px-1">
+                              <span className="ml-2 text-[9px] uppercase text-danger border border-danger/40 rounded px-1">
                                 over
                               </span>
                             )}
@@ -290,6 +297,7 @@ export default function MaterialTab() {
               </div>
             </div>
           ))}
+          </PageShell>
       </div>
 
       {modalType && (
@@ -353,7 +361,7 @@ export default function MaterialTab() {
                   className="mt-1 w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted"
                 />
               </div>
-              {error && <div className="text-[11px] text-rose-400">{error}</div>}
+              {error && <div className="text-[11px] text-danger">{error}</div>}
               <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
@@ -366,7 +374,7 @@ export default function MaterialTab() {
                   type="submit"
                   disabled={saving}
                   className={`px-4 py-2 text-foreground text-sm font-bold rounded-lg disabled:opacity-40 ${
-                    modalType === "received" ? "bg-primary" : "bg-rose-600"
+                    modalType === "received" ? "bg-primary" : "bg-danger"
                   }`}
                 >
                   {saving ? "Saving…" : modalType === "received" ? "Receive" : "Issue"}

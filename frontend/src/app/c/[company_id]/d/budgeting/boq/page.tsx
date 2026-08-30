@@ -6,6 +6,9 @@ import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
+import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
+import SegmentedTabs from "@/components/ui/Tabs";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface BOQItem {
@@ -44,12 +47,12 @@ interface BOQRevision {
 }
 
 const SECTION_COLORS: Record<string, string> = {
-  "1 — Civil Works": "bg-blue-500/10 text-blue-400 border-blue-500/20",
+  "1 — Civil Works": "bg-info/10 text-info border-info/20",
   "2 — Structural": "bg-sky-500/10 text-sky-400 border-sky-500/20",
-  "3 — Masonry": "bg-amber-500/10 text-amber-400 border-amber-500/20",
-  "4 — Finishes": "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+  "3 — Masonry": "bg-warning/10 text-warning border-warning/20",
+  "4 — Finishes": "bg-success/10 text-success border-success/20",
   "5 — MEP": "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",
-  "6 — Provisional / Contingency": "bg-zinc-500/10 text-muted border-zinc-500/20",
+  "6 — Provisional / Contingency": "bg-elevated text-muted border-border-custom",
 };
 
 function fmt(n: number) { return "₹" + n.toLocaleString("en-IN"); }
@@ -61,16 +64,16 @@ function varPct(budget: number, actual: number) {
 }
 
 function varColor(pct: number) {
-  if (pct > 10) return "text-red-400";
-  if (pct > 0) return "text-amber-400";
-  return "text-emerald-400";
+  if (pct > 10) return "text-danger";
+  if (pct > 0) return "text-warning";
+  return "text-success";
 }
 
 function statusBadge(pct: number) {
-  if (pct > 10) return { label: "OVERSPENT", cls: "bg-red-500/10 border-red-500/20 text-red-400" };
-  if (pct > 0) return { label: "AT RISK", cls: "bg-amber-500/10 border-amber-500/20 text-amber-400" };
-  if (pct > -5) return { label: "ON TRACK", cls: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" };
-  return { label: "UNDER BUDGET", cls: "bg-blue-500/10 border-blue-500/20 text-blue-400" };
+  if (pct > 10) return { label: "OVERSPENT", cls: "bg-danger/10 border-danger/20 text-danger" };
+  if (pct > 0) return { label: "AT RISK", cls: "bg-warning/10 border-warning/20 text-warning" };
+  if (pct > -5) return { label: "ON TRACK", cls: "bg-success/10 border-success/20 text-success" };
+  return { label: "UNDER BUDGET", cls: "bg-info/10 border-info/20 text-info" };
 }
 
 export default function BOQPage() {
@@ -316,44 +319,39 @@ export default function BOQPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">            <div className="flex items-center gap-1 px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto">
-        {[
-          { key: "boq", label: "BOQ Line Items" },
-          { key: "variance", label: "Budget vs Actual" },
-          { key: "revisions", label: "Budget Revisions" },
-        ].map((item) => (
-          <button key={item.key} onClick={() => setTab(item.key as any)}
-            className={`whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${tab === item.key ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-elevated"}`}>
-            {item.label}
-          </button>
-        ))}
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <PageHeader
+        title={tab === "boq" ? "Bill of Quantities (BOQ)" : tab === "variance" ? "Budget vs Actual Variance" : "Budget Revisions"}
+        subtitle={`Total Budget: ${fmt(totalBudget)} · Spent: ${fmt(totalActual)}`}
+      >
+        <div className="flex items-center gap-3">
+          {/* KPI pill */}
+          <div className={`text-[10px] px-3 py-1 rounded-full border font-bold ${overallPct > 10 ? "bg-danger/10 border-danger/20 text-danger" : overallPct > 0 ? "bg-warning/10 border-warning/20 text-warning" : "bg-success/10 border-success/20 text-success"}`}>
+            {overallPct > 0 ? "+" : ""}{overallPct.toFixed(1)}% overall variance
+          </div>
+          {/* Import trigger */}
+          <label className="px-3.5 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:opacity-90 cursor-pointer transition-all">
+            ↑ Import Excel
+            <input type="file" accept=".xlsx,.xlsm" className="hidden" onChange={e => { if (e.target.files?.[0]) { setFile(e.target.files[0]); handleImport(new Event("submit") as any); } }} />
+          </label>
+        </div>
+      </PageHeader>
+
+      <div className="flex items-center gap-1 px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto">
+        <SegmentedTabs
+          tabs={[
+            { id: "boq", label: "BOQ Line Items" },
+            { id: "variance", label: "Budget vs Actual" },
+            { id: "revisions", label: "Budget Revisions" },
+          ]}
+          activeTab={tab}
+          onChange={(t) => setTab(t as any)}
+        />
       </div>
-      {/* Sidebar */}
-      
 
-      {/* Main */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-14 border-b border-border-custom bg-card px-6 flex items-center justify-between shrink-0">
-          <div>
-            <h1 className="text-sm font-bold text-foreground">
-              {tab === "boq" ? "Bill of Quantities (BOQ)" : tab === "variance" ? "Budget vs Actual Variance" : "Budget Revisions"}
-            </h1>
-            <div className="text-[10px] text-muted">Total Budget: {fmt(totalBudget)} · Spent: {fmt(totalActual)}</div>
-          </div>
-          <div className="flex items-center gap-3">
-            {/* KPI pill */}
-            <div className={`text-[10px] px-3 py-1 rounded-full border font-bold ${overallPct > 10 ? "bg-red-500/10 border-red-500/20 text-red-400" : overallPct > 0 ? "bg-amber-500/10 border-amber-500/20 text-amber-400" : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"}`}>
-              {overallPct > 0 ? "+" : ""}{overallPct.toFixed(1)}% overall variance
-            </div>
-            {/* Import trigger */}
-            <label className="px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:opacity-90 cursor-pointer transition-all">
-              ↑ Import Excel
-              <input type="file" accept=".xlsx,.xlsm" className="hidden" onChange={e => { if (e.target.files?.[0]) { setFile(e.target.files[0]); handleImport(new Event("submit") as any); } }} />
-            </label>
-          </div>
-        </header>
-
-        <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-y-auto">
+        <PageShell width="wide">
+          <div className="flex-1 overflow-hidden">
 
           {/* ── BOQ TAB ── */}
           {tab === "boq" && (
@@ -383,10 +381,10 @@ export default function BOQPage() {
                   <button onClick={() => { setShowInlineD(v => !v); setInlineDError(null); setInlineDMsg(null); }} disabled={!selectedDocId && documents.length === 0} className="px-3 py-1.5 bg-primary/10 border border-primary/20 text-primary text-xs font-bold rounded-lg hover:bg-primary/20 disabled:opacity-40">
                     {showInlineD ? "Cancel" : "+ Add Item"}
                   </button>
-                  {!selectedDocId && documents.length > 0 && <span className="text-[10px] text-amber-400">Select a BOQ document to add items</span>}
+                  {!selectedDocId && documents.length > 0 && <span className="text-[10px] text-warning">Select a BOQ document to add items</span>}
                   {documents.length === 0 && <span className="text-[10px] text-muted">Create a BOQ document first — then add items</span>}
-                  {inlineDError && <span className="text-[10px] text-rose-400">{inlineDError}</span>}
-                  {inlineDMsg && <span className="text-[10px] text-emerald-400">{inlineDMsg}</span>}
+                  {inlineDError && <span className="text-[10px] text-danger">{inlineDError}</span>}
+                  {inlineDMsg && <span className="text-[10px] text-success">{inlineDMsg}</span>}
                 </div>
                 {selectedDocId && (
                   <div className="flex items-center gap-2 text-[10px] text-muted">
@@ -439,7 +437,7 @@ export default function BOQPage() {
                     {Object.entries(groupedFiltered).map(([section, items]) => {
                       const secBudget = items.reduce((s, i) => s + i.amount, 0);
                       const secActual = items.reduce((s, i) => s + i.actual_spent, 0);
-                      const sColor = SECTION_COLORS[section] ?? "bg-zinc-500/10 text-muted border-zinc-500/20";
+                      const sColor = SECTION_COLORS[section] ?? "bg-elevated text-muted border-border-custom";
                       return (
                         <React.Fragment key={section}>
                           {/* Section header */}
@@ -504,7 +502,7 @@ export default function BOQPage() {
               {/* KPI strip */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 {[
-                  { label: "Total Budget", value: fmt(totalBudget), sub: selectedDoc?.revised_amount != null ? "Latest applied revision" : "Original contract value", color: "text-blue-400" },
+                  { label: "Total Budget", value: fmt(totalBudget), sub: selectedDoc?.revised_amount != null ? "Latest applied revision" : "Original contract value", color: "text-info" },
                   { label: "Total Actual Spent", value: fmt(totalActual), sub: "As of today", color: "text-foreground" },
                   { label: "Variance (₹)", value: (totalVariance >= 0 ? "+" : "") + fmt(totalVariance), sub: totalVariance > 0 ? "Over budget" : "Under budget", color: varColor(overallPct) },
                   { label: "Variance (%)", value: (overallPct > 0 ? "+" : "") + overallPct.toFixed(1) + "%", sub: statusBadge(overallPct).label, color: varColor(overallPct) },
@@ -526,7 +524,7 @@ export default function BOQPage() {
                   const sActual = secItems.reduce((s, i) => s + i.actual_spent, 0);
                   const pct = (sActual / sBudget) * 100;
                   const vp = varPct(sBudget, sActual);
-                  const sColor = SECTION_COLORS[section] ?? "bg-zinc-500/10 text-muted border-zinc-500/20";
+                  const sColor = SECTION_COLORS[section] ?? "bg-elevated text-muted border-border-custom";
                   return (
                     <div key={section} className="space-y-1.5">
                       <div className="flex items-center justify-between text-xs">
@@ -539,7 +537,7 @@ export default function BOQPage() {
                         </div>
                       </div>
                       <div className="h-2 bg-elevated rounded-full overflow-hidden">
-                        <div className={`h-full rounded-full transition-all ${pct > 110 ? "bg-red-500" : pct > 100 ? "bg-amber-500" : "bg-emerald-500"}`}
+                        <div className={`h-full rounded-full transition-all ${pct > 110 ? "bg-danger" : pct > 100 ? "bg-warning" : "bg-success"}`}
                           style={{ width: `${Math.min(pct, 100)}%` }} />
                       </div>
                     </div>
@@ -577,7 +575,7 @@ export default function BOQPage() {
                           <td className={`py-2.5 px-3 text-right font-sans font-bold ${varColor(vPct)}`}>
                             {vAmt >= 0 ? "+" : ""}{fmt(vAmt)}
                           </td>
-                          <td className={`py-2.5 pr-5 text-right font-sans text-[10px] ${eac > item.amount ? "text-red-400" : "text-muted"}`}>
+                          <td className={`py-2.5 pr-5 text-right font-sans text-[10px] ${eac > item.amount ? "text-danger" : "text-muted"}`}>
                             {fmt(Math.round(eac))}
                           </td>
                         </tr>
@@ -620,7 +618,7 @@ export default function BOQPage() {
                       className="px-4 py-2 bg-primary text-white text-xs font-bold rounded-lg disabled:opacity-40 hover:opacity-90">
                       {savingRev ? "Saving..." : "Record Revision"}
                     </button>
-                    {revMsg && <span className="text-[10px] text-emerald-400">{revMsg}</span>}
+                    {revMsg && <span className="text-[10px] text-success">{revMsg}</span>}
                   </div>
                 </form>
               </div>
@@ -660,7 +658,7 @@ export default function BOQPage() {
               <div className="bg-input border border-dashed border-border-custom rounded-md p-5 text-center space-y-2">
                 <div className="text-xs font-bold text-muted">Import New BOQ / Revised Budget</div>
                 <div className="text-[10px] text-muted">Upload an Excel (.xlsx) with columns: item_name, unit, qty, rate, cost_code</div>
-                {importMsg && <div className="text-xs text-emerald-400">{importMsg}</div>}
+                {importMsg && <div className="text-xs text-success">{importMsg}</div>}
                 <form onSubmit={handleImport} className="flex justify-center gap-2">
                   <label className="px-4 py-2 bg-elevated border border-border-custom text-muted text-xs rounded-lg cursor-pointer hover:bg-elevated/70">
                     {file ? file.name : "Select Excel File"}
@@ -675,6 +673,7 @@ export default function BOQPage() {
             </div>
           )}
         </div>
+        </PageShell>
       </div>
     </div>
   );

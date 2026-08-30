@@ -39,7 +39,7 @@ def test_r2_761_approval_panel_notices_parity():
         ), f"Approval notice does not cover category '{category}'"
 
     # 3. Only ONE amber notice in the approval section
-    amber_boxes = re.findall(r'<div className="[^"]*bg-amber-500/10[^"]*"[^>]*>(.*?)</div>', approval_section, re.S)
+    amber_boxes = re.findall(r'<div className="[^"]*bg-(?:amber-500|warning)/10[^"]*"[^>]*>(.*?)</div>', approval_section, re.S)
     assert len(amber_boxes) == 1, (
         f"Expected exactly 1 collapsed notice in approval panel, found {len(amber_boxes)}: {amber_boxes}"
     )

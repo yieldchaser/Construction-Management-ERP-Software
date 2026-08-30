@@ -5,6 +5,10 @@ import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
+import SegmentedTabs from "@/components/ui/Tabs";
+import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
+import { TableSkeleton } from "@/components/ui/Skeleton";
 
 interface ReliabilityScore {
   id: string;
@@ -137,40 +141,40 @@ export default function LabourPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden font-sans">            <div className="flex items-center gap-1 px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto">
-        {[
-          { key: "reliability", label: "Reliability Scores" },
-          { key: "bocw", label: "BOCW Records" },
-          { key: "muster", label: "Muster Roll" },
-        ].map((item) => (
-          <button key={item.key} onClick={() => setActiveTab(item.key as any)}
-            className={`whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${activeTab === item.key ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-elevated"}`}>
-            {item.label}
-          </button>
-        ))}
+    <div className="flex-1 flex flex-col overflow-hidden font-sans">
+      <div className="px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto">
+        <SegmentedTabs
+          tabs={[
+            { id: "reliability", label: "Reliability Scores" },
+            { id: "bocw", label: "BOCW Records" },
+            { id: "muster", label: "Muster Roll" },
+          ]}
+          activeTab={activeTab}
+          onChange={(t) => setActiveTab(t as any)}
+        />
       </div>
-      
 
       <div className="flex-1 flex flex-col overflow-hidden relative font-sans">
-        <div className="absolute top-[-10%] right-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-[0.02] blur-[120px] pointer-events-none" />
-        <div className="border-b border-border-custom bg-background px-6 py-3.5 flex items-center justify-between z-10">
-          <div>
-            <h1 className="text-sm font-bold text-foreground uppercase tracking-wider">Labour Management</h1>
-            <p className="text-[10px] text-muted">Contractor reliability · BOCW compliance · Muster rolls</p>
+        <PageHeader
+          title="Labour Management"
+          subtitle="Contractor reliability · BOCW compliance · Muster rolls"
+        >
+          <div className="flex items-center gap-2">
+            {activeTab === "muster" && <button onClick={() => setShowMusterModal(true)} className="px-3.5 py-1.5 rounded-md bg-primary text-xs font-bold text-white hover:opacity-90 cursor-pointer">+ Add Muster</button>}
+            {activeTab === "bocw" && <button onClick={() => setShowBocwModal(true)} className="px-3.5 py-1.5 rounded-md bg-primary text-xs font-bold text-white hover:opacity-90 cursor-pointer">+ Add BOCW</button>}
+            {activeTab === "bocw" && <button onClick={handleBOCWExport} className="px-3.5 py-1.5 rounded-md border border-border-custom text-xs font-bold hover:bg-elevated cursor-pointer">Export CSV</button>}
           </div>
-          {activeTab === "muster" && <button onClick={() => setShowMusterModal(true)} className="px-4 py-2 rounded-md bg-primary text-xs font-bold text-white hover:opacity-90 cursor-pointer">+ Add Muster</button>}
-          {activeTab === "bocw" && <button onClick={() => setShowBocwModal(true)} className="px-4 py-2 rounded-md bg-primary text-xs font-bold text-white hover:opacity-90 cursor-pointer">+ Add BOCW</button>}
-          {activeTab === "bocw" && <button onClick={handleBOCWExport} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-elevated cursor-pointer">Export CSV</button>}
-        </div>
+        </PageHeader>
 
-        <div className="flex-1 overflow-y-auto p-6 z-10">
-          {loading && <div className="text-xs text-muted">Loading...</div>}
+        <div className="flex-1 overflow-y-auto z-10">
+          <PageShell width="wide">
+            {loading && <TableSkeleton rows={4} cols={5} />}
 
           {activeTab === "reliability" && (
             <div className="space-y-4">
               {reliability.map((r) => {
                 const reliabilityScore = ((r.on_time_pct + r.billing_accuracy_pct + r.quality_score) / 3).toFixed(1);
-                const scoreColor = Number(reliabilityScore) >= 80 ? "text-green-400" : Number(reliabilityScore) >= 60 ? "text-amber-400" : "text-red-400";
+                const scoreColor = Number(reliabilityScore) >= 80 ? "text-success" : Number(reliabilityScore) >= 60 ? "text-warning" : "text-danger";
                 return (
                   <div key={r.id} className="bg-card border border-border-custom rounded-lg p-5 rounded-lg border border-border-custom">
                     <div className="flex items-start justify-between">
@@ -186,11 +190,11 @@ export default function LabourPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
                       <div className="bg-elevated rounded-md p-3 text-center">
                         <span className="text-[10px] text-muted block">On-Time</span>
-                        <span className="text-sm font-bold text-green-400">{r.on_time_pct.toFixed(1)}%</span>
+                        <span className="text-sm font-bold text-success">{r.on_time_pct.toFixed(1)}%</span>
                       </div>
                       <div className="bg-elevated rounded-md p-3 text-center">
                         <span className="text-[10px] text-muted block">Billing Accuracy</span>
-                        <span className="text-sm font-bold text-blue-400">{r.billing_accuracy_pct.toFixed(1)}%</span>
+                        <span className="text-sm font-bold text-info">{r.billing_accuracy_pct.toFixed(1)}%</span>
                       </div>
                       <div className="bg-elevated rounded-md p-3 text-center">
                         <span className="text-[10px] text-muted block">Quality</span>
@@ -198,7 +202,7 @@ export default function LabourPage() {
                       </div>
                       <div className="bg-elevated rounded-md p-3 text-center">
                         <span className="text-[10px] text-muted block">Disputes</span>
-                        <span className="text-sm font-bold text-amber-400">{r.disputes_count}</span>
+                        <span className="text-sm font-bold text-warning">{r.disputes_count}</span>
                       </div>
                     </div>
                   </div>
@@ -245,12 +249,12 @@ export default function LabourPage() {
                   <tbody>
                     {muster.map((m) => (
                       <tr key={m.id} className="border-b border-border-custom hover:bg-elevated transition-all">
-                        <td className="px-5 py-3.5 text-zinc-300">{m.date}</td>
+                        <td className="px-5 py-3.5 text-muted">{m.date}</td>
                         <td className="px-5 py-3.5 text-foreground font-semibold">{m.labor_role}</td>
-                        <td className="px-5 py-3.5 text-right font-sans text-green-400">{m.workers_present}</td>
-                        <td className="px-5 py-3.5 text-right font-sans text-red-400">{m.workers_absent}</td>
+                        <td className="px-5 py-3.5 text-right font-sans text-success">{m.workers_present}</td>
+                        <td className="px-5 py-3.5 text-right font-sans text-danger">{m.workers_absent}</td>
                         <td className="px-5 py-3.5 text-right font-sans">{m.hours_worked}h</td>
-                        <td className="px-5 py-3.5 text-right font-sans text-amber-400">{m.overtime_hours}h</td>
+                        <td className="px-5 py-3.5 text-right font-sans text-warning">{m.overtime_hours}h</td>
                         <td className="px-5 py-3.5 text-muted">{m.notes || "—"}</td>
                       </tr>
                     ))}
@@ -260,6 +264,7 @@ export default function LabourPage() {
               </div>
             </div>
           )}
+          </PageShell>
         </div>
       </div>
 

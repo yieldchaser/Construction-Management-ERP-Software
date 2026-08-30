@@ -10,6 +10,10 @@ import TeamSection from "@/components/rbac/TeamSection";
 import { usePermissions } from "@/context/PermissionsContext";
 import { LOCKED_ROLES } from "@/lib/rbac";
 import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
+import Icon from "@/components/marketing/Icon";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { CardSkeleton } from "@/components/ui/Skeleton";
 
 interface CompanySettings {
   id: string;
@@ -1088,22 +1092,21 @@ export default function CompanySettingsPage() {
       {/* Main content */}
       <main className="flex-1 overflow-y-auto">
         <PageShell width="wide">
-          <header className="flex items-center justify-between border-b border-border-custom pb-6">
-            <div>
-              <h1 className="text-2xl font-black text-foreground tracking-tight">{SECTIONS.find((s) => s.id === activeSection)?.label}</h1>
-              <p className="mt-1 text-xs text-muted">Configure company-wide settings for this organization.</p>
-            </div>
+          <PageHeader
+            title={SECTIONS.find((s) => s.id === activeSection)?.label || "Settings"}
+            subtitle="Configure company-wide settings for this organization."
+          >
             <PwaControls />
-          </header>
+          </PageHeader>
 
           {error && (
-            <div className="mt-6 p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-lg">{error}</div>
+            <div className="mt-6 p-4 bg-danger/10 border border-danger/20 text-danger text-xs rounded-lg">{error}</div>
           )}
           {saveStatus === "saved" && (
-            <div className="mt-6 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg">Settings saved successfully</div>
+            <div className="mt-6 p-4 bg-success/10 border border-success/20 text-success text-xs rounded-lg">Settings saved successfully</div>
           )}
           {saveStatus === "error" && (
-            <div className="mt-6 p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-lg">Failed to save settings. Please try again.</div>
+            <div className="mt-6 p-4 bg-danger/10 border border-danger/20 text-danger text-xs rounded-lg">Failed to save settings. Please try again.</div>
           )}
 
           <div className="mt-8">
@@ -1140,8 +1143,8 @@ export default function CompanySettingsPage() {
                       </Field>
                       <Field label="GSTIN">
                         <input type="text" value={cDraft.gstin} onChange={(e) => { const v = e.target.value.toUpperCase(); setCDraft({ ...cDraft, gstin: v }); setGstinError(v ? !validateGSTIN(v) : false); }}
-                          className={`w-full bg-elevated border rounded-md px-4 py-2.5 text-xs text-foreground outline-none ${gstinError ? "border-rose-500" : "border-border-custom focus:border-primary"}`} placeholder="Enter 15-digit GSTIN" />
-                        {gstinError && <p className="text-[10px] text-rose-400 mt-1">Invalid GSTIN format.</p>}
+                          className={`w-full bg-elevated border rounded-md px-4 py-2.5 text-xs text-foreground outline-none ${gstinError ? "border-danger" : "border-border-custom focus:border-primary"}`} placeholder="Enter 15-digit GSTIN" />
+                        {gstinError && <p className="text-[10px] text-danger mt-1">Invalid GSTIN format.</p>}
                       </Field>
                     </div>
                     <Field label="Company Primary Address">
@@ -1228,7 +1231,7 @@ export default function CompanySettingsPage() {
                               <div className="h-9 w-9 rounded-full bg-primary/15 text-primary font-bold flex items-center justify-center text-sm">{b.branch_name.charAt(0).toUpperCase()}</div>
                               <div className="font-bold text-foreground text-sm">{b.branch_name}</div>
                             </div>
-                            {b.is_primary && <span className="text-[10px] bg-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded-full font-bold">Primary</span>}
+                            {b.is_primary && <span className="text-[10px] bg-success/10 text-success px-2 py-0.5 rounded-full font-bold">Primary</span>}
                           </div>
                           <div className="text-xs space-y-1">
                             <div className="text-muted">GSTIN: <span className="font-sans text-muted">{b.gstin}</span></div>
@@ -1288,8 +1291,8 @@ export default function CompanySettingsPage() {
               {roleMsg && (
                 <div className={`p-4 text-xs rounded-lg border ${
                   roleMsg.type === "ok"
-                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-                    : "bg-rose-500/10 border-rose-500/20 text-rose-400"
+                    ? "bg-success/10 border-success/20 text-success"
+                    : "bg-danger/10 border-danger/20 text-danger"
                 }`}>{roleMsg.text}</div>
               )}
 
@@ -1341,7 +1344,7 @@ export default function CompanySettingsPage() {
                             <span className="text-[10px] bg-elevated text-muted px-2 py-0.5 rounded-full">Default</span>
                           )}
                           {LOCKED_ROLES.has(r.role_name) && (
-                            <span className="text-[10px] bg-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded-full font-bold">Full access</span>
+                            <span className="text-[10px] bg-success/10 text-success px-2 py-0.5 rounded-full font-bold">Full access</span>
                           )}
                         </div>
                       </div>
@@ -1422,7 +1425,7 @@ export default function CompanySettingsPage() {
                             <input type="number" placeholder="Days" value={t.days}
                               onChange={(e) => editLtType(i, "days", Number(e.target.value) || 0)}
                               className="w-24 bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
-                            <button type="button" onClick={() => removeLtType(i)} className="text-muted hover:text-rose-500 px-2">✕</button>
+                            <button type="button" onClick={() => removeLtType(i)} className="text-muted hover:text-danger px-2">✕</button>
                           </div>
                         ))}
                       </div>
@@ -1434,7 +1437,13 @@ export default function CompanySettingsPage() {
                   )}
 
                   {leaveTemplates.length === 0 ? (
-                    <div className="col-span-full text-center p-8 border border-dashed border-border-custom rounded-md text-muted text-xs">No leave policy templates found.</div>
+                    <div className="col-span-full">
+                      <EmptyState
+                        title="No leave policy templates found"
+                        description="Define annual leave quotas and accrual policies for your staff."
+                        action={{ label: "Add Leave Policy", onClick: () => setShowAddLeave(true) }}
+                      />
+                    </div>
                   ) : (
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                       {leaveTemplates.map((t) => {
@@ -1445,7 +1454,7 @@ export default function CompanySettingsPage() {
                           <div key={t.id} className="bg-card border border-border-custom rounded-lg p-5 space-y-3">
                             <div className="flex items-center justify-between">
                               <div className="font-bold text-foreground text-sm">{t.name}</div>
-                              <button onClick={() => deleteLeaveTemplate(t.id)} className="text-[10px] text-muted hover:text-rose-400">Delete</button>
+                              <button onClick={() => deleteLeaveTemplate(t.id)} className="text-[10px] text-muted hover:text-danger">Delete</button>
                             </div>
                             <div className="text-xs text-muted space-y-1">
                               {quotas.map((q) => (
@@ -1498,7 +1507,7 @@ export default function CompanySettingsPage() {
                             <div className="font-bold text-foreground text-sm">{h.name}</div>
                             <div className="text-xs text-muted">{new Date(h.date).toLocaleDateString("en-IN")}</div>
                           </div>
-                          <button onClick={() => deleteHoliday(h.id)} className="text-[10px] text-muted hover:text-rose-400">Delete</button>
+                          <button onClick={() => deleteHoliday(h.id)} className="text-[10px] text-muted hover:text-danger">Delete</button>
                         </div>
                       ))}
                     </div>
@@ -1568,7 +1577,7 @@ export default function CompanySettingsPage() {
                             <input type="number" placeholder="Amount" value={a.amount}
                               onChange={(e) => editLine(stAllowances, setStAllowances, i, "amount", parseFloat(e.target.value) || 0)}
                               className="w-32 bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
-                            <button type="button" onClick={() => setStAllowances(stAllowances.filter((_, j) => j !== i))} className="text-muted hover:text-rose-500 px-2">✕</button>
+                            <button type="button" onClick={() => setStAllowances(stAllowances.filter((_, j) => j !== i))} className="text-muted hover:text-danger px-2">✕</button>
                           </div>
                         ))}
                         <div className="text-right text-sm text-muted">Fixed Allowance: ₹{stFixedAllowance.toLocaleString("en-IN")}</div>
@@ -1589,7 +1598,9 @@ export default function CompanySettingsPage() {
                             <input type="number" placeholder="Amount" value={d.amount}
                               onChange={(e) => editLine(stDeductions, setStDeductions, i, "amount", parseFloat(e.target.value) || 0)}
                               className="w-32 bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
-                            <button type="button" onClick={() => setStDeductions(stDeductions.filter((_, j) => j !== i))} className="text-muted hover:text-rose-500 px-2">✕</button>
+                            <button type="button" onClick={() => setStDeductions(stDeductions.filter((_, j) => j !== i))} className="text-muted hover:text-danger px-2 cursor-pointer inline-flex items-center">
+                              <Icon name="close" className="w-3.5 h-3.5" />
+                            </button>
                           </div>
                         ))}
                         <div className="border-t border-border-custom pt-3 text-sm font-semibold text-foreground">Net Amount (Per Month): ₹{stNet.toLocaleString("en-IN")}</div>
@@ -1603,7 +1614,13 @@ export default function CompanySettingsPage() {
                   )}
 
                   {salaryTemplates.length === 0 ? (
-                    <div className="col-span-full text-center p-8 border border-dashed border-border-custom rounded-md text-muted text-xs">No salary templates found.</div>
+                    <div className="col-span-full">
+                      <EmptyState
+                        title="No salary templates found"
+                        description="Configure salary structures, allowances, and deduction policies."
+                        action={{ label: "Add Salary Template", onClick: () => setShowAddSalary(true) }}
+                      />
+                    </div>
                   ) : (
                     <div className="space-y-2">
                       <div className="grid grid-cols-[2fr_3fr_1fr_auto] gap-4 px-4 text-[10px] uppercase tracking-wider text-muted font-bold">
@@ -1613,8 +1630,8 @@ export default function CompanySettingsPage() {
                         <div key={t.id} className="bg-card border border-border-custom rounded-lg p-5 grid grid-cols-[2fr_3fr_1fr_auto] gap-4 items-center">
                           <div className="font-bold text-foreground text-sm">{t.name}</div>
                           <div className="text-xs text-muted truncate">{t.description || "—"}</div>
-                          <div><span className="text-[10px] bg-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded-full font-bold">{t.status}</span></div>
-                          <button onClick={() => deleteSalaryTemplate(t.id)} className="text-[10px] text-muted hover:text-rose-400 justify-self-end">Delete</button>
+                          <div><span className="text-[10px] bg-success/10 text-success px-2 py-0.5 rounded-full font-bold">{t.status}</span></div>
+                          <button onClick={() => deleteSalaryTemplate(t.id)} className="text-[10px] text-muted hover:text-danger justify-self-end">Delete</button>
                         </div>
                       ))}
                     </div>
@@ -1672,10 +1689,10 @@ export default function CompanySettingsPage() {
                       </button>
                     </div>
                     {payrollStatus === "saved" && (
-                      <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg">Payroll settings saved</div>
+                      <div className="p-4 bg-success/10 border border-success/20 text-success text-xs rounded-lg">Payroll settings saved</div>
                     )}
                     {payrollStatus === "error" && (
-                      <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-lg">Failed to save payroll settings</div>
+                      <div className="p-4 bg-danger/10 border border-danger/20 text-danger text-xs rounded-lg">Failed to save payroll settings</div>
                     )}
                   </div>
 
@@ -1684,13 +1701,13 @@ export default function CompanySettingsPage() {
                     <p className="text-[11px] text-muted">Fixed payslip component layout used by the payroll engine. Earnings and deductions are computed per run; this is a reference view, not an editable definition.</p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                       <div>
-                        <div className="text-[10px] uppercase tracking-wider text-emerald-400 font-bold mb-2">Earnings</div>
+                        <div className="text-[10px] uppercase tracking-wider text-success font-bold mb-2">Earnings</div>
                         <ul className="text-xs text-muted space-y-1">
                           <li>• Basic</li><li>• HRA</li><li>• Other Allowances</li>
                         </ul>
                       </div>
                       <div>
-                        <div className="text-[10px] uppercase tracking-wider text-rose-400 font-bold mb-2">Deductions</div>
+                        <div className="text-[10px] uppercase tracking-wider text-danger font-bold mb-2">Deductions</div>
                         <ul className="text-xs text-muted space-y-1">
                           <li>• PF (Employee) — Basic × PF Employee %</li>
                           <li>• PF (Employer) — Basic × PF Employer %</li>
@@ -1746,7 +1763,7 @@ export default function CompanySettingsPage() {
                           <div className="font-bold text-foreground text-sm">{h.name}</div>
                           <div className="text-xs text-muted">{new Date(h.date).toLocaleDateString("en-IN")}</div>
                         </div>
-                        <button onClick={() => deleteHoliday(h.id)} className="text-[10px] text-muted hover:text-rose-400">Delete</button>
+                        <button onClick={() => deleteHoliday(h.id)} className="text-[10px] text-muted hover:text-danger">Delete</button>
                       </div>
                     ))}
                   </div>
@@ -1768,8 +1785,8 @@ export default function CompanySettingsPage() {
                           onClick={() => toggleWeeklyOffDay(d)}
                           className={`h-12 w-12 rounded-full text-[10px] font-bold flex flex-col items-center justify-center transition-colors ${
                             isOff
-                              ? "bg-rose-500/15 text-rose-400 border border-rose-500/30"
-                              : "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                              ? "bg-danger/10 text-danger border border-danger/20"
+                              : "bg-success/10 text-success border border-success/20"
                           }`}
                           title={d}
                         >
@@ -1788,10 +1805,10 @@ export default function CompanySettingsPage() {
                   </button>
                 </div>
                 {weeklyOffStatus === "saved" && (
-                  <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg">Weekly off saved</div>
+                  <div className="p-4 bg-success/10 border border-success/20 text-success text-xs rounded-lg">Weekly off saved</div>
                 )}
                 {weeklyOffStatus === "error" && (
-                  <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-lg">Failed to save weekly off</div>
+                  <div className="p-4 bg-danger/10 border border-danger/20 text-danger text-xs rounded-lg">Failed to save weekly off</div>
                 )}
               </div>
             </div>
@@ -1915,7 +1932,7 @@ export default function CompanySettingsPage() {
                         const active = settings.custom_pdf_template_enabled ? o.v === "Custom" : o.v === "Default";
                         return (
                           <button key={o.v} type="button" onClick={() => savePdfSettings({ custom_pdf_template_enabled: o.v === "Custom" })}
-                            className={`text-left rounded-lg border p-4 space-y-1.5 transition-all ${active ? "border-primary bg-primary/10" : "border-border-custom bg-elevated hover:border-primary/50"}`}>
+                            className={`text-left rounded-lg border p-4 space-y-1.5 transition-all cursor-pointer ${active ? "border-border-custom bg-elevated text-foreground shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)]" : "border-border-custom bg-card text-muted hover:bg-elevated/40"}`}>
                             <div className="text-xs font-bold text-foreground">{o.t}</div>
                             <div className="text-[10px] text-muted">{o.d}</div>
                           </button>
@@ -1935,7 +1952,7 @@ export default function CompanySettingsPage() {
                         const active = (settings.document_company_name_display ?? "company") === o.v;
                         return (
                           <button key={o.v} type="button" onClick={() => savePdfSettings({ document_company_name_display: o.v })}
-                            className={`text-left rounded-lg border p-4 space-y-1.5 transition-all ${active ? "border-primary bg-primary/10" : "border-border-custom bg-elevated hover:border-primary/50"}`}>
+                            className={`text-left rounded-lg border p-4 space-y-1.5 transition-all cursor-pointer ${active ? "border-border-custom bg-elevated text-foreground shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)]" : "border-border-custom bg-card text-muted hover:bg-elevated/40"}`}>
                             <div className="text-xs font-bold text-foreground">{o.t}</div>
                             <div className="text-[10px] text-muted">{o.d}</div>
                           </button>
@@ -1945,8 +1962,8 @@ export default function CompanySettingsPage() {
                     <p className="text-[10px] text-muted">Chooses the name printed in the masthead of your PDF documents. With Branch Name selected, a document for a project that belongs to a branch prints that branch's name, and projects without a branch print the company name. With Company Name selected, every document prints the parent company name. Applies to client portal reports, bills, purchase orders, and BOQ documents.</p>
                   </div>
 
-                  {pdfStatus === "saved" && (<div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg">PDF template settings saved</div>)}
-                  {pdfStatus === "error" && (<div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-lg">Failed to save PDF template settings</div>)}
+                  {pdfStatus === "saved" && (<div className="p-4 bg-success/10 border border-success/20 text-success text-xs rounded-lg">PDF template settings saved</div>)}
+                  {pdfStatus === "error" && (<div className="p-4 bg-danger/10 border border-danger/20 text-danger text-xs rounded-lg">Failed to save PDF template settings</div>)}
 
                   <div className="bg-card border border-border-custom rounded-lg p-6 space-y-3">
                     <h3 className="text-[10px] uppercase tracking-wider text-muted font-bold">ZATCA E-Invoicing (Saudi)</h3>
@@ -1956,7 +1973,7 @@ export default function CompanySettingsPage() {
                         const active = Boolean(settings.is_zatca_enable) === o.v;
                         return (
                           <button key={o.t} type="button" onClick={() => saveZatca({ is_zatca_enable: o.v })}
-                            className={`text-left rounded-lg border p-4 space-y-1.5 transition-all ${active ? "border-primary bg-primary/10" : "border-border-custom bg-elevated hover:border-primary/50"}`}>
+                            className={`text-left rounded-lg border p-4 space-y-1.5 transition-all cursor-pointer ${active ? "border-border-custom bg-elevated text-foreground shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)]" : "border-border-custom bg-card text-muted hover:bg-elevated/40"}`}>
                             <div className="text-xs font-bold text-foreground">{o.t}</div>
                             <div className="text-[10px] text-muted">{o.d}</div>
                           </button>
@@ -1968,8 +1985,8 @@ export default function CompanySettingsPage() {
                       <input value={vatNumber} onChange={(e) => setVatNumber(e.target.value)} onBlur={() => saveZatca({ vat_number: vatNumber })}
                         placeholder="e.g. 300000000000003" className="w-full rounded-md border border-border-custom bg-elevated px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary" />
                     </div>
-                    {zatcaStatus === "saved" && (<div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg">ZATCA settings saved</div>)}
-                    {zatcaStatus === "error" && (<div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-lg">Failed to save ZATCA settings</div>)}
+                    {zatcaStatus === "saved" && (<div className="p-4 bg-success/10 border border-success/20 text-success text-xs rounded-lg">ZATCA settings saved</div>)}
+                    {zatcaStatus === "error" && (<div className="p-4 bg-danger/10 border border-danger/20 text-danger text-xs rounded-lg">Failed to save ZATCA settings</div>)}
                   </div>
                 </div>
               )}
@@ -1986,7 +2003,7 @@ export default function CompanySettingsPage() {
                   </div>
 
                   {!termsLoaded ? (
-                    <div className="text-xs text-muted">Loading…</div>
+                    <CardSkeleton />
                   ) : (
                     <div className="space-y-5">
                       {TERMS_FIELDS.map((f) => (
@@ -1999,12 +2016,12 @@ export default function CompanySettingsPage() {
                     </div>
                   )}
 
-                  <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg">
+                  <div className="p-4 bg-success/10 border border-success/20 text-success text-xs rounded-lg">
                     Fully wired: creating a Subcon Work Order, CRM Quotation, Sales / Purchase / Subcon Invoice, BOQ, or Purchase Order without supplying <code>terms</code> now pre-fills it server-side from the matching document terms above. Each of those documents also exposes a Download PDF action that renders the saved terms in its footer.
                   </div>
 
-                  {termsStatus === "saved" && (<div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg">Terms & Conditions saved</div>)}
-                  {termsStatus === "error" && (<div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-lg">Failed to save Terms & Conditions</div>)}
+                  {termsStatus === "saved" && (<div className="p-4 bg-success/10 border border-success/20 text-success text-xs rounded-lg">Terms & Conditions saved</div>)}
+                  {termsStatus === "error" && (<div className="p-4 bg-danger/10 border border-danger/20 text-danger text-xs rounded-lg">Failed to save Terms & Conditions</div>)}
                 </div>
               )}
 
@@ -2028,10 +2045,10 @@ export default function CompanySettingsPage() {
                     <div className="flex justify-end">
                       <button onClick={saveNumFmt} disabled={numStatus === "saving"} className="bg-primary text-white text-xs font-bold px-6 py-2.5 rounded-md disabled:opacity-50">{numStatus === "saving" ? "Saving…" : "Save"}</button>
                     </div>
-                    {numStatus === "saved" && (<div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg">Number format saved</div>)}
-                    {numStatus === "error" && (<div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-lg">Failed to save number format</div>)}
+                    {numStatus === "saved" && (<div className="p-4 bg-success/10 border border-success/20 text-success text-xs rounded-lg">Number format saved</div>)}
+                    {numStatus === "error" && (<div className="p-4 bg-danger/10 border border-danger/20 text-danger text-xs rounded-lg">Failed to save number format</div>)}
                   </div>
-                  <div className="p-4 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs rounded-lg">
+                  <div className="p-4 bg-warning/10 border border-warning/20 text-warning text-xs rounded-lg">
                     Partially wired: the shared currency formatter (fmtINR) now accepts an optional decimal-places argument (fmtINR(amount, company.currency_decimal_places)) instead of always hardcoding 0, so any screen that already has the company record in scope can opt in. It still defaults to 0 decimal places, because none of the existing call sites currently fetch company settings — passing the configured value into all of them would mean adding a new company-settings fetch across many unrelated pages, which is deferred. There is no equivalent shared formatter for Quantity Decimal Places yet; quantities are rendered inline with fixed decimal counts (e.g. toFixed(2)/toFixed(3)) across two dozen+ files, so wiring that in a single safe pass wasn't attempted either.
                   </div>
                 </div>
@@ -2056,7 +2073,7 @@ export default function CompanySettingsPage() {
                     </select>
                   </div>
 
-                  {cfMsg && (<div className={`p-4 text-xs rounded-lg border ${cfMsg.type === "ok" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-rose-500/10 border-rose-500/20 text-rose-400"}`}>{cfMsg.text}</div>)}
+                  {cfMsg && (<div className={`p-4 text-xs rounded-lg border ${cfMsg.type === "ok" ? "bg-success/10 border-success/20 text-success" : "bg-danger/10 border-danger/20 text-danger"}`}>{cfMsg.text}</div>)}
 
                   {showAddCf && (
                     <form onSubmit={addCf} className="bg-card border border-border-custom rounded-lg p-6 space-y-4 max-w-xl">
@@ -2101,14 +2118,14 @@ export default function CompanySettingsPage() {
                         <div key={f.id} className="grid grid-cols-[2fr_1.5fr_1fr_2fr] gap-4 px-5 py-3 items-center border-b border-border-custom last:border-0">
                           <div className="font-bold text-foreground text-sm">{f.field_name}</div>
                           <div className="text-xs text-muted">{f.field_type}</div>
-                          <div>{f.set_default ? <span className="text-[10px] bg-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded-full font-bold">Yes</span> : <span className="text-[10px] text-muted">—</span>}</div>
+                          <div>{f.set_default ? <span className="text-[10px] bg-success/10 text-success px-2 py-0.5 rounded-full font-bold">Yes</span> : <span className="text-[10px] text-muted">—</span>}</div>
                           <div className="text-xs text-muted truncate">{f.default_value || "—"}</div>
                         </div>
                       ))
                     )}
                   </div>
 
-                  <div className="p-4 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs rounded-lg">
+                  <div className="p-4 bg-warning/10 border border-warning/20 text-warning text-xs rounded-lg">
                     Note: custom fields you define here are saved per record type and listed above. They do not yet appear on Project, Task, Invoice, or other record forms, so values cannot be filled in on individual records yet.
                   </div>
                 </div>
@@ -2130,12 +2147,12 @@ export default function CompanySettingsPage() {
                 </select>
               </div>
 
-              <div className="p-4 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs rounded-lg">
+              <div className="p-4 bg-warning/10 border border-warning/20 text-warning text-xs rounded-lg">
                 Approval chains are enforced today across {APPROVAL_CATEGORIES.join(", ")}: when a matching rule covers the amount, the document is held until every level approves it.
               </div>
 
               {ruleMsg && (
-                <div className={`p-4 text-xs rounded-lg border ${ruleMsg.type === "ok" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-rose-500/10 border-rose-500/20 text-rose-400"}`}>{ruleMsg.text}</div>
+                <div className={`p-4 text-xs rounded-lg border ${ruleMsg.type === "ok" ? "bg-success/10 border-success/20 text-success" : "bg-danger/10 border-danger/20 text-danger"}`}>{ruleMsg.text}</div>
               )}
 
               {/* New rule block */}
@@ -2204,7 +2221,7 @@ export default function CompanySettingsPage() {
                           </Field>
                         </div>
                         <div className="flex justify-end gap-2">
-                          <button onClick={() => deleteRule(r.id)} className="text-[10px] text-muted hover:text-rose-400 font-bold">Delete</button>
+                          <button onClick={() => deleteRule(r.id)} className="text-[10px] text-muted hover:text-danger font-bold">Delete</button>
                           <button onClick={() => publishEditRule(r)} disabled={ruleBusy} className="bg-primary text-white text-xs font-bold px-5 py-2 rounded-md disabled:opacity-50">Publish</button>
                         </div>
                       </div>
@@ -2253,8 +2270,8 @@ export default function CompanySettingsPage() {
                 <div className="rounded-lg border border-border-custom p-4 space-y-2">
                   <div className="text-[10px] uppercase tracking-wider text-muted font-bold">Connection Status</div>
                   {gsConnection.connected ? (
-                    <div className="flex items-center gap-2 text-xs text-emerald-400">
-                      <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                    <div className="flex items-center gap-2 text-xs text-success">
+                      <span className="h-2 w-2 rounded-full bg-success" />
                       <span>
                         Connected
                         {gsConnection.connected_by_phone
@@ -2264,7 +2281,7 @@ export default function CompanySettingsPage() {
                     </div>
                   ) : (
                     <div className="flex items-center gap-2 text-xs text-muted">
-                      <span className="h-2 w-2 rounded-full bg-zinc-500" />
+                      <span className="h-2 w-2 rounded-full bg-elevated" />
                       <span>Not connected. Connect from the Payroll Runs tab (HR) to authorize a Google account.</span>
                     </div>
                   )}
@@ -2276,12 +2293,12 @@ export default function CompanySettingsPage() {
                   <div className="text-center text-xs text-muted py-4">No activity recorded yet.</div>
                 </div>
 
-                <div className="p-4 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs rounded-lg">
+                <div className="p-4 bg-warning/10 border border-warning/20 text-warning text-xs rounded-lg">
                   Live export is wired for payroll runs (HR -&gt; Payroll Runs -&gt; Export to Google Sheets). The enable flag and authorized-phone whitelist below gate who may connect a Google account. Other report types are not exported yet.
                 </div>
 
-                {gsStatus === "saved" && (<div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg">Integration settings saved</div>)}
-                {gsStatus === "error" && (<div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-lg">Failed to save integration settings</div>)}
+                {gsStatus === "saved" && (<div className="p-4 bg-success/10 border border-success/20 text-success text-xs rounded-lg">Integration settings saved</div>)}
+                {gsStatus === "error" && (<div className="p-4 bg-danger/10 border border-danger/20 text-danger text-xs rounded-lg">Failed to save integration settings</div>)}
               </div>
 
               {/* Google Drive */}
@@ -2292,7 +2309,7 @@ export default function CompanySettingsPage() {
                     <div className="text-[10px] text-muted">Backup project and company files to your connected Google Drive.</div>
                   </div>
                   {gdConnected ? (
-                    <button onClick={disconnectDrive} disabled={gdBusy} className="bg-rose-500/15 text-rose-400 border border-rose-500/20 text-xs font-bold px-4 py-2 rounded-md disabled:opacity-50">Disconnect</button>
+                    <button onClick={disconnectDrive} disabled={gdBusy} className="bg-danger/10 text-danger border border-danger/20 text-xs font-bold px-4 py-2 rounded-md disabled:opacity-50">Disconnect</button>
                   ) : (
                     <button onClick={connectDrive} disabled={gdBusy} className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-md disabled:opacity-50">Connect</button>
                   )}
@@ -2300,13 +2317,13 @@ export default function CompanySettingsPage() {
                 <div className="rounded-lg border border-border-custom p-4 space-y-2">
                   <div className="text-[10px] uppercase tracking-wider text-muted font-bold">Connection Status</div>
                   {gdConnected ? (
-                    <div className="flex items-center gap-2 text-xs text-emerald-400"><span className="h-2 w-2 rounded-full bg-emerald-400" /><span>Connected</span></div>
+                    <div className="flex items-center gap-2 text-xs text-success"><span className="h-2 w-2 rounded-full bg-success" /><span>Connected</span></div>
                   ) : (
-                    <div className="flex items-center gap-2 text-xs text-muted"><span className="h-2 w-2 rounded-full bg-zinc-500" /><span>Not connected.</span></div>
+                    <div className="flex items-center gap-2 text-xs text-muted"><span className="h-2 w-2 rounded-full bg-elevated" /><span>Not connected.</span></div>
                   )}
                 </div>
                 {gdMsg && (
-                  <div className={`p-4 text-xs rounded-lg ${gdMsg.type === "ok" ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400" : "bg-rose-500/10 border border-rose-500/20 text-rose-400"}`}>{gdMsg.text}</div>
+                  <div className={`p-4 text-xs rounded-lg ${gdMsg.type === "ok" ? "bg-success/10 border border-success/20 text-success" : "bg-danger/10 border border-danger/20 text-danger"}`}>{gdMsg.text}</div>
                 )}
               </div>
 
@@ -2318,7 +2335,7 @@ export default function CompanySettingsPage() {
                     <div className="text-[10px] text-muted">Push vendor bills from SiteFlow into Zoho Books for accounting and GST reconciliation.</div>
                   </div>
                   {zbConnected ? (
-                    <button onClick={disconnectZoho} disabled={zbBusy} className="bg-rose-500/15 text-rose-400 border border-rose-500/20 text-xs font-bold px-4 py-2 rounded-md disabled:opacity-50">Disconnect</button>
+                    <button onClick={disconnectZoho} disabled={zbBusy} className="bg-danger/10 text-danger border border-danger/20 text-xs font-bold px-4 py-2 rounded-md disabled:opacity-50">Disconnect</button>
                   ) : (
                     <button onClick={connectZoho} disabled={zbBusy} className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-md disabled:opacity-50">Connect</button>
                   )}
@@ -2326,13 +2343,13 @@ export default function CompanySettingsPage() {
                 <div className="rounded-lg border border-border-custom p-4 space-y-2">
                   <div className="text-[10px] uppercase tracking-wider text-muted font-bold">Connection Status</div>
                   {zbConnected ? (
-                    <div className="flex items-center gap-2 text-xs text-emerald-400"><span className="h-2 w-2 rounded-full bg-emerald-400" /><span>Connected</span></div>
+                    <div className="flex items-center gap-2 text-xs text-success"><span className="h-2 w-2 rounded-full bg-success" /><span>Connected</span></div>
                   ) : (
-                    <div className="flex items-center gap-2 text-xs text-muted"><span className="h-2 w-2 rounded-full bg-zinc-500" /><span>Not connected.</span></div>
+                    <div className="flex items-center gap-2 text-xs text-muted"><span className="h-2 w-2 rounded-full bg-elevated" /><span>Not connected.</span></div>
                   )}
                 </div>
                 {zbMsg && (
-                  <div className={`p-4 text-xs rounded-lg ${zbMsg.type === "ok" ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400" : "bg-rose-500/10 border border-rose-500/20 text-rose-400"}`}>{zbMsg.text}</div>
+                  <div className={`p-4 text-xs rounded-lg ${zbMsg.type === "ok" ? "bg-success/10 border border-success/20 text-success" : "bg-danger/10 border border-danger/20 text-danger"}`}>{zbMsg.text}</div>
                 )}
               </div>
 
@@ -2349,9 +2366,9 @@ export default function CompanySettingsPage() {
                     <button onClick={createBiKey} disabled={biBusy} className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-md disabled:opacity-50">Create</button>
                   </div>
                   {biNewKey && (
-                    <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-3 space-y-1">
-                      <div className="text-[10px] uppercase tracking-wider text-emerald-400 font-bold">Copy this key now (shown once)</div>
-                      <code className="block text-[11px] text-emerald-300 break-all select-all">{biNewKey}</code>
+                    <div className="rounded-lg border border-success/20 bg-success/10 p-3 space-y-1">
+                      <div className="text-[10px] uppercase tracking-wider text-success font-bold">Copy this key now (shown once)</div>
+                      <code className="block text-[11px] text-success break-all select-all">{biNewKey}</code>
                     </div>
                   )}
                 </div>
@@ -2368,7 +2385,7 @@ export default function CompanySettingsPage() {
                             <span className="text-[10px] text-muted">{k.masked_key}{k.revoked ? " (revoked)" : ""}</span>
                           </div>
                           {!k.revoked && (
-                            <button onClick={() => revokeBiKey(k.id)} className="text-rose-400 hover:text-rose-300 text-[11px] font-bold">Revoke</button>
+                            <button onClick={() => revokeBiKey(k.id)} className="text-danger hover:text-danger text-[11px] font-bold">Revoke</button>
                           )}
                         </div>
                       ))}
@@ -2381,7 +2398,7 @@ export default function CompanySettingsPage() {
                   <code className="block text-[11px] text-muted break-all">{apiHost}/apis/v3/integrations/bi/feed/{company_id}/projects?format=csv</code>
                 </div>
                 {biMsg && (
-                  <div className={`p-4 text-xs rounded-lg ${biMsg.type === "ok" ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400" : "bg-rose-500/10 border border-rose-500/20 text-rose-400"}`}>{biMsg.text}</div>
+                  <div className={`p-4 text-xs rounded-lg ${biMsg.type === "ok" ? "bg-success/10 border border-success/20 text-success" : "bg-danger/10 border border-danger/20 text-danger"}`}>{biMsg.text}</div>
                 )}
               </div>
 
@@ -2399,9 +2416,9 @@ export default function CompanySettingsPage() {
                 <div className="rounded-lg border border-border-custom p-4 space-y-2">
                   <div className="text-[10px] uppercase tracking-wider text-muted font-bold">Connection Status</div>
                   {tallyConn?.connected ? (
-                    <div className="flex items-center gap-2 text-xs text-emerald-400"><span className="h-2 w-2 rounded-full bg-emerald-400" /><span>Connected{tallyConn.tally_company_name ? ` (${tallyConn.tally_company_name})` : ""}</span></div>
+                    <div className="flex items-center gap-2 text-xs text-success"><span className="h-2 w-2 rounded-full bg-success" /><span>Connected{tallyConn.tally_company_name ? ` (${tallyConn.tally_company_name})` : ""}</span></div>
                   ) : (
-                    <div className="flex items-center gap-2 text-xs text-muted"><span className="h-2 w-2 rounded-full bg-zinc-500" /><span>Not connected.</span></div>
+                    <div className="flex items-center gap-2 text-xs text-muted"><span className="h-2 w-2 rounded-full bg-elevated" /><span>Not connected.</span></div>
                   )}
                 </div>
               </div>
@@ -2463,7 +2480,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function WfSwitch({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <button type="button" onClick={() => onChange(!checked)}
-      className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${checked ? "bg-primary" : "bg-zinc-600"}`}
+      className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${checked ? "bg-primary" : "bg-elevated"}`}
       aria-pressed={checked}>
       <span className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform ${checked ? "translate-x-5" : ""}`} />
     </button>
@@ -2515,10 +2532,10 @@ function WfSaveFooter({ status, onSave, savedText, errorText }: {
         </button>
       </div>
       {status === "saved" && (
-        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg">{savedText}</div>
+        <div className="p-4 bg-success/10 border border-success/20 text-success text-xs rounded-lg">{savedText}</div>
       )}
       {status === "error" && (
-        <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-lg">{errorText}</div>
+        <div className="p-4 bg-danger/10 border border-danger/20 text-danger text-xs rounded-lg">{errorText}</div>
       )}
     </>
   );

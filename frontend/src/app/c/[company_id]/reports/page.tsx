@@ -10,6 +10,7 @@ import Icon, { type IconName } from "@/components/marketing/Icon";
 // formula — a leading = + - @ executes when the export opens in Excel/Sheets.
 import { buildCsv } from "@/lib/csv";
 import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
 
 interface ReportItem {
   name: string;
@@ -392,25 +393,23 @@ export default function ReportsDashboard() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-elevated/20">
+      <PageHeader
+        title="Reports & Analytics"
+        subtitle="Generate, filter, and export tabular company reports in CSV, Microsoft Excel or PDF format."
+      >
+        <div className="relative w-72 shrink-0">
+          <input
+            type="text"
+            placeholder="Search report names..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="w-full bg-sidebar border border-border-custom rounded-lg pl-9 pr-4 py-1.5 text-xs text-foreground placeholder:text-muted focus:outline-none focus:border-primary transition-all"
+          />
+          <Icon name="search" className="absolute left-3 top-2 w-3.5 h-3.5 text-muted" />
+        </div>
+      </PageHeader>
       <div className="flex-1 overflow-y-auto">
         <PageShell width="wide">
-          
-          {/* Filter & Search Header */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-border-custom">
-            <div>
-              <p className="text-xs text-muted">Generate, filter, and export tabular company reports in Microsoft Excel or PDF format.</p>
-            </div>
-            <div className="relative w-full md:w-80 shrink-0">
-              <input
-                type="text"
-                placeholder="Search report names..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="w-full bg-sidebar border border-border-custom rounded-lg pl-9 pr-4 py-2 text-xs text-foreground placeholder:text-muted focus:outline-none focus:border-primary transition-all"
-              />
-              <Icon name="search" className="absolute left-3 top-2.5 w-4 h-4 text-muted" />
-            </div>
-          </div>
 
           {/* Reports Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -514,16 +513,16 @@ export default function ReportsDashboard() {
                   <div className="flex items-center justify-between bg-background border border-border-custom rounded-lg p-1">
                     <button
                       onClick={() => shiftMonth("prev")}
-                      className="px-3 py-1.5 text-xs text-muted hover:text-foreground hover:bg-elevated rounded-md transition-all"
+                      className="px-3 py-1.5 text-xs text-muted hover:text-foreground hover:bg-elevated rounded-md transition-all cursor-pointer"
                     >
-                      ◀
+                      <Icon name="chevron_left" className="w-3.5 h-3.5" />
                     </button>
                     <span className="text-xs font-semibold text-white">{selectedMonth}</span>
                     <button
                       onClick={() => shiftMonth("next")}
-                      className="px-3 py-1.5 text-xs text-muted hover:text-foreground hover:bg-elevated rounded-md transition-all"
+                      className="px-3 py-1.5 text-xs text-muted hover:text-foreground hover:bg-elevated rounded-md transition-all cursor-pointer"
                     >
-                      ▶
+                      <Icon name="chevron_right" className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>

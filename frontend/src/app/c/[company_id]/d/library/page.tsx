@@ -5,6 +5,9 @@ import { useParams, useSearchParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
 import { UNITS } from "@/lib/units";
 import Icon, { type IconName } from "@/components/marketing/Icon";
+import SegmentedTabs from "@/components/ui/Tabs";
+import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
 
 type LibraryType =
   | "party"
@@ -423,53 +426,47 @@ export default function LibraryHubPage() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      {/* Main Hub Area */}
-      <div className="flex-1 flex flex-col overflow-y-auto p-8 relative bg-background">
-        {/* Library sub-tab bar */}
-        <div className="-mx-8 px-8 pt-4 pb-2 mb-6 flex items-center gap-1 border-b border-border-custom bg-card overflow-x-auto shrink-0">
-          {([
-            { id: "party", label: "Party Library", icon: "group" },
-            { id: "asset-type", label: "Asset Type Library", icon: "tractor" },
-            { id: "cost-code", label: "Cost Code Library", icon: "tag" },
-            { id: "deduction", label: "Deduction Library", icon: "minus" },
-            { id: "progress", label: "Progress Library", icon: "trending_up" },
-            { id: "workforce", label: "Workforce Library", icon: "worker" },
-            { id: "material", label: "Material Library", icon: "brick" },
-            { id: "rate", label: "Rate Library", icon: "money_wings" },
-            { id: "retention", label: "Retention Library", icon: "lock" },
-            { id: "material-category", label: "Material Category Library", icon: "folder" },
-            { id: "todo", label: "To Do Library", icon: "check_circle" }
-          ] as { id: LibraryType; label: string; icon: IconName }[]).map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => {
-                setActiveTab(tab.id as LibraryType);
-                setSearchQuery("");
-              }}
-              className={`whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold inline-flex items-center gap-1.5 transition-all ${activeTab === tab.id ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-elevated"}`}
-            >
-              <Icon name={tab.icon} className="w-4 h-4" />{tab.label}
-            </button>
-          ))}
-        </div>
-        {/* Action Header */}
-        <div className="flex justify-between items-center mb-6 shrink-0">
-          <div>
-            <h1 className="text-base font-semibold text-foreground capitalize">{activeTab.replace("-", " ")} Library</h1>
-            <p className="text-xs text-muted mt-1">Manage global templates and codes shared across all project locations.</p>
-          </div>
+      <PageHeader
+        title={`${activeTab.replace("-", " ")} Library`}
+        subtitle="Manage global templates and codes shared across all project locations."
+      >
+        <button
+          onClick={() => {
+            if (activeTab === "party") setIsPartyDrawerOpen(true);
+            else if (activeTab === "material") setIsMaterialDrawerOpen(true);
+            else if (activeTab === "rate") setIsRateDrawerOpen(true);
+            else setIsSimpleDrawerOpen(true);
+          }}
+          className="px-3.5 py-1.5 bg-primary hover:bg-primary/95 text-white rounded-lg text-xs font-bold shadow-md transition-all cursor-pointer"
+        >
+          {activeTab === "todo" ? "+ Add To Do" : "+ Add to Library"}
+        </button>
+      </PageHeader>
 
-          <button
-            onClick={() => {
-              if (activeTab === "party") setIsPartyDrawerOpen(true);
-              else if (activeTab === "material") setIsMaterialDrawerOpen(true);
-              else if (activeTab === "rate") setIsRateDrawerOpen(true);
-              else setIsSimpleDrawerOpen(true);
+      <div className="flex-1 flex flex-col overflow-y-auto relative bg-background">
+        <PageShell width="full">
+        {/* Library sub-tab bar */}
+        <div className="-mx-8 px-8 pt-4 pb-2 mb-6 border-b border-border-custom bg-card overflow-x-auto shrink-0">
+          <SegmentedTabs
+            tabs={[
+              { id: "party", label: "Party Library", icon: <Icon name="group" className="w-3.5 h-3.5" /> },
+              { id: "asset-type", label: "Asset Type Library", icon: <Icon name="tractor" className="w-3.5 h-3.5" /> },
+              { id: "cost-code", label: "Cost Code Library", icon: <Icon name="tag" className="w-3.5 h-3.5" /> },
+              { id: "deduction", label: "Deduction Library", icon: <Icon name="minus" className="w-3.5 h-3.5" /> },
+              { id: "progress", label: "Progress Library", icon: <Icon name="trending_up" className="w-3.5 h-3.5" /> },
+              { id: "workforce", label: "Workforce Library", icon: <Icon name="worker" className="w-3.5 h-3.5" /> },
+              { id: "material", label: "Material Library", icon: <Icon name="brick" className="w-3.5 h-3.5" /> },
+              { id: "rate", label: "Rate Library", icon: <Icon name="money_wings" className="w-3.5 h-3.5" /> },
+              { id: "retention", label: "Retention Library", icon: <Icon name="lock" className="w-3.5 h-3.5" /> },
+              { id: "material-category", label: "Material Category Library", icon: <Icon name="folder" className="w-3.5 h-3.5" /> },
+              { id: "todo", label: "To Do Library", icon: <Icon name="check_circle" className="w-3.5 h-3.5" /> },
+            ]}
+            activeTab={activeTab}
+            onChange={(t) => {
+              setActiveTab(t as LibraryType);
+              setSearchQuery("");
             }}
-            className="px-4 py-2 bg-primary hover:bg-primary/95 text-white rounded-lg text-xs font-bold shadow-lg transition-all cursor-pointer"
-          >
-            {activeTab === "todo" ? "+ Add To Do" : "+ Add to Library"}
-          </button>
+          />
         </div>
 
         {/* Search & Filter Toolbar */}
@@ -542,7 +539,7 @@ export default function LibraryHubPage() {
                       <td className="px-6 py-4 text-muted font-bold whitespace-nowrap">{formatLibraryCell(item.party_id_custom)}</td>
                       <td className="px-6 py-4 font-semibold text-foreground whitespace-nowrap">{formatLibraryCell(item.name)}</td>
                       <td className="px-5 py-3 whitespace-nowrap">
-                        <span className="bg-elevated text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider text-zinc-300">
+                        <span className="bg-elevated text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider text-muted">
                           {formatLibraryCell(item.party_type)}
                         </span>
                       </td>
@@ -793,6 +790,7 @@ export default function LibraryHubPage() {
             </table>
           )}
         </div>
+        </PageShell>
       </div>
 
       {/* Reusable Simple Item Add Modal */}

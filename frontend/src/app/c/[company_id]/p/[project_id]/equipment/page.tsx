@@ -5,6 +5,10 @@ import { authHeaders } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Icon, { type IconName } from "@/components/marketing/Icon";
+import SegmentedTabs from "@/components/ui/Tabs";
+import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
+import { CardSkeleton } from "@/components/ui/Skeleton";
 
 interface Equipment {
   id: string;
@@ -310,47 +314,46 @@ export default function EquipmentTrackingPage() {
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Main Framework */}
       <main className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-16 border-b border-border-custom px-8 flex items-center justify-between bg-card shrink-0">
-          <div className="flex items-center gap-4">
-            <h1 className="text-sm font-bold text-foreground uppercase tracking-wider">Equipment & Machinery Logs</h1>
-            <span className="h-4 w-px bg-elevated" />
-            <span className="text-xs font-medium text-muted">GPS verified mileage and refueling timeline</span>
-          </div>
-          <button onClick={() => setIsAddEqOpen(true)} className="px-4 py-2 bg-primary rounded-md text-xs font-bold text-white hover:opacity-90 transition-all shadow-lg shadow-primary/20">
+        <PageHeader
+          title="Equipment & Machinery Logs"
+          subtitle="GPS verified mileage and refueling timeline"
+        >
+          <button onClick={() => setIsAddEqOpen(true)} className="px-3.5 py-1.5 bg-primary rounded-md text-xs font-bold text-white hover:opacity-90 transition-all shadow-md cursor-pointer">
             + Add Equipment
           </button>
-        </header>
+        </PageHeader>
 
         {/* Tab Controls */}
-        <div className="flex items-center gap-1 px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto">
-          {([
-            { key: "fleet", icon: "tractor", label: "Fleet Inventory" },
-            { key: "timeline", icon: "fuel_pump", label: "Usage & Refuel Timeline" },
-            { key: "odologs", icon: "bar_chart", label: "Odometer Run Logs" },
-            { key: "maintenance", icon: "wrench", label: "Maintenance Schedule" },
-          ] as { key: string; icon: IconName; label: string }[]).map((t) => (
-            <button key={t.key} onClick={() => { setActiveTab(t.key as any); }} className={`whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-all inline-flex items-center gap-1.5 ${activeTab === t.key ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-elevated"}`}>
-              <Icon name={t.icon} className="w-3.5 h-3.5" />{t.label}
-            </button>
-          ))}
+        <div className="px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto">
+          <SegmentedTabs
+            tabs={[
+              { id: "fleet", icon: <Icon name="tractor" className="w-3.5 h-3.5" />, label: "Fleet Inventory" },
+              { id: "timeline", icon: <Icon name="fuel_pump" className="w-3.5 h-3.5" />, label: "Usage & Refuel Timeline" },
+              { id: "odologs", icon: <Icon name="bar_chart" className="w-3.5 h-3.5" />, label: "Odometer Run Logs" },
+              { id: "maintenance", icon: <Icon name="wrench" className="w-3.5 h-3.5" />, label: "Maintenance Schedule" },
+            ]}
+            activeTab={activeTab}
+            onChange={(t) => setActiveTab(t as any)}
+          />
         </div>
 
         {/* Workspace */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {error && (
-            <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg text-xs">
-              {error}
-            </div>
-          )}
-          {loading ? (
-            <div className="text-muted text-xs text-center py-20">Loading machinery logs...</div>
-          ) : (
+        <div className="flex-1 overflow-y-auto">
+          <PageShell width="wide">
+            {error && (
+              <div className="p-4 bg-danger/10 border border-danger/20 text-danger rounded-lg text-xs">
+                {error}
+              </div>
+            )}
+            {loading ? (
+              <CardSkeleton />
+            ) : (
             <>
               {activeTab === "fleet" && (
                 <div className="space-y-6">
                   {/* Overdue Maintenance Banner Alert */}
                   {maintenanceLogs.filter(m => m.completed_date === null && new Date(m.scheduled_date) < new Date()).length > 0 && (
-                    <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg flex items-start gap-3 text-xs">
+                    <div className="p-4 bg-danger/10 border border-danger/20 text-danger rounded-lg flex items-start gap-3 text-xs">
                       <Icon name="warning" className="w-5 h-5 shrink-0" />
                       <div>
                         <strong className="font-extrabold block text-foreground">Overdue Maintenance Alert!</strong>
@@ -386,11 +389,11 @@ export default function EquipmentTrackingPage() {
                               <span className="text-xs font-bold text-foreground line-clamp-1">{eq.name}</span>
                               <div className="flex gap-1 items-center">
                                 {isOverdue && (
-                                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase bg-red-500/15 border border-red-500/30 text-red-400 inline-flex items-center gap-1">
+                                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase bg-danger/10 border border-danger/20 text-danger inline-flex items-center gap-1">
                                     <Icon name="warning" className="w-3 h-3" />SERVICING OVERDUE
                                   </span>
                                 )}
-                                <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase border ${activeDep ? "bg-primary/10 text-primary border-primary/20" : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"}`}>
+                                <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase border ${activeDep ? "bg-primary/10 text-primary border-primary/20" : "bg-success/10 text-success border-success/20"}`}>
                                   {activeDep ? "deployed" : "available"}
                                 </span>
                               </div>
@@ -408,16 +411,16 @@ export default function EquipmentTrackingPage() {
                             {activeDep ? (
                               <button
                                 onClick={() => { setActiveStoppingEq(eq); setStopMeterVal(""); setIsStopPhotoCaptured(false); }}
-                                className="text-[10px] bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 px-3 py-1.5 rounded-md transition-all font-bold inline-flex items-center gap-1"
+                                className="text-[10px] bg-danger/10 hover:bg-danger/10 border border-danger/20 text-danger px-3 py-1.5 rounded-md transition-all font-bold inline-flex items-center gap-1"
                               >
-                                ⏹ Stop Wizard
+                                <Icon name="close" className="w-3 h-3" /> Stop Wizard
                               </button>
                             ) : (
                               <button
                                 onClick={() => { setActiveDeployingEq(eq); setStartMeterVal(""); setIsStartPhotoCaptured(false); }}
-                                className="text-[10px] bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 px-3 py-1.5 rounded-md transition-all font-bold inline-flex items-center gap-1"
+                                className="text-[10px] bg-success/10 hover:bg-success/10 border border-success/20 text-success px-3 py-1.5 rounded-md transition-all font-bold inline-flex items-center gap-1"
                               >
-                                ▶ Start Wizard
+                                <Icon name="chevron_right" className="w-3 h-3" /> Start Wizard
                               </button>
                             )}
 
@@ -453,7 +456,7 @@ export default function EquipmentTrackingPage() {
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
                             <strong className="text-foreground font-bold">{evt.eqName}</strong>
-                            <span className={`text-[9px] px-2 py-0.5 rounded font-bold uppercase ${evt.type === "usage" ? "bg-primary/10 text-primary" : "bg-amber-500/10 text-amber-400"}`}>
+                            <span className={`text-[9px] px-2 py-0.5 rounded font-bold uppercase ${evt.type === "usage" ? "bg-primary/10 text-primary" : "bg-warning/10 text-warning"}`}>
                               {evt.type}
                             </span>
                           </div>
@@ -516,8 +519,8 @@ export default function EquipmentTrackingPage() {
                       {[
                         { label: "Total Runs", value: completedRuns.length, color: "text-foreground" },
                         { label: "Total Hours", value: completedRuns.reduce((s,r) => s + r.durationHrs, 0).toFixed(1) + " hr", color: "text-primary" },
-                        { label: "Total Fuel Used", value: completedRuns.reduce((s,r) => s + r.fuelForRun, 0).toFixed(0) + " L", color: "text-amber-400" },
-                        { label: "Est. Machine Cost", value: "₹" + completedRuns.reduce((s,r) => s + (r.costForRun || 0), 0).toLocaleString(), color: "text-emerald-400" },
+                        { label: "Total Fuel Used", value: completedRuns.reduce((s,r) => s + r.fuelForRun, 0).toFixed(0) + " L", color: "text-warning" },
+                        { label: "Est. Machine Cost", value: "₹" + completedRuns.reduce((s,r) => s + (r.costForRun || 0), 0).toLocaleString(), color: "text-success" },
                       ].map(kpi => (
                         <div key={kpi.label} className="bg-input border border-border-custom rounded-md p-4">
                           <span className="text-[9px] uppercase text-muted tracking-wider block">{kpi.label}</span>
@@ -563,12 +566,12 @@ export default function EquipmentTrackingPage() {
                                   ? <span className="font-bold text-primary">+{run.delta.toFixed(1)}</span>
                                   : <span className="text-muted">{run.durationHrs.toFixed(2)} hr</span>}
                               </td>
-                              <td className="px-5 py-3 text-center text-amber-400 font-sans">
+                              <td className="px-5 py-3 text-center text-warning font-sans">
                                 {run.fuelForRun > 0 ? `${run.fuelForRun.toFixed(1)} L` : <span className="text-muted">—</span>}
                               </td>
                               <td className="px-5 py-3 text-center">
                                 {run.efficiency
-                                  ? <span className="text-emerald-400 font-sans">{run.efficiency} km/L</span>
+                                  ? <span className="text-success font-sans">{run.efficiency} km/L</span>
                                   : <span className="text-muted">—</span>}
                               </td>
                               <td className="px-5 py-3 text-right font-sans font-bold text-foreground">
@@ -626,10 +629,10 @@ export default function EquipmentTrackingPage() {
                               <td className="px-5 py-3 text-center">
                                 <span className={`text-[9px] font-bold px-2 py-0.5 rounded border ${
                                   log.status === "Completed" || log.completed_date
-                                    ? "bg-green-500/10 border-green-500/20 text-green-400"
+                                    ? "bg-success/10 border-success/20 text-success"
                                     : isOverdue
-                                      ? "bg-red-500/10 border-red-500/20 text-red-400 animate-pulse"
-                                      : "bg-yellow-500/10 border-yellow-500/20 text-yellow-400"
+                                      ? "bg-danger/10 border-danger/20 text-danger font-bold"
+                                      : "bg-warning/10 border-warning/20 text-warning"
                                 }`}>
                                   {log.completed_date ? "Completed" : isOverdue ? "Overdue" : log.status}
                                 </span>
@@ -647,6 +650,7 @@ export default function EquipmentTrackingPage() {
               )}
             </>
           )}
+          </PageShell>
         </div>
       </main>
 
@@ -682,7 +686,7 @@ export default function EquipmentTrackingPage() {
                   >
                     <Icon name="camera" className="w-4 h-4" />Take Photo
                   </button>
-                  {isStartPhotoCaptured && <span className="text-emerald-400 font-bold">✓ Captured (GPS Locked)</span>}
+                  {isStartPhotoCaptured && <span className="text-success font-bold">✓ Captured (GPS Locked)</span>}
                 </div>
               </div>
             </div>
@@ -726,7 +730,7 @@ export default function EquipmentTrackingPage() {
                   >
                     <Icon name="camera" className="w-4 h-4" />Take Photo
                   </button>
-                  {isStopPhotoCaptured && <span className="text-emerald-400 font-bold">✓ Captured (GPS verification active)</span>}
+                  {isStopPhotoCaptured && <span className="text-success font-bold">✓ Captured (GPS verification active)</span>}
                 </div>
               </div>
 

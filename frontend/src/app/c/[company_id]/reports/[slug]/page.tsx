@@ -7,6 +7,8 @@ import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 import Icon from "@/components/marketing/Icon";
 import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
+import { TableSkeleton } from "@/components/ui/Skeleton";
 import { isMissingOrDemoTenant, redirectToLogin } from "@/lib/company-guard";
 // R2-755: shared CSV guard, so this export cannot drift from the other four.
 import { csvSafeCell, csvQuote } from "@/lib/csv";
@@ -568,7 +570,7 @@ export default function DynamicReportViewPage() {
     return (
       <div className="flex h-screen bg-background text-foreground items-center justify-center">
         <div className="text-center space-y-4">
-          <p className="text-red-500 font-bold">Report configuration not found for slug "{slug}"</p>
+          <p className="text-danger font-bold">Report configuration not found for slug "{slug}"</p>
           <Link href={`/c/${companyId}/reports`} className="text-xs text-primary underline">Back to Reports Hub</Link>
         </div>
       </div>
@@ -830,6 +832,31 @@ export default function DynamicReportViewPage() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
+      <PageHeader
+        title={meta?.title || slug}
+        subtitle="Spreadsheet view, dynamic column aggregations, and export engine"
+      >
+        <div className="flex items-center gap-2">
+          <button onClick={handleRefresh} className="text-foreground text-xs border border-border-custom bg-card/50 hover:bg-elevated rounded-lg px-3 py-1.5 transition-all inline-flex items-center gap-1.5 cursor-pointer"><Icon name="refresh" className="w-3.5 h-3.5" /> Refresh</button>
+          {/* Dynamic 4-option export dropdown button */}
+          <div className="relative">
+            <button 
+              onClick={() => setShowExportDropdown(!showExportDropdown)}
+              className="text-white text-xs bg-primary hover:bg-primary/90 font-bold rounded-lg px-3.5 py-1.5 transition-all flex items-center gap-1 cursor-pointer shadow-md"
+              title="Export Options"
+            >
+              <Icon name="arrow_up" className="w-3.5 h-3.5" /> Export
+            </button>
+            {showExportDropdown && (
+              <div className="absolute right-0 mt-2 w-40 bg-card border border-border-custom rounded-lg shadow-xl py-1 z-50">
+                <button onClick={() => handleExportSelect("csv")} className="w-full text-left px-4 py-2 text-xs text-muted hover:bg-elevated hover:text-white transition-colors cursor-pointer">Export as CSV</button>
+                <button onClick={() => handleExportSelect("pdf")} className="w-full text-left px-4 py-2 text-xs text-muted hover:bg-elevated hover:text-white transition-colors cursor-pointer">Export as PDF</button>
+                <button onClick={() => handleExportSelect("html")} className="w-full text-left px-4 py-2 text-xs text-muted hover:bg-elevated hover:text-white transition-colors cursor-pointer">Export as HTML</button>
+              </div>
+            )}
+          </div>
+        </div>
+      </PageHeader>
 
         {/* Filters + Action Header bar */}
         <div className="bg-sidebar border-b border-border-custom px-6 py-4 flex flex-col gap-4 shrink-0">
@@ -999,7 +1026,7 @@ export default function DynamicReportViewPage() {
                   {/* Segment 5 */}
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-xs font-semibold">
-                      <span className="text-emerald-400">5. Client Confirmed / Won</span>
+                      <span className="text-success">5. Client Confirmed / Won</span>
                       <span className="text-white">{wonLeads} Leads ({wonPct}% conversion)</span>
                     </div>
                     <div className="h-9 bg-gradient-to-r from-emerald-500 to-sky-500 rounded-lg flex items-center px-4 shadow-lg shadow-emerald-500/10 hover:opacity-95 transition-opacity min-w-[75px]" style={{ width: `${Math.max(wonPct, 8)}%` }}>
@@ -1033,8 +1060,8 @@ export default function DynamicReportViewPage() {
               groups[cc] = (groups[cc] || 0) + (Number(p.amount) || 0);
             });
             const entries = Object.entries(groups).sort((a, b) => b[1] - a[1]);
-            const colors = ["bg-sky-500", "bg-cyan-500", "bg-teal-500", "bg-emerald-500", "bg-blue-500"];
-            const textColors = ["text-sky-400", "text-cyan-400", "text-teal-400", "text-emerald-400", "text-blue-400"];
+            const colors = ["bg-sky-500", "bg-cyan-500", "bg-teal-500", "bg-success", "bg-info"];
+            const textColors = ["text-sky-400", "text-cyan-400", "text-teal-400", "text-success", "text-info"];
 
             return (
               <div className="max-w-4xl mx-auto bg-card border border-border-custom rounded-xl p-8 space-y-8">
@@ -1155,9 +1182,7 @@ export default function DynamicReportViewPage() {
           })() : (
             /* STANDARD DATA TABLE */
             loading ? (
-              <div className="min-w-full overflow-x-auto rounded-xl border border-border-custom bg-card p-10 text-center text-muted text-sm">
-                Loading…
-              </div>
+              <TableSkeleton rows={8} cols={meta.columns.length || 6} />
             ) : (
               <div className="min-w-full overflow-x-auto rounded-xl border border-border-custom bg-card">
                 <table className="w-full text-xs">

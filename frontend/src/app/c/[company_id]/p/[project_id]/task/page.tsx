@@ -3,6 +3,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { getApi, authHeaders } from "@/lib/siteflow";
+import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
+import { TableSkeleton } from "@/components/ui/Skeleton";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 type Task = {
   id: string;
@@ -129,13 +133,13 @@ export default function TaskPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-foreground">Tasks &amp; Schedule</h1>
-        <p className="text-sm text-muted">
-          Delay and Forecast End are computed live from start/end dates and actual progress — no estimates faked.
-        </p>
-      </div>
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <PageHeader
+        title="Tasks & Schedule"
+        subtitle="Delay and Forecast End are computed live from start/end dates and actual progress — no estimates faked."
+      />
+      <div className="flex-1 overflow-y-auto">
+        <PageShell width="wide">
 
       {/* Gantt timeline */}
       <div className="rounded-lg border border-border-custom bg-card p-4">
@@ -164,7 +168,7 @@ export default function TaskPage() {
         })}
         {rows.length > 0 && (
           <div className="relative h-0.5 bg-border-custom mt-1">
-            <div className="absolute -top-1 w-0.5 h-3 bg-rose-500" style={{ right: `${todayPct}%` }} title="Today" />
+            <div className="absolute -top-1 w-0.5 h-3 bg-danger" style={{ right: `${todayPct}%` }} title="Today" />
           </div>
         )}
       </div>
@@ -183,9 +187,22 @@ export default function TaskPage() {
             </tr>
           </thead>
           <tbody>
-            {loading && <tr><td colSpan={6} className="px-4 py-8 text-center text-muted">Loading…</td></tr>}
+            {loading && (
+              <tr>
+                <td colSpan={6} className="p-4">
+                  <TableSkeleton rows={5} cols={6} />
+                </td>
+              </tr>
+            )}
             {!loading && rows.length === 0 && (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-muted">No tasks for this project.</td></tr>
+              <tr>
+                <td colSpan={6} className="p-8">
+                  <EmptyState
+                    title="No tasks for this project"
+                    description="Create tasks and milestones in project planning to monitor schedule variance."
+                  />
+                </td>
+              </tr>
             )}
             {!loading && rows.map((r) => (
               <tr key={r.task.id} className="border-t border-border-custom hover:bg-elevated/50">
@@ -204,10 +221,10 @@ export default function TaskPage() {
                     />
                   </div>
                 </td>
-                <td className={`px-4 py-3 text-right font-semibold ${r.delayDays > 0 ? "text-rose-500" : "text-emerald-500"}`}>
+                <td className={`px-4 py-3 text-right font-semibold ${r.delayDays > 0 ? "text-danger" : "text-success"}`}>
                   {r.delayDays > 0 ? `${r.delayDays}d behind` : r.task.status === "completed" ? "—" : "On track"}
                 </td>
-                <td className={`px-4 py-3 whitespace-nowrap ${r.forecast === "Insufficient data" ? "text-amber-500 italic" : "text-foreground"}`}>
+                <td className={`px-4 py-3 whitespace-nowrap ${r.forecast === "Insufficient data" ? "text-warning italic" : "text-foreground"}`}>
                   {r.forecast}
                 </td>
                 <td className="px-4 py-3 text-muted">{r.task.status}</td>
@@ -215,6 +232,8 @@ export default function TaskPage() {
             ))}
           </tbody>
         </table>
+        </div>
+      </PageShell>
       </div>
     </div>
   );

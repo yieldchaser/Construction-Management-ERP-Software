@@ -8,6 +8,8 @@ import { useProject } from "@/context/ProjectContext";
 import Icon, { type IconName } from "@/components/marketing/Icon";
 
 import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
+import SegmentedTabs from "@/components/ui/Tabs";
 
 interface Task {
   id: string;
@@ -485,35 +487,31 @@ export default function GanttSchedulerPage() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      <PageShell width="wide">
+      <PageHeader
+        title="Project Scheduler & WBS"
+        subtitle="Work breakdown structure, milestone baselines and 14-day lookahead"
+      />
 
-      {/* Main Workspace Frame */}
-      <main className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <header className="h-14 border-b border-border-custom px-6 flex items-center justify-between bg-card shrink-0">
-          <div className="flex items-center gap-3">
-            <h1 className="text-sm font-bold text-foreground">Project Scheduler & WBS</h1>
-          </div>
-        </header>
+      {/* Top bar with Navigation */}
+      <div className="px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto">
+        <SegmentedTabs
+          tabs={[
+            { id: "wbs", label: "WBS Tasks", icon: <Icon name="clipboard" className="w-3.5 h-3.5" /> },
+            { id: "milestones", label: "Milestones", icon: <Icon name="flag_checkered" className="w-3.5 h-3.5" /> },
+            { id: "baseline", label: "Baseline", icon: <Icon name="bar_chart" className="w-3.5 h-3.5" /> },
+            { id: "lookahead", label: "14-Day Lookahead", icon: <Icon name="calendar" className="w-3.5 h-3.5" /> },
+          ]}
+          activeTab={mainTab}
+          onChange={(t) => setMainTab(t as any)}
+        />
+      </div>
 
-        <div className="flex items-center gap-1 px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto">
-          {([
-            { key: "wbs", label: "WBS Tasks", icon: "clipboard" },
-            { key: "milestones", label: "Milestones", icon: "flag_checkered" },
-            { key: "baseline", label: "Baseline", icon: "bar_chart" },
-            { key: "lookahead", label: "14-Day Lookahead", icon: "calendar" },
-          ] as { key: "wbs" | "milestones" | "baseline" | "lookahead"; label: string; icon: IconName }[]).map(t => (
-            <button key={t.key} onClick={() => setMainTab(t.key)}
-              className={`whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-all inline-flex items-center gap-1.5 ${mainTab === t.key ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-elevated"}`}>
-              <Icon name={t.icon} className="w-3.5 h-3.5" />{t.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Content Workspace */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {error && <div className="bg-red-500/15 border border-red-500/20 text-red-400 text-xs p-3 rounded-md">{error}</div>}
-          {success && <div className="bg-emerald-500/15 border border-emerald-500/20 text-emerald-400 text-xs p-3 rounded-md">{success}</div>}
+      {/* Content Workspace */}
+      <div className="flex-1 overflow-y-auto">
+        <PageShell width="wide">
+          <div className="p-6 space-y-6">
+          {error && <div className="bg-danger/10 border border-danger/20 text-danger text-xs p-3 rounded-md">{error}</div>}
+          {success && <div className="bg-success/10 border border-success/20 text-success text-xs p-3 rounded-md">{success}</div>}
 
           {/* ── MILESTONES TAB ── */}
           {mainTab === "milestones" && (
@@ -522,13 +520,13 @@ export default function GanttSchedulerPage() {
 
               {milestones.map(m => {
                 const colors = {
-                  start: "border-blue-500/30 bg-blue-500/5",
-                  handover: "border-emerald-500/30 bg-emerald-500/5",
-                  inspection: "border-amber-500/30 bg-amber-500/5",
+                  start: "border-info/20 bg-info/5",
+                  handover: "border-success/20 bg-success/5",
+                  inspection: "border-warning/20 bg-warning/5",
                   payment: "border-sky-500/30 bg-sky-500/5",
-                  critical: "border-red-500/30 bg-red-500/5",
+                  critical: "border-danger/20 bg-danger/5",
                 };
-                const statusCls = m.status === "achieved" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : m.status === "delayed" ? "bg-red-500/10 border-red-500/20 text-red-400" : "bg-zinc-700/30 border-zinc-600/20 text-muted";
+                const statusCls = m.status === "achieved" ? "bg-success/10 border-success/20 text-success" : m.status === "delayed" ? "bg-danger/10 border-danger/20 text-danger" : "bg-elevated/30 border-border-custom/20 text-muted";
                 const icon: Record<Milestone["type"], IconName> = { start: "rocket", handover: "flag_checkered", inspection: "search", payment: "money_bag", critical: "warning" };
                 return (
                   <div key={m.id} className={`flex items-start gap-4 p-4 rounded-md border ${colors[m.type]}`}>
@@ -624,9 +622,9 @@ export default function GanttSchedulerPage() {
           {mainTab === "baseline" && (
             <div className="space-y-4">
               <div className="flex items-center gap-4 text-[10px]">
-                <div className="flex items-center gap-1.5"><div className="w-10 h-2 rounded bg-blue-400/60" /> Baseline (Planned)</div>
-                <div className="flex items-center gap-1.5"><div className="w-10 h-2 rounded bg-emerald-400" /> Actual Progress</div>
-                <div className="flex items-center gap-1.5"><div className="w-10 h-2 rounded bg-red-400" /> Critical Path</div>
+                <div className="flex items-center gap-1.5"><div className="w-10 h-2 rounded bg-info/10" /> Baseline (Planned)</div>
+                <div className="flex items-center gap-1.5"><div className="w-10 h-2 rounded bg-success" /> Actual Progress</div>
+                <div className="flex items-center gap-1.5"><div className="w-10 h-2 rounded bg-danger" /> Critical Path</div>
               </div>
               {tasks.map(t => {
                 const hasBaseline = !!t.baseline_start && !!t.baseline_end;
@@ -638,13 +636,13 @@ export default function GanttSchedulerPage() {
                   <div key={t.id} className="bg-input border border-border-custom rounded-md p-4 space-y-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        {t.is_critical && <span className="text-[8px] bg-red-500/10 border border-red-500/20 text-red-400 px-1.5 py-0.5 rounded font-bold">CRITICAL</span>}
+                        {t.is_critical && <span className="text-[8px] bg-danger/10 border border-danger/20 text-danger px-1.5 py-0.5 rounded font-bold">CRITICAL</span>}
                         <span className="text-xs font-semibold text-foreground">{t.name}</span>
                       </div>
                       <div className="text-right text-[10px]">
-                        {hasBaseline && delay > 0 && <span className="text-red-400 font-bold">+{delay.toFixed(0)}d delay</span>}
-                        {hasBaseline && delay === 0 && pct === 100 && <span className="text-emerald-400 font-bold">✓ On Time</span>}
-                        {pct < 100 && pct > 0 && <span className="text-amber-400 font-bold">{pct}% done</span>}
+                        {hasBaseline && delay > 0 && <span className="text-danger font-bold">+{delay.toFixed(0)}d delay</span>}
+                        {hasBaseline && delay === 0 && pct === 100 && <span className="text-success font-bold">✓ On Time</span>}
+                        {pct < 100 && pct > 0 && <span className="text-warning font-bold">{pct}% done</span>}
                         {!hasBaseline && <span className="text-muted">No baseline</span>}
                       </div>
                     </div>
@@ -652,13 +650,13 @@ export default function GanttSchedulerPage() {
                     <div className="text-[9px] text-muted">
                       Baseline: {hasBaseline ? `${fmtDate(t.baseline_start)} → ${fmtDate(t.baseline_end)}` : "not captured"}
                     </div>
-                    <div className="h-2 bg-blue-400/20 rounded-full relative overflow-hidden">
-                      <div className={`h-full rounded-full ${t.is_critical ? "bg-red-400/50" : "bg-blue-400/50"}`} style={{ width: hasBaseline ? "100%" : "0%" }} />
+                    <div className="h-2 bg-info/10 rounded-full relative overflow-hidden">
+                      <div className={`h-full rounded-full ${t.is_critical ? "bg-danger/10" : "bg-info/10"}`} style={{ width: hasBaseline ? "100%" : "0%" }} />
                     </div>
                     {/* Actual bar */}
                     <div className="text-[9px] text-muted">Actual: {fmtDate(t.start_date)} → {t.end_date ? fmtDate(t.end_date) : "Ongoing"}</div>
                     <div className="h-2 bg-elevated rounded-full overflow-hidden">
-                      <div className="h-full rounded-full bg-emerald-400" style={{ width: `${pct}%` }} />
+                      <div className="h-full rounded-full bg-success" style={{ width: `${pct}%` }} />
                     </div>
                   </div>
                 );
@@ -681,14 +679,14 @@ export default function GanttSchedulerPage() {
               </div>
               {lookahead.map(t => {
                 const pct = t.progress ?? 0;
-                const statusCls = t.status === "in_progress" ? "bg-blue-500/10 border-blue-500/20 text-blue-400" : t.status === "completed" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-zinc-700/20 border-zinc-600/20 text-muted";
+                const statusCls = t.status === "in_progress" ? "bg-info/10 border-info/20 text-info" : t.status === "completed" ? "bg-success/10 border-success/20 text-success" : "bg-elevated/20 border-border-custom/20 text-muted";
                 return (
                   <div key={t.id} className="bg-input border border-border-custom rounded-md p-4 flex items-start gap-4">
                     <div className="shrink-0 text-[9px] font-sans text-muted w-20">{fmtDate(t.start_date)}<br/>→ {fmtDate(t.end_date)}</div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-xs font-semibold text-foreground">{t.name}</span>
-                        {t.is_critical && <span className="text-[8px] bg-red-500/10 border border-red-500/20 text-red-400 px-1.5 py-0.5 rounded font-bold">CRITICAL</span>}
+                        {t.is_critical && <span className="text-[8px] bg-danger/10 border border-danger/20 text-danger px-1.5 py-0.5 rounded font-bold">CRITICAL</span>}
                         <span className={`text-[8px] px-1.5 py-0.5 rounded border font-bold ${statusCls}`}>{t.status.replace("_"," ").toUpperCase()}</span>
                       </div>
                       {t.assigned_to_name && <div className="text-[10px] text-muted">Responsible: {t.assigned_to_name}</div>}
@@ -834,29 +832,29 @@ export default function GanttSchedulerPage() {
                           {task.name}
                         </strong>
                         {task.is_critical && (
-                          <span className="text-[8px] bg-red-500/10 border border-red-500/20 text-red-400 px-1.5 py-0.5 rounded font-bold">CRITICAL</span>
+                          <span className="text-[8px] bg-danger/10 border border-danger/20 text-danger px-1.5 py-0.5 rounded font-bold">CRITICAL</span>
                         )}
                         {overdue && (
-                          <span className="text-[8px] bg-orange-500/10 border border-orange-500/20 text-orange-400 px-1.5 py-0.5 rounded font-bold">OVERDUE</span>
+                          <span className="text-[8px] bg-warning/10 border border-warning/20 text-warning px-1.5 py-0.5 rounded font-bold">OVERDUE</span>
                         )}
                         <span className={`text-[9px] px-2 py-0.5 rounded font-bold uppercase ${
-                          task.priority === "high" ? "bg-red-500/10 text-red-400" : "bg-zinc-500/10 text-muted"
+                          task.priority === "high" ? "bg-danger/10 text-danger" : "bg-elevated text-muted"
                         }`}>{task.priority}</span>
                         <span className={`text-[8px] px-1.5 py-0.5 rounded border font-bold uppercase ${
                           task.status === "completed"
-                            ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                            ? "bg-success/10 border-success/20 text-success"
                             : task.status === "not_started"
-                              ? "bg-zinc-700/20 border-zinc-600/20 text-muted"
-                              : "bg-blue-500/10 border-blue-500/20 text-blue-400"
+                              ? "bg-elevated/20 border-border-custom/20 text-muted"
+                              : "bg-info/10 border-info/20 text-info"
                         }`}>{(task.status || "").replace("_", " ")}</span>
                       </div>
                       <div className="text-[10px] text-muted">
                         Start: {fmtDate(task.start_date)} · End: {fmtDate(task.end_date)} · Duration: {task.duration_days} Days
                       </div>
                       <div className="flex items-center gap-2">
-                        <div className="h-1.5 flex-1 max-w-[240px] bg-zinc-800 rounded-full overflow-hidden">
+                        <div className="h-1.5 flex-1 max-w-[240px] bg-elevated rounded-full overflow-hidden">
                           <div
-                            className={`h-full rounded-full ${overdue ? "bg-orange-400/70" : "bg-emerald-400/60"}`}
+                            className={`h-full rounded-full ${overdue ? "bg-warning/10" : "bg-success/10"}`}
                             style={{ width: `${pct}%` }}
                           />
                         </div>
@@ -872,8 +870,9 @@ export default function GanttSchedulerPage() {
             </div>
           </div>
           </> }
-        </div>
-      </main>
+          </div>
+        </PageShell>
+      </div>
 
       {/* Task detail Drawer overlay */}
       {selectedTask && (
@@ -903,7 +902,7 @@ export default function GanttSchedulerPage() {
                     onChange={(e) => setNewTodoTitle(e.target.value)}
                     className="flex-1 bg-input border border-border-custom rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none"
                   />
-                  <button onClick={handleAddTodo} className="px-4 py-2 bg-zinc-800 border border-border-custom hover:bg-zinc-700 text-foreground rounded-lg text-xs font-bold">
+                  <button onClick={handleAddTodo} className="px-4 py-2 bg-elevated border border-border-custom hover:bg-elevated text-foreground rounded-lg text-xs font-bold">
                     + Todo
                   </button>
                 </div>
@@ -918,11 +917,11 @@ export default function GanttSchedulerPage() {
                           onChange={() => handleToggleTodo(todo.id)}
                           className="accent-primary h-3.5 w-3.5 rounded cursor-pointer"
                         />
-                        <span className={`text-xs ${todo.is_completed ? "line-through text-muted" : "text-zinc-300"}`}>
+                        <span className={`text-xs ${todo.is_completed ? "line-through text-muted" : "text-muted"}`}>
                           {todo.title}
                         </span>
                       </div>
-                      <button onClick={() => handleDeleteTodo(todo.id)} className="text-muted hover:text-red-400">✕</button>
+                      <button onClick={() => handleDeleteTodo(todo.id)} className="text-muted hover:text-danger">✕</button>
                     </div>
                   ))}
                   {todos.length === 0 && (
@@ -980,10 +979,10 @@ export default function GanttSchedulerPage() {
                     </span>
                     <span className={`text-[8px] px-1.5 py-0.5 rounded border font-bold uppercase ${
                       selectedTask.status === "completed"
-                        ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                        ? "bg-success/10 border-success/20 text-success"
                         : selectedTask.status === "not_started"
-                          ? "bg-zinc-700/20 border-zinc-600/20 text-muted"
-                          : "bg-blue-500/10 border-blue-500/20 text-blue-400"
+                          ? "bg-elevated/20 border-border-custom/20 text-muted"
+                          : "bg-info/10 border-info/20 text-info"
                     }`}>{(selectedTask.status || "").replace("_", " ")}</span>
                   </div>
                   <div className="flex gap-2">
@@ -993,7 +992,7 @@ export default function GanttSchedulerPage() {
                       value={progressQty}
                       onChange={(e) => setProgressQty(e.target.value)}
                       disabled={useTakeoff}
-                      className="flex-1 bg-input border border-border-custom rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none disabled:opacity-70 disabled:text-emerald-400 disabled:font-bold"
+                      className="flex-1 bg-input border border-border-custom rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none disabled:opacity-70 disabled:text-success disabled:font-bold"
                     />
                     <button
                       onClick={() => handleSaveComment()}
@@ -1023,8 +1022,8 @@ export default function GanttSchedulerPage() {
                     disabled={isRecording}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[10px] transition-all font-semibold ${
                       isRecording
-                        ? "bg-red-500/20 text-red-400 border-red-500/30 animate-pulse"
-                        : "bg-elevated border-border-custom text-zinc-300 hover:text-foreground"
+                        ? "bg-danger/10 text-danger border-danger/20 font-bold"
+                        : "bg-elevated border-border-custom text-muted hover:text-foreground"
                     }`}
                   >
                     <Icon name="microphone" className="w-3.5 h-3.5" /> {isRecording ? `Recording (${4 - recordingSeconds}s)...` : "Audio Memo"}
@@ -1035,10 +1034,10 @@ export default function GanttSchedulerPage() {
                   {comments.map(comm => (
                     <div key={comm.id} className="p-3 rounded-lg bg-input border border-border-custom space-y-1.5">
                       <div className="flex justify-between items-center text-[9px] text-muted">
-                        <strong className="text-zinc-300 font-bold">{comm.user_name}</strong>
+                        <strong className="text-muted font-bold">{comm.user_name}</strong>
                         <span>{new Date(comm.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                       </div>
-                      <p className="text-zinc-300 text-xs">{comm.message_text}</p>
+                      <p className="text-muted text-xs">{comm.message_text}</p>
                       
                       {comm.voice_note_url && (
                         <div className="flex items-center gap-2 p-1.5 rounded bg-elevated border border-border-custom text-[9px] text-muted font-sans">
@@ -1061,7 +1060,7 @@ export default function GanttSchedulerPage() {
                     onChange={(e) => setNewCommentText(e.target.value)}
                     className="flex-1 bg-input border border-border-custom rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none"
                   />
-                  <button onClick={() => handleSaveComment()} className="px-4 py-2 bg-elevated border border-border-custom hover:bg-elevated text-zinc-300 hover:text-foreground rounded-lg text-xs font-bold">
+                  <button onClick={() => handleSaveComment()} className="px-4 py-2 bg-elevated border border-border-custom hover:bg-elevated text-muted hover:text-foreground rounded-lg text-xs font-bold">
                     Send
                   </button>
                 </div>
@@ -1071,8 +1070,6 @@ export default function GanttSchedulerPage() {
           </div>
         </div>
       )}
-    
-      </PageShell>
     </div>
   );
 }

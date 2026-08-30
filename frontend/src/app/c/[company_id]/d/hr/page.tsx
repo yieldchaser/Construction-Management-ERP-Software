@@ -6,6 +6,11 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
 import Icon, { type IconName } from "@/components/marketing/Icon";
+import SegmentedTabs from "@/components/ui/Tabs";
+import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { CardSkeleton } from "@/components/ui/Skeleton";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -873,73 +878,48 @@ export default function HRPayrollPage() {
     }
   };
 
-  const tabClass = (t: string) =>
-    `px-4 py-2 text-xs font-bold rounded-lg transition-all ${
-      tab === t
-        ? "bg-primary/15 text-primary border border-border-custom"
-        : "text-muted hover:text-foreground hover:bg-elevated"
-    }`;
-
   const statusBadge = (s: string) => {
     const map: Record<string, string> = {
-      Present: "bg-green-500/15 text-green-400 border-green-500/20",
-      "Present (Off-Site)": "bg-yellow-500/15 text-yellow-400 border-yellow-500/20",
-      Absent: "bg-red-500/15 text-red-400 border-red-500/20",
-      "Half-Day": "bg-orange-500/15 text-orange-400 border-orange-500/20",
-      Leave: "bg-blue-500/15 text-blue-400 border-blue-500/20",
-      draft: "bg-zinc-500/15 text-muted border-zinc-500/20",
-      submitted: "bg-blue-500/15 text-blue-400 border-blue-500/20",
-      approved: "bg-green-500/15 text-green-400 border-green-500/20",
-      rejected: "bg-red-500/15 text-red-400 border-red-500/20",
-      finalized: "bg-sky-500/15 text-sky-400 border-sky-500/20",
-      paid: "bg-green-500/15 text-green-400 border-green-500/20",
+      Present: "bg-success/10 text-success border-success/20",
+      Absent: "bg-danger/10 text-danger border-danger/20",
+      "Half Day": "bg-warning/10 text-warning border-warning/20",
+      "On Leave": "bg-info/10 text-info border-info/20",
     };
-    return `inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${map[s] ?? "bg-zinc-700/30 text-muted border-zinc-700"}`;
+    return map[s] || "bg-border-custom/50 text-muted";
   };
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* ── HR sub-navigation (top tabs) ── */}
-      <div className="flex items-center gap-1 px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto">
-        {([
-          { key: "employees", label: "Employees", icon: "worker" },
-          { key: "attendance", label: "Attendance", icon: "location_pin" },
-          { key: "timesheets", label: "Timesheets", icon: "clipboard" },
-          { key: "payroll", label: "Payroll Runs", icon: "money_bag" },
-          { key: "leaves", label: "Leaves", icon: "calendar" },
-          { key: "holidays", label: "Holidays", icon: "sun" },
-        ] as { key: string; label: string; icon: IconName }[]).map(item => (
-          <button key={item.key} onClick={() => setTab(item.key as any)}
-            className={`whitespace-nowrap inline-flex items-center px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${tab === item.key ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-elevated"}`}>
-            <Icon name={item.icon} className="w-4 h-4 mr-1.5" />{item.label}
-          </button>
-        ))}
+      <div className="px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto">
+        <SegmentedTabs
+          tabs={[
+            { id: "employees", label: "Employees", icon: <Icon name="worker" className="w-3.5 h-3.5" /> },
+            { id: "attendance", label: "Attendance", icon: <Icon name="location_pin" className="w-3.5 h-3.5" /> },
+            { id: "timesheets", label: "Timesheets", icon: <Icon name="clipboard" className="w-3.5 h-3.5" /> },
+            { id: "payroll", label: "Payroll Runs", icon: <Icon name="money_bag" className="w-3.5 h-3.5" /> },
+            { id: "leaves", label: "Leaves", icon: <Icon name="calendar" className="w-3.5 h-3.5" /> },
+            { id: "holidays", label: "Holidays", icon: <Icon name="sun" className="w-3.5 h-3.5" /> },
+          ]}
+          activeTab={tab}
+          onChange={(t) => setTab(t as any)}
+        />
       </div>
 
       {/* Main */}
       <main className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <header className="h-14 border-b border-border-custom px-6 flex items-center justify-between bg-sidebar shrink-0">
-          <div className="flex items-center gap-3">
-            <h1 className="text-sm font-bold text-foreground uppercase tracking-widest">
-              {tab === "employees" && "Staff Directory"}
-              {tab === "attendance" && `Daily Attendance — ${selectedDate}`}
-              {tab === "timesheets" && "Weekly Timesheets"}
-              {tab === "payroll" && "Payroll Engine"}
-              {tab === "leaves" && "Leave Management"}
-              {tab === "holidays" && "Holiday Calendar"}
-            </h1>
-          </div>
+        <PageHeader
+          title={
+            (tab === "employees" && "Staff Directory") ||
+            (tab === "attendance" && `Daily Attendance — ${selectedDate}`) ||
+            (tab === "timesheets" && "Weekly Timesheets") ||
+            (tab === "payroll" && "Payroll Engine") ||
+            (tab === "leaves" && "Leave Management") ||
+            (tab === "holidays" && "Holiday Calendar") || "HR Management"
+          }
+          subtitle="Staff Directory, Attendance & Payroll Engine"
+        >
           <div className="flex items-center gap-2">
-            {/* Theme Toggle */}
-            <button
-              onClick={toggleTheme}
-              className="flex items-center justify-center h-8 w-8 rounded-lg bg-elevated border border-border-custom text-muted hover:text-foreground transition-all cursor-pointer"
-              title="Toggle Theme"
-            >
-              <Icon name={isLightTheme ? "moon" : "sun"} className="w-4 h-4" />
-            </button>
-
             {tab === "employees" && (
               <>
                 <button onClick={() => setShowLibraryDrawer(true)}
@@ -969,9 +949,10 @@ export default function HRPayrollPage() {
               </button>
             )}
           </div>
-        </header>
+        </PageHeader>
 
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto">
+          <PageShell width="wide">
 
           {/* ── EMPLOYEES ── */}
           {tab === "employees" && (
@@ -979,10 +960,10 @@ export default function HRPayrollPage() {
               {/* Summary cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 {[
-                  { label: "Total Active", val: employees.filter(e => e.status === "active").length, color: "text-green-400" },
+                  { label: "Total Active", val: employees.filter(e => e.status === "active").length, color: "text-success" },
                   { label: "Total Monthly CTC", val: fmt(employees.reduce((a, e) => a + e.grossMonthly + e.basic * (e.pfEmployerPct ?? 12) / 100, 0)), color: "text-primary" },
                   { label: "Departments", val: new Set(employees.map(e => e.department)).size, color: "text-secondary" },
-                  { label: "PF Enrolled", val: employees.length, color: "text-blue-400" },
+                  { label: "PF Enrolled", val: employees.length, color: "text-info" },
                 ].map(({ label, val, color }) => (
                   <div key={label} className="bg-card border border-border-custom rounded-md p-4">
                     <p className="text-[10px] text-muted uppercase font-bold tracking-wider mb-1">{label}</p>
@@ -1006,15 +987,15 @@ export default function HRPayrollPage() {
                       <tr key={emp.id} className="hover:bg-elevated transition-colors cursor-pointer" onClick={() => { setSelectedEmpDetail(emp); setShowDetailsDrawer(true); }}>
                         <td className="px-3 py-2.5 font-sans text-muted">{emp.code}</td>
                         <td className="px-3 py-2.5 font-semibold text-foreground">{emp.name}</td>
-                        <td className="px-3 py-2.5 text-zinc-300">{emp.designation}</td>
+                        <td className="px-3 py-2.5 text-muted">{emp.designation}</td>
                         <td className="px-3 py-2.5 text-muted">{emp.department}</td>
-                        <td className="px-3 py-2.5 text-zinc-300">{fmt(emp.basic)}</td>
-                        <td className="px-3 py-2.5 text-zinc-300">{fmt(emp.hra)}</td>
-                        <td className="px-3 py-2.5 text-zinc-300">{fmt(emp.allowances)}</td>
-                        <td className="px-3 py-2.5 font-bold text-green-400">{fmt(emp.grossMonthly)}</td>
+                        <td className="px-3 py-2.5 text-muted">{fmt(emp.basic)}</td>
+                        <td className="px-3 py-2.5 text-muted">{fmt(emp.hra)}</td>
+                        <td className="px-3 py-2.5 text-muted">{fmt(emp.allowances)}</td>
+                        <td className="px-3 py-2.5 font-bold text-success">{fmt(emp.grossMonthly)}</td>
                         <td className="px-3 py-2.5 text-muted">{emp.pfPct}%</td>
                         <td className="px-3 py-2.5">
-                          <span className={emp.esiApplicable ? "text-green-400" : "text-muted"}>
+                          <span className={emp.esiApplicable ? "text-success" : "text-muted"}>
                             {emp.esiApplicable ? "Yes" : "N/A"}
                           </span>
                         </td>
@@ -1036,9 +1017,9 @@ export default function HRPayrollPage() {
               {/* Geofence overview */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-2">
                 {[
-                  { label: "Present Today", val: attendance.filter(a => a.status.startsWith("Present")).length, color: "text-green-400" },
-                  { label: "Within Geofence", val: attendance.filter(a => a.withinGeofence).length, color: "text-blue-400" },
-                  { label: "Off-Site", val: attendance.filter(a => !a.withinGeofence).length, color: "text-yellow-400" },
+                  { label: "Present Today", val: attendance.filter(a => a.status.startsWith("Present")).length, color: "text-success" },
+                  { label: "Within Geofence", val: attendance.filter(a => a.withinGeofence).length, color: "text-info" },
+                  { label: "Off-Site", val: attendance.filter(a => !a.withinGeofence).length, color: "text-warning" },
                   { label: "Overtime Hours", val: attendance.reduce((a, r) => a + (r.overtime ?? 0), 0).toFixed(1) + " hrs", color: "text-primary" },
                 ].map(({ label, val, color }) => (
                   <div key={label} className="bg-card border border-border-custom rounded-md p-4">
@@ -1065,17 +1046,17 @@ export default function HRPayrollPage() {
                       return (
                         <tr key={rec.id} className="hover:bg-elevated transition-colors">
                           <td className="px-3 py-3 font-semibold text-foreground">{empName}</td>
-                          <td className="px-3 py-3 font-sans text-green-400">{rec.punchIn || "—"}</td>
-                          <td className="px-3 py-3 font-sans text-muted">{rec.punchOut || <span className="text-yellow-500 animate-pulse">Active</span>}</td>
+                          <td className="px-3 py-3 font-sans text-success">{rec.punchIn || "—"}</td>
+                          <td className="px-3 py-3 font-sans text-muted">{rec.punchOut || <span className="text-warning font-semibold">Active</span>}</td>
                           <td className="px-3 py-3 text-foreground font-bold">{rec.hoursWorked != null && rec.hoursWorked > 0 ? `${rec.hoursWorked}h` : "—"}</td>
-                          <td className="px-3 py-3 text-orange-400">{rec.overtime != null && rec.overtime > 0 ? `+${rec.overtime.toFixed(2)}h` : "—"}</td>
+                          <td className="px-3 py-3 text-warning">{rec.overtime != null && rec.overtime > 0 ? `+${rec.overtime.toFixed(2)}h` : "—"}</td>
                           <td className="px-3 py-3 text-muted">
                             {rec.distanceFromSite != null ? `${rec.distanceFromSite}m` : "—"}
                           </td>
                           <td className="px-3 py-3">
                             {rec.withinGeofence
-                              ? <span className="flex items-center gap-1 text-green-400 font-bold"><span className="h-1.5 w-1.5 rounded-full bg-green-400 inline-block" />Inside</span>
-                              : <span className="flex items-center gap-1 text-yellow-400 font-bold"><span className="h-1.5 w-1.5 rounded-full bg-yellow-400 inline-block" />Outside</span>}
+                              ? <span className="flex items-center gap-1 text-success font-bold"><span className="h-1.5 w-1.5 rounded-full bg-success inline-block" />Inside</span>
+                              : <span className="flex items-center gap-1 text-warning font-bold"><span className="h-1.5 w-1.5 rounded-full bg-warning inline-block" />Outside</span>}
                           </td>
                           <td className="px-3 py-3"><span className={statusBadge(rec.status)}>{rec.status}</span></td>
                         </tr>
@@ -1131,14 +1112,14 @@ export default function HRPayrollPage() {
                       <tr key={ts.id} className="hover:bg-elevated transition-colors">
                         <td className="px-4 py-3 font-semibold text-foreground">{ts.employeeName}</td>
                         <td className="px-4 py-3 text-muted">{ts.weekStart} → {ts.weekEnd}</td>
-                        <td className="px-4 py-3 font-bold text-blue-400">{ts.totalHours}h</td>
+                        <td className="px-4 py-3 font-bold text-info">{ts.totalHours}h</td>
                         <td className="px-4 py-3"><span className={statusBadge(ts.status)}>{ts.status}</span></td>
                         <td className="px-4 py-3">
                           <div className="flex gap-2">
                             {ts.status === "draft" && (
                               <button
                                 onClick={() => handleTimesheetAction(ts.id, "submit")}
-                                className="text-[10px] px-2 py-1 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20"
+                                className="text-[10px] px-2 py-1 rounded bg-info/10 text-info border border-info/20 hover:bg-info/10"
                               >
                                 Submit
                               </button>
@@ -1146,7 +1127,7 @@ export default function HRPayrollPage() {
                             {ts.status === "submitted" && (
                               <button
                                 onClick={() => handleTimesheetAction(ts.id, "approve")}
-                                className="text-[10px] px-2 py-1 rounded bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500/20"
+                                className="text-[10px] px-2 py-1 rounded bg-success/10 text-success border border-success/20 hover:bg-success/10"
                               >
                                 Approve
                               </button>
@@ -1199,12 +1180,12 @@ export default function HRPayrollPage() {
                           <tr key={log.id} className="hover:bg-elevated transition-colors">
                             <td className="px-4 py-3 font-sans text-muted">{formattedDate}</td>
                             <td className="px-4 py-3 font-semibold text-foreground">{log.employee_name || "—"}</td>
-                            <td className="px-4 py-3 font-sans text-green-400">{fmtTime(log.start_time)}</td>
+                            <td className="px-4 py-3 font-sans text-success">{fmtTime(log.start_time)}</td>
                             <td className="px-4 py-3 font-sans text-muted">{fmtTime(log.end_time)}</td>
                             <td className="px-4 py-3 text-foreground font-semibold font-sans">{durationStr}</td>
-                            <td className="px-4 py-3 font-bold text-blue-400 font-sans">{log.hours}h</td>
+                            <td className="px-4 py-3 font-bold text-info font-sans">{log.hours}h</td>
                             <td className="px-4 py-3">
-                              <span className="px-2 py-0.5 rounded bg-elevated border border-border-custom text-[10px] text-zinc-300">
+                              <span className="px-2 py-0.5 rounded bg-elevated border border-border-custom text-[10px] text-muted">
                                 {taskName}
                               </span>
                             </td>
@@ -1392,8 +1373,8 @@ export default function HRPayrollPage() {
                   {/* Summary */}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {[
-                      { label: "Total Gross", val: fmt(payrollRun.totalGross), color: "text-green-400" },
-                      { label: "Total Deductions", val: fmt(payrollRun.totalDeductions), color: "text-red-400" },
+                      { label: "Total Gross", val: fmt(payrollRun.totalGross), color: "text-success" },
+                      { label: "Total Deductions", val: fmt(payrollRun.totalDeductions), color: "text-danger" },
                       { label: "Net Payable", val: fmt(payrollRun.totalNet), color: "text-primary" },
                     ].map(({ label, val, color }) => (
                       <div key={label} className="bg-card border border-border-custom rounded-md p-5">
@@ -1413,7 +1394,7 @@ export default function HRPayrollPage() {
                           <button
                             onClick={handleExportPayrollToSheets}
                             disabled={gsExporting}
-                            className="text-[10px] px-3 py-1.5 rounded-lg bg-green-500/15 text-green-400 border border-green-500/20 font-bold hover:bg-green-500/25 transition-all disabled:opacity-60"
+                            className="text-[10px] px-3 py-1.5 rounded-lg bg-success/10 text-success border border-success/20 font-bold hover:bg-success/10 transition-all disabled:opacity-60"
                           >
                             {gsExporting ? "Exporting..." : "Export to Google Sheets"}
                           </button>
@@ -1443,13 +1424,13 @@ export default function HRPayrollPage() {
                               <div className="font-semibold text-foreground">{p.employeeName}</div>
                               <div className="text-[10px] text-muted">{p.designation}</div>
                             </td>
-                            <td className="px-3 py-3 text-zinc-300">{p.daysPresent}/{p.daysInMonth}</td>
-                            <td className="px-3 py-3 font-bold text-green-400">{fmt(p.gross)}</td>
+                            <td className="px-3 py-3 text-muted">{p.daysPresent}/{p.daysInMonth}</td>
+                            <td className="px-3 py-3 font-bold text-success">{fmt(p.gross)}</td>
                             <td className="px-3 py-3 text-muted">{fmt(p.pfEmployee)}</td>
                             <td className="px-3 py-3 text-muted">{fmt(p.pfEmployer)}</td>
                             <td className="px-3 py-3 text-muted">{p.esiEmployee > 0 ? fmt(p.esiEmployee) : <span className="text-muted">N/A</span>}</td>
                             <td className="px-3 py-3 text-muted">{p.tds > 0 ? fmt(p.tds) : "—"}</td>
-                            <td className="px-3 py-3 text-red-400 font-bold">{fmt(p.totalDeductions)}</td>
+                            <td className="px-3 py-3 text-danger font-bold">{fmt(p.totalDeductions)}</td>
                             <td className="px-3 py-3 font-bold text-primary text-sm">{fmt(p.netPayable)}</td>
                             <td className="px-3 py-3">
                               <button className="text-[10px] px-2 py-1 rounded bg-elevated text-muted border border-border-custom hover:bg-elevated">Payslip</button>
@@ -1484,18 +1465,20 @@ export default function HRPayrollPage() {
 
               {/* Leave Balances Grid */}
               {leaveBalLoading ? (
-                <div className="bg-card border border-border-custom rounded-md p-8 text-center text-muted text-xs">
-                  Loading leave balances...
+                <div className="bg-card border border-border-custom rounded-md p-6">
+                  <CardSkeleton />
                 </div>
               ) : leaveBalances.length === 0 ? (
-                <div className="bg-card border border-border-custom rounded-md p-8 text-center text-muted text-xs">
-                  No active employees found for this company. Add staff from the Employees tab to see per-employee leave balances.
-                </div>
+                <EmptyState
+                  title="No active employees found"
+                  description="Add staff from the Employees tab to track per-employee leave balances."
+                  action={{ label: "Go to Staff Directory", onClick: () => setTab("employees") }}
+                />
               ) : !leaveBalInfo.company_has_templates ? (
-                <div className="bg-card border border-border-custom rounded-md p-8 text-center text-xs">
-                  <p className="text-muted">No leave templates are configured for this company, so entitlements cannot be computed yet.</p>
-                  <p className="text-primary font-bold mt-2">Set up a leave template (HR settings) to assign Casual / Sick / Earned entitlements per employee.</p>
-                </div>
+                <EmptyState
+                  title="No leave templates configured"
+                  description="Set up a leave template in Settings to assign Casual, Sick, and Earned leave entitlements."
+                />
               ) : (
                 <div className="bg-card border border-border-custom rounded-md overflow-hidden">
                   <div className="px-4 py-3 border-b border-border-custom flex items-center justify-between">
@@ -1513,15 +1496,15 @@ export default function HRPayrollPage() {
                         <th className="px-4 py-3 font-semibold text-center">Template</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-border-custom text-zinc-300">
+                    <tbody className="divide-y divide-border-custom text-muted">
                       {leaveBalances.map((row) => {
                         const cell = (b: LeaveTypeBalance) => (
                           <span className="font-sans">
                             <span className="text-muted">{b.entitled}</span>
                             <span className="text-muted"> / </span>
-                            <span className="text-amber-400">{b.used}</span>
+                            <span className="text-warning">{b.used}</span>
                             <span className="text-muted"> / </span>
-                            <span className={b.balance < 0 ? "text-red-400 font-bold" : "text-green-400 font-bold"}>{b.balance}</span>
+                            <span className={b.balance < 0 ? "text-danger font-bold" : "text-success font-bold"}>{b.balance}</span>
                           </span>
                         );
                         return (
@@ -1533,9 +1516,9 @@ export default function HRPayrollPage() {
                             <td className="px-4 py-3 text-center">{cell(row.earned)}</td>
                             <td className="px-4 py-3 text-center">
                               <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                                row.template_source === "assigned" ? "bg-green-500/10 border-green-500/20 text-green-400" :
-                                row.template_source === "company_default" ? "bg-blue-500/10 border-blue-500/20 text-blue-400" :
-                                "bg-zinc-500/10 border-zinc-500/20 text-muted"
+                                row.template_source === "assigned" ? "bg-success/10 border-success/20 text-success" :
+                                row.template_source === "company_default" ? "bg-info/10 border-info/20 text-info" :
+                                "bg-elevated border-border-custom text-muted"
                               }`}>
                                 {row.template_source === "assigned" ? "Assigned" : row.template_source === "company_default" ? "Company default" : "None"}
                               </span>
@@ -1564,13 +1547,13 @@ export default function HRPayrollPage() {
                       <th className="px-4 py-3 text-right font-semibold">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border-custom text-zinc-300">
+                  <tbody className="divide-y divide-border-custom text-muted">
                     {leaves.map((leave) => (
                       <tr key={leave.id} className="hover:bg-elevated transition-all">
                         <td className="px-4 py-3 font-bold text-foreground">{leave.employeeName}</td>
                         <td className="px-4 py-3">
                           <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                            leave.leaveType === "Sick" ? "bg-amber-500/10 border border-amber-500/20 text-amber-400" : "bg-primary/10 border border-primary/20 text-primary"
+                            leave.leaveType === "Sick" ? "bg-warning/10 border border-warning/20 text-warning" : "bg-primary/10 border border-primary/20 text-primary"
                           }`}>{leave.leaveType}</span>
                         </td>
                         <td className="px-4 py-3">
@@ -1580,20 +1563,20 @@ export default function HRPayrollPage() {
                         <td className="px-4 py-3 text-muted max-w-xs truncate">{leave.reason}</td>
                         <td className="px-4 py-3">
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                            leave.status === "Approved" ? "bg-green-500/10 border-green-500/20 text-green-400" :
-                            leave.status === "Rejected" ? "bg-red-500/10 border-red-500/20 text-red-400" :
-                            "bg-amber-500/10 border-amber-500/20 text-amber-400"
+                            leave.status === "Approved" ? "bg-success/10 border-success/20 text-success" :
+                            leave.status === "Rejected" ? "bg-danger/10 border-danger/20 text-danger" :
+                            "bg-warning/10 border-warning/20 text-warning"
                           }`}>{leave.status}</span>
                         </td>
                         <td className="px-4 py-3 text-right">
                           {leave.status === "Pending" && (
                             <div className="flex gap-2 justify-end">
                               <button onClick={() => handleUpdateLeaveStatus(leave.id, "Approved")}
-                                className="px-2.5 py-1 bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 text-green-400 rounded text-[10px] font-bold transition-all">
+                                className="px-2.5 py-1 bg-success/10 hover:bg-success/10 border border-success/20 text-success rounded text-[10px] font-bold transition-all">
                                 Approve
                               </button>
                               <button onClick={() => handleUpdateLeaveStatus(leave.id, "Rejected")}
-                                className="px-2.5 py-1 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded text-[10px] font-bold transition-all">
+                                className="px-2.5 py-1 bg-danger/10 hover:bg-danger/10 border border-danger/20 text-danger rounded text-[10px] font-bold transition-all">
                                 Reject
                               </button>
                             </div>
@@ -1634,7 +1617,7 @@ export default function HRPayrollPage() {
                             <td className="py-3 text-muted">{h.date}</td>
                             <td className="py-3 text-muted">{h.day}</td>
                             <td className="py-3 text-right">
-                              <button onClick={() => handleDeleteHoliday(h.id)} className="text-red-400 hover:text-red-300 text-[10px] font-bold">Delete</button>
+                              <button onClick={() => handleDeleteHoliday(h.id)} className="text-danger hover:text-danger text-[10px] font-bold">Delete</button>
                             </td>
                           </tr>
                         ))
@@ -1645,6 +1628,7 @@ export default function HRPayrollPage() {
               </div>
             </div>
           )}
+          </PageShell>
         </div>
       </main>
 
@@ -1680,8 +1664,8 @@ export default function HRPayrollPage() {
                 </div>
               ))}
               <div className="flex justify-between text-xs pt-2 border-t border-border-custom">
-                <span className="text-zinc-300 font-bold">Gross ({selectedPayslip.daysPresent}/{selectedPayslip.daysInMonth} days)</span>
-                <span className="text-green-400 font-bold">{fmt(selectedPayslip.gross)}</span>
+                <span className="text-muted font-bold">Gross ({selectedPayslip.daysPresent}/{selectedPayslip.daysInMonth} days)</span>
+                <span className="text-success font-bold">{fmt(selectedPayslip.gross)}</span>
               </div>
             </div>
 
@@ -1697,14 +1681,14 @@ export default function HRPayrollPage() {
               ].map(([label, val]) => (
                 <div key={label as string} className="flex justify-between text-xs">
                   <span className="text-muted">{label}</span>
-                  <span className={(val as number) > 0 ? "text-red-400" : "text-muted"}>
+                  <span className={(val as number) > 0 ? "text-danger" : "text-muted"}>
                     {(val as number) > 0 ? fmt(val as number) : "N/A"}
                   </span>
                 </div>
               ))}
               <div className="flex justify-between text-xs pt-2 border-t border-border-custom">
-                <span className="text-zinc-300 font-bold">Total Deductions</span>
-                <span className="text-red-400 font-bold">{fmt(selectedPayslip.totalDeductions)}</span>
+                <span className="text-muted font-bold">Total Deductions</span>
+                <span className="text-danger font-bold">{fmt(selectedPayslip.totalDeductions)}</span>
               </div>
             </div>
 

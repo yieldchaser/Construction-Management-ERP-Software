@@ -5,6 +5,10 @@ import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
 import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
+import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
+import { TableSkeleton } from "@/components/ui/Skeleton";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 interface VendorPerf {
   id: string;
@@ -43,23 +47,23 @@ export default function VendorPerformancePage() {
   return (
     <div className="flex-1 flex flex-col overflow-hidden font-sans">
       <div className="flex-1 flex flex-col overflow-hidden relative font-sans">
-        <div className="absolute top-[-10%] right-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-[0.02] blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-[-10%] left-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-[0.02] blur-[120px] pointer-events-none" />
+        <PageHeader
+          title="Vendor Performance"
+          subtitle="On-time delivery · GRN history · Quality issues"
+        >
+          <button onClick={fetchData} className="px-3.5 py-1.5 rounded-md border border-border-custom text-xs font-bold hover:bg-elevated cursor-pointer">Refresh</button>
+        </PageHeader>
 
-        <div className="border-b border-border-custom bg-background px-6 py-3.5 flex items-center justify-between z-10">
-          <div>
-            <h1 className="text-sm font-bold text-foreground uppercase tracking-wider">Vendor Performance</h1>
-            <p className="text-[10px] text-muted">On-time delivery · GRN history · Quality issues</p>
-          </div>
-          <button onClick={fetchData} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-elevated cursor-pointer">Refresh</button>
-        </div>
+        <div className="flex-1 overflow-y-auto z-10">
+          <PageShell width="wide">
+            {loading && <TableSkeleton rows={5} cols={7} />}
 
-        <div className="flex-1 overflow-y-auto p-6 z-10">
-          {loading && <div className="flex items-center justify-center h-48 text-muted text-xs">Loading...</div>}
-
-          {!loading && vendors.length === 0 && (
-            <div className="flex items-center justify-center h-48 text-muted text-xs">No vendor performance data yet. Data is auto-calculated from PO and GRN history.</div>
-          )}
+            {!loading && vendors.length === 0 && (
+              <EmptyState
+                title="No vendor performance data yet"
+                description="Performance metrics are auto-calculated from purchase order and goods receipt note history."
+              />
+            )}
 
           {!loading && vendors.length > 0 && (
             <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
@@ -79,15 +83,15 @@ export default function VendorPerformancePage() {
                   <tbody>
                     {vendors.map((v) => {
                       const otp = parseFloat(onTimePct(v));
-                      const rating = otp >= 90 ? "text-green-400" : otp >= 70 ? "text-amber-400" : "text-red-400";
+                      const rating = otp >= 90 ? "text-success" : otp >= 70 ? "text-warning" : "text-danger";
                       return (
                         <tr key={v.id} className="border-b border-border-custom hover:bg-elevated transition-all">
                           <td className="px-5 py-3.5 text-foreground font-semibold">{v.vendor_name}</td>
-                          <td className="px-5 py-3.5 text-right font-sans text-zinc-300">{v.total_pos}</td>
-                          <td className="px-5 py-3.5 text-right font-sans text-zinc-300">{v.total_grns}</td>
+                          <td className="px-5 py-3.5 text-right font-sans text-muted">{v.total_pos}</td>
+                          <td className="px-5 py-3.5 text-right font-sans text-muted">{v.total_grns}</td>
                           <td className="px-5 py-3.5 text-right font-sans text-primary">{otp}%</td>
                           <td className="px-5 py-3.5 text-right font-sans text-muted">{v.avg_delay_days.toFixed(1)}</td>
-                          <td className="px-5 py-3.5 text-right font-sans text-red-400">{v.quality_issues}</td>
+                          <td className="px-5 py-3.5 text-right font-sans text-danger">{v.quality_issues}</td>
                           <td className="px-5 py-3.5 text-center">
                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${rating} border-current/20`}>
                               {otp >= 90 ? "A" : otp >= 70 ? "B" : "C"}
@@ -101,6 +105,7 @@ export default function VendorPerformancePage() {
               </div>
             </div>
           )}
+          </PageShell>
         </div>
       </div>
     </div>

@@ -7,6 +7,10 @@ import Link from "next/link";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
 import Icon from "@/components/marketing/Icon";
+import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
+import { CardSkeleton } from "@/components/ui/Skeleton";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 interface ClientReport {
   id: string;
@@ -131,24 +135,22 @@ export default function ClientReportsPage() {
 
       {/* Main Workspace */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="border-b border-border-custom bg-background px-6 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-sm font-bold text-foreground">Client Progress Reports</h1>
-            <p className="text-[10px] text-muted">
-              Compile WBS milestones, subcontractor billing audits, and quality control indicators.
-            </p>
-          </div>
+        <PageHeader
+          title="Client Progress Reports"
+          subtitle="Compile WBS milestones, subcontractor billing audits, and quality control indicators."
+        >
           <button
             onClick={() => setIsOpen(true)}
-            className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-xs font-bold text-white hover:opacity-90 transition-all shadow-lg shadow-primary/20"
+            className="flex items-center gap-2 rounded-md bg-primary px-3.5 py-1.5 text-xs font-bold text-white hover:opacity-90 transition-all shadow-md shadow-primary/20 cursor-pointer"
           >
             + Generate Progress Report
           </button>
-        </div>
+        </PageHeader>
+
+        <PageShell width="full" className="p-0 space-y-0 h-full flex flex-col overflow-hidden">
 
         {isOffline && (
-          <div className="px-6 py-2.5 bg-amber-500/10 border-b border-amber-500/20 text-amber-400 text-xs">
+          <div className="px-6 py-2.5 bg-warning/10 border-b border-warning/20 text-warning text-xs">
             Using demo reports — backend connection unavailable
           </div>
         )}
@@ -162,9 +164,12 @@ export default function ClientReportsPage() {
             </h2>
 
             {loading ? (
-              <div className="text-xs text-muted text-center py-10">Loading reports...</div>
+              <CardSkeleton />
             ) : reports.length === 0 ? (
-              <div className="text-xs text-muted text-center py-10">No reports generated yet</div>
+              <EmptyState
+                title="No reports generated yet"
+                description="Compile WBS milestones, subcontractor billing audits, and quality control indicators."
+              />
             ) : (
               reports.map((report) => (
                 <div
@@ -183,8 +188,8 @@ export default function ClientReportsPage() {
                     <span
                       className={`text-[9px] px-2 py-0.5 rounded-full shrink-0 font-bold ${
                         report.is_approved
-                          ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                          : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                          ? "bg-success/10 text-success border border-success/20"
+                          : "bg-warning/10 text-warning border border-warning/20"
                       }`}
                     >
                       {report.is_approved ? "Approved" : "Draft"}
@@ -216,7 +221,7 @@ export default function ClientReportsPage() {
                     {!selectedReport.is_approved && (
                       <button
                         onClick={() => handleApproveReport(selectedReport.id)}
-                        className="rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-4 py-2 text-xs font-bold transition-all"
+                        className="rounded-md bg-success/10 hover:bg-success/10 text-success border border-success/20 px-4 py-2 text-xs font-bold transition-all"
                       >
                         ✓ Approve for Client Portal
                       </button>
@@ -265,6 +270,7 @@ export default function ClientReportsPage() {
             )}
           </div>
         </div>
+        </PageShell>
       </div>
 
       {/* Generate Report Dialog Modal */}
@@ -284,7 +290,7 @@ export default function ClientReportsPage() {
             </div>
             <form onSubmit={handleGenerateReport} className="p-5 space-y-4">
               {error && (
-                <div className="p-3 text-xs bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg">
+                <div className="p-3 text-xs bg-danger/10 border border-danger/20 text-danger rounded-lg">
                   {error}
                 </div>
               )}

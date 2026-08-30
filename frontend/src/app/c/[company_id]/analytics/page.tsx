@@ -7,6 +7,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import PwaControls from "@/components/pwa/PwaControls";
 import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
 
 interface AnalyticsPoint {
   label: string;
@@ -309,19 +310,16 @@ export default function CompanyAnalyticsPage() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
+      <PageHeader
+        title="Advanced Analytics Dashboard"
+        subtitle="Cross-project KPI view for burn rate, progress cadence, labour productivity, and procurement leakage"
+      >
+        <div className="w-full max-w-xs">
+          <PwaControls />
+        </div>
+      </PageHeader>
       <main className="flex-1 overflow-y-auto">
         <PageShell width="wide">
-          <header className="flex flex-col gap-4 border-b border-border-custom bg-card px-6 py-5 rounded-lg lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-foreground">Advanced Analytics Dashboard</h1>
-              <p className="mt-2 max-w-3xl text-sm text-muted">
-                Cross-project KPI view for burn rate, progress cadence, labour productivity, procurement leakage, and subcontractor performance.
-              </p>
-            </div>
-            <div className="w-full max-w-md">
-              <PwaControls />
-            </div>
-          </header>
 
           <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             {[
@@ -335,7 +333,7 @@ export default function CompanyAnalyticsPage() {
                 label: "Burn Rate",
                 value: data ? (data.burn_rate_pct == null ? "—" : `${data.burn_rate_pct}%`) : "—",
                 hint: data && data.burn_rate_pct == null ? "No budget set — not tracked" : "Company-wide budget consumption",
-                tone: "text-emerald-400",
+                tone: "text-success",
               },
               {
                 label: "Labour Productivity",
@@ -347,7 +345,7 @@ export default function CompanyAnalyticsPage() {
                 label: "Material Wastage",
                 value: data ? (data.material_wastage.wastage_pct == null ? "—" : `${data.material_wastage.wastage_pct}%`) : "—",
                 hint: "Ordered vs consumed from procurement",
-                tone: "text-amber-400",
+                tone: "text-warning",
               },
             ].map((card) => (
               <div key={card.label} className="bg-card border border-border-custom rounded-lg p-5">
@@ -491,7 +489,7 @@ export default function CompanyAnalyticsPage() {
                         </td>
                         <td className="px-4 py-3 text-right text-muted">{formatCurrency(project.budget)}</td>
                         <td className="px-4 py-3 text-right text-muted">{formatCurrency(project.spend)}</td>
-                        <td className={`px-4 py-3 text-right font-semibold ${project.variance >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                        <td className={`px-4 py-3 text-right font-semibold ${project.variance >= 0 ? "text-success" : "text-danger"}`}>
                           {formatCurrency(project.variance)}
                         </td>
                         <td className="px-4 py-3 text-right text-foreground">{project.completion_pct}%</td>
@@ -536,7 +534,7 @@ export default function CompanyAnalyticsPage() {
                     </div>
                     <div className="mt-2 h-2 rounded-full bg-elevated">
                       <div
-                        className="h-2 rounded-full bg-emerald-500"
+                        className="h-2 rounded-full bg-success"
                         style={{
                           width: data ? `${Math.min((data.material_wastage.consumed_qty / Math.max(data.material_wastage.ordered_qty, 1)) * 100, 100)}%` : "0%",
                         }}
@@ -544,10 +542,10 @@ export default function CompanyAnalyticsPage() {
                     </div>
                   </div>
                   <div className="text-xs text-muted">
-                    Wastage: <span className="font-semibold text-amber-400">{data?.material_wastage.wastage_pct == null ? "—" : `${data.material_wastage.wastage_pct}%`}</span>
+                    Wastage: <span className="font-semibold text-warning">{data?.material_wastage.wastage_pct == null ? "—" : `${data.material_wastage.wastage_pct}%`}</span>
                   </div>
                   {data && data.material_reconciliation.some((row) => row.over_consumed) ? (
-                    <div className="rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-xs font-semibold text-red-300">
+                    <div className="rounded-lg border border-danger/40 bg-danger/10 p-3 text-xs font-semibold text-danger">
                       Over-consumed {data.material_reconciliation.filter((row) => row.over_consumed).length} material line(s): consumption exceeds the ordered quantity.
                     </div>
                   ) : null}
@@ -582,8 +580,8 @@ export default function CompanyAnalyticsPage() {
                         {row.project_names.length > 0 ? row.project_names.join(", ") : "No linked projects"}
                       </td>
                       <td className="px-4 py-3 text-right text-muted">{row.bill_count}</td>
-                      <td className="px-4 py-3 text-right font-semibold text-emerald-400">{row.on_time_rate}%</td>
-                      <td className="px-4 py-3 text-right text-rose-400">{row.ncr_count}</td>
+                      <td className="px-4 py-3 text-right font-semibold text-success">{row.on_time_rate}%</td>
+                      <td className="px-4 py-3 text-right text-danger">{row.ncr_count}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -10,10 +10,12 @@ import { getApiHost } from "@/lib/api";
 
 interface PageHeaderProps {
   title: string;
+  subtitle?: React.ReactNode;
+  breadcrumbs?: { label: string; href?: string }[];
   children?: React.ReactNode;
 }
 
-export default function PageHeader({ title, children }: PageHeaderProps) {
+export default function PageHeader({ title, subtitle, breadcrumbs, children }: PageHeaderProps) {
   const router = useRouter();
   const params = useParams();
   const { toggleMobile } = useSidebar();
@@ -61,19 +63,38 @@ export default function PageHeader({ title, children }: PageHeaderProps) {
   };
 
   return (
-    <header className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-border-custom bg-card flex justify-between items-center shrink-0">
-      <div className="flex items-center gap-3">
+    <header className="px-4 sm:px-6 py-3 border-b border-border-custom bg-card flex justify-between items-center shrink-0">
+      <div className="flex items-center gap-3 min-w-0">
         <button
           type="button"
           onClick={toggleMobile}
-          className="lg:hidden p-1.5 rounded-md bg-elevated text-foreground hover:text-primary transition-colors cursor-pointer"
+          className="lg:hidden p-1.5 rounded-md bg-elevated text-foreground hover:text-primary transition-colors cursor-pointer shrink-0"
           aria-label="Toggle navigation drawer"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
-        <h1 className="text-base sm:text-lg font-semibold text-foreground truncate">{title}</h1>
+        <div className="min-w-0">
+          {breadcrumbs && breadcrumbs.length > 0 && (
+            <nav className="flex items-center gap-1.5 text-[11px] text-muted mb-0.5">
+              {breadcrumbs.map((b, i) => (
+                <React.Fragment key={i}>
+                  {i > 0 && <span>/</span>}
+                  {b.href ? (
+                    <Link href={b.href} className="hover:text-foreground transition-colors">
+                      {b.label}
+                    </Link>
+                  ) : (
+                    <span className="text-foreground">{b.label}</span>
+                  )}
+                </React.Fragment>
+              ))}
+            </nav>
+          )}
+          <h1 className="text-sm font-bold text-foreground truncate">{title}</h1>
+          {subtitle && <div className="text-[10px] text-muted truncate mt-0.5">{subtitle}</div>}
+        </div>
       </div>
 
       <div className="flex items-center gap-4">

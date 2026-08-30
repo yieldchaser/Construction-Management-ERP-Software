@@ -4,6 +4,10 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { getApi, authHeaders, downloadWithAuth, fmtINR } from "@/lib/siteflow";
 import { useCompanySettings } from "@/context/CompanySettingsContext";
+import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
+import { TableSkeleton } from "@/components/ui/Skeleton";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type BOQDocument = {
@@ -364,26 +368,27 @@ export default function BoqTab() {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Header */}
-      <header className="h-14 border-b border-border-custom bg-card px-6 flex items-center justify-between shrink-0">
-        <div>
-          <h1 className="text-sm font-bold text-foreground">BOQ Documents</h1>
-          <div className="text-[10px] text-muted">
+      <PageHeader
+        title="BOQ Documents"
+        subtitle={
+          <span>
             {docs.length} BOQ document(s) · Total BOQ Value{" "}
             <span className="text-primary font-semibold">
               {fmtINR(docs.reduce((s, d) => s + d.boq_value, 0), currencyDecimalPlaces)}
             </span>
-          </div>
-        </div>
+          </span>
+        }
+      >
         <button
           onClick={() => {
             setShowAdd(true);
             loadClients();
           }}
-          className="px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:opacity-90 transition-all"
+          className="px-3.5 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:opacity-90 transition-all cursor-pointer"
         >
           + BOQ
         </button>
-      </header>
+      </PageHeader>
 
       {/* Search */}
       <div className="px-5 py-3 border-b border-border-custom shrink-0">
@@ -397,15 +402,18 @@ export default function BoqTab() {
 
       {/* Body */}
       <div className="flex-1 overflow-auto">
-        {loading ? (
-          <div className="p-10 text-center text-muted text-xs">Loading BOQ documents…</div>
-        ) : error ? (
-          <div className="p-10 text-center text-rose-400 text-xs">{error}</div>
-        ) : filteredDocs.length === 0 ? (
-          <div className="p-10 text-center text-muted text-xs">
-            No BOQ documents yet. Click <span className="text-primary font-bold">+ BOQ</span> to create one per client.
-          </div>
-        ) : (
+        <PageShell width="wide">
+          {loading ? (
+            <TableSkeleton rows={5} cols={8} />
+          ) : error ? (
+            <div className="p-10 text-center text-danger text-xs">{error}</div>
+          ) : filteredDocs.length === 0 ? (
+            <EmptyState
+              title="No BOQ documents yet"
+              description="Click '+ BOQ' to create one per client."
+              action={{ label: "+ BOQ", onClick: () => { setShowAdd(true); loadClients(); } }}
+            />
+          ) : (
           <table className="w-full text-xs text-left border-collapse">
             <thead className="sticky top-0 z-10 bg-background">
               <tr className="border-b border-border-custom text-muted font-bold uppercase tracking-wider text-[9px]">
@@ -442,7 +450,7 @@ export default function BoqTab() {
                         </span>
                         <div className="mt-1 h-1 w-16 bg-elevated rounded-full overflow-hidden mx-auto">
                           <div
-                            className="h-full bg-amber-500 rounded-full"
+                            className="h-full bg-warning rounded-full"
                             style={{ width: `${milestonePct}%` }}
                           />
                         </div>
@@ -454,7 +462,7 @@ export default function BoqTab() {
                         <div className="mt-1 h-1 w-20 bg-elevated rounded-full overflow-hidden ml-auto">
                           <div
                             className={`h-full rounded-full ${
-                              pct >= 100 ? "bg-emerald-500" : pct > 0 ? "bg-blue-500" : "bg-zinc-600"
+                              pct >= 100 ? "bg-success" : pct > 0 ? "bg-info" : "bg-elevated"
                             }`}
                             style={{ width: `${pct}%` }}
                           />
@@ -463,7 +471,7 @@ export default function BoqTab() {
                       <td className="py-3 px-2 text-right font-sans text-muted">
                         {fmtINR(d.boq_value, currencyDecimalPlaces)}
                       </td>
-                      <td className="py-3 px-2 text-right font-sans font-semibold text-emerald-400">
+                      <td className="py-3 px-2 text-right font-sans font-semibold text-success">
                         {fmtINR(d.billed_value, currencyDecimalPlaces)}
                       </td>
                       <td className="py-3 pr-5 text-center text-muted">
@@ -529,7 +537,7 @@ export default function BoqTab() {
                             {importNotice && (
                               <span
                                 className={`text-[10px] ${
-                                  importNotice.tone === "warn" ? "text-amber-500" : "text-emerald-400"
+                                  importNotice.tone === "warn" ? "text-warning" : "text-success"
                                 }`}
                               >
                                 {importNotice.text}
@@ -546,7 +554,7 @@ export default function BoqTab() {
                             >
                               {showInlineRow ? "Cancel" : "+ Add Item"}
                             </button>
-                            {inlineError && <span className="text-[10px] text-rose-400">{inlineError}</span>}
+                            {inlineError && <span className="text-[10px] text-danger">{inlineError}</span>}
                           </div>
                           {showInlineRow && (
                             <div className="mb-4 p-3 bg-card border border-border-custom rounded-lg space-y-2" onClick={(e) => e.stopPropagation()}>
@@ -656,7 +664,8 @@ export default function BoqTab() {
               })}
             </tbody>
           </table>
-        )}
+          )}
+        </PageShell>
       </div>
 
       {/* Add BOQ modal */}

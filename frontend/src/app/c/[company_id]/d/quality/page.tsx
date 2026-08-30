@@ -5,6 +5,9 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
 import Icon, { type IconName } from "@/components/marketing/Icon";
+import SegmentedTabs from "@/components/ui/Tabs";
+import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -72,19 +75,19 @@ interface LabTest {
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const severityColors: Record<string, string> = {
-  Critical: "bg-red-500/15 text-red-400 border-red-500/25",
-  Major: "bg-orange-500/15 text-orange-400 border-orange-500/25",
-  Minor: "bg-yellow-500/15 text-yellow-400 border-yellow-500/25",
+  Critical: "bg-danger/10 text-danger border-danger/25",
+  Major: "bg-warning/10 text-warning border-warning/25",
+  Minor: "bg-warning/10 text-warning border-warning/25",
 };
 
 const statusColors: Record<string, string> = {
-  open: "bg-red-500/10 text-red-400 border-red-500/20",
-  under_review: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-  closed: "bg-green-500/10 text-green-400 border-green-500/20",
-  pass: "bg-green-500/10 text-green-400 border-green-500/20",
-  fail: "bg-red-500/10 text-red-400 border-red-500/20",
-  partial: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
-  pending: "bg-zinc-500/10 text-muted border-zinc-500/20",
+  open: "bg-danger/10 text-danger border-danger/20",
+  under_review: "bg-info/10 text-info border-info/20",
+  closed: "bg-success/10 text-success border-success/20",
+  pass: "bg-success/10 text-success border-success/20",
+  fail: "bg-danger/10 text-danger border-danger/20",
+  partial: "bg-warning/10 text-warning border-warning/20",
+  pending: "bg-elevated text-muted border-border-custom",
 };
 
 const badge = (label: string, cls: string) => (
@@ -439,60 +442,55 @@ isCode: cl.is_code_reference || "—",
     return matchesSearch && matchesInspector && matchesStatus;
   });
 
-  const tabBtn = (key: typeof tab, label: string) => (
-    <button onClick={() => setTab(key)}
-      className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${tab === key ? "bg-primary/15 text-primary border border-border-custom" : "text-muted hover:text-foreground hover:bg-elevated"}`}>
-      {label}
-    </button>
-  );
-
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Main */}
       <main className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-14 border-b border-border-custom px-6 flex items-center justify-between bg-card shrink-0">
-          <h1 className="text-sm font-bold text-foreground uppercase tracking-widest">
-            {tab === "inspections" && "Site Inspections"}
-            {tab === "checklists" && "IS-Code Checklist Library"}
-            {tab === "ncr" && "Non-Conformance Reports (NCR)"}
-            {tab === "labtests" && "Material Lab Tests"}
-          </h1>
+        <PageHeader
+          title={
+            (tab === "inspections" && "Site Inspections") ||
+            (tab === "checklists" && "IS-Code Checklist Library") ||
+            (tab === "ncr" && "Non-Conformance Reports (NCR)") ||
+            (tab === "labtests" && "Material Lab Tests") || "Quality Control & Assurance"
+          }
+          subtitle="Site inspections, checklists, NCR tracker and lab test logs"
+        >
           <div>
             {tab === "ncr" && (
               <button onClick={() => setShowNCRForm(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-all">
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-all shadow-md cursor-pointer">
                 + Raise NCR
               </button>
             )}
             {tab === "inspections" && (
-              <button onClick={() => setShowInspForm(true)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-all cursor-pointer">
+              <button onClick={() => setShowInspForm(true)} className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-all shadow-md cursor-pointer">
                 + New Inspection
               </button>
             )}
           </div>
-        </header>
+        </PageHeader>
 
-        <div className="flex items-center gap-1 px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto">
-          {([
-            { key: "inspections", icon: "search", label: "Inspections" },
-            { key: "checklists", icon: "clipboard", label: "Checklists" },
-            { key: "ncr", icon: "siren", label: "NCR Tracker" },
-            { key: "labtests", icon: "test_tube", label: "Lab Tests" },
-          ] as { key: "inspections" | "checklists" | "ncr" | "labtests"; icon: IconName; label: string }[]).map(({ key, icon, label }) => (
-            <button key={key} onClick={() => setTab(key)}
-              className={`whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-all inline-flex items-center gap-1.5 ${tab === key ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-elevated"}`}>
-              <Icon name={icon} className="w-3.5 h-3.5" />{label}
-            </button>
-          ))}
+        <div className="px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto">
+          <SegmentedTabs
+            tabs={[
+              { id: "inspections", icon: <Icon name="search" className="w-3.5 h-3.5" />, label: "Inspections" },
+              { id: "checklists", icon: <Icon name="clipboard" className="w-3.5 h-3.5" />, label: "Checklists" },
+              { id: "ncr", icon: <Icon name="siren" className="w-3.5 h-3.5" />, label: "NCR Tracker" },
+              { id: "labtests", icon: <Icon name="test_tube" className="w-3.5 h-3.5" />, label: "Lab Tests" },
+            ]}
+            activeTab={tab}
+            onChange={(t) => setTab(t as any)}
+          />
         </div>
 
         {isOffline && (
-          <div className="px-6 py-2.5 bg-amber-500/10 border-b border-amber-500/20 text-amber-400 text-xs">
+          <div className="px-6 py-2.5 bg-warning/10 border-b border-warning/20 text-warning text-xs">
             Using demo quality data — backend connection unavailable
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto">
+          <PageShell width="wide">
 
           {/* ── INSPECTIONS ─────────────────────────────────────────────────── */}
           {tab === "inspections" && (
@@ -501,9 +499,9 @@ isCode: cl.is_code_reference || "—",
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                 {[
                   { label: "Total Inspections", val: inspections.length, color: "text-foreground" },
-                  { label: "All Pass", val: inspections.filter(i => i.status === "pass").length, color: "text-green-400" },
-                  { label: "Partial", val: inspections.filter(i => i.status === "partial").length, color: "text-yellow-400" },
-                  { label: "Fail", val: inspections.filter(i => i.status === "fail").length, color: "text-red-400" },
+                  { label: "All Pass", val: inspections.filter(i => i.status === "pass").length, color: "text-success" },
+                  { label: "Partial", val: inspections.filter(i => i.status === "partial").length, color: "text-warning" },
+                  { label: "Fail", val: inspections.filter(i => i.status === "fail").length, color: "text-danger" },
                 ].map(({ label, val, color }) => (
                   <div key={label} className="bg-card border border-border-custom rounded-md p-4">
                     <p className="text-[10px] text-muted uppercase font-bold tracking-wider mb-1">{label}</p>
@@ -588,7 +586,7 @@ isCode: cl.is_code_reference || "—",
                           return (
                             <tr key={insp.id} className="border-b border-border-custom hover:bg-elevated transition-all">
                               <td className="px-5 py-3 font-bold text-foreground">{insp.zone}</td>
-                              <td className="px-5 py-3 text-zinc-200">{insp.checklist}</td>
+                              <td className="px-5 py-3 text-foreground">{insp.checklist}</td>
                               <td className="px-5 py-3 text-muted">{insp.date}</td>
                               <td className="px-5 py-3 text-muted">{insp.inspector}</td>
                               <td className="px-5 py-3">
@@ -597,9 +595,9 @@ isCode: cl.is_code_reference || "—",
                                     <div className="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-full" style={{ width: `${rate}%` }} />
                                   </div>
                                   <div className="text-[10px] text-muted whitespace-nowrap">
-                                    <span className="text-green-400 font-bold">✓ {insp.passCount}</span>
+                                    <span className="text-success font-bold">✓ {insp.passCount}</span>
                                     <span className="mx-1">/</span>
-                                    <span className="text-red-400 font-bold">✕ {insp.failCount}</span>
+                                    <span className="text-danger font-bold">✕ {insp.failCount}</span>
                                   </div>
                                 </div>
                               </td>
@@ -632,7 +630,7 @@ isCode: cl.is_code_reference || "—",
                     <div>
                       <p className="font-bold text-foreground">{cl.title}</p>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[10px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full font-bold">{cl.category}</span>
+                        <span className="text-[10px] bg-info/10 text-info border border-info/20 px-2 py-0.5 rounded-full font-bold">{cl.category}</span>
                         <span className="text-[10px] bg-sky-500/10 text-sky-400 border border-sky-500/20 px-2 py-0.5 rounded-full font-bold">{cl.isCode}</span>
                         <span className="text-[10px] text-muted">{cl.items.length} items</span>
                       </div>
@@ -659,11 +657,11 @@ isCode: cl.is_code_reference || "—",
                       {cl.items.map(item => (
                         <tr key={item.id} className="hover:bg-elevated">
                           <td className="px-4 py-2.5 text-muted font-sans">{item.sequence}</td>
-                          <td className="px-4 py-2.5 text-zinc-200">{item.description}</td>
+                          <td className="px-4 py-2.5 text-foreground">{item.description}</td>
                           <td className="px-4 py-2.5 text-muted">{item.criteria}</td>
                           <td className="px-4 py-2.5">
                             {item.mandatory
-                              ? <span className="text-red-400 font-bold text-[10px]">MANDATORY</span>
+                              ? <span className="text-danger font-bold text-[10px]">MANDATORY</span>
                               : <span className="text-muted text-[10px]">Optional</span>}
                           </td>
                         </tr>
@@ -681,12 +679,12 @@ isCode: cl.is_code_reference || "—",
               {/* Open */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="h-2 w-2 rounded-full bg-red-400" />
-                  <span className="text-xs font-bold text-zinc-300 uppercase tracking-wider">Open</span>
+                  <div className="h-2 w-2 rounded-full bg-danger" />
+                  <span className="text-xs font-bold text-muted uppercase tracking-wider">Open</span>
                   <span className="ml-auto text-xs text-muted">{openNCRs.length}</span>
                 </div>
                 {openNCRs.map(ncr => (
-                  <div key={ncr.id} className="bg-card border border-red-500/10 rounded-md p-4 space-y-2">
+                  <div key={ncr.id} className="bg-card border border-danger/10 rounded-md p-4 space-y-2">
                     <div className="flex items-center justify-between">
                       {badge(ncr.severity, severityColors[ncr.severity])}
                       <span className="text-[10px] text-muted font-sans">{ncr.number}</span>
@@ -694,7 +692,7 @@ isCode: cl.is_code_reference || "—",
                     <p className="text-xs font-semibold text-foreground leading-snug">{ncr.title}</p>
                     <p className="text-[10px] text-muted">{ncr.zone} · Due {ncr.dueDate}</p>
                     <button onClick={() => moveNCR(ncr.id, "under_review")}
-                      className="w-full text-[10px] py-1 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 font-bold transition-all cursor-pointer">
+                      className="w-full text-[10px] py-1 rounded bg-info/10 text-info border border-info/20 hover:bg-info/10 font-bold transition-all cursor-pointer">
                       → Move to Review
                     </button>
                   </div>
@@ -704,12 +702,12 @@ isCode: cl.is_code_reference || "—",
               {/* Under Review */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="h-2 w-2 rounded-full bg-blue-400" />
-                  <span className="text-xs font-bold text-zinc-300 uppercase tracking-wider">Under Review</span>
+                  <div className="h-2 w-2 rounded-full bg-info" />
+                  <span className="text-xs font-bold text-muted uppercase tracking-wider">Under Review</span>
                   <span className="ml-auto text-xs text-muted">{reviewNCRs.length}</span>
                 </div>
                 {reviewNCRs.map(ncr => (
-                  <div key={ncr.id} className="bg-card border border-blue-500/10 rounded-md p-4 space-y-2">
+                  <div key={ncr.id} className="bg-card border border-info/10 rounded-md p-4 space-y-2">
                     <div className="flex items-center justify-between">
                       {badge(ncr.severity, severityColors[ncr.severity])}
                       <span className="text-[10px] text-muted font-sans">{ncr.number}</span>
@@ -717,7 +715,7 @@ isCode: cl.is_code_reference || "—",
                     <p className="text-xs font-semibold text-foreground leading-snug">{ncr.title}</p>
                     <p className="text-[10px] text-muted">{ncr.zone} · Due {ncr.dueDate}</p>
                     <button onClick={() => moveNCR(ncr.id, "closed")}
-                      className="w-full text-[10px] py-1 rounded bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500/20 font-bold transition-all cursor-pointer">
+                      className="w-full text-[10px] py-1 rounded bg-success/10 text-success border border-success/20 hover:bg-success/10 font-bold transition-all cursor-pointer">
                       ✓ Close NCR
                     </button>
                   </div>
@@ -727,12 +725,12 @@ isCode: cl.is_code_reference || "—",
               {/* Closed */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="h-2 w-2 rounded-full bg-green-400" />
-                  <span className="text-xs font-bold text-zinc-300 uppercase tracking-wider">Closed</span>
+                  <div className="h-2 w-2 rounded-full bg-success" />
+                  <span className="text-xs font-bold text-muted uppercase tracking-wider">Closed</span>
                   <span className="ml-auto text-xs text-muted">{closedNCRs.length}</span>
                 </div>
                 {closedNCRs.map(ncr => (
-                  <div key={ncr.id} className="bg-card border border-green-500/10 rounded-md p-4 space-y-2 opacity-70">
+                  <div key={ncr.id} className="bg-card border border-success/10 rounded-md p-4 space-y-2 opacity-70">
                     <div className="flex items-center justify-between">
                       {badge(ncr.severity, severityColors[ncr.severity])}
                       <span className="text-[10px] text-muted font-sans">{ncr.number}</span>
@@ -753,8 +751,8 @@ isCode: cl.is_code_reference || "—",
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-2">
                 {[
                   { label: "Total Tests", val: labTests.length, color: "text-foreground" },
-                  { label: "Passed", val: labTests.filter(t => t.pass === true).length, color: "text-green-400" },
-                  { label: "Failed", val: labTests.filter(t => t.pass === false).length, color: "text-red-400" },
+                  { label: "Passed", val: labTests.filter(t => t.pass === true).length, color: "text-success" },
+                  { label: "Failed", val: labTests.filter(t => t.pass === false).length, color: "text-danger" },
                   { label: "Pass Rate", val: (() => { const ev = labTests.filter(t => t.pass != null); return ev.length ? `${Math.round(ev.filter(t => t.pass).length / ev.length * 100)}%` : "0%"; })(), color: "text-primary" },
                 ].map(({ label, val, color }) => (
                   <div key={label} className="bg-card border border-border-custom rounded-md p-4">
@@ -781,11 +779,11 @@ isCode: cl.is_code_reference || "—",
                     {labTests.map(t => (
                       <tr key={t.id} className="hover:bg-elevated transition-colors">
                         <td className="px-4 py-3 font-semibold text-foreground">{t.type}</td>
-                        <td className="px-4 py-3 text-zinc-300">{t.material}</td>
+                        <td className="px-4 py-3 text-muted">{t.material}</td>
                         <td className="px-4 py-3 font-sans text-muted text-[10px]">{t.sampleRef}</td>
                         <td className="px-4 py-3 text-muted">{t.date}</td>
                         <td className="px-4 py-3">
-                          <span className={`font-bold text-sm ${t.pass == null ? "text-muted" : t.pass ? "text-green-400" : "text-red-400"}`}>
+                          <span className={`font-bold text-sm ${t.pass == null ? "text-muted" : t.pass ? "text-success" : "text-danger"}`}>
                             {t.value} {t.unit}
                           </span>
                         </td>
@@ -793,10 +791,10 @@ isCode: cl.is_code_reference || "—",
                         <td className="px-4 py-3 text-muted">{t.zone}</td>
                         <td className="px-4 py-3">
                           {t.pass == null
-                            ? <span className="flex items-center gap-1 text-muted font-bold text-[10px]"><span className="h-1.5 w-1.5 rounded-full bg-zinc-500" />Not evaluated</span>
+                            ? <span className="flex items-center gap-1 text-muted font-bold text-[10px]"><span className="h-1.5 w-1.5 rounded-full bg-elevated" />Not evaluated</span>
                             : t.pass
-                              ? <span className="flex items-center gap-1 text-green-400 font-bold text-[10px]"><span className="h-1.5 w-1.5 rounded-full bg-green-400" />PASS</span>
-                              : <span className="flex items-center gap-1 text-red-400 font-bold text-[10px]"><span className="h-1.5 w-1.5 rounded-full bg-red-400" />FAIL</span>}
+                              ? <span className="flex items-center gap-1 text-success font-bold text-[10px]"><span className="h-1.5 w-1.5 rounded-full bg-success" />PASS</span>
+                              : <span className="flex items-center gap-1 text-danger font-bold text-[10px]"><span className="h-1.5 w-1.5 rounded-full bg-danger" />FAIL</span>}
                         </td>
                       </tr>
                     ))}
@@ -805,6 +803,7 @@ isCode: cl.is_code_reference || "—",
               </div>
             </div>
           )}
+          </PageShell>
         </div>
       </main>
 
@@ -831,8 +830,8 @@ isCode: cl.is_code_reference || "—",
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-5">
               {[
-                { label: "Pass", val: selectedInspection.passCount, color: "text-green-400 bg-green-500/10 border-green-500/20" },
-                { label: "Fail", val: selectedInspection.failCount, color: "text-red-400 bg-red-500/10 border-red-500/20" },
+                { label: "Pass", val: selectedInspection.passCount, color: "text-success bg-success/10 border-success/20" },
+                { label: "Fail", val: selectedInspection.failCount, color: "text-danger bg-danger/10 border-danger/20" },
                 { label: "N/A", val: selectedInspection.naCount, color: "text-muted bg-elevated border-border-custom" },
               ].map(({ label, val, color }) => (
                 <div key={label} className={`rounded-md border p-3 text-center ${color}`}>
@@ -867,10 +866,10 @@ isCode: cl.is_code_reference || "—",
                               className={`px-2.5 py-1 text-[10px] font-bold rounded border transition-all cursor-pointer ${
                                 isSelected
                                   ? res === "Pass"
-                                    ? "bg-green-500/20 border-green-500 text-green-400"
+                                    ? "bg-success/10 border-success text-success"
                                     : res === "Fail"
-                                    ? "bg-red-500/20 border-red-500 text-red-400"
-                                    : "bg-zinc-500/20 border-zinc-500 text-muted"
+                                    ? "bg-danger/10 border-danger text-danger"
+                                    : "bg-elevated border-border-custom text-muted"
                                   : "bg-elevated border-border-custom text-muted hover:text-foreground"
                               }`}
                             >

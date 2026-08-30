@@ -5,6 +5,7 @@ import React, { useState, useEffect } from "react";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
 import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
 
@@ -166,32 +167,31 @@ export default function ThreeWayPage() {
   const autoVariance = selectedPo && selectedBill ? selectedBill.total_payable - selectedPo.total_amount : 0;
 
   const statusColors: Record<string, string> = {
-    matched: "bg-emerald-500/10 text-emerald-400",
-    mismatch: "bg-red-500/10 text-red-400",
-    pending: "bg-amber-500/10 text-amber-400",
-    approved: "bg-blue-500/10 text-blue-400",
-    rejected: "bg-red-500/10 text-red-400",
+    matched: "bg-success/10 text-success",
+    mismatch: "bg-danger/10 text-danger",
+    pending: "bg-warning/10 text-warning",
+    approved: "bg-info/10 text-info",
+    rejected: "bg-danger/10 text-danger",
   };
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
+      <PageHeader
+        title="3-Way Matching"
+        subtitle="Reconcile PO ↔ GRN ↔ Invoice automatically"
+      >
+        <button
+          onClick={() => { setShowModal(true); setMessage(""); }}
+          className="px-3.5 py-1.5 bg-primary hover:bg-primary/90 text-white rounded-md text-xs font-semibold transition-all cursor-pointer"
+        >
+          + New Match
+        </button>
+      </PageHeader>
       <div className="flex-1 overflow-y-auto">
         <PageShell width="wide">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">3-Way Matching</h1>
-            <p className="text-muted mt-1">Reconcile PO ↔ GRN ↔ Invoice automatically</p>
-          </div>
-          <button
-            onClick={() => { setShowModal(true); setMessage(""); }}
-            className="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-md text-sm font-semibold transition-all cursor-pointer"
-          >
-            New Match
-          </button>
-        </div>
 
         {message && (
-          <div className={`mb-6 p-4 rounded-md ${message.includes("success") || message.includes("approved") || message.includes("rejected") ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}>
+          <div className={`mb-6 p-4 rounded-md ${message.includes("success") || message.includes("approved") || message.includes("rejected") ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}>
             {message}
           </div>
         )}
@@ -232,7 +232,7 @@ export default function ThreeWayPage() {
                     <td className="px-6 py-4">{m.grn_number || m.grn_id.slice(0, 8)}</td>
                     <td className="px-6 py-4">{fmtINR(m.po_amount)}</td>
                     <td className="px-6 py-4">{fmtINR(m.invoiced_amount)}</td>
-                    <td className={`px-6 py-4 font-medium ${Number(m.variance_amount) < 0 ? "text-red-400" : Number(m.variance_amount) > 0 ? "text-amber-400" : "text-emerald-400"}`}>
+                    <td className={`px-6 py-4 font-medium ${Number(m.variance_amount) < 0 ? "text-danger" : Number(m.variance_amount) > 0 ? "text-warning" : "text-success"}`}>
                       {fmtINR(m.variance_amount)}
                     </td>
                     <td className="px-6 py-4">
@@ -243,8 +243,8 @@ export default function ThreeWayPage() {
                     <td className="px-6 py-4 flex gap-2">
                       {m.match_status === "pending" && (
                         <>
-                          <button onClick={() => handleApprove(m.id)} className="px-3 py-1 bg-emerald-500/10 text-emerald-400 rounded-lg text-xs font-medium hover:bg-emerald-500/20 transition-all">Approve</button>
-                          <button onClick={() => handleReject(m.id)} className="px-3 py-1 bg-red-500/10 text-red-400 rounded-lg text-xs font-medium hover:bg-red-500/20 transition-all">Reject</button>
+                          <button onClick={() => handleApprove(m.id)} className="px-3 py-1 bg-success/10 text-success rounded-lg text-xs font-medium hover:bg-success/10 transition-all">Approve</button>
+                          <button onClick={() => handleReject(m.id)} className="px-3 py-1 bg-danger/10 text-danger rounded-lg text-xs font-medium hover:bg-danger/10 transition-all">Reject</button>
                         </>
                       )}
                     </td>
@@ -281,7 +281,7 @@ export default function ThreeWayPage() {
                     {bills.map((b) => <option key={b.id} value={b.id}>{b.invoice_number} — {fmtINR(b.total_payable)}</option>)}
                   </select>
                   {selectedBill && selectedPo && (
-                    <p className="text-xs text-muted mt-1">Bill Amount: {fmtINR(selectedBill.total_payable)} • PO Amount: {fmtINR(selectedPo.total_amount)} • Variance: <span className={autoVariance < 0 ? "text-red-400" : autoVariance > 0 ? "text-amber-400" : "text-emerald-400"}>{fmtINR(autoVariance)}</span></p>
+                    <p className="text-xs text-muted mt-1">Bill Amount: {fmtINR(selectedBill.total_payable)} • PO Amount: {fmtINR(selectedPo.total_amount)} • Variance: <span className={autoVariance < 0 ? "text-danger" : autoVariance > 0 ? "text-warning" : "text-success"}>{fmtINR(autoVariance)}</span></p>
                   )}
                 </div>
                 <div>

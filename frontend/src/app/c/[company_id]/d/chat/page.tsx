@@ -8,6 +8,8 @@ import { useParams } from "next/navigation";
 import Icon from "@/components/marketing/Icon";
 
 import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 interface ChatGroup {
   id: string;
@@ -322,18 +324,22 @@ export default function ChatPage() {
   const getAvatarColor = (type: string) => {
     switch (type.toLowerCase()) {
       case "site":
-        return "bg-emerald-500 text-white";
+        return "bg-success text-white";
       case "finance":
-        return "bg-purple-500 text-white";
+        return "bg-chart-4 text-white";
       case "safety":
-        return "bg-amber-500 text-white";
+        return "bg-warning text-white";
       default:
-        return "bg-blue-500 text-white";
+        return "bg-info text-white";
     }
   };
 
   return (
     <div className="flex-1 flex flex-col h-full bg-background text-foreground overflow-hidden font-sans">
+      <PageHeader
+        title="Team Chat"
+        subtitle="Internal project discussions and channel messaging"
+      />
       <div className="flex flex-1 overflow-hidden h-full">
         
         {/* Left Column: Recent Chats Sidebar */}
@@ -392,7 +398,11 @@ export default function ChatPage() {
                 </button>
               ))
             ) : projectId ? (
-              <div className="text-center py-8 text-xs text-muted">No chats found.</div>
+              <EmptyState
+                title="No chats found"
+                description="Start a conversation with project members or subconsultants."
+                className="py-8"
+              />
             ) : (
               <div className="text-center py-8 px-3 text-xs text-muted leading-relaxed">
                 No active project selected. Pick a project from the "Pinned Projects" dropdown in the sidebar to view its chats.
@@ -441,7 +451,7 @@ export default function ChatPage() {
                       <div
                         key={m.id}
                         className={`h-6 w-6 rounded-full border border-card flex items-center justify-center text-[9px] font-bold ${
-                          idx === 0 ? "bg-primary text-white" : idx === 1 ? "bg-purple-500 text-white" : "bg-emerald-500 text-white"
+                          idx === 0 ? "bg-primary text-white" : idx === 1 ? "bg-chart-4 text-white" : "bg-success text-white"
                         }`}
                       >
                         {(m.name || m.user_id).charAt(0).toUpperCase()}
@@ -498,7 +508,7 @@ export default function ChatPage() {
                           <hr className="border-border-custom/50 my-1" />
                           <button
                             onClick={handleDeleteGroup}
-                            className="w-full text-left px-4 py-2 text-xs hover:bg-red-500/10 text-red-500 font-bold"
+                            className="w-full text-left px-4 py-2 text-xs hover:bg-danger/10 text-danger font-bold"
                           >
                             Delete Group
                           </button>
@@ -834,7 +844,7 @@ export default function ChatPage() {
                         {m.role !== "admin" && (
                           <button
                             onClick={() => handleRemoveMember(m.user_id)}
-                            className="p-1 text-muted hover:text-red-500 transition-colors cursor-pointer"
+                            className="p-1 text-muted hover:text-danger transition-colors cursor-pointer"
                             title="Remove Member"
                           >
                             <Icon name="trash" className="w-3.5 h-3.5" />

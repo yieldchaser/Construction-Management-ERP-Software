@@ -4,6 +4,10 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
+import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
+import SegmentedTabs from "@/components/ui/Tabs";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 interface Project {
   id: string;
@@ -216,52 +220,38 @@ export default function ToDoPage() {
   });
 
   return (
-    <div className="flex-1 flex flex-col overflow-y-auto p-6 space-y-6 relative">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-base font-semibold text-foreground">To Do</h1>
-          <p className="text-xs text-muted mt-1">Assign, track, and complete daily tasks for site coordination.</p>
-        </div>
-
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <PageHeader
+        title="To Do"
+        subtitle="Assign, track, and complete daily tasks for site coordination."
+      >
         <button
           onClick={() => setIsNewTodoOpen(true)}
-          className="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-md text-xs font-medium shadow-sm transition-all cursor-pointer"
+          className="px-3.5 py-1.5 bg-primary hover:bg-primary-hover text-white rounded-md text-xs font-medium shadow-md transition-all cursor-pointer"
         >
           + New To Do
         </button>
-      </div>
+      </PageHeader>
+      <div className="flex-1 overflow-y-auto">
+        <PageShell width="wide">
+          <div className="space-y-6">
 
-      {loadError && (
-        <div className="rounded-md border border-amber-500/20 bg-amber-500/10 text-amber-400 text-xs px-4 py-2">
-          Could not load tasks from the server. Retry once the connection is restored.
-        </div>
-      )}
+          {loadError && (
+            <div className="rounded-md border border-warning/20 bg-warning/10 text-warning text-xs px-4 py-2">
+              Could not load tasks from the server. Retry once the connection is restored.
+            </div>
+          )}
 
-      {/* Filters */}
-      <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 mb-6">
-        <div className="flex gap-2">
-          <button
-            onClick={() => setFilterStatus("pending")}
-            className={`px-4 py-2 text-xs font-bold rounded-md border transition-all cursor-pointer ${
-              filterStatus === "pending"
-                ? "bg-primary border-primary text-white"
-                : "bg-elevated border-border-custom text-muted hover:text-foreground"
-            }`}
-          >
-            Pending
-          </button>
-          <button
-            onClick={() => setFilterStatus("completed")}
-            className={`px-4 py-2 text-xs font-bold rounded-md border transition-all cursor-pointer ${
-              filterStatus === "completed"
-                ? "bg-primary border-primary text-white"
-                : "bg-elevated border-border-custom text-muted hover:text-foreground"
-            }`}
-          >
-            Completed
-          </button>
-        </div>
+          {/* Filters */}
+          <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 mb-6">
+            <SegmentedTabs
+              tabs={[
+                { id: "pending", label: "Pending" },
+                { id: "completed", label: "Completed" },
+              ]}
+              activeTab={filterStatus}
+              onChange={(t) => setFilterStatus(t as any)}
+            />
 
         <div className="flex flex-wrap items-center gap-3">
           <select
@@ -303,10 +293,12 @@ export default function ToDoPage() {
           <tbody className="divide-y divide-border-custom">
             {filteredTodos.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-6 py-12 text-center text-muted font-semibold">
-                  {todos.length === 0
-                    ? "No tasks found. Click \"+ New To Do\" to add one."
-                    : "No tasks match the current filter."}
+                <td colSpan={7} className="p-8">
+                  <EmptyState
+                    title="No tasks found"
+                    description={todos.length === 0 ? "Get started by adding your first to do item." : "No tasks match the current filter."}
+                    action={todos.length === 0 ? { label: "New To Do", onClick: () => setIsNewTodoOpen(true) } : undefined}
+                  />
                 </td>
               </tr>
             ) : (
@@ -434,6 +426,9 @@ export default function ToDoPage() {
           </div>
         </div>
       )}
+          </div>
+        </PageShell>
+      </div>
     </div>
   );
 }

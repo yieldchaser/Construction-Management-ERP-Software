@@ -7,6 +7,8 @@ import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
 import { authHeaders, downloadWithAuth } from "@/lib/siteflow";
 import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
+import SegmentedTabs from "@/components/ui/Tabs";
 
 // Types
 interface Deduction {
@@ -518,57 +520,48 @@ export default function SubcontractorBillingPage() {
   const settledAmt = settledBills.reduce((s, b) => s + (b.totalPayable || 0), 0);
   const kpiCards = [
     { label: "Total RA Billing MTD", value: fmtINR(totalBilledMTD), sub: `${billedThisMonth.length} bill${billedThisMonth.length === 1 ? "" : "s"} this month`, color: "text-foreground" },
-    { label: "Pending Audit Approval", value: fmtINR(pendingAmt), sub: `${pendingBills.length} bill${pendingBills.length === 1 ? "" : "s"} pending`, color: "text-amber-400" },
-    { label: "Total Retentions Held", value: fmtINR(retentionHeld), sub: "Retention deductions", color: "text-blue-400" },
+    { label: "Pending Audit Approval", value: fmtINR(pendingAmt), sub: `${pendingBills.length} bill${pendingBills.length === 1 ? "" : "s"} pending`, color: "text-warning" },
+    { label: "Total Retentions Held", value: fmtINR(retentionHeld), sub: "Retention deductions", color: "text-info" },
     { label: "Net Payable Settled", value: fmtINR(settledAmt), sub: `${settledBills.length} bill${settledBills.length === 1 ? "" : "s"} paid`, color: "text-primary" }
   ];
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden font-sans">            <div className="flex items-center gap-1 px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto">
-        {[
-          { key: "ra-bills", label: "RA Bills (Subcon)" },
-          { key: "wo", label: "Work Orders" },
-          { key: "notes", label: "Debit/Credit Notes" },
-        ].map((item) => (
-          <button key={item.key} onClick={() => setTab(item.key as any)}
-            className={`whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${tab === item.key ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-elevated"}`}>
-            {item.label}
+    <div className="flex-1 flex flex-col overflow-hidden font-sans">
+      <PageHeader
+        title="Subcontractor Billing & WOs"
+        subtitle="RA Billing Engine · Post-tax & Pre-tax Retentions · TDS Auditor Logs"
+      >
+        <div className="flex items-center gap-2">
+          <select value={selectedTower} onChange={(e) => setSelectedTower(e.target.value)} className="bg-card border border-border-custom rounded-md px-2.5 py-1.5 text-xs text-foreground outline-none">
+            <option value="all">All Towers/Phases</option>
+            {towers.map((t) => <option key={t.id} value={t.id}>{t.tower_name} ({t.tower_code})</option>)}
+          </select>
+          <button
+            onClick={() => {
+              if (tab === "wo") setShowWOModal(true);
+              else setShowBillModal(true);
+            }}
+            className="flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-1.5 text-xs font-bold text-white hover:opacity-90 transition-all cursor-pointer shadow-md shadow-primary/10"
+          >
+            {tab === "wo" ? "+ Create Work Order" : "+ Submit RA Bill"}
           </button>
-        ))}
+        </div>
+      </PageHeader>
+
+      <div className="px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto">
+        <SegmentedTabs
+          tabs={[
+            { id: "ra-bills", label: "RA Bills (Subcon)" },
+            { id: "wo", label: "Work Orders" },
+            { id: "notes", label: "Debit/Credit Notes" },
+          ]}
+          activeTab={tab}
+          onChange={(t) => setTab(t as any)}
+        />
       </div>
-      
-      {/* Sidebar Navigation */}
-      
 
       {/* Main Container */}
       <div className="flex-1 flex flex-col overflow-hidden relative font-sans">
-        
-        {/* Background Glowing Rings */}
-        <div className="absolute top-[-10%] right-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-[0.02] blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-[-10%] left-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-[0.02] blur-[120px] pointer-events-none" />
-
-        {/* Top Header */}
-        <div className="border-b border-border-custom bg-background px-6 py-3.5 flex items-center justify-between z-10">
-          <div>
-            <h1 className="text-sm font-bold text-foreground uppercase tracking-wider">Subcontractor Billing & WOs</h1>
-            <p className="text-[10px] text-muted">RA Billing Engine · Post-tax & Pre-tax Retentions · TDS Auditor Logs</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <select value={selectedTower} onChange={(e) => setSelectedTower(e.target.value)} className="bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none">
-              <option value="all">All Towers/Phases</option>
-              {towers.map((t) => <option key={t.id} value={t.id}>{t.tower_name} ({t.tower_code})</option>)}
-            </select>
-            <button
-              onClick={() => {
-                if (tab === "wo") setShowWOModal(true);
-                else setShowBillModal(true);
-              }}
-              className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-xs font-bold text-white hover:opacity-90 transition-all cursor-pointer shadow-lg shadow-primary/10"
-            >
-              {tab === "wo" ? "+ Create Work Order" : "+ Submit RA Bill"}
-            </button>
-          </div>
-        </div>
 
         {/* Workspace Body */}
         <div className="flex-1 overflow-y-auto z-10">
@@ -619,10 +612,10 @@ export default function SubcontractorBillingPage() {
                             <div className="flex flex-col">
                               <span className="text-[10px] text-muted">Total: ₹{bill.gstAmount.toLocaleString()}</span>
                               {bill.cgstAmount > 0 && <>
-                                <span className="text-[10px] text-emerald-400">CGST {bill.cgstAmount.toLocaleString()}</span>
-                                <span className="text-[10px] text-emerald-400">SGST {bill.sgstAmount.toLocaleString()}</span>
+                                <span className="text-[10px] text-success">CGST {bill.cgstAmount.toLocaleString()}</span>
+                                <span className="text-[10px] text-success">SGST {bill.sgstAmount.toLocaleString()}</span>
                               </>}
-                              {bill.igstAmount > 0 && <span className="text-[10px] text-amber-400">IGST {bill.igstAmount.toLocaleString()}</span>}
+                              {bill.igstAmount > 0 && <span className="text-[10px] text-warning">IGST {bill.igstAmount.toLocaleString()}</span>}
                             </div>
                           </td>
                           <td className="px-5 py-3.5 text-muted max-w-[200px]">
@@ -657,7 +650,7 @@ export default function SubcontractorBillingPage() {
                           <tr key={p.tower_id} className="border-b border-border-custom hover:bg-elevated transition-all">
                             <td className="px-5 py-3.5 text-foreground font-semibold">{p.tower_name}</td>
                             <td className="px-5 py-3.5 text-right font-sans text-muted">₹{(p.budget || 0).toLocaleString()}</td>
-                            <td className="px-5 py-3.5 text-right font-sans text-amber-400">₹{(p.total_po_value || 0).toLocaleString()}</td>
+                            <td className="px-5 py-3.5 text-right font-sans text-warning">₹{(p.total_po_value || 0).toLocaleString()}</td>
                             <td className="px-5 py-3.5 text-right font-sans">₹{(p.total_wo_value || 0).toLocaleString()}</td>
                             <td className="px-5 py-3.5 text-right font-sans text-primary">₹{(p.total_billed || 0).toLocaleString()}</td>
                             <td className="px-5 py-3.5 text-right font-sans text-muted">₹{((p.budget || 0) - (p.total_billed || 0)).toLocaleString()}</td>
@@ -678,13 +671,13 @@ export default function SubcontractorBillingPage() {
                             <div className="flex flex-col gap-1">
                               <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
                                 isAuditApproved(bill)
-                                  ? "bg-green-500/10 text-green-400 border border-green-500/20"
-                                  : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                                  ? "bg-success/10 text-success border border-success/20"
+                                  : "bg-warning/10 text-warning border border-warning/20"
                               }`}>
                                 {isAuditApproved(bill) ? "approved" : bill.approvalFlag}
                               </span>
                               {bill.invoiceType !== "sale" && bill.matchStatus !== "approved" && (
-                                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-red-500/10 text-red-400 border border-red-500/20 w-fit">
+                                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-danger/10 text-danger border border-danger/20 w-fit">
                                   Unmatched
                                 </span>
                               )}
@@ -708,7 +701,7 @@ export default function SubcontractorBillingPage() {
                               {!isAuditApproved(bill) && (
                                 <button
                                   onClick={() => handleApproveBill(bill.id)}
-                                  className="bg-green-600 hover:bg-green-500 text-white rounded-lg px-2.5 py-1 text-[10px] font-bold transition-all cursor-pointer"
+                                  className="bg-success hover:bg-success text-white rounded-lg px-2.5 py-1 text-[10px] font-bold transition-all cursor-pointer"
                                 >
                                   ✓ Auditor Approve
                                 </button>
@@ -783,8 +776,8 @@ export default function SubcontractorBillingPage() {
                           <td className="px-5 py-3.5">
                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
                               wo.status === "Completed"
-                                ? "bg-green-500/10 text-green-400 border border-green-500/20"
-                                : "bg-blue-500/10 text-blue-400 border border-blue-500/20"
+                                ? "bg-success/10 text-success border border-success/20"
+                                : "bg-info/10 text-info border border-info/20"
                             }`}>
                               {wo.status}
                             </span>
@@ -823,15 +816,15 @@ export default function SubcontractorBillingPage() {
                         <tr key={note.id} className="border-b border-border-custom hover:bg-elevated transition-all">
                           <td className="px-5 py-3.5 font-sans text-muted">{note.id}</td>
                           <td className="px-5 py-3.5 text-foreground font-semibold">{note.subcontractor}</td>
-                          <td className={`px-5 py-3.5 font-sans font-bold ${note.type === "credit" ? "text-green-400" : "text-red-400"}`}>
+                          <td className={`px-5 py-3.5 font-sans font-bold ${note.type === "credit" ? "text-success" : "text-danger"}`}>
                             {note.type === "credit" ? "+" : "-"}${(note.amount).toLocaleString()}
                           </td>
                           <td className="px-5 py-3.5 text-muted">{note.notes}</td>
                           <td className="px-5 py-3.5">
                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
                               note.type === "credit"
-                                ? "bg-green-500/10 text-green-400 border border-green-500/20"
-                                : "bg-red-500/10 text-red-400 border border-red-500/20"
+                                ? "bg-success/10 text-success border border-success/20"
+                                : "bg-danger/10 text-danger border border-danger/20"
                             }`}>
                               {note.type.toUpperCase() + " NOTE"}
                             </span>
@@ -1142,24 +1135,24 @@ export default function SubcontractorBillingPage() {
                 
                 <div className="flex justify-between text-muted">
                   <span>TDS ({newBillTdsPct}%):</span>
-                  <span className="font-sans text-red-400">-₹{preview.tdsAmt.toLocaleString()}</span>
+                  <span className="font-sans text-danger">-₹{preview.tdsAmt.toLocaleString()}</span>
                 </div>
 
                 <div className="flex justify-between text-muted">
                   <span>Retention ({newBillRetentionPct}%):</span>
-                  <span className="font-sans text-red-400">-₹{preview.retentionAmt.toLocaleString()}</span>
+                  <span className="font-sans text-danger">-₹{preview.retentionAmt.toLocaleString()}</span>
                 </div>
 
                 {newBillAdvanceRecovery > 0 && (
                   <div className="flex justify-between text-muted">
                     <span>Advance Recovery:</span>
-                    <span className="font-sans text-red-400">-₹{newBillAdvanceRecovery.toLocaleString()}</span>
+                    <span className="font-sans text-danger">-₹{newBillAdvanceRecovery.toLocaleString()}</span>
                   </div>
                 )}
 
                 <div className="flex justify-between text-muted border-t border-border-custom pt-2">
                   <span>GST ({newBillGstPct}%):</span>
-                  <span className="font-sans text-green-400">+₹{preview.gstAmt.toLocaleString()}</span>
+                  <span className="font-sans text-success">+₹{preview.gstAmt.toLocaleString()}</span>
                 </div>
 
                 <div className="flex justify-between items-center text-foreground border-t border-border-custom pt-3 mt-1 font-extrabold text-sm">

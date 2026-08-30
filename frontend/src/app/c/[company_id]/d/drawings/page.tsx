@@ -9,6 +9,9 @@ import { authHeaders } from "@/lib/siteflow";
 import Icon, { type IconName } from "@/components/marketing/Icon";
 
 import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
+import SegmentedTabs from "@/components/ui/Tabs";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 type PinCategory = "RFI" | "Clash" | "Observation" | "Approval";
 type RevStatus = "current" | "superseded" | "locked";
@@ -48,16 +51,16 @@ interface Drawing {
 }
 
 const PIN_META: Record<PinCategory, { bg: string; text: string; ring: string; label: string }> = {
-  RFI:         { bg: "bg-amber-500",   text: "text-black",  ring: "ring-amber-400/40",   label: "RFI" },
-  Clash:       { bg: "bg-red-500",     text: "text-white",  ring: "ring-red-400/40",     label: "Clash" },
-  Observation: { bg: "bg-blue-500",    text: "text-white",  ring: "ring-blue-400/40",    label: "Obs" },
-  Approval:    { bg: "bg-emerald-500", text: "text-white",  ring: "ring-emerald-400/40", label: "Appr" },
+  RFI:         { bg: "bg-warning",   text: "text-black",  ring: "ring-warning/40",   label: "RFI" },
+  Clash:       { bg: "bg-danger",     text: "text-white",  ring: "ring-danger/40",     label: "Clash" },
+  Observation: { bg: "bg-info",    text: "text-white",  ring: "ring-info/40",    label: "Obs" },
+  Approval:    { bg: "bg-success", text: "text-white",  ring: "ring-success/40", label: "Appr" },
 };
 
 const REV_META: Record<RevStatus, { label: string; badge: string; dot: string; icon?: string; iconName?: IconName }> = {
-  current:    { label: "Current",    badge: "bg-emerald-500/10 border-emerald-500/30 text-emerald-400", dot: "bg-emerald-500", icon: "●" },
-  superseded: { label: "Superseded", badge: "bg-zinc-700/30 border-zinc-600/20 text-muted",         dot: "bg-zinc-600",   icon: "◌" },
-  locked:     { label: "Locked",     badge: "bg-amber-500/10 border-amber-500/30 text-amber-400",       dot: "bg-amber-500",  iconName: "lock" },
+  current:    { label: "Current",    badge: "bg-success/10 border-success/20 text-success", dot: "bg-success", icon: "●" },
+  superseded: { label: "Superseded", badge: "bg-elevated/30 border-border-custom/20 text-muted",         dot: "bg-elevated",   icon: "◌" },
+  locked:     { label: "Locked",     badge: "bg-warning/10 border-warning/20 text-warning",       dot: "bg-warning",  iconName: "lock" },
 };
 
 export default function DrawingsPage() {
@@ -388,45 +391,38 @@ export default function DrawingsPage() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      <PageShell width="wide">
-        <div className="flex items-center gap-1 px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto">
-        {[
-          { key: "drawings", label: "Blueprints & RFI" },
-          { key: "files", label: "Project Files" },
-        ].map((item) => (
-          <button key={item.key} onClick={() => setTab(item.key as any)}
-            className={`whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${tab === item.key ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-elevated"}`}>
-            {item.label}
+      <PageHeader
+        title={tab === "drawings" ? "Blueprint & RFI System" : "Project Files Directory"}
+        subtitle={tab === "drawings" ? "Versioned drawings · Revision locking · RFI pin overlay" : "Document storage"}
+      >
+        {tab === "drawings" && (
+          <button onClick={() => { setNewRevCode(getNextRevCode()); setNewRevComment(""); setNewRevFile(null); setShowRevModal(true); }}
+            className="px-3.5 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:opacity-90 transition-all shadow-md cursor-pointer">
+            ↑ Upload New Revision
           </button>
-        ))}
+        )}
+      </PageHeader>
+
+      <div className="px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto">
+        <SegmentedTabs
+          tabs={[
+            { id: "drawings", label: "Blueprints & RFI" },
+            { id: "files", label: "Project Files" },
+          ]}
+          activeTab={tab}
+          onChange={(t) => setTab(t as any)}
+        />
       </div>
+
       {isOffline && (
-        <div className="fixed top-4 right-4 z-50 p-4 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-lg text-xs max-w-md">
+        <div className="fixed top-4 right-4 z-50 p-4 bg-warning/10 border border-warning/20 text-warning rounded-lg text-xs max-w-md">
           Could not load drawings from the server. Retry once the connection is restored.
         </div>
       )}
-      {/* ── Sidebar ── */}
-      
 
       {/* ── Main ── */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <header className="h-14 border-b border-border-custom bg-card px-6 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-3">
-            <h1 className="text-sm font-bold text-foreground">
-              {tab === "drawings" ? "Blueprint & RFI System" : "Project Files Directory"}
-            </h1>
-            <span className="text-[10px] text-muted">
-              {tab === "drawings" ? "Versioned drawings · Revision locking · RFI pin overlay" : "Document storage"}
-            </span>
-          </div>
-          {tab === "drawings" && (
-            <button onClick={() => { setNewRevCode(getNextRevCode()); setNewRevComment(""); setNewRevFile(null); setShowRevModal(true); }}
-              className="px-4 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:opacity-90 transition-all shadow-lg">
-              ↑ Upload New Revision
-            </button>
-          )}
-        </header>
+      <div className="flex-1 overflow-y-auto">
+        <PageShell width="wide">
 
         {/* Content */}
         <div className="flex-1 overflow-hidden">
@@ -443,7 +439,7 @@ export default function DrawingsPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     {openCount > 0 && (
-                      <span className="text-[10px] px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-full font-bold">
+                      <span className="text-[10px] px-2 py-0.5 bg-warning/10 border border-warning/20 text-warning rounded-full font-bold">
                         {openCount} Open {openCount === 1 ? "Item" : "Items"}
                       </span>
                     )}
@@ -477,7 +473,7 @@ export default function DrawingsPage() {
                   {/* SUPERSEDED / LOCKED watermark */}
                   {activeRev && activeRev.status !== "current" && (
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
-                      <div className={`text-5xl font-black uppercase tracking-[0.5em] rotate-[-28deg] ${activeRev.status === "locked" ? "text-amber-400/20" : "text-muted/15"}`}>
+                      <div className={`text-5xl font-black uppercase tracking-[0.5em] rotate-[-28deg] ${activeRev.status === "locked" ? "text-warning/20" : "text-muted/15"}`}>
                         {activeRev.status === "locked" ? "LOCKED" : "SUPERSEDED"}
                       </div>
                     </div>
@@ -522,18 +518,18 @@ export default function DrawingsPage() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${m.bg} ${m.text}`}>{pin.category} #{pin.seq}</span>
-                          {pin.resolved && <span className="text-[9px] text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded">✓ Resolved</span>}
-                          {pin.photoAttached && <span className="text-[9px] text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded inline-flex items-center gap-1"><Icon name="camera" className="w-3 h-3" /> Photo</span>}
+                          {pin.resolved && <span className="text-[9px] text-success font-bold bg-success/10 px-1.5 py-0.5 rounded">✓ Resolved</span>}
+                          {pin.photoAttached && <span className="text-[9px] text-info bg-info/10 px-1.5 py-0.5 rounded inline-flex items-center gap-1"><Icon name="camera" className="w-3 h-3" /> Photo</span>}
                         </div>
                         <div className="flex items-center gap-2">
                           <button onClick={() => handleToggleResolved(pin.id)}
-                            className={`text-[10px] px-2.5 py-1 font-bold rounded-lg border transition-all ${pin.resolved ? "bg-zinc-700/30 border-zinc-600/20 text-muted hover:border-zinc-500" : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20"}`}>
+                            className={`text-[10px] px-2.5 py-1 font-bold rounded-lg border transition-all ${pin.resolved ? "bg-elevated/30 border-border-custom/20 text-muted hover:border-border-custom" : "bg-success/10 border-success/20 text-success hover:bg-success/10"}`}>
                             {pin.resolved ? "Re-open" : "✓ Mark Resolved"}
                           </button>
                           <button onClick={() => setSelectedPinId(null)} className="text-muted hover:text-foreground text-lg leading-none">×</button>
                         </div>
                       </div>
-                      <p className="text-zinc-200 leading-relaxed">{pin.comment}</p>
+                      <p className="text-foreground leading-relaxed">{pin.comment}</p>
                       <div className="text-[10px] text-muted">Logged by {pin.user} · {pin.date}</div>
                     </div>
                   );
@@ -558,7 +554,7 @@ export default function DrawingsPage() {
                           <div className="absolute left-[9px] top-5 bottom-0 w-px bg-white/5" />
                         )}
                         <div className={`absolute left-1.5 top-3.5 h-3 w-3 rounded-full border-2 transition-all ${isActive ? "bg-primary border-primary" : `${m.dot} border-border-custom`}`} />
-                        <div className={`mb-2 rounded-md p-3 border transition-all ${isActive ? "bg-primary/10 border-primary/20" : "border-transparent hover:bg-elevated"}`}>
+                        <div className={`mb-2 rounded-md p-3 border transition-all ${isActive ? "bg-elevated text-foreground font-semibold shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)] border-border-custom" : "border-transparent hover:bg-elevated"}`}>
                           <button onClick={() => { setActiveRevId(rev.id); setSelectedPinId(null); setImgLoaded(false); }} className="w-full text-left">
                             <div className="flex items-center justify-between mb-1">
                               <span className="text-xs font-extrabold text-foreground">{rev.version}</span>
@@ -571,15 +567,15 @@ export default function DrawingsPage() {
                             {rev.pins.length > 0 && (
                               <div className="flex items-center gap-2 mt-1 text-[9px]">
                                 <span className="text-muted">{rev.pins.length} pins</span>
-                                {revOpenPins > 0 && <span className="text-amber-400 font-bold">{revOpenPins} open</span>}
+                                {revOpenPins > 0 && <span className="text-warning font-bold">{revOpenPins} open</span>}
                               </div>
                             )}
-                            {rev.approvedBy && <div className="text-[9px] text-emerald-400 mt-0.5">Approved by {rev.approvedBy}</div>}
+                            {rev.approvedBy && <div className="text-[9px] text-success mt-0.5">Approved by {rev.approvedBy}</div>}
                           </button>
                           {/* Lock / Unlock for non-current revisions */}
                           {rev.status !== "current" && (
                             <button onClick={() => handleToggleLock(rev.id)}
-                              className={`mt-2 w-full text-[9px] font-bold px-2 py-1 rounded border text-left transition-all ${rev.status === "locked" ? "bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/20" : "bg-zinc-700/20 border-zinc-600/20 text-muted hover:text-amber-400 hover:border-amber-500/30"}`}>
+                              className={`mt-2 w-full text-[9px] font-bold px-2 py-1 rounded border text-left transition-all ${rev.status === "locked" ? "bg-warning/10 border-warning/20 text-warning hover:bg-warning/10" : "bg-elevated/20 border-border-custom/20 text-muted hover:text-warning hover:border-warning/20"}`}>
                               {rev.status === "locked" ? (
                                 <span className="inline-flex items-center gap-1"><Icon name="unlock" className="w-3 h-3" /> Unlock Revision</span>
                               ) : (
@@ -618,20 +614,28 @@ export default function DrawingsPage() {
           )}
 
           {tab === "drawings" && !activeDrawing && (
-            <div className="flex-1 flex items-center justify-center p-8 text-center text-muted">
-              No drawings found for this project. Use &ldquo;Upload New Revision&rdquo; to add the first one.
+            <div className="flex-1 flex items-center justify-center p-8">
+              <EmptyState
+                title="No drawings found"
+                description="Upload architectural, structural, and MEP blueprint sheets for this project."
+                action={{ label: "Upload New Revision", onClick: () => { setNewRevCode(getNextRevCode()); setNewRevComment(""); setNewRevFile(null); setShowRevModal(true); } }}
+              />
             </div>
           )}
 
           {/* ── FILES TAB ── */}
           {tab === "files" && (
-            <div className="h-full overflow-y-auto p-5 space-y-6">
-              <div className="flex-1 flex items-center justify-center p-8 text-center text-muted">
-                No project files yet. Files and site photos will appear here once uploaded.
+            <div className="h-full overflow-y-auto p-5">
+              <div className="flex-1 flex items-center justify-center p-8">
+                <EmptyState
+                  title="No project files found"
+                  description="Files and site photos will appear here once uploaded."
+                />
               </div>
             </div>
           )}
         </div>
+        </PageShell>
       </div>
 
       {/* ── Add RFI Pin Modal ── */}
@@ -670,7 +674,7 @@ export default function DrawingsPage() {
               <span className="text-muted">Attach site photo proof</span>
             </label>
             <div className="flex gap-2 justify-end border-t border-border-custom pt-3">
-              <button onClick={() => setShowPinModal(false)} className="px-4 py-2 bg-zinc-800 text-muted hover:text-foreground rounded-md text-xs">Cancel</button>
+              <button onClick={() => setShowPinModal(false)} className="px-4 py-2 bg-elevated text-muted hover:text-foreground rounded-md text-xs">Cancel</button>
               <button onClick={handleAddPin} disabled={!newPinComment.trim()}
                 className="px-5 py-2 bg-primary text-white font-bold rounded-md text-xs hover:opacity-90 disabled:opacity-40 transition-all">
                 Place Pin
@@ -697,9 +701,9 @@ export default function DrawingsPage() {
               <div className="text-[9px] uppercase tracking-wider text-muted mb-2">What will happen</div>
               {activeDrawing?.revisions.slice(0, 3).map(r => (
                 <div key={r.id} className="flex items-center gap-2 text-[10px]">
-                  <span className="text-zinc-300 font-bold w-6 shrink-0">{r.version}</span>
+                  <span className="text-muted font-bold w-6 shrink-0">{r.version}</span>
                   <span className="text-muted">→</span>
-                  <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold border ${r.status === "current" ? "bg-amber-500/10 border-amber-500/20 text-amber-400" : REV_META[r.status].badge}`}>
+                  <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold border ${r.status === "current" ? "bg-warning/10 border-warning/20 text-warning" : REV_META[r.status].badge}`}>
                     {r.status === "current" ? "Superseded on approval" : REV_META[r.status].label}
                   </span>
                 </div>
@@ -707,7 +711,7 @@ export default function DrawingsPage() {
               <div className="flex items-center gap-2 text-[10px] border-t border-border-custom pt-1.5">
                 <span className="text-foreground font-bold w-6 shrink-0">{newRevCode}</span>
                 <span className="text-muted">→</span>
-                <span className="px-1.5 py-0.5 rounded text-[8px] font-bold border bg-emerald-500/10 border-emerald-500/20 text-emerald-400">New Current</span>
+                <span className="px-1.5 py-0.5 rounded text-[8px] font-bold border bg-success/10 border-success/20 text-success">New Current</span>
               </div>
             </div>
             )}
@@ -749,7 +753,7 @@ export default function DrawingsPage() {
                 placeholder="Incorporated RFI comments, updated column grid..." />
             </div>
             <div className="flex gap-2 justify-end border-t border-border-custom pt-3">
-              <button onClick={() => setShowRevModal(false)} className="px-4 py-2 bg-zinc-800 text-muted hover:text-foreground rounded-md">Cancel</button>
+              <button onClick={() => setShowRevModal(false)} className="px-4 py-2 bg-elevated text-muted hover:text-foreground rounded-md">Cancel</button>
               <button onClick={handlePublishRevision} disabled={!newRevCode.trim() || !newRevFile || (!activeDrawing && !newDrawingName.trim())}
                 className="px-5 py-2 bg-primary text-white font-bold rounded-md hover:opacity-90 disabled:opacity-40 transition-all">
                 Publish {newRevCode}
@@ -758,8 +762,6 @@ export default function DrawingsPage() {
           </div>
         </div>
       )}
-    
-      </PageShell>
     </div>
   );
 }

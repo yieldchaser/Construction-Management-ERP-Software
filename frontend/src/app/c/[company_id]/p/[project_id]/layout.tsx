@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { getApi, authHeaders } from "@/lib/siteflow";
 import { useProject } from "@/context/ProjectContext";
+import Icon from "@/components/marketing/Icon";
 
 const TABS = [
   { label: "Dashboard", slug: "dashboard" },
@@ -197,10 +198,10 @@ export default function ProjectDetailLayout({ children }: { children: React.Reac
             <Link
               key={t.slug}
               href={href}
-              className={`whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-all ${
+              className={`whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-semibold transition-all ${
                 active
-                  ? "bg-primary/15 text-primary"
-                  : "text-muted hover:text-foreground hover:bg-elevated"
+                  ? "bg-elevated text-foreground shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)] border border-border-custom"
+                  : "text-muted hover:text-foreground hover:bg-elevated border border-transparent"
               }`}
             >
               {t.label}
@@ -213,13 +214,13 @@ export default function ProjectDetailLayout({ children }: { children: React.Reac
           <button
             type="button"
             onClick={() => setMoreOpen((o) => !o)}
-            className={`whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-all ${
+            className={`whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-semibold transition-all inline-flex items-center gap-1 cursor-pointer ${
               moreOpen
-                ? "bg-primary/15 text-primary"
-                : "text-muted hover:text-foreground hover:bg-elevated"
+                ? "bg-elevated text-foreground shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)] border border-border-custom"
+                : "text-muted hover:text-foreground hover:bg-elevated border border-transparent"
             }`}
           >
-            More ▾
+            More <Icon name="chevron_down" className="w-3.5 h-3.5" />
           </button>
           {moreOpen && (
             <>

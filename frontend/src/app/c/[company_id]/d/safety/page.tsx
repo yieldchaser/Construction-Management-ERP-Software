@@ -7,8 +7,10 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Icon, { type IconName } from '@/components/marketing/Icon';
 import PageShell from '@/components/layout/PageShell';
+import PageHeader from '@/components/PageHeader';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Skeleton, CardSkeleton } from '@/components/ui/Skeleton';
+import SegmentedTabs from '@/components/ui/Tabs';
 
 const API = `${getApiHost()}/apis/v3`;
 
@@ -244,20 +246,12 @@ export default function SafetyPage() {
   ];
   return (
     <div className="min-h-0 flex-1 flex flex-col overflow-hidden bg-background text-foreground font-sans">
+      <PageHeader
+        title="HSE / Safety Management"
+        subtitle="Incident tracking, toolbox talks & PPE compliance"
+      />
       <div className="flex-1 overflow-y-auto">
         <PageShell width="wide">
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-danger/15 border border-danger/30 flex items-center justify-center text-danger">
-              <Icon name="safety_vest" className="w-5 h-5" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-foreground">HSE / Safety Management</h1>
-              <p className="text-xs text-muted">Incident tracking, toolbox talks & PPE compliance</p>
-            </div>
-          </div>
-        </div>
 
         {/* Flash */}
         {msg && (
@@ -267,21 +261,17 @@ export default function SafetyPage() {
         )}
 
         {/* Tab Bar */}
-        <div className="flex gap-1 mb-6 bg-card border border-border-custom rounded-xl p-1">
-          {tabs.map((t, i) => (
-            <button
-              key={i}
-              onClick={() => setTab(i)}
-              className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-semibold transition-all inline-flex items-center justify-center gap-2 cursor-pointer ${
-                tab === i
-                  ? "bg-elevated text-foreground shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)]"
-                  : "text-muted hover:text-foreground"
-              }`}
-            >
-              <Icon name={t.icon} className={`w-4 h-4 ${tab === i ? "text-primary" : "text-muted"}`} />
-              {t.label}
-            </button>
-          ))}
+        <div className="mb-6">
+          <SegmentedTabs
+            tabs={tabs.map((t, i) => ({
+              id: i.toString(),
+              label: t.label,
+              icon: <Icon name={t.icon} className="w-4 h-4" />,
+            }))}
+            activeTab={tab.toString()}
+            onChange={(t) => setTab(parseInt(t, 10))}
+            className="w-full justify-start"
+          />
         </div>
 
         {/* ─── Tab 0: Incident Board ────────────────────────────────────────── */}
@@ -408,7 +398,7 @@ export default function SafetyPage() {
         <div>
           <h2 className="text-base font-semibold text-foreground mb-5">LTIF & Safety Statistics</h2>
           {!stats ? (
-            <p className="text-muted text-sm">{loading ? "Loading…" : "No data yet."}</p>
+            loading ? <CardSkeleton /> : <EmptyState title="No safety data yet" description="Record safety statistics and incidents to view safety metrics." />
           ) : (
             <>
               {/* KPI Cards */}

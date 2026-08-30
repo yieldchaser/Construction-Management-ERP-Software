@@ -4,6 +4,11 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { getApi, authHeaders } from "@/lib/siteflow";
 import Icon from "@/components/marketing/Icon";
+import SegmentedTabs from "@/components/ui/Tabs";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { CardSkeleton } from "@/components/ui/Skeleton";
+import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
 // R2-755: shared CSV guard. Quote-doubling protects the delimiter, not the
 // formula — a leading = + - @ executes when the export opens in Excel/Sheets.
 import { buildCsv } from "@/lib/csv";
@@ -405,8 +410,8 @@ export default function TeamSchedulePage() {
     const startPct = posPct(span.start);
     const endPct = posPct(span.end);
     const widthPct = Math.max(endPct - startPct, 1.5);
-    const barColor = group.unassigned ? "bg-amber-400" : "bg-emerald-500";
-    const fillColor = group.unassigned ? "bg-amber-500" : "bg-emerald-600";
+    const barColor = group.unassigned ? "bg-warning" : "bg-success";
+    const fillColor = group.unassigned ? "bg-warning" : "bg-success";
 
     const out: React.ReactElement[] = [];
     out.push(
@@ -418,7 +423,7 @@ export default function TeamSchedulePage() {
           className="w-64 shrink-0 flex items-center gap-2 px-4 py-2 border-r border-border-custom bg-background/30 cursor-pointer"
           onClick={() => toggleCollapse(group.id)}
         >
-          <span className="text-[10px] text-muted w-3">{isCollapsed ? "▶" : "▼"}</span>
+          <Icon name={isCollapsed ? "chevron_right" : "chevron_down"} className="w-3 h-3 text-muted shrink-0" />
           <div className="min-w-0">
             <div className="text-xs font-semibold text-foreground truncate" style={{ paddingLeft: depth * 10 }}>
               {group.name}
@@ -451,8 +456,8 @@ export default function TeamSchedulePage() {
           const sp = posPct(s);
           const ep = posPct(e);
           const wp = Math.max(ep - sp, 1.5);
-          const color = n.task.assigned_to ? "bg-emerald-500" : "bg-amber-400";
-          const fill = n.task.assigned_to ? "bg-emerald-600" : "bg-amber-500";
+          const color = n.task.assigned_to ? "bg-success" : "bg-warning";
+          const fill = n.task.assigned_to ? "bg-success" : "bg-warning";
           out.push(
             <div key={n.task.id} className="flex items-stretch border-b border-border-custom hover:bg-elevated/40">
               <div className="w-64 shrink-0 flex items-center gap-2 px-4 py-2 border-r border-border-custom bg-background/10">
@@ -671,34 +676,22 @@ ${tasksXml}
   };
 
   return (
-    <div className="flex-1 flex flex-col overflow-y-auto p-6 space-y-6 relative">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-2 shrink-0">
-        <div>
-          <h1 className="text-base font-semibold text-foreground">Team Schedule</h1>
-          <p className="text-xs text-muted mt-1">
-            Company-wide task rollup across all projects and party-linked time logs.
-          </p>
-        </div>
-        <div className="flex bg-elevated border border-border-custom rounded-md p-1 shrink-0">
-          <button
-            onClick={() => setActiveTab("schedule")}
-            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-              activeTab === "schedule" ? "bg-primary text-white shadow-sm" : "text-muted hover:text-foreground"
-            }`}
-          >
-            Schedule Gantt
-          </button>
-          <button
-            onClick={() => setActiveTab("timesheet")}
-            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-              activeTab === "timesheet" ? "bg-primary text-white shadow-sm" : "text-muted hover:text-foreground"
-            }`}
-          >
-            Timesheet
-          </button>
-        </div>
-      </div>
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <PageHeader
+        title="Team Schedule"
+        subtitle="Company-wide task rollup across all projects and party-linked time logs."
+      >
+        <SegmentedTabs
+          tabs={[
+            { id: "schedule", label: "Schedule Gantt" },
+            { id: "timesheet", label: "Timesheet" },
+          ]}
+          activeTab={activeTab}
+          onChange={(t) => setActiveTab(t as any)}
+        />
+      </PageHeader>
+      <div className="flex-1 overflow-y-auto">
+        <PageShell width="wide">
 
       {/* ───────── Schedule sub-tab ───────── */}
       {activeTab === "schedule" && (
@@ -805,10 +798,10 @@ ${tasksXml}
           {/* Legend */}
           <div className="px-4 py-2 flex items-center gap-4 text-[10px] border-b border-border-custom bg-background/30">
             <div className="flex items-center gap-1.5">
-              <div className="w-4 h-3 rounded bg-amber-400" /> Unassigned
+              <div className="w-4 h-3 rounded bg-warning" /> Unassigned
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-4 h-3 rounded bg-emerald-500" /> Assigned
+              <div className="w-4 h-3 rounded bg-success" /> Assigned
             </div>
             <span className="text-muted ml-auto">{filteredTasks.length} tasks</span>
           </div>
@@ -816,10 +809,15 @@ ${tasksXml}
           {/* Gantt */}
           <div className="flex-1 overflow-auto">
             {loadingTasks ? (
-              <div className="p-10 text-center text-sm text-muted">Loading schedule…</div>
+              <div className="p-8">
+                <CardSkeleton />
+              </div>
             ) : filteredTasks.length === 0 ? (
-              <div className="p-10 text-center text-sm text-muted">
-                No tasks found for the selected filters.
+              <div className="p-8">
+                <EmptyState
+                  title="No tasks found"
+                  description="No tasks found for the selected filters."
+                />
               </div>
             ) : (
               <div style={{ minWidth: periods.length * cellW }}>
@@ -991,7 +989,7 @@ ${tasksXml}
                       <td className="px-5 py-3 text-right">
                         <button
                           onClick={() => handleDeleteTimesheet(ts.id)}
-                          className="text-muted hover:text-rose-400 text-[11px] cursor-pointer"
+                          className="text-muted hover:text-danger text-[11px] cursor-pointer"
                         >
                           Delete
                         </button>
@@ -1081,7 +1079,7 @@ ${tasksXml}
 
               <div className="space-y-1">
                 <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">
-                  Project <span className="text-rose-400">*</span>
+                  Project <span className="text-danger">*</span>
                 </label>
                 <select
                   value={tsProjectId}
@@ -1180,12 +1178,14 @@ ${tasksXml}
                 {tsSaving ? "Saving…" : "Save Timesheet"}
               </button>
               {tsFormError && (
-                <p className="text-xs text-rose-500 mt-2">{tsFormError}</p>
+                <p className="text-xs text-danger mt-2">{tsFormError}</p>
               )}
             </form>
           </div>
         </div>
       )}
+      </PageShell>
+      </div>
     </div>
   );
 }

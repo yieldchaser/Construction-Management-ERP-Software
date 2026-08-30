@@ -4,6 +4,9 @@ import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
 import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
+import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 interface Amendment {
   id: string;
@@ -83,17 +86,16 @@ export default function WOAmendmentsPage({ params }: { params: { wo_id: string }
   return (
     <div className="flex-1 flex flex-col overflow-hidden font-sans">
       <div className="flex-1 flex flex-col overflow-hidden relative font-sans">
-        <div className="absolute top-[-10%] right-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-[0.02] blur-[120px] pointer-events-none" />
-        <div className="border-b border-border-custom bg-background px-6 py-3.5 flex items-center justify-between z-10">
-          <div>
-            <h1 className="text-sm font-bold text-foreground uppercase tracking-wider">WO Amendment Version Control</h1>
-            <p className="text-[10px] text-muted">{wo ? `${wo.wo_number} · ${wo.subcontractor_name}` : woId}</p>
-          </div>
-          <button onClick={() => setShowModal(true)} className="px-4 py-2 rounded-md bg-primary text-xs font-bold text-white hover:opacity-90 cursor-pointer">+ New Amendment</button>
-        </div>
+        <PageHeader
+          title="WO Amendment Version Control"
+          subtitle={wo ? `${wo.wo_number} · ${wo.subcontractor_name}` : (woId as string)}
+        >
+          <button onClick={() => setShowModal(true)} className="px-3.5 py-1.5 rounded-md bg-primary text-xs font-bold text-white hover:opacity-90 cursor-pointer">+ New Amendment</button>
+        </PageHeader>
 
-        <div className="flex-1 overflow-y-auto p-6 z-10">
-          {error && <div className="p-4 rounded-md bg-red-500/10 border border-red-500/20 text-xs text-red-400 mb-4">{error}</div>}
+        <div className="flex-1 overflow-y-auto z-10">
+          <PageShell width="wide">
+            {error && <div className="p-4 rounded-md bg-danger/10 border border-danger/20 text-xs text-danger mb-4">{error}</div>}
 
           <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
             <div className="px-5 py-4 border-b border-border-custom">
@@ -112,7 +114,7 @@ export default function WOAmendmentsPage({ params }: { params: { wo_id: string }
                   {am.reason && <p className="text-xs text-muted mt-1 italic">Reason: {am.reason}</p>}
                   <div className="mt-2 flex flex-wrap gap-2">
                     {Object.entries(am.amended_fields).map(([key, val]) => (
-                      <span key={key} className="bg-white/5 border border-border-custom text-[10px] px-2 py-1 rounded-lg text-zinc-300">
+                      <span key={key} className="bg-white/5 border border-border-custom text-[10px] px-2 py-1 rounded-lg text-muted">
                         {key}: <span className="font-sans font-bold text-foreground">{String(val)}</span>
                       </span>
                     ))}
@@ -120,10 +122,15 @@ export default function WOAmendmentsPage({ params }: { params: { wo_id: string }
                 </div>
               ))}
               {amendments.length === 0 && (
-                <div className="px-5 py-8 text-center text-muted text-xs">No amendments recorded yet.</div>
+                <EmptyState
+                  title="No amendments recorded yet"
+                  description="Record changes to rates, quantities, or scope on this work order."
+                  action={{ label: "New Amendment", onClick: () => setShowModal(true) }}
+                />
               )}
             </div>
           </div>
+          </PageShell>
         </div>
       </div>
 

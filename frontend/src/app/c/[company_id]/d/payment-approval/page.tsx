@@ -4,6 +4,10 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
 import Icon from "@/components/marketing/Icon";
+import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
+import SegmentedTabs from "@/components/ui/Tabs";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 interface Project {
   id: string;
@@ -144,30 +148,26 @@ export default function PaymentApprovalPage() {
   });
 
   return (
-    <div className="flex-1 flex flex-col overflow-y-auto p-6 space-y-6 relative">
-      {/* Header & Title */}
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-base font-semibold text-foreground">Payment Approvals</h1>
-          <p className="text-xs text-muted mt-1">Review, authorize, or decline transactions submitted by team members.</p>
-        </div>
-      </div>
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <PageHeader
+        title="Payment Approvals"
+        subtitle="Review, authorize, or decline transactions submitted by team members"
+      />
+      <div className="flex-1 overflow-y-auto">
+        <PageShell width="wide">
+          <div className="space-y-6">
 
-      {/* Filter and Search Bar */}
-      <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 mb-6">
-        <div className="flex bg-elevated border border-border-custom rounded-md p-1 shrink-0">
-          {["Pending", "Approved", "Rejected"].map((status) => (
-            <button
-              key={status}
-              onClick={() => setFilterStatus(status)}
-              className={`px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                filterStatus === status ? "bg-primary text-white shadow-sm font-medium" : "text-muted hover:text-foreground font-medium"
-              }`}
-            >
-              {status}
-            </button>
-          ))}
-        </div>
+          {/* Filter and Search Bar */}
+          <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 mb-6">
+            <SegmentedTabs
+              tabs={[
+                { id: "Pending", label: "Pending" },
+                { id: "Approved", label: "Approved" },
+                { id: "Rejected", label: "Rejected" },
+              ]}
+              activeTab={filterStatus}
+              onChange={(t) => setFilterStatus(t)}
+            />
 
         <div className="flex flex-col sm:flex-row gap-3 w-full md:max-w-2xl">
           <select
@@ -197,15 +197,10 @@ export default function PaymentApprovalPage() {
       {/* Requests List */}
       <div className="space-y-4">
         {filteredRequests.length === 0 ? (
-          <div className="rounded-lg border border-border-custom bg-card p-12 flex flex-col items-center justify-center text-center space-y-4">
-            <span className="text-4xl inline-flex"><Icon name="tag" className="w-10 h-10" /></span>
-            <div>
-              <h3 className="text-foreground font-semibold text-sm">No Approvals Found</h3>
-              <p className="text-muted text-xs mt-1">
-                No requests match the selected status or project filter.
-              </p>
-            </div>
-          </div>
+          <EmptyState
+            title="No approvals found"
+            description="No requests match the selected status or project filter."
+          />
         ) : (
           filteredRequests.map((r) => (
             <div
@@ -272,6 +267,9 @@ export default function PaymentApprovalPage() {
           <span className="font-semibold">{toastMessage}</span>
         </div>
       )}
+        </div>
+      </PageShell>
+      </div>
     </div>
   );
 }

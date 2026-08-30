@@ -6,8 +6,10 @@ import { getApi, authHeaders, resolveCompanyId, fmtINR } from "@/lib/siteflow";
 import { useProject } from "@/context/ProjectContext";
 import { useCompanySettings } from "@/context/CompanySettingsContext";
 import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton, TableSkeleton } from "@/components/ui/Skeleton";
+import SegmentedTabs from "@/components/ui/Tabs";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -423,7 +425,7 @@ function SalaryBreakupModal({
                 editLine(allowances, setAllowances, i, "amount", parseFloat(e.target.value) || 0)
               }
             />
-            <button className="text-muted hover:text-rose-500" onClick={() => setAllowances(allowances.filter((_, j) => j !== i))}>
+            <button className="text-muted hover:text-danger" onClick={() => setAllowances(allowances.filter((_, j) => j !== i))}>
               ✕
             </button>
           </div>
@@ -462,7 +464,7 @@ function SalaryBreakupModal({
                 editLine(deductions, setDeductions, i, "amount", parseFloat(e.target.value) || 0)
               }
             />
-            <button className="text-muted hover:text-rose-500" onClick={() => setDeductions(deductions.filter((_, j) => j !== i))}>
+            <button className="text-muted hover:text-danger" onClick={() => setDeductions(deductions.filter((_, j) => j !== i))}>
               ✕
             </button>
           </div>
@@ -554,7 +556,13 @@ function PartyPickerDrawer({
             <span className="text-xs text-muted">{p.party_type || "—"}</span>
           </button>
         ))}
-        {filtered.length === 0 && <div className="text-sm text-muted">No parties found.</div>}
+        {filtered.length === 0 && (
+          <EmptyState
+            title="No parties found"
+            description="No parties match your search query."
+            className="py-6"
+          />
+        )}
       </div>
     </Drawer>
   );
@@ -1231,9 +1239,9 @@ function AttendanceTab({
         </div>
         {!loadError && (
           <div className="ml-auto flex items-center gap-3 text-sm">
-            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-500" /> {counts.present} Present</span>
-            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-rose-500" /> {counts.absent} Absent</span>
-            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-amber-500" /> {counts.paid} Paid Leave</span>
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-success" /> {counts.present} Present</span>
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-danger" /> {counts.absent} Absent</span>
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-warning" /> {counts.paid} Paid Leave</span>
             <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-sky-500" /> {counts.weekoff} Week Off</span>
           </div>
         )}
@@ -1250,7 +1258,7 @@ function AttendanceTab({
           <tbody>
             {loadError ? (
               <tr>
-                <td colSpan={2} className="px-3 py-6 text-center text-rose-500">
+                <td colSpan={2} className="px-3 py-6 text-center text-danger">
                   Attendance could not be loaded for this day — no statuses are shown rather than marking everyone absent.
                 </td>
               </tr>
@@ -1263,12 +1271,12 @@ function AttendanceTab({
                       <span
                         className={
                           r.status === "Present" || r.status === "Present (Off-Site)"
-                            ? "text-emerald-600"
+                            ? "text-success"
                             : r.status === "Paid Leave"
-                            ? "text-amber-600"
+                            ? "text-warning"
                             : r.status === "Week Off"
                             ? "text-sky-600"
-                            : "text-rose-600"
+                            : "text-danger"
                         }
                       >
                         {r.status}
@@ -1350,10 +1358,10 @@ function TeamLeavesTab({ companyId }: { companyId: string }) {
                 <td className="px-3 py-2">
                   {l.status === "Pending" && (
                     <div className="flex gap-1">
-                      <button className="text-xs text-emerald-600 hover:underline" onClick={() => decide(l.id, "Approved")}>
+                      <button className="text-xs text-success hover:underline" onClick={() => decide(l.id, "Approved")}>
                         Approve
                       </button>
-                      <button className="text-xs text-rose-600 hover:underline" onClick={() => decide(l.id, "Rejected")}>
+                      <button className="text-xs text-danger hover:underline" onClick={() => decide(l.id, "Rejected")}>
                         Reject
                       </button>
                     </div>
@@ -1433,7 +1441,7 @@ function MyLeavesTab({
 
   if (!assignedTemplate) {
     return (
-      <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-700">
+      <div className="rounded-md border border-warning/40 bg-warning/10 p-4 text-sm text-warning">
         !! No leave template assigned for your account this year.
       </div>
     );
@@ -1647,27 +1655,20 @@ export default function PayrollPage() {
   }, [reloadAll, projects]);
 
   return (
-    <div className="flex-1 overflow-y-auto">
-      <PageShell width="wide">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-foreground">Payroll</h2>
-        </div>
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <PageHeader
+        title="Payroll & Attendance"
+        subtitle="Staff management, daily logs, leaves and holiday calendar"
+      />
+      <div className="flex-1 overflow-y-auto">
+        <PageShell width="wide">
 
-        <div className="mb-5 inline-flex items-center gap-1 p-1 bg-card border border-border-custom rounded-lg shrink-0">
-          {TABS.map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setTab(t)}
-              className={`px-3.5 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
-                tab === t
-                  ? "bg-elevated text-foreground shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)]"
-                  : "text-muted hover:text-foreground hover:bg-elevated/40"
-              }`}
-            >
-              {t}
-            </button>
-          ))}
+        <div className="mb-5">
+          <SegmentedTabs
+            tabs={TABS}
+            activeTab={tab}
+            onChange={(t) => setTab(t as any)}
+          />
         </div>
 
         {tab === "People" && (
@@ -1693,6 +1694,7 @@ export default function PayrollPage() {
           </div>
         )}
       </PageShell>
+      </div>
     </div>
   );
 }

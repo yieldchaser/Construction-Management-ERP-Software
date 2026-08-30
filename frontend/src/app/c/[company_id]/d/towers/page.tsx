@@ -5,6 +5,10 @@ import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
 import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
+import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
+import { CardSkeleton } from "@/components/ui/Skeleton";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 interface Tower {
   id: string;
@@ -131,48 +135,51 @@ export default function TowersPage() {
   return (
     <div className="flex-1 flex flex-col overflow-hidden font-sans">
       <div className="flex-1 flex flex-col overflow-hidden relative font-sans">
-        <div className="absolute top-[-10%] right-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-[0.02] blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-[-10%] left-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-[0.02] blur-[120px] pointer-events-none" />
+        <PageHeader
+          title="Tower & Phase Management"
+          subtitle="Multi-tower P&L tracking · Budget per tower/phase"
+        >
+          <button onClick={() => { resetForm(); setShowForm(true); }} className="px-3.5 py-1.5 rounded-md bg-primary text-xs font-bold text-white hover:opacity-90 cursor-pointer">+ New Tower</button>
+        </PageHeader>
 
-        <div className="border-b border-border-custom bg-background px-6 py-3.5 flex items-center justify-between z-10">
-          <div>
-            <h1 className="text-sm font-bold text-foreground uppercase tracking-wider">Tower & Phase Management</h1>
-            <p className="text-[10px] text-muted">Multi-tower P&L tracking · Budget per tower/phase</p>
-          </div>
-          <button onClick={() => { resetForm(); setShowForm(true); }} className="px-4 py-2 rounded-md bg-primary text-xs font-bold text-white hover:opacity-90 cursor-pointer">+ New Tower</button>
-        </div>
+        <div className="flex-1 overflow-y-auto z-10">
+          <PageShell width="wide">
+            {loading && <CardSkeleton />}
 
-        <div className="flex-1 overflow-y-auto p-6 z-10 space-y-6">
-          {loading && <div className="flex items-center justify-center h-48 text-muted text-xs">Loading...</div>}
-
-          {!loading && (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {towers.map((t) => (
-                  <div key={t.id} className="bg-card border border-border-custom rounded-lg p-5 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-xs font-extrabold text-foreground uppercase tracking-wider">{t.tower_name}</h3>
-                        <p className="text-[10px] text-muted">Code: {t.tower_code} · {t.status}</p>
+            {!loading && (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {towers.map((t) => (
+                    <div key={t.id} className="bg-card border border-border-custom rounded-lg p-5 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-xs font-extrabold text-foreground uppercase tracking-wider">{t.tower_name}</h3>
+                          <p className="text-[10px] text-muted">Code: {t.tower_code} · {t.status}</p>
+                        </div>
+                        <div className="flex gap-1">
+                          <button onClick={() => startEdit(t)} className="px-2 py-1 rounded-lg border border-border-custom text-[10px] font-bold text-muted hover:text-foreground hover:bg-elevated cursor-pointer">Edit</button>
+                          <button onClick={() => handleDelete(t.id)} className="px-2 py-1 rounded-lg border border-danger/20 text-[10px] font-bold text-danger hover:bg-danger/10 cursor-pointer">Delete</button>
+                        </div>
                       </div>
-                      <div className="flex gap-1">
-                        <button onClick={() => startEdit(t)} className="px-2 py-1 rounded-lg border border-border-custom text-[10px] font-bold text-zinc-300 hover:text-foreground hover:bg-white/[0.05] cursor-pointer">Edit</button>
-                        <button onClick={() => handleDelete(t.id)} className="px-2 py-1 rounded-lg border border-red-500/20 text-[10px] font-bold text-red-400 hover:bg-red-500/10 cursor-pointer">Delete</button>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[10px]">
+                        <div><span className="text-muted block">Budget</span><span className="text-foreground font-sans font-bold">₹{fmt(t.budget)}</span></div>
+                        <div><span className="text-muted block">Start</span><span className="text-foreground font-sans">{t.start_date ? t.start_date.split("T")[0] : "-"}</span></div>
+                        <div><span className="text-muted block">End</span><span className="text-foreground font-sans">{t.end_date ? t.end_date.split("T")[0] : "-"}</span></div>
                       </div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[10px]">
-                      <div><span className="text-muted block">Budget</span><span className="text-foreground font-sans font-bold">₹{fmt(t.budget)}</span></div>
-                      <div><span className="text-muted block">Start</span><span className="text-foreground font-sans">{t.start_date ? t.start_date.split("T")[0] : "-"}</span></div>
-                      <div><span className="text-muted block">End</span><span className="text-foreground font-sans">{t.end_date ? t.end_date.split("T")[0] : "-"}</span></div>
+                  ))}
+                  {towers.length === 0 && (
+                    <div className="col-span-full">
+                      <EmptyState
+                        title="No towers/phases created yet"
+                        description="Create a tower or phase to track P&L per tower."
+                        action={{ label: "New Tower", onClick: () => { resetForm(); setShowForm(true); } }}
+                      />
                     </div>
-                  </div>
-                ))}
-                {towers.length === 0 && (
-                  <div className="bg-card border border-border-custom rounded-lg p-6 col-span-full text-center text-muted text-xs">No towers/phases created yet. Create one to track P&L per tower.</div>
-                )}
-              </div>
+                  )}
+                </div>
 
-              <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
+                <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
                 <div className="px-5 py-4 border-b border-border-custom">
                   <h2 className="text-xs font-bold uppercase tracking-wider text-muted">Consolidated P&L by Tower</h2>
                 </div>
@@ -192,10 +199,10 @@ export default function TowersPage() {
                       {pnl.map((p) => (
                         <tr key={p.tower_id} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-all">
                           <td className="px-5 py-3.5 text-foreground font-semibold">{p.tower_name} <span className="text-muted">({p.tower_code})</span></td>
-                          <td className="px-5 py-3.5 text-right font-sans text-zinc-300">₹{fmt(p.total_po_value)}</td>
-                          <td className="px-5 py-3.5 text-right font-sans text-zinc-300">₹{fmt(p.total_wo_value)}</td>
+                          <td className="px-5 py-3.5 text-right font-sans text-muted">₹{fmt(p.total_po_value)}</td>
+                          <td className="px-5 py-3.5 text-right font-sans text-muted">₹{fmt(p.total_wo_value)}</td>
                           <td className="px-5 py-3.5 text-right font-sans text-primary">₹{fmt(p.total_billed)}</td>
-                          <td className="px-5 py-3.5 text-right font-sans text-zinc-300">₹{fmt(p.budget)}</td>
+                          <td className="px-5 py-3.5 text-right font-sans text-muted">₹{fmt(p.budget)}</td>
                           <td className="px-5 py-3.5 text-right font-sans text-muted">₹{fmt(p.variance)}</td>
                         </tr>
                       ))}
@@ -208,6 +215,7 @@ export default function TowersPage() {
               </div>
             </>
           )}
+          </PageShell>
         </div>
       </div>
 
@@ -252,7 +260,7 @@ export default function TowersPage() {
               </div>
             </div>
             <div className="flex gap-2 justify-end border-t border-border-custom pt-4">
-              <button onClick={resetForm} className="px-4 py-2 bg-zinc-800 text-muted hover:text-foreground rounded-md">Cancel</button>
+              <button onClick={resetForm} className="px-4 py-2 bg-elevated text-muted hover:text-foreground rounded-md">Cancel</button>
               <button onClick={editingId ? handleUpdate : handleCreate} className="px-5 py-2.5 bg-primary text-white font-bold rounded-md">{editingId ? "Save Changes" : "Create Tower"}</button>
             </div>
           </div>

@@ -4,6 +4,8 @@ import { authHeaders } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
+import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
 
 interface Field {
   id: string;
@@ -175,32 +177,32 @@ export default function CustomFieldsPage() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Custom Fields</h1>
-            <p className="text-muted mt-1">Add dynamic fields to projects, tasks, bills, and more</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <select
-              value={entityFilter}
-              onChange={(e) => setEntityFilter(e.target.value)}
-              className="bg-input border border-border-custom rounded-md px-3 py-2 text-sm text-foreground"
-              title="Filter fields by entity type"
-            >
-              <option value="project">Project fields</option>
-              <option value="invoice">Invoice fields</option>
-              <option value="lead">Lead fields</option>
-              <option value="vendor">Vendor fields</option>
-            </select>
-            <button onClick={() => setShowFieldModal(true)} className="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-md text-sm font-semibold transition-all">
-              New Field
-            </button>
-          </div>
+      <PageHeader
+        title="Custom Fields"
+        subtitle="Add dynamic fields to projects, tasks, bills, and more"
+      >
+        <div className="flex items-center gap-2">
+          <select
+            value={entityFilter}
+            onChange={(e) => setEntityFilter(e.target.value)}
+            className="bg-input border border-border-custom rounded-md px-2.5 py-1.5 text-xs text-foreground"
+            title="Filter fields by entity type"
+          >
+            <option value="project">Project fields</option>
+            <option value="invoice">Invoice fields</option>
+            <option value="lead">Lead fields</option>
+            <option value="vendor">Vendor fields</option>
+          </select>
+          <button onClick={() => setShowFieldModal(true)} className="px-3.5 py-1.5 bg-primary hover:bg-primary/90 text-white rounded-md text-xs font-semibold transition-all cursor-pointer">
+            + New Field
+          </button>
         </div>
+      </PageHeader>
+      <div className="flex-1 overflow-y-auto">
+        <PageShell width="wide">
 
         {message && (
-          <div className={`mb-6 p-4 rounded-md ${message.includes("success") || message.includes("saved") || message.includes("created") ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}>
+          <div className={`mb-6 p-4 rounded-md ${message.includes("success") || message.includes("saved") || message.includes("created") ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}>
             {message}
           </div>
         )}
@@ -216,13 +218,13 @@ export default function CustomFieldsPage() {
                     <h3 className="text-foreground font-semibold">{f.field_label}</h3>
                     <p className="text-muted text-xs mt-1">{f.field_name} • {f.field_type}</p>
                   </div>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${f.is_active ? "bg-emerald-500/10 text-emerald-400" : "bg-zinc-500/10 text-muted"}`}>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${f.is_active ? "bg-success/10 text-success" : "bg-elevated text-muted"}`}>
                     {f.is_active ? "Active" : "Inactive"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-xs text-muted mb-4">
                   <span className="capitalize">{f.entity_type}</span>
-                  {f.is_required && <span className="text-red-400">Required</span>}
+                  {f.is_required && <span className="text-danger">Required</span>}
                 </div>
                 <div className="text-xs mb-4 truncate">
                   <span className="text-muted">Current value: </span>
@@ -235,7 +237,6 @@ export default function CustomFieldsPage() {
             ))
           )}
         </div>
-      </div>
 
       {showFieldModal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
@@ -317,7 +318,9 @@ export default function CustomFieldsPage() {
             </form>
           </div>
         </div>
-      )}
+        )}
+        </PageShell>
+      </div>
     </div>
   );
 }

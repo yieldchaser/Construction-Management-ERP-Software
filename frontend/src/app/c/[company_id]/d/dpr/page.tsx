@@ -7,6 +7,7 @@ import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
 import Icon, { type IconName } from "@/components/marketing/Icon";
 import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
 
@@ -180,19 +181,17 @@ export default function DPRPage() {
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Main Container */}
       <main className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-16 border-b border-border-custom px-8 flex items-center justify-between bg-card shrink-0">
-          <div className="flex items-center gap-4">
-            <h1 className="text-sm font-bold text-foreground uppercase tracking-wider">Project Daily Progress Report (DPR)</h1>
-            <span className="h-4 w-px bg-white/10" />
-            <span className="text-xs font-medium text-muted">SiteFlow daily feed</span>
-          </div>
+        <PageHeader
+          title="Project Daily Progress Report (DPR)"
+          subtitle="SiteFlow daily feed"
+        >
           <button
             onClick={() => setIsCreateDPROpen(true)}
-            className="px-4 py-2 bg-primary rounded-md text-xs font-bold text-white hover:opacity-90 transition-all shadow-lg shadow-primary/20"
+            className="px-3.5 py-1.5 bg-primary rounded-md text-xs font-bold text-white hover:opacity-90 transition-all shadow-md shadow-primary/20 cursor-pointer"
           >
-            Create DPR +
+            + Create DPR
           </button>
-        </header>
+        </PageHeader>
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto relative">
@@ -203,8 +202,8 @@ export default function DPRPage() {
             {[
               { label: "Site Staff Present", value: summary.total_workers_deployed || "—", desc: "Clocked via geofence", color: "border-primary/20 bg-primary/5 text-primary" },
               { label: "Equipment Used", value: logs.length > 0 ? `${logs.length} Reports` : "0 Active", desc: "DPR reports logged", color: "border-secondary/20 bg-secondary/5 text-secondary" },
-              { label: "Subcon Updates", value: logs.filter((l: any) => l.subcon_name).length > 0 ? `${logs.filter((l: any) => l.subcon_name).length} Updates` : "0 Tasks updated", desc: "Logged by subcontractors", color: "border-emerald-500/20 bg-emerald-500/5 text-emerald-400" },
-              { label: "Material Received", value: (summary.material_received_today || 0) > 0 ? `${summary.material_received_today} Units` : "No GRNs today", desc: "Material inward logged", color: "border-amber-500/20 bg-amber-500/5 text-amber-400" },
+              { label: "Subcon Updates", value: logs.filter((l: any) => l.subcon_name).length > 0 ? `${logs.filter((l: any) => l.subcon_name).length} Updates` : "0 Tasks updated", desc: "Logged by subcontractors", color: "border-success/20 bg-success/5 text-success" },
+              { label: "Material Received", value: (summary.material_received_today || 0) > 0 ? `${summary.material_received_today} Units` : "No GRNs today", desc: "Material inward logged", color: "border-warning/20 bg-warning/5 text-warning" },
               { label: "Material Used Today", value: (summary.material_used_today || 0) > 0 ? `${summary.material_used_today} Units` : "No consumption logged", desc: "On-site consumption", color: "border-sky-500/20 bg-sky-500/5 text-sky-400" }
             ].map((card, idx) => (
               <div key={idx} className={`p-4 rounded-lg border ${card.color} flex flex-col justify-between h-28 shadow-sm`}>
@@ -244,7 +243,7 @@ export default function DPRPage() {
                       {log.notes && <p className="text-muted mt-1">{log.notes}</p>}
                     </div>
                     {log.issues && (
-                      <div className="p-2 rounded bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] inline-flex items-center gap-1">
+                      <div className="p-2 rounded bg-warning/10 border border-warning/20 text-warning text-[10px] inline-flex items-center gap-1">
                         <Icon name="warning" className="w-3 h-3 shrink-0" /> <strong>Issue Flagged:</strong> {log.issues}
                       </div>
                     )}
@@ -271,7 +270,7 @@ export default function DPRPage() {
 
             <form onSubmit={handleSubmitDPR} className="p-6 overflow-y-auto space-y-4 text-xs">
               {message && (
-                <div className={`p-3 rounded-lg text-xs font-semibold ${message.includes("success") ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/20" : "bg-red-500/15 text-red-400 border border-red-500/20"}`}>
+                <div className={`p-3 rounded-lg text-xs font-semibold ${message.includes("success") ? "bg-success/10 text-success border border-success/20" : "bg-danger/10 text-danger border border-danger/20"}`}>
                   {message}
                 </div>
               )}
@@ -353,7 +352,7 @@ export default function DPRPage() {
               </div>
 
               <div className="flex gap-2 justify-end border-t border-border-custom pt-4">
-                <button type="button" onClick={() => setIsCreateDPROpen(false)} className="px-4 py-2 bg-zinc-800 text-muted hover:text-foreground rounded-md">Cancel</button>
+                <button type="button" onClick={() => setIsCreateDPROpen(false)} className="px-4 py-2 bg-elevated text-muted hover:text-foreground rounded-md">Cancel</button>
                 <button type="submit" disabled={submitting} className="px-5 py-2.5 bg-primary text-white font-bold rounded-md hover:opacity-90">
                   {submitting ? "Saving..." : "Submit Log"}
                 </button>
@@ -456,7 +455,7 @@ export default function DPRPage() {
                             className="bg-input border border-border-custom rounded px-2 py-1 text-foreground w-16"
                           />
                         </td>
-                        <td className="px-4 py-2 text-right font-sans text-zinc-300">
+                        <td className="px-4 py-2 text-right font-sans text-muted">
                           {rowQty.toFixed(3)}
                         </td>
                         <td className="px-4 py-2 text-center">
@@ -465,7 +464,7 @@ export default function DPRPage() {
                             onClick={() => {
                               setMbRows(mbRows.filter((_, i) => i !== idx));
                             }}
-                            className="text-red-500 hover:text-red-400 font-bold cursor-pointer"
+                            className="text-danger hover:text-danger font-bold cursor-pointer"
                           >
                             Delete
                           </button>
@@ -480,7 +479,7 @@ export default function DPRPage() {
                 <button
                   type="button"
                   onClick={() => setMbRows([...mbRows, { description: "", nos: 1, l: 0, w: 0, h: 0 }])}
-                  className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-white font-bold cursor-pointer"
+                  className="px-3 py-1.5 bg-elevated hover:bg-elevated rounded-lg text-white font-bold cursor-pointer"
                 >
                   + Add Dimension Row
                 </button>
@@ -497,7 +496,7 @@ export default function DPRPage() {
               <button
                 type="button"
                 onClick={() => setShowMBModal(false)}
-                className="px-4 py-2 bg-zinc-800 text-muted hover:text-foreground rounded-md cursor-pointer"
+                className="px-4 py-2 bg-elevated text-muted hover:text-foreground rounded-md cursor-pointer"
               >
                 Cancel
               </button>

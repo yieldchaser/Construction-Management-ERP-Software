@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
 import { PageSkeleton } from "@/components/ui/Skeleton";
 
 interface BudgetCommitted {
@@ -104,18 +105,19 @@ export default function BudgetPage() {
       <div className="flex-1 flex flex-col overflow-hidden relative font-sans">
         <div className="absolute top-[-10%] right-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-[0.02] blur-[120px] pointer-events-none" />
 
-        <div className="border-b border-border-custom bg-background px-6 py-3.5 flex items-center justify-between z-10">
-          <div>
-            <h1 className="text-sm font-bold text-foreground uppercase tracking-wider">Budget & Committed Costs</h1>
-            <p className="text-[10px] text-muted">Committed vs Actuals · POs and WOs vs Bills</p>
+        <PageHeader
+          title="Budget & Committed Costs"
+          subtitle="Committed vs Actuals · POs and WOs vs Bills"
+        >
+          <div className="flex items-center gap-2">
+            <button onClick={() => setShowBudgetModal(true)} className="px-3.5 py-1.5 rounded-md bg-primary text-xs font-bold text-white hover:opacity-90 cursor-pointer">+ Set Budget</button>
+            <button onClick={fetchData} className="px-3.5 py-1.5 rounded-md border border-border-custom text-xs font-bold hover:bg-elevated cursor-pointer">Refresh</button>
           </div>
-          <button onClick={() => setShowBudgetModal(true)} className="px-4 py-2 rounded-md bg-primary text-xs font-bold text-white hover:opacity-90 cursor-pointer">Set Budget</button>
-          <button onClick={fetchData} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-elevated cursor-pointer">Refresh</button>
-        </div>
+        </PageHeader>
 
         <div className="flex-1 overflow-y-auto z-10">
           <PageShell width="wide">
-          {error && <div className="p-4 rounded-md bg-red-500/10 border border-red-500/20 text-xs text-red-400">{error}</div>}
+          {error && <div className="p-4 rounded-md bg-danger/10 border border-danger/20 text-xs text-danger">{error}</div>}
 
           {loading && <PageSkeleton />}
 
@@ -124,9 +126,9 @@ export default function BudgetPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 {[
                   { label: "Total Budget", value: `₹${fmt(budget.total_budget)}`, color: "text-foreground" },
-                  { label: "Total Committed", value: `₹${fmt(budget.total_committed)}`, color: "text-amber-400" },
+                  { label: "Total Committed", value: `₹${fmt(budget.total_committed)}`, color: "text-warning" },
                   { label: "Total Actual", value: `₹${fmt(budget.total_actual)}`, color: "text-primary" },
-                  { label: "Committed Variance", value: noBudget ? "—" : `₹${fmt(budget.total_committed_variance)}`, color: noBudget ? "text-muted" : (budget.total_committed_variance >= 0 ? "text-green-400" : "text-red-400") },
+                  { label: "Committed Variance", value: noBudget ? "—" : `₹${fmt(budget.total_committed_variance)}`, color: noBudget ? "text-muted" : (budget.total_committed_variance >= 0 ? "text-success" : "text-danger") },
                 ].map((s, idx) => (
                   <div key={idx} className="bg-card border border-border-custom rounded-lg p-4">
                     <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">{s.label}</span>
@@ -136,7 +138,7 @@ export default function BudgetPage() {
               </div>
 
               {noBudget && (
-                <div className="p-4 rounded-md bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400">
+                <div className="p-4 rounded-md bg-warning/10 border border-warning/20 text-xs text-warning">
                   No budget has been set for this project — set one to see committed variance and utilization.
                 </div>
               )}
@@ -170,7 +172,7 @@ export default function BudgetPage() {
                         <tr key={row.label} className="border-b border-border-custom hover:bg-elevated transition-all">
                           <td className="px-5 py-3.5 text-foreground font-semibold">{row.label}</td>
                           <td className="px-5 py-3.5 text-right font-sans text-muted">₹{fmt(row.b)}</td>
-                          <td className="px-5 py-3.5 text-right font-sans text-amber-400">₹{fmt(row.c)}</td>
+                          <td className="px-5 py-3.5 text-right font-sans text-warning">₹{fmt(row.c)}</td>
                           <td className="px-5 py-3.5 text-right font-sans text-primary">₹{fmt(row.a)}</td>
                           <td className="px-5 py-3.5 text-right font-sans text-muted">{noRowBudget ? "—" : `₹${fmt(row.b - row.c)}`}</td>
                           <td className="px-5 py-3.5 text-right font-sans text-muted">{noRowBudget ? "—" : `₹${fmt(row.b - row.a)}`}</td>
@@ -217,7 +219,7 @@ export default function BudgetPage() {
                 <input type="number" min="0" value={equipBudget} onChange={(e) => setEquipBudget(parseFloat(e.target.value) || 0)} className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none" />
               </div>
             </div>
-            {budgetMsg && <div className="text-[10px] text-emerald-400">{budgetMsg}</div>}
+            {budgetMsg && <div className="text-[10px] text-success">{budgetMsg}</div>}
             <div className="flex gap-3 justify-end pt-2">
               <button onClick={() => setShowBudgetModal(false)} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-elevated cursor-pointer">Cancel</button>
               <button onClick={handleSetBudget} disabled={savingBudget} className="bg-primary hover:opacity-90 text-white px-5 py-2 rounded-md text-xs font-bold cursor-pointer">Save Budget</button>

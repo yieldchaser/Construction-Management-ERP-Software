@@ -4,6 +4,9 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { getApi, authHeaders, fmtINR } from "@/lib/siteflow";
 import { useCompanySettings } from "@/context/CompanySettingsContext";
+import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
+import { TableSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
 
 type RollupCompany = {
   id: string;
@@ -75,16 +78,23 @@ export default function EnterpriseRollupPage() {
 
   if (loading) {
     return (
-      <div className="flex-1 overflow-y-auto p-6">
-        <p className="text-muted">Loading enterprise rollup…</p>
+      <div className="flex-1 overflow-y-auto">
+        <PageShell width="wide">
+          <div className="space-y-6">
+            <CardSkeleton />
+            <TableSkeleton rows={4} cols={6} />
+          </div>
+        </PageShell>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex-1 overflow-y-auto p-6">
-        <p className="text-red-500">{error}</p>
+      <div className="flex-1 overflow-y-auto">
+        <PageShell width="wide">
+          <p className="text-danger">{error}</p>
+        </PageShell>
       </div>
     );
   }
@@ -92,22 +102,21 @@ export default function EnterpriseRollupPage() {
   if (!data) return null;
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold text-foreground">Enterprise Rollup</h1>
-        <p className="text-sm text-muted">
-          Consolidated view across {data.company_count} compan
-          {data.company_count === 1 ? "y" : "ies"}
-          {data.company_count === 1 ? " — this entity is not yet grouped under an enterprise." : ""}
-        </p>
-      </div>
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <PageHeader
+        title="Enterprise Rollup"
+        subtitle={`Consolidated view across ${data.company_count} compan${data.company_count === 1 ? "y" : "ies"}${data.company_count === 1 ? " — this entity is not yet grouped under an enterprise." : ""}`}
+      />
+      <div className="flex-1 overflow-y-auto">
+        <PageShell width="wide">
+          <div className="space-y-6">
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
         <StatCard label="Companies" value={String(data.company_count)} />
         <StatCard label="Projects" value={String(data.project_count)} />
         <StatCard label="Parties" value={String(data.party_count)} />
-        <StatCard label="To Pay" value={fmtINR(data.total_to_pay, currencyDecimalPlaces)} accent="text-amber-500" />
-        <StatCard label="To Receive" value={fmtINR(data.total_to_receive, currencyDecimalPlaces)} accent="text-emerald-500" />
+        <StatCard label="To Pay" value={fmtINR(data.total_to_pay, currencyDecimalPlaces)} accent="text-warning" />
+        <StatCard label="To Receive" value={fmtINR(data.total_to_receive, currencyDecimalPlaces)} accent="text-success" />
         <StatCard label="Net Balance" value={fmtINR(data.total_balance, currencyDecimalPlaces)} />
       </div>
 
@@ -132,13 +141,16 @@ export default function EnterpriseRollupPage() {
                 <td className="px-4 py-2 text-foreground">{c.name}</td>
                 <td className="px-4 py-2 text-muted">{c.project_count}</td>
                 <td className="px-4 py-2 text-muted">{c.party_count}</td>
-                <td className="px-4 py-2 text-right text-amber-500">{fmtINR(c.to_pay, currencyDecimalPlaces)}</td>
-                <td className="px-4 py-2 text-right text-emerald-500">{fmtINR(c.to_receive, currencyDecimalPlaces)}</td>
+                <td className="px-4 py-2 text-right text-warning">{fmtINR(c.to_pay, currencyDecimalPlaces)}</td>
+                <td className="px-4 py-2 text-right text-success">{fmtINR(c.to_receive, currencyDecimalPlaces)}</td>
                 <td className="px-4 py-2 text-right text-foreground">{fmtINR(c.balance, currencyDecimalPlaces)}</td>
               </tr>
             ))}
           </tbody>
         </table>
+      </div>
+          </div>
+        </PageShell>
       </div>
     </div>
   );

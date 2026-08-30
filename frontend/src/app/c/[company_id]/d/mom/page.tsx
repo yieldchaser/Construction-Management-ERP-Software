@@ -5,6 +5,8 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
+import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -29,10 +31,10 @@ const MOM_TYPES = ["Regular", "Review", "Client Meeting", "Internal"] as const;
 const MOM_STATUSES = ["Open", "Closed", "Action Pending", "Draft"] as const;
 
 const statusColors: Record<string, string> = {
-  Open: "bg-red-500/10 text-red-400 border-red-500/20",
-  "Action Pending": "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
-  Closed: "bg-green-500/10 text-green-400 border-green-500/20",
-  Draft: "bg-zinc-500/10 text-muted border-zinc-500/20",
+  Open: "bg-danger/10 text-danger border-danger/20",
+  "Action Pending": "bg-warning/10 text-warning border-warning/20",
+  Closed: "bg-success/10 text-success border-success/20",
+  Draft: "bg-elevated text-muted border-border-custom",
 };
 
 const badge = (label: string, cls: string) => (
@@ -207,22 +209,25 @@ export default function MoMPage() {
 
       {/* Main */}
       <main className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-14 border-b border-border-custom px-6 flex items-center justify-between bg-card shrink-0">
-          <h1 className="text-sm font-bold text-foreground uppercase tracking-widest">Minutes of Meeting</h1>
+        <PageHeader
+          title="Minutes of Meeting"
+          subtitle="Corporate MOM register, action item logs and attendee records"
+        >
           <button onClick={openCreate}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-all cursor-pointer">
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-all shadow-md cursor-pointer">
             + New MOM
           </button>
-        </header>
+        </PageHeader>
 
         {isOffline && (
-          <div className="px-6 py-2.5 bg-amber-500/10 border-b border-amber-500/20 text-amber-400 text-xs">
+          <div className="px-6 py-2.5 bg-warning/10 border-b border-warning/20 text-warning text-xs">
             Backend connection unavailable — MOM list could not be loaded.
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
-          {/* Filters */}
+        <div className="flex-1 overflow-y-auto">
+          <PageShell width="wide">
+            {/* Filters */}
           <div className="rounded-md border border-border-custom bg-card p-4">
             <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between mb-3">
               <div>
@@ -289,7 +294,7 @@ export default function MoMPage() {
                     moms.map((m) => (
                       <tr key={m.id} className="border-b border-border-custom hover:bg-elevated transition-all">
                         <td className="px-5 py-3 font-bold text-foreground">{(m.attendees || []).join(", ") || "—"}</td>
-                        <td className="px-5 py-3 text-zinc-200">{projectName(m.project_id)}</td>
+                        <td className="px-5 py-3 text-foreground">{projectName(m.project_id)}</td>
                         <td className="px-5 py-3 text-muted">{m.type}</td>
                         <td className="px-5 py-3">{badge(m.status, statusColors[m.status])}</td>
                         <td className="px-5 py-3 text-muted max-w-xs truncate">{m.notes || "—"}</td>
@@ -299,7 +304,7 @@ export default function MoMPage() {
                             Edit
                           </button>
                           <button onClick={() => handleDelete(m.id)}
-                            className="px-3 py-1.5 rounded-lg bg-red-500/10 text-red-400 text-[10px] font-bold border border-red-500/20 hover:bg-red-500/20 cursor-pointer">
+                            className="px-3 py-1.5 rounded-lg bg-danger/10 text-danger text-[10px] font-bold border border-danger/20 hover:bg-danger/10 cursor-pointer">
                             Delete
                           </button>
                         </td>
@@ -310,6 +315,7 @@ export default function MoMPage() {
               </table>
             </div>
           </div>
+          </PageShell>
         </div>
       </main>
 

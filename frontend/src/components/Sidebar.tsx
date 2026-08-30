@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import { getApiHost } from "@/lib/api";
@@ -498,6 +499,56 @@ export default function Sidebar() {
     return false;
   }, [can]);
 
+  const [flyoutPos, setFlyoutPos] = useState<{ top: number; left: number } | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const flyoutTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const openFlyout = useCallback((groupId: string, el: HTMLElement) => {
+    if (flyoutTimerRef.current) clearTimeout(flyoutTimerRef.current);
+    const rect = el.getBoundingClientRect();
+    const top = Math.max(12, Math.min(rect.top, (typeof window !== "undefined" ? window.innerHeight : 800) - 340));
+    setFlyoutPos({ top, left: rect.right + 6 });
+    setHoveredFlyout(groupId);
+  }, []);
+
+  const closeFlyoutWithDelay = useCallback(() => {
+    if (flyoutTimerRef.current) clearTimeout(flyoutTimerRef.current);
+    flyoutTimerRef.current = setTimeout(() => {
+      setHoveredFlyout(null);
+      setFlyoutPos(null);
+    }, 150);
+  }, []);
+
+  const closeFlyoutImmediate = useCallback(() => {
+    if (flyoutTimerRef.current) clearTimeout(flyoutTimerRef.current);
+    setHoveredFlyout(null);
+    setFlyoutPos(null);
+  }, []);
+
+  useEffect(() => {
+    if (!hoveredFlyout) return;
+    const handleScrollOrResize = () => {
+      closeFlyoutImmediate();
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        closeFlyoutImmediate();
+      }
+    };
+    window.addEventListener("scroll", handleScrollOrResize, { capture: true, passive: true });
+    window.addEventListener("resize", handleScrollOrResize, { passive: true });
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("scroll", handleScrollOrResize, { capture: true });
+      window.removeEventListener("resize", handleScrollOrResize);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [hoveredFlyout, closeFlyoutImmediate]);
+
   return (
     <>
       {/* Mobile Backdrop */}
@@ -549,13 +600,13 @@ export default function Sidebar() {
                 return (
                   <div
                     key={group.id}
-                    className="relative group/rail flex flex-col items-center py-1"
-                    onMouseEnter={() => setHoveredFlyout(group.id)}
-                    onMouseLeave={() => setHoveredFlyout(null)}
-                    onFocus={() => setHoveredFlyout(group.id)}
+                    className="relative flex flex-col items-center py-1"
+                    onMouseEnter={(e) => openFlyout(group.id, e.currentTarget)}
+                    onMouseLeave={closeFlyoutWithDelay}
+                    onFocus={(e) => openFlyout(group.id, e.currentTarget)}
                     onBlur={(e) => {
                       if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-                        setHoveredFlyout(null);
+                        closeFlyoutWithDelay();
                       }
                     }}
                   >
@@ -568,50 +619,14 @@ export default function Sidebar() {
                       }`}
                       title={group.label}
                       aria-label={group.label}
+                      aria-haspopup="menu"
+                      aria-expanded={hoveredFlyout === group.id}
                     >
                       <Icon
                         name={group.iconName}
                         className={`w-5 h-5 ${hasActiveChild ? "text-primary" : ""}`}
                       />
                     </button>
-
-                    {/* Flyout Popover on Hover / Focus */}
-                    {hoveredFlyout === group.id && (
-                      <div
-                        className="absolute left-full top-0 ml-2 w-56 bg-card border border-border-custom rounded-lg shadow-xl py-2 z-50 animate-fade-in space-y-0.5"
-                        role="menu"
-                      >
-                        <div className="px-3 py-1.5 border-b border-border-custom mb-1 flex items-center justify-between">
-                          <span className="text-[11px] font-bold text-foreground uppercase tracking-wider">
-                            {group.label}
-                          </span>
-                        </div>
-                        {visibleItems.map((item) => {
-                          const isActive = item.activePattern
-                            ? pathname.includes(item.activePattern)
-                            : pathname === item.href;
-                          return (
-                            <Link
-                              key={item.id}
-                              href={item.href}
-                              prefetch={true}
-                              role="menuitem"
-                              className={`flex items-center gap-2.5 px-3 py-1.5 text-xs rounded-md transition-all mx-1.5 ${
-                                isActive
-                                  ? "bg-elevated text-foreground font-semibold shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)]"
-                                  : "text-muted hover:text-foreground hover:bg-elevated font-medium"
-                              }`}
-                            >
-                              <Icon
-                                name={item.iconName}
-                                className={`w-4 h-4 shrink-0 ${isActive ? "text-primary" : "text-muted"}`}
-                              />
-                              <span className="truncate">{item.label}</span>
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    )}
                   </div>
                 );
               }
@@ -773,6 +788,63 @@ export default function Sidebar() {
           </div>
         </div>
       </aside>
+
+      {/* Portaled Flyout Menu for Collapsed Rail */}
+      {mounted && desktopCollapsed && !mobileOpen && hoveredFlyout && flyoutPos && typeof document !== "undefined" && (() => {
+        const activeFlyoutGroup = domainGroups.find((g) => g.id === hoveredFlyout);
+        if (!activeFlyoutGroup) return null;
+        const visibleItems = activeFlyoutGroup.items.filter(isItemVisible);
+        if (visibleItems.length === 0) return null;
+
+        return createPortal(
+          <div
+            style={{
+              position: "fixed",
+              top: `${flyoutPos.top}px`,
+              left: `${flyoutPos.left}px`,
+              zIndex: 9999,
+            }}
+            className="w-56 bg-card border border-border-custom rounded-lg shadow-2xl py-2 animate-fade-in space-y-0.5"
+            role="menu"
+            onMouseEnter={() => {
+              if (flyoutTimerRef.current) clearTimeout(flyoutTimerRef.current);
+            }}
+            onMouseLeave={closeFlyoutWithDelay}
+          >
+            <div className="px-3 py-1.5 border-b border-border-custom mb-1 flex items-center justify-between">
+              <span className="text-[11px] font-bold text-foreground uppercase tracking-wider">
+                {activeFlyoutGroup.label}
+              </span>
+            </div>
+            {visibleItems.map((item) => {
+              const isActive = item.activePattern
+                ? pathname.includes(item.activePattern)
+                : pathname === item.href;
+              return (
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  prefetch={true}
+                  role="menuitem"
+                  onClick={closeFlyoutImmediate}
+                  className={`flex items-center gap-2.5 px-3 py-1.5 text-xs rounded-md transition-all mx-1.5 ${
+                    isActive
+                      ? "bg-elevated text-foreground font-semibold shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)]"
+                      : "text-muted hover:text-foreground hover:bg-elevated font-medium"
+                  }`}
+                >
+                  <Icon
+                    name={item.iconName}
+                    className={`w-4 h-4 shrink-0 ${isActive ? "text-primary" : "text-muted"}`}
+                  />
+                  <span className="truncate">{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>,
+          document.body
+        );
+      })()}
     </>
   );
 }

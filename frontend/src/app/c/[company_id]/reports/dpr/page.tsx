@@ -7,6 +7,9 @@ import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 import Icon from "@/components/marketing/Icon";
 import { isMissingOrDemoTenant, redirectToLogin } from "@/lib/company-guard";
+import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
+import { CardSkeleton } from "@/components/ui/Skeleton";
 
 export default function DPRReportPage() {
   const params = useParams();
@@ -117,12 +120,12 @@ export default function DPRReportPage() {
   const statusBadge = (status: string) => {
     const s = status.toString();
     if (s === "Completed" || s === "Fulfilled") {
-      return "bg-green-500/10 text-green-400 border border-green-500/20";
+      return "bg-success/10 text-success border border-success/20";
     }
     if (s === "Ongoing" || s === "Partially Fulfilled") {
-      return "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20";
+      return "bg-warning/10 text-warning border border-warning/20";
     }
-    return "bg-zinc-500/10 text-muted border border-zinc-500/20";
+    return "bg-elevated text-muted border border-border-custom";
   };
 
   const emptyRow = (colSpan: number) => (
@@ -133,72 +136,74 @@ export default function DPRReportPage() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
+      <PageHeader
+        title="DPR Activity Report"
+        subtitle="Consolidated daily progress logs, manpower attendance, and material consumption"
+      >
+        <div className="flex items-center gap-2">
+          <button onClick={() => fetchReport()} className="p-2 bg-card hover:bg-elevated border border-border-custom rounded-lg text-xs cursor-pointer" title="Refresh">
+            <Icon name="refresh" className="w-3.5 h-3.5" />
+          </button>
+          <button onClick={handleExportDpr} className="px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg flex items-center gap-1.5 hover:bg-primary/90 transition-all cursor-pointer shadow-md">
+            <Icon name="outbox" className="w-3.5 h-3.5" /> Export CSV
+          </button>
+        </div>
+      </PageHeader>
 
-        {/* Action Header bar */}
-        <div className="bg-sidebar border-b border-border-custom px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
-          <div className="flex flex-wrap items-center gap-3 text-xs">
-            
-            {/* Project Select */}
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] text-muted uppercase font-bold">Project Name:</span>
-              <select
-                value={selectedProject}
-                onChange={e => setSelectedProject(e.target.value)}
-                className="bg-card border border-border-custom rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
-              >
-                <option value="All">All Projects</option>
-                {projectOptions.map(p => (
-                  <option key={p} value={p}>{p}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Date Select */}
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] text-muted uppercase font-bold">Date:</span>
-              <select
-                value={selectedDateFilter}
-                onChange={e => setSelectedDateFilter(e.target.value)}
-                className="bg-card border border-border-custom rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
-              >
-                <option value="Today">Today</option>
-                <option value="Yesterday">Yesterday</option>
-                <option value="This Week">This Week</option>
-                <option value="Custom">Custom Range</option>
-              </select>
-            </div>
-
-            {/* Date Range Picker */}
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] text-muted uppercase font-bold">
-                {selectedDateFilter === "Custom" ? "Pick Date:" : "Date Range:"}
-              </span>
-              <input
-                type="date"
-                value={customDate}
-                onChange={(e) => setCustomDate(e.target.value)}
-                disabled={selectedDateFilter !== "Custom"}
-                className="bg-card border border-border-custom rounded-lg px-3 py-1 text-xs text-foreground focus:outline-none focus:border-primary disabled:opacity-50"
-              />
-            </div>
+      {/* Action Header bar */}
+      <div className="bg-sidebar border-b border-border-custom px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
+        <div className="flex flex-wrap items-center gap-3 text-xs">
+          
+          {/* Project Select */}
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] text-muted uppercase font-bold">Project Name:</span>
+            <select
+              value={selectedProject}
+              onChange={e => setSelectedProject(e.target.value)}
+              className="bg-card border border-border-custom rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
+            >
+              <option value="All">All Projects</option>
+              {projectOptions.map(p => (
+                <option key={p} value={p}>{p}</option>
+              ))}
+            </select>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button onClick={() => fetchReport()} className="p-2 bg-card hover:bg-elevated border border-border-custom rounded-lg text-xs" title="Refresh">
-              <Icon name="refresh" className="w-3.5 h-3.5" />
-            </button>
-            <button onClick={handleExportDpr} className="px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg flex items-center gap-1.5 hover:bg-primary/90 transition-all">
-              <Icon name="outbox" className="w-3.5 h-3.5" /> Export CSV
-            </button>
+          {/* Date Select */}
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] text-muted uppercase font-bold">Date:</span>
+            <select
+              value={selectedDateFilter}
+              onChange={e => setSelectedDateFilter(e.target.value)}
+              className="bg-card border border-border-custom rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
+            >
+              <option value="Today">Today</option>
+              <option value="Yesterday">Yesterday</option>
+              <option value="This Week">This Week</option>
+              <option value="Custom">Custom Range</option>
+            </select>
+          </div>
+
+          {/* Date Range Picker */}
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] text-muted uppercase font-bold">
+              {selectedDateFilter === "Custom" ? "Pick Date:" : "Date Range:"}
+            </span>
+            <input
+              type="date"
+              value={customDate}
+              onChange={(e) => setCustomDate(e.target.value)}
+              disabled={selectedDateFilter !== "Custom"}
+              className="bg-card border border-border-custom rounded-lg px-3 py-1 text-xs text-foreground focus:outline-none focus:border-primary disabled:opacity-50"
+            />
           </div>
         </div>
+      </div>
 
         {/* Content Lists */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-elevated/10">
-
-          {loading && (
-            <div className="text-center text-muted text-sm py-4">Loading…</div>
-          )}
+        <div className="flex-1 overflow-y-auto bg-elevated/10">
+          <PageShell width="full">
+            {loading && <CardSkeleton />}
 
           {/* Row 1: To Do & Material Request split */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -373,7 +378,7 @@ export default function DPRReportPage() {
                         <td className="py-2.5 font-medium text-foreground">{cell(row, "Project Name")}</td>
                         <td className="py-2.5 text-foreground">{cell(row, "Material")}</td>
                         <td className="py-2.5 text-success font-semibold">{cell(row, "Received Qty")}</td>
-                        <td className="py-2.5 text-orange-400 font-semibold">{cell(row, "Used Qty")}</td>
+                        <td className="py-2.5 text-warning font-semibold">{cell(row, "Used Qty")}</td>
                       </tr>
                     ))
                   )}
@@ -410,7 +415,7 @@ export default function DPRReportPage() {
               </table>
             </div>
           </div>
-
+          </PageShell>
         </div>
 
         {/* Global Toast */}

@@ -6,6 +6,9 @@ import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
 import { useProject } from "@/context/ProjectContext";
 import Icon from "@/components/marketing/Icon";
+import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 interface Project {
   id: string;
@@ -87,7 +90,7 @@ const getProjectHealthBadgeClass = (health: string) => {
   if (normalized.includes("healthy") || normalized.includes("good") || normalized.includes("stable")) {
     return "bg-success/10 text-success border-success/20";
   }
-  if (normalized.includes("warn")) return "bg-yellow-500/10 text-yellow-400 border-yellow-500/20";
+  if (normalized.includes("warn")) return "bg-warning/10 text-warning border-warning/20";
   if (normalized.includes("critical")) return "bg-danger/10 text-danger border-danger/20";
   if (normalized.includes("complete")) return "bg-success/10 text-success border-success/20";
   if (normalized.includes("hold")) return "bg-warning/10 text-warning border-warning/20";
@@ -318,8 +321,15 @@ export default function ProjectsHomePage() {
   ];
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 space-y-6 relative">
-      {/* Leave Management Banner */}
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <PageHeader
+        title="Project Hub"
+        subtitle="Central project status and navigation hub"
+      />
+      <div className="flex-1 overflow-y-auto">
+        <PageShell width="wide">
+        <div className="space-y-6">
+          {/* Leave Management Banner */}
       <div className="rounded-lg bg-card border border-border-custom p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
@@ -603,9 +613,10 @@ export default function ProjectsHomePage() {
             {/* List */}
             <div className="p-5 space-y-4 max-h-[400px] overflow-y-auto">
               {leaves.length === 0 ? (
-                <div className="text-center py-12 space-y-4">
-                  <p className="text-xs text-muted">No leave requests found in database.</p>
-                </div>
+                <EmptyState
+                  title="No leave requests found"
+                  description="No leave applications submitted by site staff."
+                />
               ) : (
                 leaves.map((l) => (
                   <div key={l.id} className="p-4 bg-elevated/20 border border-border-custom rounded-lg flex justify-between items-center gap-4">
@@ -781,8 +792,11 @@ export default function ProjectsHomePage() {
                     <tbody className="divide-y divide-border-custom">
                       {filteredIndents.length === 0 ? (
                         <tr>
-                          <td colSpan={6} className="px-6 py-12 text-center text-muted font-medium">
-                            No material indents found matching tab "{mrTab}".
+                          <td colSpan={6} className="p-8">
+                            <EmptyState
+                              title="No material indents found"
+                              description={`No indents found matching tab "${mrTab}".`}
+                            />
                           </td>
                         </tr>
                       ) : (
@@ -862,6 +876,9 @@ export default function ProjectsHomePage() {
           <span className="font-semibold">{toastMessage}</span>
         </div>
       )}
+        </div>
+      </PageShell>
+      </div>
     </div>
   );
 }

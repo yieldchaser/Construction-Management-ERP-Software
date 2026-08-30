@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
 import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 
@@ -122,16 +123,13 @@ export default function DeleteLogsPage() {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto">
-      <PageShell width="wide">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground">Delete Logs</h1>
-          <p className="text-sm text-muted mt-1">
-            Company-level audit trail of deleted records.
-          </p>
-        </div>
-      </div>
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <PageHeader
+        title="Delete Logs"
+        subtitle="Company-level audit trail of deleted records"
+      />
+      <div className="flex-1 overflow-y-auto">
+        <PageShell width="wide">
 
       {/* Filters */}
       <div className="flex flex-wrap items-end gap-3 mb-5 bg-card border border-border-custom rounded-lg p-4">
@@ -213,7 +211,7 @@ export default function DeleteLogsPage() {
               ))
             ) : error ? (
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-red-400">
+                <td colSpan={6} className="px-4 py-6 text-center text-danger">
                   {error}
                 </td>
               </tr>
@@ -245,7 +243,7 @@ export default function DeleteLogsPage() {
                   <td className="px-4 py-3 text-right">
                     <button
                       onClick={() => handlePurge(log)}
-                      className="px-3 py-1.5 rounded-md border border-red-500/30 text-red-500 text-xs font-medium hover:bg-red-500/10"
+                      className="px-3 py-1.5 rounded-md border border-danger/20 text-danger text-xs font-medium hover:bg-danger/10"
                     >
                       Purge
                     </button>
@@ -263,6 +261,7 @@ export default function DeleteLogsPage() {
         </div>
       )}
       </PageShell>
+      </div>
     </div>
   );
 }

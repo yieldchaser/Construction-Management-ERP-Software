@@ -5,6 +5,7 @@ import React, { useState, useEffect } from "react";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
 import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
 
@@ -178,43 +179,42 @@ export default function StatutoryPage() {
   };
 
   const statusColors: Record<string, string> = {
-    draft: "bg-zinc-500/10 text-muted",
-    filed: "bg-emerald-500/10 text-emerald-400",
-    overdue: "bg-red-500/10 text-red-400",
+    draft: "bg-elevated text-muted",
+    filed: "bg-success/10 text-success",
+    overdue: "bg-danger/10 text-danger",
   };
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
+      <PageHeader
+        title="Statutory Reports"
+        subtitle="PF, ESI, BOCW, TDS and other compliance filings"
+      >
+        <div className="flex items-center gap-2">
+          <select
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value)}
+            className="bg-input border border-border-custom rounded-md px-2.5 py-1.5 text-foreground text-xs"
+          >
+            <option value="">All Types</option>
+            <option value="pf">PF</option>
+            <option value="esi">ESI</option>
+            <option value="bocw">BOCW</option>
+            <option value="tds">TDS</option>
+          </select>
+          <button
+            onClick={() => setShowModal(true)}
+            className="px-3.5 py-1.5 bg-primary hover:bg-primary/90 text-white rounded-md text-xs font-semibold transition-all cursor-pointer"
+          >
+            + New Report
+          </button>
+        </div>
+      </PageHeader>
       <div className="flex-1 overflow-y-auto">
         <PageShell width="wide">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Statutory Reports</h1>
-            <p className="text-muted mt-1">PF, ESI, BOCW, TDS and other compliance filings</p>
-          </div>
-          <div className="flex gap-3">
-            <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              className="bg-input border border-border-custom rounded-md px-4 py-2 text-foreground text-sm"
-            >
-              <option value="">All Types</option>
-              <option value="pf">PF</option>
-              <option value="esi">ESI</option>
-              <option value="bocw">BOCW</option>
-              <option value="tds">TDS</option>
-            </select>
-            <button
-              onClick={() => setShowModal(true)}
-              className="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-md text-sm font-semibold transition-all cursor-pointer"
-            >
-              New Report
-            </button>
-          </div>
-        </div>
 
         {message && (
-          <div className={`mb-6 p-4 rounded-md ${message.includes("success") || message.includes("filed") ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}>
+          <div className={`mb-6 p-4 rounded-md ${message.includes("success") || message.includes("filed") ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}>
             {message}
           </div>
         )}
@@ -266,13 +266,13 @@ export default function StatutoryPage() {
                       <div>
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[r.status]}`}>{r.status}</span>
                         {r.days_overdue > 0 && (
-                          <span className="ml-2 text-[10px] text-red-400">{r.days_overdue}d overdue</span>
+                          <span className="ml-2 text-[10px] text-danger">{r.days_overdue}d overdue</span>
                         )}
                       </div>
                     </td>
                     <td className="px-6 py-4 flex gap-2">
                       {r.status === "draft" && (
-                        <button onClick={() => handleFile(r.id)} className="px-3 py-1 bg-blue-500/10 text-blue-400 rounded-lg text-xs font-medium hover:bg-blue-500/20 transition-all">File</button>
+                        <button onClick={() => handleFile(r.id)} className="px-3 py-1 bg-info/10 text-info rounded-lg text-xs font-medium hover:bg-info/10 transition-all">File</button>
                       )}
                     </td>
                   </tr>
@@ -290,7 +290,7 @@ export default function StatutoryPage() {
               <div><span className="text-muted">Period:</span> <span className="text-foreground">{penaltyData.return_period}</span></div>
               <div><span className="text-muted">Total Wages:</span> <span className="text-foreground">₹{Number(penaltyData.total_wages).toLocaleString()}</span></div>
               <div><span className="text-muted">Due Date:</span> <span className="text-foreground">{penaltyData.due_date ? new Date(penaltyData.due_date as string).toLocaleDateString() : "-"}</span></div>
-              <div><span className="text-muted">Estimated Penalty:</span> <span className="text-red-400 font-medium">₹{Number(penaltyData.estimated_penalty).toLocaleString()}</span></div>
+              <div><span className="text-muted">Estimated Penalty:</span> <span className="text-danger font-medium">₹{Number(penaltyData.estimated_penalty).toLocaleString()}</span></div>
             </div>
             <button onClick={() => setShowPenalty(false)} className="mt-4 px-4 py-2 bg-white/10 hover:bg-white/15 text-foreground rounded-md text-sm font-semibold">Close</button>
           </div>
@@ -319,8 +319,8 @@ export default function StatutoryPage() {
                   </div>
                 </div>
                 <div className="flex gap-3">
-                  <button type="button" onClick={handleAutoPopulate} className="px-4 py-2 bg-zinc-500/10 text-zinc-300 rounded-md text-xs font-medium hover:bg-zinc-500/20 transition-all">Auto-fill from Employees</button>
-                  <button type="button" onClick={handleEstimatePenalty} className="px-4 py-2 bg-amber-500/10 text-amber-400 rounded-md text-xs font-medium hover:bg-amber-500/20 transition-all">Estimate Penalty</button>
+                  <button type="button" onClick={handleAutoPopulate} className="px-4 py-2 bg-elevated text-muted rounded-md text-xs font-medium hover:bg-elevated transition-all">Auto-fill from Employees</button>
+                  <button type="button" onClick={handleEstimatePenalty} className="px-4 py-2 bg-warning/10 text-warning rounded-md text-xs font-medium hover:bg-warning/10 transition-all">Estimate Penalty</button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>

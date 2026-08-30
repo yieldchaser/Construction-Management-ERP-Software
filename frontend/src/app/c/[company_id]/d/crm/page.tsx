@@ -5,6 +5,10 @@ import { useParams } from "next/navigation";
 import { getApi, authHeaders, resolveCompanyId, fmtINR } from "@/lib/siteflow";
 import { useCompanySettings } from "@/context/CompanySettingsContext";
 import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
+import SegmentedTabs from "@/components/ui/Tabs";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { TableSkeleton } from "@/components/ui/Skeleton";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -654,24 +658,23 @@ export default function CRMPage() {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto">
-      <PageShell width="wide">
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <PageHeader
+        title="CRM & Quotations"
+        subtitle="Lead tracking, client pipeline and quotation register"
+      />
+      <div className="flex-1 overflow-y-auto">
+        <PageShell width="wide">
       {/* Sub-tabs */}
-      <div className="mb-4 inline-flex items-center gap-1 p-1 bg-card border border-border-custom rounded-lg shrink-0">
-        {(["leads", "quotation"] as const).map((t) => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => setTab(t)}
-            className={`px-3.5 py-1.5 text-xs font-semibold rounded-md capitalize transition-all cursor-pointer ${
-              tab === t
-                ? "bg-elevated text-foreground shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)]"
-                : "text-muted hover:text-foreground hover:bg-elevated/40"
-            }`}
-          >
-            {t === "leads" ? "Leads" : "Quotation"}
-          </button>
-        ))}
+      <div className="mb-4">
+        <SegmentedTabs
+          tabs={[
+            { id: "leads", label: "Leads" },
+            { id: "quotation", label: "Quotation" },
+          ]}
+          activeTab={tab}
+          onChange={(t) => setTab(t as any)}
+        />
       </div>
 
       {tab === "leads" && (
@@ -764,15 +767,19 @@ export default function CRMPage() {
               <tbody>
                 {loading && (
                   <tr>
-                    <td className="px-3 py-6 text-muted" colSpan={ALL_COLS.length}>
-                      Loading…
+                    <td colSpan={ALL_COLS.length} className="p-4">
+                      <TableSkeleton rows={5} cols={ALL_COLS.length} />
                     </td>
                   </tr>
                 )}
                 {!loading && filtered.length === 0 && (
                   <tr>
-                    <td className="px-3 py-6 text-muted" colSpan={ALL_COLS.length}>
-                      No leads found.
+                    <td colSpan={ALL_COLS.length} className="p-8">
+                      <EmptyState
+                        title="No leads found"
+                        description={search ? "No leads match your search query." : "Track incoming customer inquiries and opportunities."}
+                        action={!search ? { label: "New Lead", onClick: () => setDrawerOpen(true) } : undefined}
+                      />
                     </td>
                   </tr>
                 )}
@@ -937,7 +944,7 @@ export default function CRMPage() {
                 />
               </Field>
 
-              {formError && <div className="mb-3 rounded bg-red-500/10 px-3 py-2 text-sm text-red-400">{formError}</div>}
+              {formError && <div className="mb-3 rounded bg-danger/10 px-3 py-2 text-sm text-danger">{formError}</div>}
               <div className="flex justify-end gap-2">
                 <button className={btnGhost} onClick={() => setDrawerOpen(false)}>
                   Cancel
@@ -992,12 +999,21 @@ export default function CRMPage() {
               </thead>
               <tbody>
                 {qLoading && (
-                  <tr><td className="px-3 py-6 text-muted" colSpan={9}>Loading…</td></tr>
+                  <tr>
+                    <td colSpan={9} className="p-4">
+                      <TableSkeleton rows={3} cols={9} />
+                    </td>
+                  </tr>
                 )}
                 {!qLoading && quots.length === 0 && (
-                  <tr><td className="px-3 py-6 text-muted" colSpan={9}>
-                    {selLeadId ? "No quotations yet for this lead." : "Select a lead to view quotations."}
-                  </td></tr>
+                  <tr>
+                    <td colSpan={9} className="p-8">
+                      <EmptyState
+                        title={selLeadId ? "No quotations yet" : "No quotations to display"}
+                        description={selLeadId ? "Create a quotation for this lead to send proposals and estimates." : "Select a lead from the list above to view associated quotations."}
+                      />
+                    </td>
+                  </tr>
                 )}
                 {quots.map((q) => (
                   <tr
@@ -1118,7 +1134,7 @@ export default function CRMPage() {
                 <div className="flex justify-between border-t border-border-custom pt-1 font-semibold"><span>Grand Total</span><span>{fmtINR(qGrand, currencyDecimalPlaces)}</span></div>
               </div>
 
-              {qError && <div className="mb-3 mt-3 rounded bg-red-500/10 px-3 py-2 text-sm text-red-400">{qError}</div>}
+              {qError && <div className="mb-3 mt-3 rounded bg-danger/10 px-3 py-2 text-sm text-danger">{qError}</div>}
               <div className="mt-3 flex justify-end gap-2">
                 <button className={btnGhost} onClick={() => setQDrawer(false)}>Cancel</button>
                 <button className={btnPrimary} onClick={submitQuotation} disabled={qSaving}>
@@ -1181,6 +1197,7 @@ export default function CRMPage() {
         </div>
       )}
       </PageShell>
+      </div>
     </div>
   );
 }

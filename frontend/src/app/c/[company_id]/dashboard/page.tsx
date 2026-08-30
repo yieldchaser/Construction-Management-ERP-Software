@@ -6,6 +6,8 @@ import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 import Icon from "@/components/marketing/Icon";
 import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 export default function DashboardPage() {
   const params = useParams();
@@ -384,24 +386,11 @@ export default function DashboardPage() {
 
       {/* Main Workspace Frame */}
       <main className="flex-1 flex flex-col overflow-hidden h-full">
-        {/* Top Header */}
-        <header className="h-16 border-b border-border-custom px-6 flex items-center justify-between bg-card shrink-0">
-          <div className="flex items-center gap-4">
-            <h1 className="text-base font-bold text-foreground uppercase tracking-wider">
-              Company Dashboard
-            </h1>
-          </div>
-
-          <div className="flex items-center gap-4">
-            {/* Theme Toggle */}
-            <button
-              onClick={toggleTheme}
-              className="flex items-center justify-center h-8 w-8 rounded-lg bg-elevated border border-border-custom text-muted hover:text-foreground transition-all cursor-pointer"
-              title="Toggle Theme"
-            >
-              <Icon name={isLightTheme ? "moon" : "sun"} className="w-4 h-4" />
-            </button>
-
+        <PageHeader
+          title="Company Dashboard"
+          subtitle="Real-time KPI overview, financial ledger metrics and physical progress"
+        >
+          <div className="flex items-center gap-3">
             {/* Tally Connection status dot */}
             <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-elevated border border-border-custom text-xs text-muted">
               <span className={`h-2 w-2 rounded-full ${tallySyncStatus === "Connected" ? "bg-success" : "bg-muted"}`} />
@@ -425,19 +414,8 @@ export default function DashboardPage() {
                 "Trigger Sync"
               )}
             </button>
-
-            {/* Refresh Button */}
-            <button
-              onClick={() => window.location.reload()}
-              className="flex items-center justify-center h-8 w-8 rounded-lg bg-elevated border border-border-custom text-muted hover:text-foreground transition-all cursor-pointer"
-              title="Refresh Dashboard"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
-              </svg>
-            </button>
           </div>
-        </header>
+        </PageHeader>
 
         {/* Tab Selector Row (Under Header) */}
         <div className="flex border-b border-border-custom px-6 bg-card shrink-0">
@@ -566,15 +544,15 @@ export default function DashboardPage() {
                     {/* Summary Counters Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
                       <div className="rounded-md border border-border-custom bg-card p-5 flex flex-col justify-center items-center text-center transition-all">
-                        <span className="text-[11px] font-bold text-red-500 [.light-theme_&]:text-red-600 uppercase tracking-wider block mb-1">Not Started Projects</span>
+                        <span className="text-[11px] font-bold text-danger [.light-theme_&]:text-danger uppercase tracking-wider block mb-1">Not Started Projects</span>
                         <span className="text-2xl font-bold text-foreground">{notStartedCount}</span>
                       </div>
                       <div className="rounded-md border border-border-custom bg-card p-5 flex flex-col justify-center items-center text-center transition-all">
-                        <span className="text-[11px] font-bold text-success [.light-theme_&]:text-green-600 uppercase tracking-wider block mb-1">Ongoing Projects</span>
+                        <span className="text-[11px] font-bold text-success [.light-theme_&]:text-success uppercase tracking-wider block mb-1">Ongoing Projects</span>
                         <span className="text-2xl font-bold text-foreground">{ongoingCount}</span>
                       </div>
                       <div className="rounded-md border border-border-custom bg-card p-5 flex flex-col justify-center items-center text-center transition-all">
-                        <span className="text-[11px] font-bold text-yellow-500 [.light-theme_&]:text-yellow-600 uppercase tracking-wider block mb-1">Onhold Projects</span>
+                        <span className="text-[11px] font-bold text-warning [.light-theme_&]:text-warning uppercase tracking-wider block mb-1">Onhold Projects</span>
                         <span className="text-2xl font-bold text-foreground">{onHoldCount}</span>
                       </div>
                       <div className="rounded-md border border-border-custom bg-card p-5 flex flex-col justify-center items-center text-center transition-all">
@@ -582,7 +560,7 @@ export default function DashboardPage() {
                         <span className="text-2xl font-bold text-foreground">{completedCount}</span>
                       </div>
                       <div className="rounded-md border border-border-custom bg-card p-5 flex flex-col justify-center items-center text-center transition-all">
-                        <span className="text-[11px] font-bold text-red-400 uppercase tracking-wider block mb-1">Cancelled Projects</span>
+                        <span className="text-[11px] font-bold text-danger uppercase tracking-wider block mb-1">Cancelled Projects</span>
                         <span className="text-2xl font-bold text-foreground">{cancelledCount}</span>
                       </div>
                     </div>
@@ -807,7 +785,7 @@ export default function DashboardPage() {
                             if (!hasData) {
                               return (
                                 <div className="h-40 flex items-center justify-center rounded-md bg-transparent">
-                                  <span className="text-red-500 [.light-theme_&]:text-red-600 text-xs font-bold uppercase tracking-wider">No Data Available</span>
+                                  <span className="text-danger [.light-theme_&]:text-danger text-xs font-bold uppercase tracking-wider">No Data Available</span>
                                 </div>
                               );
                             }
@@ -894,7 +872,7 @@ export default function DashboardPage() {
                             if (!hasData) {
                               return (
                                 <div className="h-40 flex items-center justify-center rounded-md bg-transparent">
-                                  <span className="text-red-500 [.light-theme_&]:text-red-600 text-xs font-bold uppercase tracking-wider">No Data Available</span>
+                                  <span className="text-danger [.light-theme_&]:text-danger text-xs font-bold uppercase tracking-wider">No Data Available</span>
                                 </div>
                               );
                             }
@@ -969,7 +947,12 @@ export default function DashboardPage() {
                           <tbody className="divide-y divide-border-custom">
                             {filteredProjList.length === 0 ? (
                               <tr>
-                                <td colSpan={11} className="px-4 py-8 text-center text-muted font-medium">No projects found.</td>
+                                <td colSpan={11} className="p-8">
+                                  <EmptyState
+                                    title="No projects found"
+                                    description="No matching projects in your company portfolio."
+                                  />
+                                </td>
                               </tr>
                             ) : (
                               filteredProjList.map((p, idx) => (
@@ -981,9 +964,9 @@ export default function DashboardPage() {
                                   <td className="px-4 py-3 text-center border-r border-border-custom">
                                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
                                       p.status === "Ongoing" ? "bg-success/15 text-success border-success/30" :
-                                      p.status === "Onhold" || p.status === "On Hold" ? "bg-yellow-500/15 text-yellow-500 border-yellow-500/30" :
-                                      p.status === "Completed" ? "bg-zinc-500/15 text-zinc-400 border-zinc-500/30" :
-                                      "bg-red-500/15 text-red-500 border-red-500/30"
+                                      p.status === "Onhold" || p.status === "On Hold" ? "bg-warning/10 text-warning border-warning/20" :
+                                      p.status === "Completed" ? "bg-elevated text-muted border-border-custom" :
+                                      "bg-danger/10 text-danger border-danger/20"
                                     }`}>
                                       {p.status}
                                     </span>
@@ -991,8 +974,8 @@ export default function DashboardPage() {
                                   <td className="px-4 py-3 text-center border-r border-border-custom">
                                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
                                       p.health === "Healthy" ? "bg-success/15 text-success border-success/30" :
-                                      p.health === "Warning" ? "bg-yellow-500/15 text-yellow-500 border-yellow-500/30" :
-                                      "bg-red-500/15 text-red-500 border-red-500/30"
+                                      p.health === "Warning" ? "bg-warning/10 text-warning border-warning/20" :
+                                      "bg-danger/10 text-danger border-danger/20"
                                     }`}>
                                       {p.health}
                                     </span>
@@ -1141,25 +1124,25 @@ export default function DashboardPage() {
                     {/* Bottom metrics grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-border-custom">
                       {/* Advance Paid */}
-                      <div className="bg-emerald-950/10 border border-emerald-500/10 [.light-theme_&]:bg-success/10 [.light-theme_&]:border-emerald-200 rounded-lg p-3 flex flex-col items-center justify-center transition-all">
-                        <span className="text-[10px] font-bold text-emerald-400 [.light-theme_&]:text-emerald-700 uppercase tracking-wider block text-center">Advance Paid</span>
-                        <strong className="text-md font-bold text-emerald-400 [.light-theme_&]:text-emerald-700 mt-1 block text-center">
+                      <div className="bg-success/10 border border-success/10 [.light-theme_&]:bg-success/10 [.light-theme_&]:border-success rounded-lg p-3 flex flex-col items-center justify-center transition-all">
+                        <span className="text-[10px] font-bold text-success [.light-theme_&]:text-success uppercase tracking-wider block text-center">Advance Paid</span>
+                        <strong className="text-md font-bold text-success [.light-theme_&]:text-success mt-1 block text-center">
                           {advPaid > 0 ? advPaid.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"}
                         </strong>
                       </div>
 
                       {/* To Pay */}
-                      <div className="bg-red-950/10 border border-red-500/10 [.light-theme_&]:bg-danger/10 [.light-theme_&]:border-red-200 rounded-lg p-3 flex flex-col items-center justify-center transition-all">
-                        <span className="text-[10px] font-bold text-red-400 [.light-theme_&]:text-red-700 uppercase tracking-wider block text-center">To Pay</span>
-                        <strong className="text-md font-bold text-red-400 [.light-theme_&]:text-red-700 mt-1 block text-center">
+                      <div className="bg-danger/10 border border-danger/10 [.light-theme_&]:bg-danger/10 [.light-theme_&]:border-danger rounded-lg p-3 flex flex-col items-center justify-center transition-all">
+                        <span className="text-[10px] font-bold text-danger [.light-theme_&]:text-danger uppercase tracking-wider block text-center">To Pay</span>
+                        <strong className="text-md font-bold text-danger [.light-theme_&]:text-danger mt-1 block text-center">
                           {toPay > 0 ? toPay.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"}
                         </strong>
                       </div>
 
                       {/* To Receive */}
-                      <div className="bg-red-950/10 border border-red-500/10 [.light-theme_&]:bg-danger/10 [.light-theme_&]:border-red-200 rounded-lg p-3 flex flex-col items-center justify-center transition-all">
-                        <span className="text-[10px] font-bold text-red-400 [.light-theme_&]:text-red-700 uppercase tracking-wider block text-center">To Receive</span>
-                        <strong className="text-md font-bold text-red-400 [.light-theme_&]:text-red-700 mt-1 block text-center">
+                      <div className="bg-danger/10 border border-danger/10 [.light-theme_&]:bg-danger/10 [.light-theme_&]:border-danger rounded-lg p-3 flex flex-col items-center justify-center transition-all">
+                        <span className="text-[10px] font-bold text-danger [.light-theme_&]:text-danger uppercase tracking-wider block text-center">To Receive</span>
+                        <strong className="text-md font-bold text-danger [.light-theme_&]:text-danger mt-1 block text-center">
                           {toReceive > 0 ? toReceive.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"}
                         </strong>
                       </div>
@@ -1197,8 +1180,11 @@ export default function DashboardPage() {
                         <tbody>
                           {financialData?.project_summaries?.length === 0 ? (
                             <tr>
-                              <td colSpan={12} className="text-center p-8 text-muted">
-                                No financial data found.
+                              <td colSpan={12} className="p-8">
+                                <EmptyState
+                                  title="No financial data found"
+                                  description="Financial data will appear as project budgets and transactions are recorded."
+                                />
                               </td>
                             </tr>
                           ) : (
@@ -1213,10 +1199,10 @@ export default function DashboardPage() {
                                   ) : (
                                     <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${
                                       p.project_health === "Healthy"
-                                        ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                                        ? "bg-success/10 border-success/20 text-success"
                                         : p.project_health === "Warning"
-                                        ? "bg-amber-500/10 border-amber-500/20 text-amber-400"
-                                        : "bg-red-500/10 border-red-500/20 text-red-400"
+                                        ? "bg-warning/10 border-warning/20 text-warning"
+                                        : "bg-danger/10 border-danger/20 text-danger"
                                     }`}>
                                       {p.project_health}
                                     </span>
@@ -1268,7 +1254,7 @@ export default function DashboardPage() {
                           if (!hasData) {
                             return (
                               <div className="h-40 flex items-center justify-center bg-transparent">
-                                <span className="text-red-500 [.light-theme_&]:text-red-600 text-xs font-bold uppercase tracking-wider">No Data Available</span>
+                                <span className="text-danger [.light-theme_&]:text-danger text-xs font-bold uppercase tracking-wider">No Data Available</span>
                               </div>
                             );
                           }
@@ -1314,7 +1300,7 @@ export default function DashboardPage() {
                           const totalSales = financialData?.sales_series?.reduce((a: number, b: number) => a + b, 0) || 0;
                           return (
                             <span className={`font-bold px-2 py-0.5 rounded ${
-                              totalSales >= 0 ? "text-emerald-500 bg-emerald-500/10 [.light-theme_&]:bg-success/10 text-emerald-600" : "text-red-500 bg-red-500/10 [.light-theme_&]:bg-danger/10 text-red-700"
+                              totalSales >= 0 ? "text-success bg-success/10 [.light-theme_&]:bg-success/10 text-success" : "text-danger bg-danger/10 [.light-theme_&]:bg-danger/10 text-danger"
                             }`}>
                               {totalSales === 0 ? "-" : totalSales.toLocaleString("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })}
                             </span>
@@ -1335,7 +1321,7 @@ export default function DashboardPage() {
                           if (!hasData) {
                             return (
                               <div className="h-40 flex items-center justify-center bg-transparent">
-                                <span className="text-red-500 [.light-theme_&]:text-red-600 text-xs font-bold uppercase tracking-wider">No Data Available</span>
+                                <span className="text-danger [.light-theme_&]:text-danger text-xs font-bold uppercase tracking-wider">No Data Available</span>
                               </div>
                             );
                           }
@@ -1380,7 +1366,7 @@ export default function DashboardPage() {
                         {(() => {
                           const totalExpense = financialData?.expense_series?.reduce((a: number, b: number) => a + b, 0) || 0;
                           return (
-                            <span className="font-bold text-red-500 [.light-theme_&]:text-red-700 bg-red-500/10 [.light-theme_&]:bg-danger/10 px-2 py-0.5 rounded">
+                            <span className="font-bold text-danger [.light-theme_&]:text-danger bg-danger/10 [.light-theme_&]:bg-danger/10 px-2 py-0.5 rounded">
                               {totalExpense === 0 ? "-" : `-${totalExpense.toLocaleString("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })}`}
                             </span>
                           );
@@ -1400,7 +1386,7 @@ export default function DashboardPage() {
                           if (!hasData) {
                             return (
                               <div className="h-40 flex items-center justify-center bg-transparent">
-                                <span className="text-red-500 [.light-theme_&]:text-red-600 text-xs font-bold uppercase tracking-wider">No Data Available</span>
+                                <span className="text-danger [.light-theme_&]:text-danger text-xs font-bold uppercase tracking-wider">No Data Available</span>
                               </div>
                             );
                           }
@@ -1447,7 +1433,7 @@ export default function DashboardPage() {
                           const totalMargin = financialData?.margin_series?.reduce((a: number, b: number) => a + b, 0) || 0;
                           return (
                             <span className={`font-bold px-2 py-0.5 rounded ${
-                              totalMargin >= 0 ? "text-emerald-500 bg-emerald-500/10 [.light-theme_&]:bg-success/10 text-emerald-600" : "text-red-500 bg-red-500/10 [.light-theme_&]:bg-danger/10 text-red-700"
+                              totalMargin >= 0 ? "text-success bg-success/10 [.light-theme_&]:bg-success/10 text-success" : "text-danger bg-danger/10 [.light-theme_&]:bg-danger/10 text-danger"
                             }`}>
                               {totalMargin === 0 ? "-" : totalMargin.toLocaleString("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })}
                             </span>
@@ -1471,7 +1457,7 @@ export default function DashboardPage() {
                           if (!hasPaymentData) {
                             return (
                               <div className="h-40 flex items-center justify-center rounded-md bg-transparent">
-                                <span className="text-red-500 [.light-theme_&]:text-red-600 text-xs font-bold uppercase tracking-wider">No Data Available</span>
+                                <span className="text-danger [.light-theme_&]:text-danger text-xs font-bold uppercase tracking-wider">No Data Available</span>
                               </div>
                             );
                           }
@@ -1520,7 +1506,7 @@ export default function DashboardPage() {
                           if (!hasExpenseData) {
                             return (
                               <div className="h-40 flex items-center justify-center rounded-md bg-transparent">
-                                <span className="text-red-500 [.light-theme_&]:text-red-600 text-xs font-bold uppercase tracking-wider">No Data Available</span>
+                                <span className="text-danger [.light-theme_&]:text-danger text-xs font-bold uppercase tracking-wider">No Data Available</span>
                               </div>
                             );
                           }
@@ -1610,7 +1596,7 @@ export default function DashboardPage() {
                     <div className="col-span-3 font-semibold text-foreground">Base slab Concrete Pouring</div>
                     <div className="col-span-1 text-center text-muted">5</div>
                     <div className="col-span-8 relative h-6 bg-elevated rounded-lg">
-                      <div className="absolute left-[78%] w-[18%] h-full bg-zinc-800 rounded-lg flex items-center px-2 text-[10px] font-medium text-muted">
+                      <div className="absolute left-[78%] w-[18%] h-full bg-elevated rounded-lg flex items-center px-2 text-[10px] font-medium text-muted">
                         Planned
                       </div>
                     </div>

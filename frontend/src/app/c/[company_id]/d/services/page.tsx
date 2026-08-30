@@ -3,6 +3,8 @@
 import React, { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Icon, { type IconName } from "@/components/marketing/Icon";
+import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
 import { isMissingOrDemoTenant, redirectToLogin } from "@/lib/company-guard";
 
 interface ServiceItem {
@@ -94,28 +96,13 @@ export default function ServicesPage() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-elevated/10">
-      <div className="flex-1 overflow-y-auto p-6 space-y-8">
-        {/* Header */}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center justify-center h-9 w-9 rounded-lg border border-border-custom bg-card text-muted hover:text-foreground hover:border-border-custom/80 transition-all cursor-pointer"
-            aria-label="Go back"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <h1 className="text-2xl font-extrabold tracking-tight text-foreground">Services</h1>
-        </div>
-
-        {/* Our services */}
-        <div>
-          <h2 className="text-lg font-bold text-foreground">Our services</h2>
-          <p className="text-xs text-muted mt-1">
-            Enhance your SiteFlow experience with our add-on services and integrations.
-          </p>
-        </div>
+      <PageHeader
+        title="Services & Add-ons"
+        subtitle="Enhance your SiteFlow experience with our add-on services and integrations."
+      />
+      <div className="flex-1 overflow-y-auto">
+        <PageShell width="wide">
+          <div className="space-y-8">
 
         {/* Service Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -172,8 +159,9 @@ export default function ServicesPage() {
               <span aria-hidden>&gt;</span>
             </a>
           </div>
-          <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-radial from-primary/10 to-transparent blur-3xl pointer-events-none"></div>
         </div>
+        </div>
+        </PageShell>
       </div>
     </div>
   );

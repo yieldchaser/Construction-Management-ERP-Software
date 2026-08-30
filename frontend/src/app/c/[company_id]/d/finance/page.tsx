@@ -10,6 +10,10 @@ import Icon, { type IconName } from "@/components/marketing/Icon";
 // formula — a leading = + - @ executes when the export opens in Excel/Sheets.
 import { buildCsv } from "@/lib/csv";
 import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
+import { Skeleton } from "@/components/ui/Skeleton";
+import SegmentedTabs from "@/components/ui/Tabs";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 interface Transaction {
   id: string;
@@ -1091,30 +1095,26 @@ export default function FinancePage() {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* ── Finance sub-navigation (top tabs) ── */}
-      <div className="flex items-center gap-1 px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto">
-        {([
-          { key: "party", label: "Party", icon: "group" },
-          { key: "ledger", label: "Transaction", icon: "ledger" },
-          { key: "payment_requests", label: "Payment Requests", icon: "envelope" },
-          { key: "accounts", label: "Accounts", icon: "bank" },
-          { key: "tally", label: "Tally Sync", icon: "refresh" },
-        ] as { key: string; label: string; icon: IconName }[]).map(item => (
-          <button key={item.key} onClick={() => setTab(item.key as any)}
-            className={`whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-all inline-flex items-center gap-1.5 ${tab === item.key ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-elevated"}`}>
-            <Icon name={item.icon} className="w-3.5 h-3.5" />{item.label}
-          </button>
-        ))}
+      <div className="px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto">
+        <SegmentedTabs
+          tabs={[
+            { id: "party", label: "Party", icon: <Icon name="group" className="w-3.5 h-3.5" /> },
+            { id: "ledger", label: "Transaction", icon: <Icon name="ledger" className="w-3.5 h-3.5" /> },
+            { id: "payment_requests", label: "Payment Requests", icon: <Icon name="envelope" className="w-3.5 h-3.5" /> },
+            { id: "accounts", label: "Accounts", icon: <Icon name="bank" className="w-3.5 h-3.5" /> },
+            { id: "tally", label: "Tally Sync", icon: <Icon name="refresh" className="w-3.5 h-3.5" /> },
+          ]}
+          activeTab={tab}
+          onChange={(t) => setTab(t as any)}
+        />
       </div>
 
       {/* ── Main content area ── */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-14 border-b border-border-custom bg-background px-6 flex items-center justify-between shrink-0">
-          <div>
-            <h1 className="text-sm font-bold text-foreground">
-              {tab === "ledger" ? "Dashboard" : tab === "party" ? "Party-wise Ledgers" : tab === "payment_requests" ? "Payment Requests Ledger" : tab === "accounts" ? "Company Cash & Bank Accounts" : tab === "cashbook" ? "Cash Book (Bank Ledger)" : tab === "pl" ? "Project P&L" : tab === "tally" ? "Tally Sync Gateway" : "Cost Variance Report"}
-            </h1>
-            <p className="text-[10px] text-muted">Real-time sequential approval tracking & running balance ledger</p>
-          </div>
+        <PageHeader
+          title={tab === "ledger" ? "Dashboard" : tab === "party" ? "Party-wise Ledgers" : tab === "payment_requests" ? "Payment Requests Ledger" : tab === "accounts" ? "Company Cash & Bank Accounts" : tab === "cashbook" ? "Cash Book (Bank Ledger)" : tab === "pl" ? "Project P&L" : tab === "tally" ? "Tally Sync Gateway" : "Cost Variance Report"}
+          subtitle="Real-time sequential approval tracking & running balance ledger"
+        >
           <div className="flex items-center gap-4 relative">
             {/* Unbilled Materials Badge */}
             <div className="hidden sm:flex items-center gap-1.5 cursor-pointer hover:bg-elevated/40 px-2.5 py-1.5 rounded-lg border border-border-custom/50">
@@ -1127,7 +1127,7 @@ export default function FinancePage() {
             <div className="hidden sm:flex items-center gap-1.5 cursor-pointer hover:bg-elevated/40 px-2.5 py-1.5 rounded-lg border border-border-custom/50">
               <Icon name="schedule" className="w-3.5 h-3.5" />
               <span className="text-[10px] text-muted uppercase font-bold tracking-wider">Pending Entries</span>
-              <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[9px] font-bold px-1.5 py-0.5 rounded-full">{pendingCount}</span>
+              <span className="bg-warning/10 text-warning border border-warning/20 text-[9px] font-bold px-1.5 py-0.5 rounded-full">{pendingCount}</span>
             </div>
 
             <div className="relative">
@@ -1176,7 +1176,7 @@ export default function FinancePage() {
               )}
             </div>
           </div>
-        </header>
+        </PageHeader>
 
         <div className="flex-1 overflow-y-auto">
           <PageShell width="wide">
@@ -1192,20 +1192,20 @@ export default function FinancePage() {
               return matchQ && matchD && matchM;
             });
             const statusClass = (s: string) => {
-              if (s === "Paid" || s === "Approved") return "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
-              if (s === "Partially Paid") return "bg-amber-500/10 text-amber-400 border border-amber-500/20";
-              return "bg-rose-500/10 text-rose-400 border border-rose-500/20";
+              if (s === "Paid" || s === "Approved") return "bg-success/10 text-success border border-success/20";
+              if (s === "Partially Paid") return "bg-warning/10 text-warning border border-warning/20";
+              return "bg-danger/10 text-danger border border-danger/20";
             };
             const sumCell = (v: number) =>
               txnLoad === "loading" ? (
-                <span className="text-muted animate-pulse">Loading...</span>
+                <Skeleton className="w-16 h-4 inline-block align-middle" />
               ) : (
                 `₹${(v || 0).toLocaleString("en-IN")}`
               );
             return (
             <div className="space-y-4">
               {txnLoad === "error" && (
-                <div className="p-3 text-xs rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center gap-2 flex-wrap">
+                <div className="p-3 text-xs rounded-lg bg-danger/10 border border-danger/20 text-danger flex items-center gap-2 flex-wrap">
                   <span>Company finance totals failed to load. Figures below may be incomplete.</span>
                   <button onClick={fetchData} className="underline font-bold cursor-pointer">Retry</button>
                 </div>
@@ -1215,12 +1215,12 @@ export default function FinancePage() {
                 <div className="bg-card border border-border-custom rounded-lg p-4">
                   <div className="text-[10px] font-bold text-muted uppercase tracking-wider">Total Invoice</div>
                   <div className="text-xl font-extrabold text-foreground mt-1">{sumCell(txnSummary.total_invoice)}</div>
-                  <div className="text-[10px] text-rose-400 mt-1">Unpaid Invoice: ₹{(txnSummary.unpaid_invoice || 0).toLocaleString("en-IN")}</div>
+                  <div className="text-[10px] text-danger mt-1">Unpaid Invoice: ₹{(txnSummary.unpaid_invoice || 0).toLocaleString("en-IN")}</div>
                 </div>
                 <div className="bg-card border border-border-custom rounded-lg p-4">
                   <div className="text-[10px] font-bold text-muted uppercase tracking-wider">Total Expense</div>
                   <div className="text-xl font-extrabold text-foreground mt-1">{sumCell(txnSummary.total_expense)}</div>
-                  <div className="text-[10px] text-rose-400 mt-1">Unpaid Expense: ₹{(txnSummary.unpaid_expense || 0).toLocaleString("en-IN")}</div>
+                  <div className="text-[10px] text-danger mt-1">Unpaid Expense: ₹{(txnSummary.unpaid_expense || 0).toLocaleString("en-IN")}</div>
                 </div>
                 <div className="bg-card border border-border-custom rounded-lg p-4">
                   <div className="text-[10px] font-bold text-muted uppercase tracking-wider flex items-center gap-1">
@@ -1238,14 +1238,14 @@ export default function FinancePage() {
                   <Icon name="trolley" className="w-3.5 h-3.5" /> Unbilled Materials <span className="bg-primary/20 text-primary text-[9px] font-bold px-1.5 py-0.5 rounded-full">New {unbilledCount}</span>
                 </button>
                 <button className="py-1 px-3 border border-border-custom hover:bg-elevated rounded text-[11px] font-medium text-foreground transition-all flex items-center gap-1">
-                  <Icon name="schedule" className="w-3.5 h-3.5" /> Pending Entries <span className="bg-amber-500/20 text-amber-400 text-[9px] font-bold px-1.5 py-0.5 rounded-full">{pendingCount}</span>
+                  <Icon name="schedule" className="w-3.5 h-3.5" /> Pending Entries <span className="bg-warning/10 text-warning text-[9px] font-bold px-1.5 py-0.5 rounded-full">{pendingCount}</span>
                 </button>
                 <div className="flex-1" />
                 <input type="text" placeholder="Search party, voucher#..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="bg-input border border-border-custom rounded-md px-3 py-1.5 text-xs text-foreground placeholder-muted focus:outline-none focus:border-primary" />
               </div>
 
               {zohoMsg && (
-                <div className={`mb-3 p-3 text-xs rounded-lg ${zohoMsg.type === "ok" ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400" : "bg-rose-500/10 border border-rose-500/20 text-rose-400"}`}>
+                <div className={`mb-3 p-3 text-xs rounded-lg ${zohoMsg.type === "ok" ? "bg-success/10 border border-success/20 text-success" : "bg-danger/10 border border-danger/20 text-danger"}`}>
                   {zohoMsg.text}
                 </div>
               )}
@@ -1276,7 +1276,7 @@ export default function FinancePage() {
                         <td className="p-3 text-foreground">
                           {t.details}
                           {t.project_id ? <span className="text-[10px] text-muted block">Project: {t.project_name || String(t.project_id).slice(0, 8)}</span> : null}
-                          {t.due_date ? <span className="text-[10px] text-amber-400 block font-medium">Due: {t.due_date}</span> : null}
+                          {t.due_date ? <span className="text-[10px] text-warning block font-medium">Due: {t.due_date}</span> : null}
                         </td>
                         <td className="p-3 text-right font-bold text-foreground">₹{(t.amount || 0).toLocaleString("en-IN")}</td>
                         <td className="p-3">
@@ -1317,10 +1317,10 @@ export default function FinancePage() {
             );
             const statusChip = (status: string) => {
               if (status === "Advance Paid" || status === "Advance Received")
-                return "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+                return "bg-success/10 text-success border border-success/20";
               if (status === "To Pay" || status === "To Receive")
-                return "bg-rose-500/10 text-rose-400 border border-rose-500/20";
-              return "bg-zinc-500/10 text-muted border border-zinc-500/20";
+                return "bg-danger/10 text-danger border border-danger/20";
+              return "bg-elevated text-muted border border-border-custom";
             };
             const filteredParties = companyParties.filter(p => {
               const q = partySearchQuery.toLowerCase();
@@ -1348,31 +1348,31 @@ export default function FinancePage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-card border border-border-custom rounded-lg p-4 flex items-center justify-between shadow-sm relative overflow-hidden">
                   <div className="space-y-1 z-10">
-                    <span className="text-[10px] font-bold text-emerald-400/80 uppercase tracking-wider block">Advance Paid</span>
+                    <span className="text-[10px] font-bold text-success/80 uppercase tracking-wider block">Advance Paid</span>
                     <strong className="text-xl font-extrabold text-foreground tracking-tight block">₹{partySums.advance_paid.toLocaleString("en-IN")}</strong>
                   </div>
-                  <div className="h-9 w-9 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400 z-10">↗</div>
+                  <div className="h-9 w-9 rounded-full bg-success/10 flex items-center justify-center text-success z-10">↗</div>
                 </div>
                 <div className="bg-card border border-border-custom rounded-lg p-4 flex items-center justify-between shadow-sm relative overflow-hidden">
                   <div className="space-y-1 z-10">
-                    <span className="text-[10px] font-bold text-red-400/80 uppercase tracking-wider block">To Pay</span>
+                    <span className="text-[10px] font-bold text-danger/80 uppercase tracking-wider block">To Pay</span>
                     <strong className="text-xl font-extrabold text-foreground tracking-tight block">₹{partySums.to_pay.toLocaleString("en-IN")}</strong>
                   </div>
-                  <div className="h-9 w-9 rounded-full bg-red-500/10 flex items-center justify-center text-red-400 z-10">↑</div>
+                  <div className="h-9 w-9 rounded-full bg-danger/10 flex items-center justify-center text-danger z-10">↑</div>
                 </div>
                 <div className="bg-card border border-border-custom rounded-lg p-4 flex items-center justify-between shadow-sm relative overflow-hidden">
                   <div className="space-y-1 z-10">
-                    <span className="text-[10px] font-bold text-red-400/80 uppercase tracking-wider block">To Receive</span>
+                    <span className="text-[10px] font-bold text-danger/80 uppercase tracking-wider block">To Receive</span>
                     <strong className="text-xl font-extrabold text-foreground tracking-tight block">₹{partySums.to_receive.toLocaleString("en-IN")}</strong>
                   </div>
-                  <div className="h-9 w-9 rounded-full bg-red-500/10 flex items-center justify-center text-red-400 z-10">↓</div>
+                  <div className="h-9 w-9 rounded-full bg-danger/10 flex items-center justify-center text-danger z-10">↓</div>
                 </div>
                 <div className="bg-card border border-border-custom rounded-lg p-4 flex items-center justify-between shadow-sm relative overflow-hidden">
                   <div className="space-y-1 z-10">
-                    <span className="text-[10px] font-bold text-emerald-400/80 uppercase tracking-wider block">Advance Received</span>
+                    <span className="text-[10px] font-bold text-success/80 uppercase tracking-wider block">Advance Received</span>
                     <strong className="text-xl font-extrabold text-foreground tracking-tight block">₹{partySums.advance_received.toLocaleString("en-IN")}</strong>
                   </div>
-                  <div className="h-9 w-9 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400 z-10">↙</div>
+                  <div className="h-9 w-9 rounded-full bg-success/10 flex items-center justify-center text-success z-10">↙</div>
                 </div>
               </div>
 
@@ -1421,7 +1421,15 @@ export default function FinancePage() {
                   </thead>
                   <tbody className="divide-y divide-border-custom/40">
                     {filteredParties.length === 0 && (
-                      <tr><td colSpan={4} className="p-6 text-center text-muted">No parties found</td></tr>
+                      <tr>
+                        <td colSpan={4} className="p-8">
+                          <EmptyState
+                            title="No parties found"
+                            description="No vendors, subcontractors, or clients match your search query."
+                            action={{ label: "Add New Party", onClick: () => setShowAddPartyModal(true) }}
+                          />
+                        </td>
+                      </tr>
                     )}
                     {filteredParties.map(p => (
                       <tr key={String(p.id)} className="hover:bg-elevated/40 transition-all">
@@ -1573,8 +1581,8 @@ export default function FinancePage() {
                         <input type="number" value={newParty.opening_balance} onChange={(e) => setNewParty({ ...newParty, opening_balance: e.target.value })} className="w-full bg-input border border-border-custom rounded-md p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
                         {newParty.opening_balance && (
                           <div className="flex gap-3 mt-2">
-                            <button type="button" onClick={() => setNewParty({ ...newParty, opening_balance_type: "pay" })} className={`flex-1 py-2 rounded border text-[10px] font-semibold ${newParty.opening_balance_type === "pay" ? "border-primary bg-primary/10 text-primary" : "border-border-custom text-muted"}`}>Party will pay (To Pay)</button>
-                            <button type="button" onClick={() => setNewParty({ ...newParty, opening_balance_type: "receive" })} className={`flex-1 py-2 rounded border text-[10px] font-semibold ${newParty.opening_balance_type === "receive" ? "border-primary bg-primary/10 text-primary" : "border-border-custom text-muted"}`}>Party will receive (Advance Received)</button>
+                            <button type="button" onClick={() => setNewParty({ ...newParty, opening_balance_type: "pay" })} className={`flex-1 py-2 rounded-md border text-[10px] font-semibold transition-all ${newParty.opening_balance_type === "pay" ? "border-border-custom bg-elevated text-foreground font-semibold shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)]" : "border-border-custom bg-card text-muted hover:bg-elevated/40"}`}>Party will pay (To Pay)</button>
+                            <button type="button" onClick={() => setNewParty({ ...newParty, opening_balance_type: "receive" })} className={`flex-1 py-2 rounded-md border text-[10px] font-semibold transition-all ${newParty.opening_balance_type === "receive" ? "border-border-custom bg-elevated text-foreground font-semibold shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)]" : "border-border-custom bg-card text-muted hover:bg-elevated/40"}`}>Party will receive (Advance Received)</button>
                           </div>
                         )}
                       </div>
@@ -1710,10 +1718,10 @@ export default function FinancePage() {
                       <tr key={idx} className="hover:bg-elevated">
                         <td className="px-5 py-3 text-muted">{row.date}</td>
                         <td className="px-5 py-3 text-foreground font-bold">{row.ref}</td>
-                        <td className="px-5 py-3 text-zinc-300 font-sans">{row.narration}</td>
+                        <td className="px-5 py-3 text-muted font-sans">{row.narration}</td>
                         <td className="px-5 py-3 text-muted font-sans">{row.party}</td>
-                        <td className="px-5 py-3 text-right text-red-400">{row.debit > 0 ? `₹${row.debit.toLocaleString("en-IN")}` : "—"}</td>
-                        <td className="px-5 py-3 text-right text-emerald-400">{row.credit > 0 ? `₹${row.credit.toLocaleString("en-IN")}` : "—"}</td>
+                        <td className="px-5 py-3 text-right text-danger">{row.debit > 0 ? `₹${row.debit.toLocaleString("en-IN")}` : "—"}</td>
+                        <td className="px-5 py-3 text-right text-success">{row.credit > 0 ? `₹${row.credit.toLocaleString("en-IN")}` : "—"}</td>
                         <td className="px-5 py-3 text-right text-foreground font-extrabold">₹{row.running_balance.toLocaleString("en-IN")}</td>
                       </tr>
                     ))}
@@ -1753,9 +1761,12 @@ export default function FinancePage() {
                   <tbody>
                     {paymentRequests.length === 0 ? (
                       <tr>
-                          <td colSpan={8} className="text-center p-8 text-muted">
-                            No active payment requests found.
-                          </td>
+                        <td colSpan={8} className="p-8">
+                          <EmptyState
+                            title="No active payment requests found"
+                            description="Payment requests submitted for approval will appear here."
+                          />
+                        </td>
                       </tr>
                     ) : (
                       paymentRequests.map((req) => (
@@ -1771,10 +1782,10 @@ export default function FinancePage() {
                           <td className="px-5 py-3">
                             <span className={`px-2 py-0.5 rounded text-[8px] font-bold border ${
                               req.status === "Approved" || req.status === "Paid"
-                                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                                ? "bg-success/10 border-success/20 text-success"
                                 : req.status === "Rejected"
-                                ? "bg-red-500/10 border-red-500/20 text-red-400"
-                                : "bg-amber-500/10 border-amber-500/20 text-amber-400"
+                                ? "bg-danger/10 border-danger/20 text-danger"
+                                : "bg-warning/10 border-warning/20 text-warning"
                             }`}>
                               {req.status.toUpperCase()}
                             </span>
@@ -1815,7 +1826,7 @@ export default function FinancePage() {
                 {cashAccount ? (
                   <div className="bg-card border border-border-custom rounded-xl p-4 flex items-center justify-between hover:shadow-md transition-all">
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center text-green-400 text-lg border border-green-500/20">
+                      <div className="h-10 w-10 rounded-lg bg-success/10 flex items-center justify-center text-success text-lg border border-success/20">
                         <Icon name="banknote" className="w-5 h-5" />
                       </div>
                       <div>
@@ -1907,8 +1918,8 @@ export default function FinancePage() {
             <div className="space-y-5">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[
-                  { label: "Revenue (Billed)", value: `₹${totalRevenue.toLocaleString("en-IN")}`, color: "text-emerald-400" },
-                  { label: "Total Cost", value: `₹${totalCost.toLocaleString("en-IN")}`, color: "text-red-400" },
+                  { label: "Revenue (Billed)", value: `₹${totalRevenue.toLocaleString("en-IN")}`, color: "text-success" },
+                  { label: "Total Cost", value: `₹${totalCost.toLocaleString("en-IN")}`, color: "text-danger" },
                   { label: `Gross Margin (${margin}%)`, value: `₹${grossProfit.toLocaleString("en-IN")}`, color: "text-primary" },
                 ].map((s, i) => (
                   <div key={i} className="bg-card border border-border-custom rounded-lg rounded-md p-5 border border-border-custom text-center bg-input">
@@ -1924,7 +1935,7 @@ export default function FinancePage() {
           {tab === "tally" && (
             <div className="space-y-5">
               {tallyMsg && (
-                <div className={`p-3 text-xs rounded-lg ${tallyMsg.type === "ok" ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400" : "bg-rose-500/10 border border-rose-500/20 text-rose-400"}`}>
+                <div className={`p-3 text-xs rounded-lg ${tallyMsg.type === "ok" ? "bg-success/10 border border-success/20 text-success" : "bg-danger/10 border border-danger/20 text-danger"}`}>
                   {tallyMsg.text}
                 </div>
               )}
@@ -1991,7 +2002,13 @@ export default function FinancePage() {
                   <div className="space-y-3">
                     <div className="text-[10px] uppercase font-bold text-muted">Party Ledger Mappings</div>
                     <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-                      {companyParties.length === 0 && <div className="text-xs text-muted">No parties found.</div>}
+                      {companyParties.length === 0 && (
+                        <EmptyState
+                          title="No parties found"
+                          description="Create company parties first to map them to Tally ledgers."
+                          className="py-4"
+                        />
+                      )}
                       {companyParties.map((p: any) => (
                         <div key={p.id} className="flex items-center gap-2">
                           <div className="w-48 shrink-0 text-xs text-foreground truncate">{p.name}</div>
@@ -2122,7 +2139,7 @@ export default function FinancePage() {
                     <h2 className="text-xs font-bold text-muted uppercase tracking-wider">Budget vs Actual — Cost Variance Report</h2>
                     <p className="text-[10px] text-muted mt-1">EAC = Estimate At Completion (projects final cost at current burn rate assuming 60% completion).</p>
                   </div>
-                  <span className={`text-[10px] px-3 py-1.5 rounded-full font-bold border ${totalVariance >= 0 ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-red-500/10 border-red-500/20 text-red-400"}`}>
+                  <span className={`text-[10px] px-3 py-1.5 rounded-full font-bold border ${totalVariance >= 0 ? "bg-success/10 border-success/20 text-success" : "bg-danger/10 border-danger/20 text-danger"}`}>
                     {totalVariance >= 0 ? "↓ Underspent" : "↑ Overspent"} by ₹{Math.abs(totalVariance).toLocaleString("en-IN")}
                   </span>
                 </div>
@@ -2131,8 +2148,8 @@ export default function FinancePage() {
                   {[
                     { label: "Total Budget", value: `₹${totalBudget.toLocaleString()}`, color: "text-foreground" },
                     { label: "Actual Spend", value: `₹${totalActual.toLocaleString()}`, color: "text-primary" },
-                    { label: "Variance", value: `₹${totalVariance.toLocaleString()}`, color: totalVariance >= 0 ? "text-emerald-400" : "text-red-400" },
-                    { label: "EAC (at 60%)", value: `₹${Math.round(totalEAC).toLocaleString()}`, color: totalEAC > totalBudget ? "text-red-400" : "text-emerald-400" },
+                    { label: "Variance", value: `₹${totalVariance.toLocaleString()}`, color: totalVariance >= 0 ? "text-success" : "text-danger" },
+                    { label: "EAC (at 60%)", value: `₹${Math.round(totalEAC).toLocaleString()}`, color: totalEAC > totalBudget ? "text-danger" : "text-success" },
                   ].map(kpi => (
                     <div key={kpi.label} className="bg-input border border-border-custom rounded-md p-4">
                       <span className="text-[9px] uppercase text-muted tracking-wider block">{kpi.label}</span>
@@ -2160,20 +2177,20 @@ export default function FinancePage() {
                         const isOver = row.variance < 0;
                         const isWarn = row.variancePct < 10 && row.variancePct >= 0;
                         const statusLabel = isOver ? "OVERSPENT" : isWarn ? "AT RISK" : "ON TRACK";
-                        const statusColor = isOver ? "bg-red-500/10 border-red-500/20 text-red-400" : isWarn ? "bg-amber-500/10 border-amber-500/20 text-amber-400" : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400";
+                        const statusColor = isOver ? "bg-danger/10 border-danger/20 text-danger" : isWarn ? "bg-warning/10 border-warning/20 text-warning" : "bg-success/10 border-success/20 text-success";
                         return (
-                          <tr key={row.code} className={`border-b border-white/[0.03] hover:bg-white/[0.015] transition-all ${isOver ? "bg-red-500/[0.02]" : ""}`}>
+                          <tr key={row.code} className={`border-b border-white/[0.03] hover:bg-white/[0.015] transition-all ${isOver ? "bg-danger/[0.02]" : ""}`}>
                             <td className="px-5 py-3 font-sans text-muted">{row.code}</td>
                             <td className="px-5 py-3 font-semibold text-foreground">{row.head}</td>
-                            <td className="px-5 py-3 text-right font-sans text-zinc-300">₹{row.budget.toLocaleString()}</td>
+                            <td className="px-5 py-3 text-right font-sans text-muted">₹{row.budget.toLocaleString()}</td>
                             <td className="px-5 py-3 text-right font-sans font-bold text-foreground">₹{row.actual.toLocaleString()}</td>
-                            <td className={`px-5 py-3 text-right font-sans font-bold ${isOver ? "text-red-400" : "text-emerald-400"}`}>
+                            <td className={`px-5 py-3 text-right font-sans font-bold ${isOver ? "text-danger" : "text-success"}`}>
                               {row.variance >= 0 ? "+" : ""}₹{row.variance.toLocaleString()}
                             </td>
-                            <td className={`px-5 py-3 text-right font-sans ${isOver ? "text-red-400" : isWarn ? "text-amber-400" : "text-emerald-400"}`}>
+                            <td className={`px-5 py-3 text-right font-sans ${isOver ? "text-danger" : isWarn ? "text-warning" : "text-success"}`}>
                               {row.variancePct.toFixed(1)}%
                             </td>
-                            <td className={`px-5 py-3 text-right font-sans ${row.eac > row.budget ? "text-red-400" : "text-zinc-300"}`}>
+                            <td className={`px-5 py-3 text-right font-sans ${row.eac > row.budget ? "text-danger" : "text-muted"}`}>
                               ₹{Math.round(row.eac).toLocaleString()}
                             </td>
                             <td className="px-5 py-3 text-center">
@@ -2201,7 +2218,7 @@ export default function FinancePage() {
                 <Icon name="warning" className="w-3.5 h-3.5" /> Pending Voucher Approval (Accrued Expense)
               </div>
             ) : (
-              <div className="bg-emerald-500 px-6 py-2.5 text-center font-bold text-black uppercase tracking-wider text-[10px]">
+              <div className="bg-success px-6 py-2.5 text-center font-bold text-black uppercase tracking-wider text-[10px]">
                 ✓ Approved & Settled Ledger Voucher
               </div>
             )}
@@ -2224,7 +2241,7 @@ export default function FinancePage() {
                   </span>
                 )}
                 {selectedVoucher.ref_invoice && (
-                  <div className="text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full inline-block mt-1.5 font-bold mr-1.5">
+                  <div className="text-[10px] text-warning bg-warning/10 border border-warning/20 px-2 py-0.5 rounded-full inline-block mt-1.5 font-bold mr-1.5">
                     Ref Invoice: {selectedVoucher.ref_invoice}
                   </div>
                 )}
@@ -2234,7 +2251,7 @@ export default function FinancePage() {
                   </div>
                 )}
                 {selectedVoucher.due_date && (
-                  <div className="text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full inline-block mt-1.5 font-bold">
+                  <div className="text-[10px] text-warning bg-warning/10 border border-warning/20 px-2 py-0.5 rounded-full inline-block mt-1.5 font-bold">
                     Due Date: {selectedVoucher.due_date}
                   </div>
                 )}
@@ -2245,14 +2262,14 @@ export default function FinancePage() {
                 <span className="text-muted uppercase text-[9px] tracking-wider block">Sequential Approvals</span>
                 <div className="space-y-3 mt-2">
                   <div className="flex items-center gap-3">
-                    <div className="h-5 w-5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-bold text-[10px]">✓</div>
+                    <div className="h-5 w-5 rounded-full bg-success/10 border border-success/20 text-success flex items-center justify-center font-bold text-[10px]">✓</div>
                     <div>
                       <div className="text-[11px] font-bold text-foreground">1. Site Supervisor</div>
                       <div className="text-[9px] text-muted">Verified upon entry & photo upload</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className={`h-5 w-5 rounded-full flex items-center justify-center font-bold text-[10px] ${selectedVoucher.status === "Approved" ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-amber-500/10 border-amber-500/30 text-amber-400"}`}>
+                    <div className={`h-5 w-5 rounded-full flex items-center justify-center font-bold text-[10px] ${selectedVoucher.status === "Approved" ? "bg-success/10 border-success/20 text-success" : "bg-warning/10 border-warning/20 text-warning"}`}>
                       {selectedVoucher.status === "Approved" ? "✓" : <Icon name="schedule" className="w-3 h-3" />}
                     </div>
                     <div>
@@ -2266,11 +2283,11 @@ export default function FinancePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-input p-4 rounded-md border border-border-custom text-xs font-sans">
                 <div>
                   <span className="text-muted block uppercase text-[9px] tracking-wider font-sans">Settled Amount</span>
-                  <strong className="text-emerald-400 mt-1 block text-sm">₹{(selectedVoucher.settled_amount ?? 0).toLocaleString("en-IN")}</strong>
+                  <strong className="text-success mt-1 block text-sm">₹{(selectedVoucher.settled_amount ?? 0).toLocaleString("en-IN")}</strong>
                 </div>
                 <div>
                   <span className="text-muted block uppercase text-[9px] tracking-wider font-sans">Balance Due</span>
-                  <strong className="text-red-400 mt-1 block text-sm">₹{(selectedVoucher.balance_due ?? 0).toLocaleString("en-IN")}</strong>
+                  <strong className="text-danger mt-1 block text-sm">₹{(selectedVoucher.balance_due ?? 0).toLocaleString("en-IN")}</strong>
                 </div>
               </div>
 
@@ -2288,7 +2305,7 @@ export default function FinancePage() {
             {selectedVoucher.status === "Pending" && (
               <div className="px-6 py-4 border-t border-border-custom bg-background flex items-center justify-end gap-2">
                 <button onClick={() => setSelectedVoucher(null)} className="px-4 py-2 text-xs font-bold text-muted hover:text-foreground">Cancel</button>
-                <button onClick={() => handleApproveVoucher(selectedVoucher.id)} className="px-5 py-2.5 bg-emerald-500 text-black font-extrabold rounded-md hover:opacity-90 inline-flex items-center gap-1.5">
+                <button onClick={() => handleApproveVoucher(selectedVoucher.id)} className="px-5 py-2.5 bg-success text-black font-extrabold rounded-md hover:opacity-90 inline-flex items-center gap-1.5">
                   Approve Voucher <Icon name="thumbs_up" className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -2619,7 +2636,7 @@ export default function FinancePage() {
                       <span className="text-muted block text-[9px] uppercase font-bold">Add Cost Code</span>
                       <span className="text-foreground font-semibold block text-xs mt-0.5">{costCode}</span>
                     </div>
-                    <span className="text-muted text-xs">▶</span>
+                    <Icon name="chevron_right" className="w-3.5 h-3.5 text-muted" />
                   </div>
 
                   <div className="bg-elevated/20 border border-border-custom p-4 rounded-xl flex justify-between items-center">
@@ -2629,7 +2646,7 @@ export default function FinancePage() {
                         ₹{(Number(amount || 0) + (enableGst ? Number(amount || 0) * (Number(gstPercent) / 100) : 0)).toLocaleString("en-IN")}
                       </strong>
                     </div>
-                    <span className="text-emerald-400 font-extrabold text-[10px] bg-emerald-400/10 px-2.5 py-1 rounded-full border border-emerald-500/20">AUTO CALCULATED</span>
+                    <span className="text-success font-extrabold text-[10px] bg-success/10 px-2.5 py-1 rounded-full border border-success/20">AUTO CALCULATED</span>
                   </div>
                 </div>
               ) : selectedTxnType === "Equipment Expense" ? (
@@ -2660,7 +2677,7 @@ export default function FinancePage() {
                     <label className="text-[10px] text-muted uppercase font-bold block mb-1">Date Range</label>
                     <div className="bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground flex justify-between items-center cursor-pointer hover:bg-elevated/20">
                       <span>{formatDmy(txnDate)}</span>
-                      <span className="text-muted text-[10px]">▼</span>
+                      <Icon name="chevron_down" className="w-3.5 h-3.5 text-muted" />
                     </div>
                   </div>
 
@@ -2807,7 +2824,7 @@ export default function FinancePage() {
                       <span className="text-muted block text-[9px] uppercase font-bold">Add Cost Code</span>
                       <span className="text-foreground block font-semibold mt-0.5">{costCode}</span>
                     </div>
-                    <span className="text-muted text-[10px]">▶</span>
+                    <Icon name="chevron_right" className="w-3.5 h-3.5 text-muted" />
                   </div>
 
                   <div className="border border-border-custom rounded-xl p-3 bg-elevated/10 flex justify-between items-center text-xs cursor-pointer" onClick={() => setShowBillShipModal(true)}>
@@ -3112,7 +3129,7 @@ export default function FinancePage() {
                     <label className="text-[10px] text-muted uppercase font-bold block mb-1">Transfer Type</label>
                     <div className="flex gap-2">
                       {["Bank To Bank", "Cash Deposit", "Cash Withdraw"].map((t) => (
-                        <label key={t} className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg border cursor-pointer select-none transition-all ${transferType === t ? "border-primary bg-primary/10 text-primary font-bold animate-pulse" : "border-border-custom bg-background hover:bg-elevated/40 text-muted"}`}>
+                        <label key={t} className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg border cursor-pointer select-none transition-all ${transferType === t ? "border-border-custom bg-elevated text-foreground font-semibold shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)]" : "border-border-custom bg-card hover:bg-elevated/40 text-muted"}`}>
                           <input
                             type="radio"
                             name="transferType"
@@ -3159,7 +3176,7 @@ export default function FinancePage() {
                         <label className="text-[10px] text-muted uppercase font-bold block mb-1">From</label>
                         <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg px-3 py-2.5">
                           <span className="text-foreground font-medium text-xs">Cash Account (Company Wallet)</span>
-                          <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] font-bold px-2 py-0.5 rounded-full font-sans">₹ 0</span>
+                          <span className="bg-success/10 text-success border border-success/20 text-[9px] font-bold px-2 py-0.5 rounded-full font-sans">₹ 0</span>
                         </div>
                       </div>
                       <div>
@@ -3193,7 +3210,7 @@ export default function FinancePage() {
                         <label className="text-[10px] text-muted uppercase font-bold block mb-1">To</label>
                         <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg px-3 py-2.5">
                           <span className="text-foreground font-medium text-xs">Cash Account (Company Wallet)</span>
-                          <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] font-bold px-2 py-0.5 rounded-full font-sans">₹ 0</span>
+                          <span className="bg-success/10 text-success border border-success/20 text-[9px] font-bold px-2 py-0.5 rounded-full font-sans">₹ 0</span>
                         </div>
                       </div>
                     </>
@@ -3619,7 +3636,7 @@ export default function FinancePage() {
 
                     <div className="border-t border-b border-border-custom/50 py-2 flex justify-between items-center cursor-pointer hover:bg-elevated/20 px-2 rounded">
                       <span className="text-[10px] text-muted uppercase font-bold">Add Cost Code</span>
-                      <span className="text-muted text-[10px]">▶</span>
+                      <Icon name="chevron_right" className="w-3.5 h-3.5 text-muted" />
                     </div>
 
                     <div className="flex gap-4 pt-1">
@@ -4032,10 +4049,10 @@ export default function FinancePage() {
                   <p className="mt-1">
                     <span className={`px-2 py-0.5 rounded text-[8px] font-bold border ${
                       selectedPR.status === "Paid" || selectedPR.status === "Approved"
-                        ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                        ? "bg-success/10 border-success/20 text-success"
                         : selectedPR.status === "Rejected"
-                        ? "bg-red-500/10 border-red-500/20 text-red-400"
-                        : "bg-amber-500/10 border-amber-500/20 text-amber-400"
+                        ? "bg-danger/10 border-danger/20 text-danger"
+                        : "bg-warning/10 border-warning/20 text-warning"
                     }`}>{selectedPR.status.toUpperCase()}</span>
                     <span className="ml-2 text-[8px] text-muted uppercase">Appr: {selectedPR.approval_status}</span>
                   </p>
@@ -4103,7 +4120,7 @@ export default function FinancePage() {
                     }
                   }}
                   disabled={selectedPR.status === "Paid"}
-                  className="flex-1 py-2.5 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-500 text-xs transition-all disabled:opacity-40"
+                  className="flex-1 py-2.5 bg-success text-white font-bold rounded-lg hover:bg-success text-xs transition-all disabled:opacity-40"
                 >Mark as Paid</button>
               </div>
               <button

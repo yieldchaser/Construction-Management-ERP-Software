@@ -4,6 +4,10 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { getApi, authHeaders, resolveCompanyId, fmtINR, initials } from "@/lib/siteflow";
 import { useCompanySettings } from "@/context/CompanySettingsContext";
+import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
+import { TableSkeleton } from "@/components/ui/Skeleton";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 type Party = {
   party_id: string;
@@ -122,15 +126,21 @@ export default function PartyPage() {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <PageHeader
+        title="Project Parties"
+        subtitle="Vendor, client, subcontractor balances and party profiles for this project"
+      />
+      <div className="flex-1 overflow-y-auto">
+        <PageShell width="wide">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         <div className="rounded-lg border border-border-custom bg-card p-4">
-          <div className="text-xs uppercase tracking-wider text-emerald-500">Advance Paid</div>
-          <div className="mt-2 text-3xl font-bold text-emerald-500">{fmtINR(balances.advance_paid, currencyDecimalPlaces)}</div>
+          <div className="text-xs uppercase tracking-wider text-success">Advance Paid</div>
+          <div className="mt-2 text-3xl font-bold text-success">{fmtINR(balances.advance_paid, currencyDecimalPlaces)}</div>
         </div>
         <div className="rounded-lg border border-border-custom bg-card p-4">
-          <div className="text-xs uppercase tracking-wider text-rose-500">To Pay</div>
-          <div className="mt-2 text-3xl font-bold text-rose-500">{fmtINR(balances.to_pay, currencyDecimalPlaces)}</div>
+          <div className="text-xs uppercase tracking-wider text-danger">To Pay</div>
+          <div className="mt-2 text-3xl font-bold text-danger">{fmtINR(balances.to_pay, currencyDecimalPlaces)}</div>
         </div>
       </div>
 
@@ -180,10 +190,22 @@ export default function PartyPage() {
           </thead>
           <tbody>
             {loading && (
-              <tr><td colSpan={5} className="px-4 py-8 text-center text-muted">Loading…</td></tr>
+              <tr>
+                <td colSpan={5} className="p-4">
+                  <TableSkeleton rows={4} cols={5} />
+                </td>
+              </tr>
             )}
             {!loading && filtered.length === 0 && (
-              <tr><td colSpan={5} className="px-4 py-8 text-center text-muted">No parties linked to this project.</td></tr>
+              <tr>
+                <td colSpan={5} className="p-8">
+                  <EmptyState
+                    title="No parties linked to this project"
+                    description="Link company parties or create a new party for this project."
+                    action={{ label: "+ Add Party", onClick: () => setAddOpen(true) }}
+                  />
+                </td>
+              </tr>
             )}
             {!loading && filtered.map((p) => (
               <tr key={p.party_id} className="border-t border-border-custom hover:bg-elevated/50">
@@ -202,15 +224,15 @@ export default function PartyPage() {
                     onClick={() => toggleStatus(p)}
                     className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${
                       (p.status || "—") === "Active"
-                        ? "bg-emerald-500/10 text-emerald-500"
-                        : "bg-rose-500/10 text-rose-500"
+                        ? "bg-success/10 text-success"
+                        : "bg-danger/10 text-danger"
                     }`}
                   >
                     {p.status || "—"}
                   </button>
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <button onClick={() => removeParty(p.party_id)} className="text-muted hover:text-rose-500">Remove</button>
+                  <button onClick={() => removeParty(p.party_id)} className="text-muted hover:text-danger">Remove</button>
                 </td>
               </tr>
             ))}
@@ -235,6 +257,8 @@ export default function PartyPage() {
           onAdded={() => { setAddOpen(false); load(); }}
         />
       )}
+      </PageShell>
+      </div>
     </div>
   );
 }

@@ -4,6 +4,9 @@ import { authHeaders } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
+import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 interface Wastage {
   id: string;
@@ -93,10 +96,10 @@ export default function WastagePage() {
   };
 
   const statusColors: Record<string, string> = {
-    reported: "bg-amber-500/10 text-amber-400",
-    reviewed: "bg-blue-500/10 text-blue-400",
-    approved: "bg-emerald-500/10 text-emerald-400",
-    disposed: "bg-zinc-500/10 text-muted",
+    reported: "bg-warning/10 text-warning",
+    reviewed: "bg-info/10 text-info",
+    approved: "bg-success/10 text-success",
+    disposed: "bg-elevated text-muted",
   };
 
   const typeLabels: Record<string, string> = {
@@ -109,29 +112,35 @@ export default function WastagePage() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Material Wastage</h1>
-            <p className="text-muted mt-1">Track scrap, offcuts, damage and theft on site</p>
-          </div>
-          <button
-            onClick={() => { setShowModal(true); setMessage(""); }}
-            className="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-md text-sm font-semibold transition-all"
-          >
-            Record Wastage
-          </button>
-        </div>
+      <PageHeader
+        title="Material Wastage"
+        subtitle="Track scrap, offcuts, damage and theft on site"
+      >
+        <button
+          onClick={() => { setShowModal(true); setMessage(""); }}
+          className="px-3.5 py-1.5 bg-primary hover:bg-primary/90 text-white rounded-md text-xs font-semibold transition-all cursor-pointer shadow-md"
+        >
+          + Record Wastage
+        </button>
+      </PageHeader>
+      <div className="flex-1 overflow-y-auto">
+        <PageShell width="wide">
 
         {message && (
-          <div className={`mb-6 p-4 rounded-md ${message.includes("success") ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}>
+          <div className={`mb-6 p-4 rounded-md ${message.includes("success") ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}>
             {message}
           </div>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {records.length === 0 ? (
-            <div className="col-span-full text-center text-muted py-12">No wastage records found</div>
+            <div className="col-span-full">
+              <EmptyState
+                title="No wastage records found"
+                description="Track scrap, offcuts, damaged, or expired materials on site."
+                action={{ label: "Record Wastage", onClick: () => { setShowModal(true); setMessage(""); } }}
+              />
+            </div>
           ) : (
             records.map((r) => (
               <div key={r.id} className="bg-white/5 border border-border-custom rounded-lg p-6 hover:bg-white/10 transition-all">
@@ -156,7 +165,7 @@ export default function WastagePage() {
                   {r.reason && (
                     <div>
                       <span className="text-muted text-xs">Reason</span>
-                      <p className="text-zinc-300 text-xs mt-1">{r.reason}</p>
+                      <p className="text-muted text-xs mt-1">{r.reason}</p>
                     </div>
                   )}
                 </div>
@@ -169,13 +178,13 @@ export default function WastagePage() {
                     </div>
                   )}
                   {r.status === "reported" && (
-                    <button onClick={() => updateStatus(r.id, "reviewed")} className="flex-1 px-3 py-1.5 bg-blue-500/10 text-blue-400 rounded-lg text-xs font-medium hover:bg-blue-500/20 transition-all">Review</button>
+                    <button onClick={() => updateStatus(r.id, "reviewed")} className="flex-1 px-3 py-1.5 bg-info/10 text-info rounded-lg text-xs font-medium hover:bg-info/10 transition-all">Review</button>
                   )}
                   {r.status === "reviewed" && (
-                    <button onClick={() => updateStatus(r.id, "approved")} className="flex-1 px-3 py-1.5 bg-emerald-500/10 text-emerald-400 rounded-lg text-xs font-medium hover:bg-emerald-500/20 transition-all">Approve</button>
+                    <button onClick={() => updateStatus(r.id, "approved")} className="flex-1 px-3 py-1.5 bg-success/10 text-success rounded-lg text-xs font-medium hover:bg-success/10 transition-all">Approve</button>
                   )}
                   {r.status === "approved" && (
-                    <button onClick={() => updateStatus(r.id, "disposed")} className="flex-1 px-3 py-1.5 bg-zinc-500/10 text-muted rounded-lg text-xs font-medium hover:bg-zinc-500/20 transition-all">Dispose</button>
+                    <button onClick={() => updateStatus(r.id, "disposed")} className="flex-1 px-3 py-1.5 bg-elevated text-muted rounded-lg text-xs font-medium hover:bg-elevated transition-all">Dispose</button>
                   )}
                 </div>
               </div>
@@ -230,6 +239,7 @@ export default function WastagePage() {
             </div>
           </div>
         )}
+      </PageShell>
       </div>
     </div>
   );

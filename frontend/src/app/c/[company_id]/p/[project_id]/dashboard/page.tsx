@@ -4,6 +4,8 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { getApi, authHeaders, fmtINR } from "@/lib/siteflow";
 import { useCompanySettings } from "@/context/CompanySettingsContext";
+import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type ProjectDash = {
@@ -70,7 +72,7 @@ const MONEY_OUT_VOUCHER_TYPES = ["payment_out", "i_paid"];
 // ─── Small components ───────────────────────────────────────────────────────────
 function Card({ label, value, tone }: { label: string; value: string; tone?: "emerald" | "rose" | "violet" }) {
   const color =
-    tone === "emerald" ? "text-emerald-500" : tone === "rose" ? "text-rose-500" : tone === "violet" ? "text-violet-500" : "text-foreground";
+    tone === "emerald" ? "text-success" : tone === "rose" ? "text-danger" : tone === "violet" ? "text-chart-4" : "text-foreground";
   return (
     <div className="rounded-lg border border-border-custom bg-card p-4">
       <div className="text-xs uppercase tracking-wider text-muted">{label}</div>
@@ -93,7 +95,7 @@ function KpiCard({
   onClick: () => void;
 }) {
   const color =
-    tone === "emerald" ? "text-emerald-400" : tone === "rose" ? "text-rose-400" : tone === "violet" ? "text-violet-400" : "text-foreground";
+    tone === "emerald" ? "text-success" : tone === "rose" ? "text-danger" : tone === "violet" ? "text-chart-4" : "text-foreground";
   return (
     <button
       onClick={onClick}
@@ -330,13 +332,13 @@ export default function ProjectDashboardPage() {
     }));
 
   return (
-    <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">{project.name}</h1>
-        <p className="text-sm text-muted">
-          {[project.code, project.category, project.stage].filter(Boolean).join(" · ") || "—"}
-        </p>
-      </div>
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <PageHeader
+        title={project.name}
+        subtitle={[project.code, project.category, project.stage].filter(Boolean).join(" · ") || "Project Overview"}
+      />
+      <div className="flex-1 overflow-y-auto">
+        <PageShell width="wide">
 
       {/* Basic snapshot - D1 R2-021: accrual is Billed In/Out, margin is ex-GST */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -577,7 +579,7 @@ export default function ProjectDashboardPage() {
                   className="mt-1 w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted"
                 />
               </div>
-              {error && <div className="text-[11px] text-rose-400">{error}</div>}
+              {error && <div className="text-[11px] text-danger">{error}</div>}
               <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
@@ -598,6 +600,8 @@ export default function ProjectDashboardPage() {
           </div>
         </div>
       )}
+        </PageShell>
+      </div>
     </div>
   );
 }

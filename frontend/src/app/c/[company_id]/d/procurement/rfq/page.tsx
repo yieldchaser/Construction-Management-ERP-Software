@@ -4,6 +4,9 @@ import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
 import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
+import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 interface RFQ {
   id: string;
@@ -97,38 +100,43 @@ export default function RFQPage() {
   return (
     <div className="flex-1 flex flex-col overflow-hidden font-sans">
       <div className="flex-1 flex flex-col overflow-hidden relative font-sans">
-        <div className="absolute top-[-10%] right-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-[0.02] blur-[120px] pointer-events-none" />
-        <div className="border-b border-border-custom bg-background px-6 py-3.5 flex items-center justify-between z-10">
-          <div>
-            <h1 className="text-sm font-bold text-white uppercase tracking-wider">RFQ Management</h1>
-            <p className="text-[10px] text-muted">Request for Quotations · Multi-vendor comparison</p>
-          </div>
-          <button onClick={() => setShowCreate(true)} className="px-4 py-2 rounded-md bg-primary text-xs font-bold text-white hover:opacity-90 cursor-pointer">+ Create RFQ</button>
-        </div>
+        <PageHeader
+          title="RFQ Management"
+          subtitle="Request for Quotations · Multi-vendor comparison"
+        >
+          <button onClick={() => setShowCreate(true)} className="px-3.5 py-1.5 rounded-md bg-primary text-xs font-bold text-white hover:opacity-90 cursor-pointer">+ Create RFQ</button>
+        </PageHeader>
 
-        <div className="flex-1 overflow-y-auto p-6 z-10 space-y-6">
-          <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
-            <div className="px-5 py-4 border-b border-border-custom">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-muted">RFQ List</h2>
-            </div>
-            <div className="divide-y divide-white/[0.02]">
-              {rfqs.map((rfq) => (
-                <div key={rfq.id} className="px-5 py-3 flex items-center justify-between hover:bg-white/[0.015] transition-all">
-                  <div>
-                    <span className="text-xs font-bold text-secondary font-sans">{rfq.rfq_number}</span>
-                    <span className="text-[10px] text-muted ml-2">{rfq.items?.length || 0} items</span>
+        <div className="flex-1 overflow-y-auto z-10">
+          <PageShell width="wide">
+            <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
+              <div className="px-5 py-4 border-b border-border-custom">
+                <h2 className="text-xs font-bold uppercase tracking-wider text-muted">RFQ List</h2>
+              </div>
+              <div className="divide-y divide-border-custom/30">
+                {rfqs.map((rfq) => (
+                  <div key={rfq.id} className="px-5 py-3 flex items-center justify-between hover:bg-elevated/30 transition-all">
+                    <div>
+                      <span className="text-xs font-bold text-foreground font-sans">{rfq.rfq_number}</span>
+                      <span className="text-[10px] text-muted ml-2">{rfq.items?.length || 0} items</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                        rfq.status === "draft" ? "bg-warning/10 text-warning border border-warning/20" : "bg-success/10 text-success border border-success/20"
+                      }`}>{rfq.status}</span>
+                      <button onClick={() => { setViewRfqId(rfq.id); fetchComparison(rfq.id); }} className="px-3 py-1 rounded-lg border border-border-custom text-[10px] font-bold hover:bg-elevated cursor-pointer">Compare Quotes</button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                      rfq.status === "draft" ? "bg-amber-500/10 text-amber-400 border border-amber-500/20" : "bg-green-500/10 text-green-400 border border-green-500/20"
-                    }`}>{rfq.status}</span>
-                    <button onClick={() => { setViewRfqId(rfq.id); fetchComparison(rfq.id); }} className="px-3 py-1 rounded-lg border border-border-custom text-[10px] font-bold hover:bg-white/[0.05] cursor-pointer">Compare Quotes</button>
-                  </div>
-                </div>
-              ))}
-              {rfqs.length === 0 && <div className="px-5 py-8 text-center text-muted text-xs">No RFQs created yet.</div>}
+                ))}
+                {rfqs.length === 0 && (
+                  <EmptyState
+                    title="No RFQs created yet"
+                    description="Create a request for quotations to compare quotes across multiple vendors."
+                    action={{ label: "Create RFQ", onClick: () => setShowCreate(true) }}
+                  />
+                )}
+              </div>
             </div>
-          </div>
 
           {viewRfqId && comparison.length > 0 && (
             <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
@@ -168,6 +176,7 @@ export default function RFQPage() {
               </div>
             </div>
           )}
+          </PageShell>
         </div>
       </div>
 

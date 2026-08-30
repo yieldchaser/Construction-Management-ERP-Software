@@ -4,6 +4,10 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useParams } from "next/navigation";
 import { getApi, authHeaders } from "@/lib/siteflow";
 import Icon from "@/components/marketing/Icon";
+import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
+import { CardSkeleton } from "@/components/ui/Skeleton";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Folder = { id: string; project_id: string; parent_id: string | null; name: string };
@@ -144,25 +148,24 @@ export default function FilesTab() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      <header className="h-14 border-b border-border-custom bg-card px-6 flex items-center justify-between shrink-0">
-        <h1 className="text-sm font-bold text-foreground">Documents</h1>
+      <PageHeader title="Documents" subtitle="Drawings, contracts and site file repository">
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowNewFolder(true)}
-            className="px-3 py-1.5 bg-elevated text-muted text-xs font-bold rounded-lg hover:bg-elevated transition-all"
+            className="px-3.5 py-1.5 bg-elevated text-muted text-xs font-bold rounded-lg hover:bg-elevated transition-all border border-border-custom cursor-pointer"
           >
             + New Folder
           </button>
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:opacity-90 transition-all disabled:opacity-40"
+            className="px-3.5 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:opacity-90 transition-all disabled:opacity-40 cursor-pointer"
           >
             {uploading ? "Uploading…" : "Upload"}
           </button>
           <input ref={fileInputRef} type="file" multiple className="hidden" onChange={onUpload} />
         </div>
-      </header>
+      </PageHeader>
 
       <div className="px-5 py-2 border-b border-border-custom shrink-0 flex items-center gap-1 text-[11px] text-muted">
         {path.map((c, i) => (
@@ -178,15 +181,17 @@ export default function FilesTab() {
         ))}
       </div>
 
-      <div className="flex-1 overflow-auto p-5">
-        {loading && <div className="p-10 text-center text-muted text-xs">Loading documents…</div>}
-        {error && !loading && <div className="p-10 text-center text-rose-400 text-xs">{error}</div>}
-        {!loading && !error && folders.length === 0 && files.length === 0 && (
-          <div className="p-10 text-center text-muted text-xs">
-            This folder is empty. Create a <span className="text-primary font-bold">New Folder</span> or{" "}
-            <span className="text-primary font-bold">Upload</span> a document.
-          </div>
-        )}
+      <div className="flex-1 overflow-auto">
+        <PageShell width="wide">
+          {loading && <CardSkeleton />}
+          {error && !loading && <div className="p-10 text-center text-danger text-xs">{error}</div>}
+          {!loading && !error && folders.length === 0 && files.length === 0 && (
+            <EmptyState
+              title="This folder is empty"
+              description="Create a new folder or upload a document."
+              action={{ label: "Upload", onClick: () => fileInputRef.current?.click() }}
+            />
+          )}
 
         {!loading && !error && (folders.length > 0 || files.length > 0) && (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
@@ -219,6 +224,7 @@ export default function FilesTab() {
             ))}
           </div>
         )}
+        </PageShell>
       </div>
 
       {showNewFolder && (
@@ -241,7 +247,7 @@ export default function FilesTab() {
                   className="mt-1 w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted"
                 />
               </div>
-              {error && <div className="text-[11px] text-rose-400">{error}</div>}
+              {error && <div className="text-[11px] text-danger">{error}</div>}
               <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"

@@ -3,6 +3,10 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { getApi, authHeaders, resolveCompanyId, initials } from "@/lib/siteflow";
+import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
+import { TableSkeleton } from "@/components/ui/Skeleton";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 type Todo = {
   id: string;
@@ -75,34 +79,57 @@ export default function TodoPage() {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-6">
-      <div className="flex flex-wrap items-center gap-3 mb-4">
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="rounded-md border border-border-custom bg-card px-3 py-2 text-sm text-foreground">
-          {["All", "pending", "done"].map((s) => <option key={s} value={s}>{s === "All" ? "Status" : s}</option>)}
-        </select>
-        <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className="rounded-md border border-border-custom bg-card px-3 py-2 text-sm text-foreground">
-          <option value="All">Type</option>
-          {types.map((t) => <option key={t} value={t}>{t}</option>)}
-        </select>
-        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search To Do" className="flex-1 min-w-[180px] rounded-md border border-border-custom bg-card px-3 py-2 text-sm text-foreground" />
-        <button onClick={() => setOpen(true)} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90">+ New To Do</button>
-      </div>
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <PageHeader
+        title="Project To-Do List"
+        subtitle="Track checklists, action items, and assigned deliverables for this project"
+      >
+        <button onClick={() => setOpen(true)} className="rounded-md bg-primary px-3.5 py-1.5 text-xs font-semibold text-white hover:opacity-90 shadow-md cursor-pointer">+ New To Do</button>
+      </PageHeader>
+      <div className="flex-1 overflow-y-auto">
+        <PageShell width="wide">
+        <div className="flex flex-wrap items-center gap-3 mb-4">
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="rounded-md border border-border-custom bg-card px-3 py-2 text-sm text-foreground">
+            {["All", "pending", "done"].map((s) => <option key={s} value={s}>{s === "All" ? "Status" : s}</option>)}
+          </select>
+          <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className="rounded-md border border-border-custom bg-card px-3 py-2 text-sm text-foreground">
+            <option value="All">Type</option>
+            {types.map((t) => <option key={t} value={t}>{t}</option>)}
+          </select>
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search To Do" className="flex-1 min-w-[180px] rounded-md border border-border-custom bg-card px-3 py-2 text-sm text-foreground" />
+        </div>
 
-      <div className="rounded-lg border border-border-custom overflow-hidden bg-card">
-        <table className="w-full text-sm">
-          <thead className="bg-elevated text-muted">
-            <tr>
-              <th className="text-left px-4 py-3 font-medium">Item Name</th>
-              <th className="text-left px-4 py-3 font-medium">Due Date</th>
-              <th className="text-left px-4 py-3 font-medium">Assigned</th>
-              <th className="text-left px-4 py-3 font-medium">Task</th>
-              <th className="text-left px-4 py-3 font-medium">Type</th>
-              <th className="text-left px-4 py-3 font-medium">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading && <tr><td colSpan={5} className="px-4 py-8 text-center text-muted">Loading…</td></tr>}
-            {!loading && filtered.length === 0 && <tr><td colSpan={5} className="px-4 py-8 text-center text-muted">No to-dos.</td></tr>}
+        <div className="rounded-lg border border-border-custom overflow-hidden bg-card">
+          <table className="w-full text-sm">
+            <thead className="bg-elevated text-muted">
+              <tr>
+                <th className="text-left px-4 py-3 font-medium">Item Name</th>
+                <th className="text-left px-4 py-3 font-medium">Due Date</th>
+                <th className="text-left px-4 py-3 font-medium">Assigned</th>
+                <th className="text-left px-4 py-3 font-medium">Task</th>
+                <th className="text-left px-4 py-3 font-medium">Type</th>
+                <th className="text-left px-4 py-3 font-medium">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading && (
+                <tr>
+                  <td colSpan={6} className="p-4">
+                    <TableSkeleton rows={4} cols={6} />
+                  </td>
+                </tr>
+              )}
+              {!loading && filtered.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="p-8">
+                    <EmptyState
+                      title="No to-dos yet"
+                      description="Create task checklists and to-do items to track assignments."
+                      action={{ label: "+ New To Do", onClick: () => setOpen(true) }}
+                    />
+                  </td>
+                </tr>
+              )}
             {!loading && filtered.map((t) => (
               <tr key={t.id} className="border-t border-border-custom hover:bg-elevated/50">
                 <td className="px-4 py-3">
@@ -125,7 +152,7 @@ export default function TodoPage() {
                 <td className="px-4 py-3 text-muted">{t.task_name || "—"}</td>
                 <td className="px-4 py-3 text-muted">{t.type || "—"}</td>
                 <td className="px-4 py-3">
-                  <button onClick={() => remove(t.id)} className="text-xs text-muted hover:text-rose-500">Delete</button>
+                  <button onClick={() => remove(t.id)} className="text-xs text-muted hover:text-danger">Delete</button>
                 </td>
               </tr>
             ))}
@@ -142,6 +169,8 @@ export default function TodoPage() {
           onCreated={() => { setOpen(false); load(); }}
         />
       )}
+      </PageShell>
+      </div>
     </div>
   );
 }

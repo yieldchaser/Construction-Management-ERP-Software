@@ -7,6 +7,10 @@ import { useCompanySettings } from "@/context/CompanySettingsContext";
 import ZatcaInvoicePanel from "@/components/ZatcaInvoicePanel";
 import { CustomFieldsSection, useCustomFields } from "@/components/CustomFieldsSection";
 import { UNITS } from "@/lib/units";
+import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
+import { TableSkeleton } from "@/components/ui/Skeleton";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 // ── Transaction taxonomy (exact list from build spec) ────────────────────────
 type Endpoint = "bill" | "debit" | "credit" | "request";
@@ -101,7 +105,7 @@ type LedgerRow = {
 };
 
 function Card({ label, value, tone }: { label: string; value: string; tone?: "emerald" | "rose" | "violet" }) {
-  const color = tone === "emerald" ? "text-emerald-500" : tone === "rose" ? "text-rose-500" : tone === "violet" ? "text-violet-500" : "text-foreground";
+  const color = tone === "emerald" ? "text-success" : tone === "rose" ? "text-danger" : tone === "violet" ? "text-chart-4" : "text-foreground";
   return (
     <div className="rounded-lg border border-border-custom bg-card p-4">
       <div className="text-xs uppercase tracking-wider text-muted">{label}</div>
@@ -290,19 +294,20 @@ export default function TransactionPage() {
   });
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex flex-wrap items-center gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-foreground">Project Transactions</h1>
-          <p className="text-sm text-muted">Balance, margin &amp; the full transaction taxonomy for this project.</p>
-        </div>
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <PageHeader
+        title="Project Transactions"
+        subtitle="Balance, margin & the full transaction taxonomy for this project."
+      >
         <button
           onClick={() => setAddOpen(true)}
-          className="ml-auto rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+          className="rounded-md bg-primary px-3.5 py-1.5 text-xs font-semibold text-white hover:opacity-90 shadow-md cursor-pointer"
         >
           + Add Transaction
         </button>
-      </div>
+      </PageHeader>
+      <div className="flex-1 overflow-y-auto">
+        <PageShell width="wide">
 
       {/* Summary cards */}
       {/* R2-490: the In/Out tiles are labelled as cash deliberately - they count
@@ -317,18 +322,18 @@ export default function TransactionPage() {
 
       {/* R2-173: never present voucher-only cash tiles as if they were complete */}
       {!loading && !paymentTotals && (
-        <div className="rounded-md border border-amber-500/40 bg-amber-500/10 px-4 py-2 text-sm text-amber-400">
+        <div className="rounded-md border border-warning/40 bg-warning/10 px-4 py-2 text-sm text-warning">
           Recorded payments could not be loaded, so Total In / Total Out cover settlement vouchers only and may understate actual cash moved.
         </div>
       )}
 
-      {error && <div className="rounded-md border border-rose-500/40 bg-rose-500/10 px-4 py-2 text-sm text-rose-400">{error}</div>}
+      {error && <div className="rounded-md border border-danger/40 bg-danger/10 px-4 py-2 text-sm text-danger">{error}</div>}
 
       {/* Taxonomy filter + search */}
       <div className="flex flex-wrap items-center gap-2">
         <button
           onClick={() => setTypeFilter("All")}
-          className={`rounded-full px-3 py-1 text-xs font-medium border ${typeFilter === "All" ? "bg-primary/15 text-primary border-primary" : "border-border-custom text-muted hover:text-foreground"}`}
+          className={`rounded-lg px-3 py-1.5 text-xs font-semibold border transition-all cursor-pointer ${typeFilter === "All" ? "bg-elevated text-foreground shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)] border-border-custom" : "border-border-custom bg-card text-muted hover:bg-elevated/40 hover:text-foreground"}`}
         >
           All
         </button>
@@ -336,7 +341,7 @@ export default function TransactionPage() {
           <button
             key={t.key}
             onClick={() => setTypeFilter(t.key)}
-            className={`rounded-full px-3 py-1 text-xs font-medium border ${typeFilter === t.key ? "bg-primary/15 text-primary border-primary" : "border-border-custom text-muted hover:text-foreground"}`}
+            className={`rounded-lg px-3 py-1.5 text-xs font-semibold border transition-all cursor-pointer ${typeFilter === t.key ? "bg-elevated text-foreground shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)] border-border-custom" : "border-border-custom bg-card text-muted hover:bg-elevated/40 hover:text-foreground"}`}
           >
             {t.label}
           </button>
@@ -364,9 +369,23 @@ export default function TransactionPage() {
             </tr>
           </thead>
           <tbody>
-            {loading &&               <tr><td colSpan={7} className="px-4 py-8 text-center text-muted">Loading…</td></tr>}
+            {loading && (
+              <tr>
+                <td colSpan={7} className="p-4">
+                  <TableSkeleton rows={5} cols={7} />
+                </td>
+              </tr>
+            )}
             {!loading && filtered.length === 0 && (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-muted">No transactions for this filter.</td></tr>
+              <tr>
+                <td colSpan={7} className="p-8">
+                  <EmptyState
+                    title="No transactions found"
+                    description="No transactions match this filter. Add a transaction to track project ledger activity."
+                    action={{ label: "+ Add Transaction", onClick: () => setAddOpen(true) }}
+                  />
+                </td>
+              </tr>
             )}
             {!loading && filtered.map((r) => (
               <tr key={`${r.kind}-${r.id}`} className="border-t border-border-custom hover:bg-elevated/50">
@@ -376,7 +395,7 @@ export default function TransactionPage() {
                 </td>
                 <td className="px-4 py-3 text-foreground">{r.party}</td>
                 <td className="px-4 py-3 text-muted">{r.ref}</td>
-                <td className={`px-4 py-3 text-right font-medium ${r.direction === "in" ? "text-emerald-500" : "text-rose-500"}`}>
+                <td className={`px-4 py-3 text-right font-medium ${r.direction === "in" ? "text-success" : "text-danger"}`}>
                   {r.direction === "in" ? "+" : "−"}
                   {fmtINR(r.amount, currencyDecimalPlaces)}
                 </td>
@@ -418,6 +437,8 @@ export default function TransactionPage() {
           />
         </Modal>
       )}
+      </PageShell>
+      </div>
     </div>
   );
 }
@@ -737,7 +758,7 @@ function NewTransactionModal({
                   key={m}
                   type="button"
                   onClick={() => setPayMode(m)}
-                  className={`rounded-md px-3 py-1 text-xs border ${payMode === m ? "bg-primary/15 text-primary border-primary" : "border-border-custom text-muted"}`}
+                  className={`rounded-md px-3 py-1.5 text-xs font-semibold border transition-all cursor-pointer ${payMode === m ? "bg-elevated text-foreground shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)] border-border-custom" : "border-border-custom bg-card text-muted hover:bg-elevated/40"}`}
                 >
                   {m}
                 </button>
@@ -861,7 +882,7 @@ function NewTransactionModal({
         </div>
       </div>
 
-      {err && <div className="mt-3 rounded-md border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-400">{err}</div>}
+      {err && <div className="mt-3 rounded-md border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger">{err}</div>}
 
       <div className="flex justify-end gap-2 mt-4">
         <button onClick={onClose} className="rounded-md border border-border-custom px-4 py-2 text-sm text-foreground hover:border-primary">Cancel</button>

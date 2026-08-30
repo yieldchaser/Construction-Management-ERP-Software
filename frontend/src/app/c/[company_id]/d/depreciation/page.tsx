@@ -5,8 +5,10 @@ import React, { useState, useEffect } from "react";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
 import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
+import SegmentedTabs from "@/components/ui/Tabs";
 
 interface Schedule {
   id: string;
@@ -142,49 +144,43 @@ export default function DepreciationPage() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
+      <PageHeader
+        title="Asset Depreciation"
+        subtitle="Track asset value decline and maintain depreciation schedules"
+      >
+        <div className="flex gap-2">
+          <button
+            onClick={() => { setShowSchedModal(true); setMessage(""); }}
+            className="px-3.5 py-1.5 bg-primary hover:bg-primary/90 text-white rounded-md text-xs font-semibold transition-all cursor-pointer"
+          >
+            + New Schedule
+          </button>
+          <button
+            onClick={() => { setShowEntryModal(true); setMessage(""); }}
+            className="px-3.5 py-1.5 bg-elevated hover:bg-elevated text-foreground rounded-md text-xs font-semibold transition-all cursor-pointer border border-border-custom"
+          >
+            Record Entry
+          </button>
+        </div>
+      </PageHeader>
       <div className="flex-1 overflow-y-auto">
         <PageShell width="wide">
-          <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Asset Depreciation</h1>
-            <p className="text-muted mt-1">Track asset value decline and maintain depreciation schedules</p>
-          </div>
-          <div className="flex gap-3">
-            <button
-              onClick={() => { setShowSchedModal(true); setMessage(""); }}
-              className="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-md text-sm font-semibold transition-all"
-            >
-              New Schedule
-            </button>
-            <button
-              onClick={() => { setShowEntryModal(true); setMessage(""); }}
-              className="px-4 py-2 bg-elevated hover:bg-elevated text-foreground rounded-md text-sm font-semibold transition-all"
-            >
-              Record Entry
-            </button>
-          </div>
-        </div>
 
         {message && (
-          <div className={`mb-6 p-4 rounded-md ${message.includes("success") ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}>
+          <div className={`mb-6 p-4 rounded-md ${message.includes("success") ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}>
             {message}
           </div>
         )}
 
-                <div className="flex items-center gap-1 px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto mb-6">
-          {(["schedules", "entries"] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                activeTab === tab
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted hover:text-foreground hover:bg-elevated"
-              }`}
-            >
-              {tab === "schedules" ? "Depreciation Schedules" : "Depreciation Entries"}
-            </button>
-          ))}
+        <div className="pb-4">
+          <SegmentedTabs
+            tabs={[
+              { id: "schedules", label: "Depreciation Schedules" },
+              { id: "entries", label: "Depreciation Entries" },
+            ]}
+            activeTab={activeTab}
+            onChange={(tab) => setActiveTab(tab as any)}
+          />
         </div>
 
         {activeTab === "schedules" && (
@@ -225,7 +221,7 @@ export default function DepreciationPage() {
                       <td className="px-6 py-4">{s.depreciation_pct}%</td>
                       <td className="px-6 py-4">{new Date(s.start_date).toLocaleDateString()}</td>
                       <td className="px-6 py-4">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${s.is_active ? "bg-emerald-500/10 text-emerald-400" : "bg-zinc-500/10 text-muted"}`}>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${s.is_active ? "bg-success/10 text-success" : "bg-elevated text-muted"}`}>
                           {s.is_active ? "Active" : "Inactive"}
                         </span>
                       </td>

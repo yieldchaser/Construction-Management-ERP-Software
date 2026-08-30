@@ -2,6 +2,9 @@
 import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 import Icon from "@/components/marketing/Icon";
+import SegmentedTabs from "@/components/ui/Tabs";
+import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
@@ -293,45 +296,36 @@ export default function ProductionPage() {
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-background text-foreground">
       <main className="flex-1 flex flex-col overflow-hidden">
-        <header className="border-b border-border-custom bg-card px-6 py-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <h1 className="mt-1 text-2xl font-black tracking-tight text-foreground">Production Management</h1>
-              <p className="mt-2 text-sm text-muted">
-                Recipe standards, batch execution, consumption variance, and inventory pull-through in one view.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <button onClick={() => setShowNewRecipeModal(true)} className="rounded-md border border-border-custom bg-elevated px-4 py-2 text-xs font-semibold text-foreground transition-colors hover:bg-primary/10">
-                + New Recipe
-              </button>
-              <button onClick={() => setShowLogBatchModal(true)} className="rounded-md bg-primary px-4 py-2 text-xs font-bold text-white transition-opacity hover:opacity-90">
-                + Log Batch
-              </button>
-            </div>
-          </div>
-        </header>
-
-        <div className="flex items-center gap-1 px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto">
-          {[
-            { key: "overview", label: "Overview" },
-            { key: "batches", label: "Batch Runs" },
-            { key: "recipes", label: "Recipes" },
-            { key: "inventory", label: "Inventory Watch" },
-          ].map((item) => (
-            <button
-              key={item.key}
-              onClick={() => setTab(item.key as typeof tab)}
-              className={`whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${tab === item.key ? "bg-primary/10 text-primary" : "text-muted hover:text-foreground hover:bg-elevated"}`}
-            >
-              {item.label}
+        <PageHeader
+          title="Production Management"
+          subtitle="Recipe standards, batch execution, consumption variance, and inventory pull-through"
+        >
+          <div className="flex items-center gap-2">
+            <button onClick={() => setShowNewRecipeModal(true)} className="rounded-md border border-border-custom bg-elevated px-3.5 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-primary/10 cursor-pointer">
+              + New Recipe
             </button>
-          ))}
+            <button onClick={() => setShowLogBatchModal(true)} className="rounded-md bg-primary px-3.5 py-1.5 text-xs font-bold text-white transition-opacity hover:opacity-90 cursor-pointer">
+              + Log Batch
+            </button>
+          </div>
+        </PageHeader>
+
+        <div className="px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto">
+          <SegmentedTabs
+            tabs={[
+              { id: "overview", label: "Overview" },
+              { id: "batches", label: "Batch Runs" },
+              { id: "recipes", label: "Recipes" },
+              { id: "inventory", label: "Inventory Watch" },
+            ]}
+            activeTab={tab}
+            onChange={(t) => setTab(t as any)}
+          />
         </div>
 
         <div className="flex-1 overflow-y-auto">
-        <div className="px-6 py-6">
-          <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <PageShell width="wide">
+            <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <MetricCard
               label="Planned Output"
               value={loading ? "…" : formatQty(data?.planned_output_qty ?? 0)}
@@ -341,19 +335,19 @@ export default function ProductionPage() {
             <MetricCard
               label="Actual Output"
               value={loading ? "…" : formatQty(data?.actual_output_qty ?? 0)}
-              accent="text-emerald-400"
+              accent="text-success"
               note="Completed production volume after execution"
             />
             <MetricCard
               label="Material Variance"
               value={loading ? "…" : formatQty(data?.material_variance_qty ?? 0)}
-              accent={totals.materialVariancePct > 0 ? "text-amber-400" : "text-primary"}
+              accent={totals.materialVariancePct > 0 ? "text-warning" : "text-primary"}
               note="Actual consumption minus planned consumption"
             />
             <MetricCard
               label="Low Stock Alerts"
               value={loading ? "…" : String(totals.lowStockCount)}
-              accent="text-red-400"
+              accent="text-danger"
               note="Inventory rows that need reorder attention"
             />
           </div>
@@ -375,7 +369,7 @@ export default function ProductionPage() {
                   <div>
                     <div className="mb-2 flex items-center justify-between text-xs">
                       <span className="text-muted">Output progress</span>
-                      <span className="font-semibold text-emerald-400">{formatQty(totals.outputProgress, 1)}%</span>
+                      <span className="font-semibold text-success">{formatQty(totals.outputProgress, 1)}%</span>
                     </div>
                     <div className="h-2 rounded-full bg-elevated">
                       <div className="h-2 rounded-full bg-gradient-to-r from-primary to-emerald-400" style={{ width: `${Math.min(totals.outputProgress, 100)}%` }} />
@@ -385,13 +379,13 @@ export default function ProductionPage() {
                   <div>
                     <div className="mb-2 flex items-center justify-between text-xs">
                       <span className="text-muted">Material variance</span>
-                      <span className={totals.materialVariancePct > 0 ? "font-semibold text-amber-400" : "font-semibold text-primary"}>
+                      <span className={totals.materialVariancePct > 0 ? "font-semibold text-warning" : "font-semibold text-primary"}>
                         {formatQty(totals.materialVariancePct, 1)}%
                       </span>
                     </div>
                     <div className="h-2 rounded-full bg-elevated">
                       <div
-                        className={`h-2 rounded-full ${totals.materialVariancePct > 0 ? "bg-amber-400" : "bg-gradient-to-r from-primary to-primary"}`}
+                        className={`h-2 rounded-full ${totals.materialVariancePct > 0 ? "bg-warning" : "bg-gradient-to-r from-primary to-primary"}`}
                         style={{ width: `${Math.min(Math.abs(totals.materialVariancePct), 100)}%` }}
                       />
                     </div>
@@ -406,14 +400,14 @@ export default function ProductionPage() {
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-bold text-foreground">{batch.batch_number}</span>
                             {getLowStockMaterialsForBatch(batch).length > 0 && (
-                              <span className="inline-flex items-center gap-1 rounded bg-amber-500/10 px-2 py-0.5 text-[9px] font-medium text-amber-400 border border-amber-500/25 shadow-sm animate-pulse">
+                              <span className="inline-flex items-center gap-1 rounded bg-warning/10 px-2 py-0.5 text-[9px] font-medium text-warning border border-warning/25 shadow-sm">
                                 <Icon name="warning" className="w-3 h-3" /> Low Stock
                               </span>
                             )}
                           </div>
                           <div className="mt-1 text-xs text-muted">{batch.product_name}</div>
                         </div>
-                        <span className="rounded-full bg-elevated px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-300">
+                        <span className="rounded-full bg-elevated px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
                           {batch.status}
                         </span>
                       </div>
@@ -424,11 +418,11 @@ export default function ProductionPage() {
                         </div>
                         <div className="rounded-md bg-elevated p-2">
                           <div className="text-muted">Actual</div>
-                          <div className="mt-1 font-bold text-emerald-400">{formatQty(batch.actual_output_qty)}</div>
+                          <div className="mt-1 font-bold text-success">{formatQty(batch.actual_output_qty)}</div>
                         </div>
                         <div className="rounded-md bg-elevated p-2">
                           <div className="text-muted">Var.</div>
-                          <div className={`mt-1 font-bold ${batch.consumption_variance_qty >= 0 ? "text-amber-400" : "text-primary"}`}>
+                          <div className={`mt-1 font-bold ${batch.consumption_variance_qty >= 0 ? "text-warning" : "text-primary"}`}>
                             {formatQty(batch.consumption_variance_qty)}
                           </div>
                         </div>
@@ -456,7 +450,7 @@ export default function ProductionPage() {
                         </div>
                         <div className="mt-3 flex flex-wrap gap-2">
                           {recipe.materials.slice(0, 4).map((material) => (
-                            <span key={material.id} className="rounded-full bg-elevated px-2.5 py-1 text-[10px] text-zinc-300">
+                            <span key={material.id} className="rounded-full bg-elevated px-2.5 py-1 text-[10px] text-muted">
                               {material.material_name} {formatQty(material.planned_qty, 3)} {material.unit}
                             </span>
                           ))}
@@ -478,7 +472,7 @@ export default function ProductionPage() {
                             {formatQty(item.available_qty)} available · {formatQty(item.reserved_qty)} reserved
                           </div>
                         </div>
-                        <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${item.needs_reorder ? "bg-red-500/10 text-red-400" : "bg-emerald-500/10 text-emerald-400"}`}>
+                        <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${item.needs_reorder ? "bg-danger/10 text-danger" : "bg-success/10 text-success"}`}>
                           {item.needs_reorder ? "Reorder" : "Healthy"}
                         </span>
                       </div>
@@ -518,20 +512,20 @@ export default function ProductionPage() {
                           <div className="flex items-center gap-2">
                             <span className="font-semibold">{batch.batch_number}</span>
                             {getLowStockMaterialsForBatch(batch).length > 0 && (
-                              <span className="inline-flex items-center gap-1 rounded bg-amber-500/10 px-2 py-0.5 text-[9px] font-medium text-amber-400 border border-amber-500/25 shadow-sm animate-pulse">
+                              <span className="inline-flex items-center gap-1 rounded bg-warning/10 px-2 py-0.5 text-[9px] font-medium text-warning border border-warning/25 shadow-sm">
                                 <Icon name="warning" className="w-3 h-3" /> Low Stock
                               </span>
                             )}
                           </div>
                           <div className="mt-1 text-[10px] text-muted">{batch.started_at ? new Date(batch.started_at).toLocaleString() : "No start time"}</div>
                         </td>
-                        <td className="px-4 py-3 text-zinc-300">
+                        <td className="px-4 py-3 text-muted">
                           <div className="font-semibold text-foreground">{batch.product_name}</div>
                           <div className="mt-1 text-[10px] text-muted">{batch.recipe_code} · {batch.mix_type}</div>
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
-                            <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${batch.status === 'completed' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-white/5 text-zinc-300'}`}>
+                            <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${batch.status === 'completed' ? 'bg-success/10 text-success' : 'bg-white/5 text-muted'}`}>
                               {batch.status}
                             </span>
                             {batch.status === "running" && (
@@ -544,9 +538,9 @@ export default function ProductionPage() {
                             )}
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-zinc-300">{formatQty(batch.planned_output_qty)}</td>
-                        <td className="px-4 py-3 text-emerald-400">{formatQty(batch.actual_output_qty)}</td>
-                        <td className={`px-4 py-3 font-semibold ${batch.consumption_variance_qty >= 0 ? "text-amber-400" : "text-primary"}`}>
+                        <td className="px-4 py-3 text-muted">{formatQty(batch.planned_output_qty)}</td>
+                        <td className="px-4 py-3 text-success">{formatQty(batch.actual_output_qty)}</td>
+                        <td className={`px-4 py-3 font-semibold ${batch.consumption_variance_qty >= 0 ? "text-warning" : "text-primary"}`}>
                           {formatQty(batch.consumption_variance_qty)}
                         </td>
                         <td className="px-4 py-3 text-muted">{batch.materials.length}</td>
@@ -583,7 +577,7 @@ export default function ProductionPage() {
                               {formatQty(material.planned_qty, 3)} {material.unit}
                             </div>
                           </div>
-                          <span className={`rounded-full px-2 py-1 text-[10px] uppercase tracking-[0.18em] ${material.is_optional ? "bg-elevated text-muted" : "bg-emerald-500/10 text-emerald-400"}`}>
+                          <span className={`rounded-full px-2 py-1 text-[10px] uppercase tracking-[0.18em] ${material.is_optional ? "bg-elevated text-muted" : "bg-success/10 text-success"}`}>
                             {material.is_optional ? "Optional" : "Required"}
                           </span>
                         </div>
@@ -616,13 +610,13 @@ export default function ProductionPage() {
                           {formatQty(item.on_hand_qty)} on hand · {formatQty(item.reserved_qty)} reserved
                         </div>
                       </div>
-                      <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${item.needs_reorder ? "bg-red-500/10 text-red-400" : "bg-emerald-500/10 text-emerald-400"}`}>
+                      <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${item.needs_reorder ? "bg-danger/10 text-danger" : "bg-success/10 text-success"}`}>
                         {item.needs_reorder ? "Reorder" : "Healthy"}
                       </span>
                     </div>
                     <div className="mt-3 h-2 rounded-full bg-elevated">
                       <div
-                        className={`h-2 rounded-full ${item.needs_reorder ? "bg-red-400" : "bg-gradient-to-r from-primary to-emerald-400"}`}
+                        className={`h-2 rounded-full ${item.needs_reorder ? "bg-danger" : "bg-gradient-to-r from-primary to-emerald-400"}`}
                         style={{ width: `${Math.max(Math.min((item.available_qty / Math.max(item.on_hand_qty + item.reserved_qty, 1)) * 100, 100), 4)}%` }}
                       />
                     </div>
@@ -634,7 +628,7 @@ export default function ProductionPage() {
               </div>
             </section>
           )}
-        </div>
+          </PageShell>
         </div>
       </main>
 
@@ -646,7 +640,7 @@ export default function ProductionPage() {
               <button onClick={() => setShowNewRecipeModal(false)} className="text-muted hover:text-foreground text-lg">&times;</button>
             </div>
             <form onSubmit={handleCreateRecipe} className="mt-4 space-y-4">
-              {submitError && <div className="rounded bg-red-500/10 border border-red-500/20 p-3 text-xs text-red-400">{submitError}</div>}
+              {submitError && <div className="rounded bg-danger/10 border border-danger/20 p-3 text-xs text-danger">{submitError}</div>}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-[10px] uppercase tracking-[0.2em] text-muted block mb-1">Recipe Code</label>
@@ -697,7 +691,7 @@ export default function ProductionPage() {
                       }} placeholder="Unit" required className="w-16 bg-elevated border border-border-custom rounded px-2.5 py-1.5 text-xs text-foreground" />
                       <button type="button" onClick={() => {
                         setRecipeMaterials(recipeMaterials.filter((_, i) => i !== idx));
-                      }} className="text-red-400 hover:text-red-300 text-xs px-1">&times;</button>
+                      }} className="text-danger hover:text-danger text-xs px-1">&times;</button>
                     </div>
                   ))}
                 </div>
@@ -724,7 +718,7 @@ export default function ProductionPage() {
               <button onClick={() => setShowLogBatchModal(false)} className="text-muted hover:text-foreground text-lg">&times;</button>
             </div>
             <form onSubmit={handleCreateBatch} className="mt-4 space-y-4">
-              {submitError && <div className="rounded bg-red-500/10 border border-red-500/20 p-3 text-xs text-red-400">{submitError}</div>}
+              {submitError && <div className="rounded bg-danger/10 border border-danger/20 p-3 text-xs text-danger">{submitError}</div>}
               <div>
                 <label className="text-[10px] uppercase tracking-[0.2em] text-muted block mb-1">Select Recipe Standard</label>
                 <select value={selectedRecipeId} onChange={(e) => {

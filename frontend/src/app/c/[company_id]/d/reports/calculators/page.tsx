@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
 import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
 import {
   BRICK_PRESETS,
   calcBrickFrontend,
@@ -343,64 +344,55 @@ export default function CalculatorsPage() {
       { name: "Structure & Civil (40%)", percentage: 0.40, color: "bg-primary" },
       { name: "Finishing & Masonry (25%)", percentage: 0.25, color: "bg-primary" },
       { name: "MEP & Fittings (15%)", percentage: 0.15, color: "bg-success" },
-      { name: "Interior & Carpentry (12%)", percentage: 0.12, color: "bg-amber-500" },
-      { name: "Consultants & Permits (8%)", percentage: 0.08, color: "bg-zinc-500" },
+      { name: "Interior & Carpentry (12%)", percentage: 0.12, color: "bg-warning" },
+      { name: "Consultants & Permits (8%)", percentage: 0.08, color: "bg-elevated" },
     ];
     return { houseProjectCost: r.totalProjectCost, houseContingencyCost: r.contingencyBuffer, houseSplits: splits };
   }, [houseRate, houseFloors, houseArea, houseCompoundWall, houseContingency]);
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      <PageShell width="wide">
+      <PageHeader
+        title={`${activeCalc.replace(/_/g, " ")} Quantity Estimator`}
+        subtitle="IS 456 & CPWD standard quantity takeoff engine"
+      >
+        {/* Calculator Selector Tabs */}
+        <div className="flex flex-wrap items-center gap-1.5 text-xs">
+          {[
+            { id: "steel_column", label: "Col Steel", cat: "steel" },
+            { id: "steel_slab", label: "1-Way Slab", cat: "steel" },
+            { id: "steel_twoway", label: "2-Way Slab", cat: "steel" },
+            { id: "concrete", label: "Concrete Vol", cat: "concrete" },
+            { id: "rmc", label: "RMC Mixer", cat: "concrete" },
+            { id: "bricks", label: "Bricks", cat: "masonry" },
+            { id: "plaster", label: "Plaster", cat: "masonry" },
+            { id: "paint", label: "Paint", cat: "finishes" },
+            { id: "tile", label: "Tile", cat: "finishes" },
+            { id: "waterproofing", label: "Waterproofing", cat: "finishes" },
+            { id: "house_cost", label: "House Cost", cat: "finance" },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => {
+                setActiveCalc(tab.id as any);
+                setActiveCategory(tab.cat as any);
+              }}
+              className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all cursor-pointer ${
+                activeCalc === tab.id
+                  ? "bg-primary text-white font-bold shadow-sm"
+                  : "bg-input text-muted hover:text-foreground hover:bg-elevated border border-border-custom"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </PageHeader>
 
-      {/* Sidebar Navigation */}
-      
-
-      {/* Main Container */}
-      <main className="flex-1 flex flex-col overflow-hidden h-full">
-        {/* Header */}
-        <header className="border-b border-border-custom px-8 py-3 flex flex-col md:flex-row md:items-center justify-between bg-card shrink-0 gap-3">
-          <div>
-            <h1 className="text-sm font-bold text-foreground uppercase tracking-wider">
-              {activeCalc.replace(/_/g, " ")} Quantity Estimator
-            </h1>
-            <p className="text-[10px] text-muted">IS 456 & CPWD standard quantity takeoff engine</p>
-          </div>
-          {/* Calculator Selector Tabs */}
-          <div className="flex flex-wrap items-center gap-1.5 text-xs">
-            {[
-              { id: "steel_column", label: "Col Steel", cat: "steel" },
-              { id: "steel_slab", label: "1-Way Slab", cat: "steel" },
-              { id: "steel_twoway", label: "2-Way Slab", cat: "steel" },
-              { id: "concrete", label: "Concrete Vol", cat: "concrete" },
-              { id: "rmc", label: "RMC Mixer", cat: "concrete" },
-              { id: "bricks", label: "Bricks", cat: "masonry" },
-              { id: "plaster", label: "Plaster", cat: "masonry" },
-              { id: "paint", label: "Paint", cat: "finishes" },
-              { id: "tile", label: "Tile", cat: "finishes" },
-              { id: "waterproofing", label: "Waterproofing", cat: "finishes" },
-              { id: "house_cost", label: "House Cost", cat: "finance" },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => {
-                  setActiveCalc(tab.id as any);
-                  setActiveCategory(tab.cat as any);
-                }}
-                className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all ${
-                  activeCalc === tab.id
-                    ? "bg-primary text-primary-foreground font-bold shadow-sm"
-                    : "bg-input text-muted hover:text-foreground hover:bg-elevated border border-border-custom"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </header>
-
-        {/* Content Panel */}
-        <div className="flex-1 overflow-y-auto p-8 space-y-8">
+      <div className="flex-1 overflow-y-auto">
+        <PageShell width="wide">
+          {/* Content Panel */}
+          <div className="space-y-8">
           {/* CALCULATOR PANELS */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* INPUT PANEL */}
@@ -409,7 +401,7 @@ export default function CalculatorsPage() {
                 <h3 className="font-bold text-sm uppercase tracking-wider text-foreground">
                   Takeoff Parameters
                 </h3>
-                <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">
+                <span className="text-[10px] px-2 py-0.5 rounded bg-success/10 text-success border border-success/20 font-bold">
                   Active Formula
                 </span>
               </div>
@@ -1522,10 +1514,10 @@ export default function CalculatorsPage() {
                               setHouseQuality(q);
                               setHouseRate(HOUSE_RATE_DEFAULTS[q]);
                             }}
-                            className={`py-1.5 border rounded-lg uppercase text-[10px] font-bold transition-all ${
+                            className={`py-1.5 px-2 border rounded-md uppercase text-[10px] font-bold transition-all cursor-pointer ${
                               houseQuality === q
-                                ? "bg-primary/10 border-border-custom text-primary"
-                                : "border-border-custom text-muted"
+                                ? "bg-elevated text-foreground shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)] border-border-custom"
+                                : "border-border-custom bg-card text-muted hover:bg-elevated/40"
                             }`}
                           >
                             {q}
@@ -2055,9 +2047,8 @@ export default function CalculatorsPage() {
             </div>
           </div>
         </div>
-      </main>
-    
-      </PageShell>
+        </PageShell>
+      </div>
     </div>
   );
 }

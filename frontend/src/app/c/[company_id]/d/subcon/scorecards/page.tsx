@@ -4,6 +4,10 @@ import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
 import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
+import PageShell from "@/components/layout/PageShell";
+import PageHeader from "@/components/PageHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { TableSkeleton } from "@/components/ui/Skeleton";
 
 interface Scorecard {
   id: string;
@@ -75,24 +79,29 @@ export default function SubconScorecardsPage() {
   const fmt = (v: number) => v.toFixed(1) + "%";
   const fmtMoney = (v: number) => "₹" + Number(v).toLocaleString();
 
-  if (loading) return <div className="flex-1 flex items-center justify-center text-muted text-xs">Loading scorecards...</div>;
+  if (loading) {
+    return (
+      <div className="flex-1 overflow-y-auto">
+        <PageShell width="wide">
+          <TableSkeleton rows={6} cols={8} />
+        </PageShell>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden font-sans">
       <div className="flex-1 flex flex-col overflow-hidden relative font-sans">
-        <div className="absolute top-[-10%] right-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-[0.02] blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-[-10%] left-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary opacity-[0.02] blur-[120px] pointer-events-none" />
+        <PageHeader
+          title="Subcontractor Performance"
+          subtitle="Performance scorecards · On-time % · Billing accuracy · Quality"
+        >
+          <button onClick={fetchData} className="px-3.5 py-1.5 rounded-md border border-border-custom text-xs font-bold hover:bg-elevated cursor-pointer">Refresh</button>
+        </PageHeader>
 
-        <div className="border-b border-border-custom bg-background px-6 py-3.5 flex items-center justify-between z-10">
-          <div>
-            <h1 className="text-sm font-bold text-white uppercase tracking-wider">Subcontractor Performance</h1>
-            <p className="text-[10px] text-muted">Performance scorecards · On-time % · Billing accuracy · Quality</p>
-          </div>
-          <button onClick={fetchData} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-white/[0.05] cursor-pointer">Refresh</button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-6 z-10 space-y-6">
-          {error && <div className="p-4 rounded-md bg-red-500/10 border border-red-500/20 text-xs text-red-400">{error}</div>}
+        <div className="flex-1 overflow-y-auto z-10">
+          <PageShell width="wide">
+            {error && <div className="p-4 rounded-md bg-danger/10 border border-danger/20 text-xs text-danger">{error}</div>}
 
           {/* Comparative Analysis */}
           <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
@@ -119,13 +128,13 @@ export default function SubconScorecardsPage() {
                     <tr key={row.subcontractor_id} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-all">
                       <td className="px-5 py-3.5 text-white font-semibold">{row.subcontractor_name}</td>
                       <td className="px-5 py-3.5 text-muted">{row.scorecard_count}</td>
-                      <td className="px-5 py-3.5 text-right font-sans font-bold text-green-400">{fmt(row.avg_on_time_pct)}</td>
-                      <td className="px-5 py-3.5 text-right font-sans font-bold text-blue-400">{fmt(row.avg_billing_accuracy_pct)}</td>
+                      <td className="px-5 py-3.5 text-right font-sans font-bold text-success">{fmt(row.avg_on_time_pct)}</td>
+                      <td className="px-5 py-3.5 text-right font-sans font-bold text-info">{fmt(row.avg_billing_accuracy_pct)}</td>
                       <td className="px-5 py-3.5 text-right font-sans font-bold text-secondary">{fmt(row.avg_quality_score)}</td>
                       <td className="px-5 py-3.5 text-right font-sans">{row.total_tasks_completed}</td>
-                      <td className="px-5 py-3.5 text-right font-sans text-red-400">{row.total_tasks_delayed}</td>
+                      <td className="px-5 py-3.5 text-right font-sans text-danger">{row.total_tasks_delayed}</td>
                       <td className="px-5 py-3.5 text-right font-sans">{fmtMoney(row.total_billed)}</td>
-                      <td className="px-5 py-3.5 text-right font-sans text-amber-400">{row.total_disputes}</td>
+                      <td className="px-5 py-3.5 text-right font-sans text-warning">{row.total_disputes}</td>
                     </tr>
                   ))}
                   {comparative.length === 0 && (
@@ -160,11 +169,11 @@ export default function SubconScorecardsPage() {
                       <tr key={sc.id} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-all">
                         <td className="px-5 py-3.5 text-white font-semibold">{sc.subcontractor_name}</td>
                         <td className="px-5 py-3.5 text-muted">{sc.period_start?.split("T")[0]} – {sc.period_end?.split("T")[0]}</td>
-                        <td className="px-5 py-3.5 text-right font-sans font-bold text-green-400">{fmt(sc.on_time_pct)}</td>
-                        <td className="px-5 py-3.5 text-right font-sans font-bold text-blue-400">{fmt(sc.billing_accuracy_pct)}</td>
+                        <td className="px-5 py-3.5 text-right font-sans font-bold text-success">{fmt(sc.on_time_pct)}</td>
+                        <td className="px-5 py-3.5 text-right font-sans font-bold text-info">{fmt(sc.billing_accuracy_pct)}</td>
                         <td className="px-5 py-3.5 text-right font-sans font-bold text-secondary">{fmt(sc.quality_score)}</td>
                         <td className="px-5 py-3.5 text-right font-sans">{fmtMoney(sc.total_billed)}</td>
-                        <td className="px-5 py-3.5 text-right font-sans text-amber-400">{sc.disputes_count}</td>
+                        <td className="px-5 py-3.5 text-right font-sans text-warning">{sc.disputes_count}</td>
                       </tr>
                     );
                   })}
@@ -175,6 +184,7 @@ export default function SubconScorecardsPage() {
               </table>
             </div>
           </div>
+          </PageShell>
         </div>
       </div>
     </div>
