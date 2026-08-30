@@ -66,3 +66,53 @@ and behaviour is identical to before the change.
 Lighthouse/LCP/INP/TBT were likewise not captured: the pane exposes resource timing and layout-shift
 data but no Lighthouse run. The numbers above come from the Performance Resource Timing API and are
 real, but they are not a Lighthouse score.
+
+
+---
+
+## Addendum 2026-08-30 — the PNG deletion broke four surfaces, now fixed
+
+Commit `09c95db` deleted 53 PNG originals (69.3 MB) on the stated grounds that *"every rendering
+component does `src.replace('.png','.webp')` before `next/image`"*.
+
+**Four components do. Four call sites do not**, and their PNGs were deleted underneath them:
+
+| Call site | What broke |
+|---|---|
+| `app/help/page.tsx:122` | `/help` hero — `priority` LCP image |
+| `app/resources/page.tsx:123` | `/resources` hero — `priority` LCP image |
+| `app/blog/BlogIndexClient.tsx` | every blog index card image |
+| `components/blog/BlogArticle.tsx` | every blog article hero |
+
+Proved rather than argued — `GET /_next/image?url=/marketing/help/help-hero.png&w=1920&q=75`
+returned **HTTP 400**, as did `resources-hero` and every `cat-*`, while a surviving `.webp` returned
+**200**.
+
+**Fixed in `9e27986`:** the 40 referenced `.png` paths were rewritten to `.webp` at source across 32
+files, after confirming every one has a `.webp` sibling (zero exceptions). The scattered `replace()`
+logic is now redundant rather than load-bearing — it passes `.webp` through untouched.
+
+**Verified end to end** on a clean production build: every image URL on 11 marketing pages fetched —
+**194 requests, 0 broken**; `/help` 1/1 and `/blog` 110/110 images render in a real browser.
+
+### Two verification traps that produced false readings here
+
+Both made a correct fix look broken. Worth knowing before trusting any local frontend check:
+
+1. **Next's incremental build cache served pre-edit HTML** out of `.next`. A rebuild reporting
+   `exit 0` still served the old markup. `rm -rf .next` before rebuilding when verifying a change to
+   rendered output.
+2. **`pkill -f "next start"` does not kill the Windows node process.** The old server kept port 3100
+   and kept serving the old build. Kill by port instead:
+   `Get-NetTCPConnection -LocalPort 3100 -State Listen | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }`
+
+### Asset state after both changes
+
+| | Before | After |
+|---|---|---|
+| Image files in `frontend/public` | 106 | 59 |
+| Total size | ~74 MB | ~4.7 MB |
+
+The deletion itself was the right call — those PNGs genuinely were redundant. It was the *reference
+sweep* that was incomplete, which is this codebase's single most common failure mode: a correct rule
+applied to some surfaces and not others.
