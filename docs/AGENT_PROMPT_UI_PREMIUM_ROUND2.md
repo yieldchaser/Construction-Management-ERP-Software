@@ -222,7 +222,63 @@ Report a 16-row table: slug, rows returned, key match yes/no.
 
 ---
 
-## PHASE 8 — Double page headers
+## PHASE 8 — Replace the selection styling (founder-rejected, highest priority after Phase 0)
+
+**The founder has explicitly rejected the current active/selected styling as generic AI-generated design.** He removed this exact treatment once before and it came back. It is not a matter of taste to re-argue; it is a hard requirement.
+
+### What is banned, everywhere, permanently
+
+1. **The 2px accent bar.** `border-l-2 border-primary` on the active sidebar item (3 uses), and `border-b-2 border-primary` as the active tab underline (10 uses). No accent bar on any edge, in any direction, as a selection indicator.
+2. **The translucent accent tint as a selected surface.** `bg-primary/10` and `bg-primary/15` used to mark selection — 21 and ~12 uses respectively, and the two opacities are used interchangeably for the same meaning, which is its own inconsistency.
+3. **Glow shadows.** `shadow-[0_0_15px_rgba(...)]`, `shadow-[0_0_20px_rgba(...)]`, `shadow-[0_0_40px_rgba(...)]` — 5 uses. Outer glows read as template output.
+4. **Decorative `animate-pulse`.** `dashboard/page.tsx:1665` has a permanently pulsing glowing bar. Pulse is for skeleton loaders only, never for decoration.
+5. **Unicode arrows as UI chevrons.** `▼ ▶ ◀ ▲ ✕` used as controls in `Sidebar.tsx` and elsewhere. Use real icons from the existing `Icon` component.
+
+### Bonus defect found while auditing this
+
+Round 1's hex sweep only matched `#rrggbb` and **missed `rgba()`**. The purple `#7C5CFF` — which is in no token and clashes with the sky-blue primary — survives as `rgba(124,92,255,...)` in `dashboard/page.tsx:1665` and `drawings/page.tsx:471`. Also surviving: `rgba(232,24,76,...)` (pink) and `rgba(0,229,163,...)` (green), neither in the token set. Worse, `dashboard/page.tsx:1651` puts a **pink** glow on a `bg-primary` (blue) bar.
+
+Sweep `rgba(` in addition to `#hex` and route every one through the tokens.
+
+### What to build instead
+
+These were prototyped and compared side by side before being chosen. Do not substitute your own approach without building the comparison and showing it.
+
+**One idea, applied in both places: the selected thing becomes a raised solid object.** Not tinted, not outlined, not glowing. It reads as a physical surface lifted off the rail, the way a native macOS sidebar or Linear does it.
+
+**Sidebar active item:**
+- Background: a **solid neutral elevated surface** (`--elevated`), not an accent tint.
+- Text: full `--foreground` at semibold. Inactive stays `--muted` at medium.
+- Accent: **only the icon** takes `--primary`. That is the sole use of colour.
+- Depth: `inset 0 1px 0 rgba(255,255,255,.06)` plus a soft `0 1px 2px rgba(0,0,0,.4)`. Subtle lift, no glow.
+- No border on any edge.
+
+**Centre-panel tabs — replace the underline with a segmented control:**
+- A track: the existing `--card` surface, 1px `--border-custom`, rounded, ~3px inner padding.
+- The active segment is a **raised solid thumb** using the same treatment as the sidebar item above (solid `--elevated`, `--foreground` text, the same inset highlight and soft shadow).
+- Inactive segments are plain `--muted` text on the track, no background.
+- Animate the thumb between segments (transform, ~160ms). Never animate colour alone.
+
+**Both must be defined once** as shared components or shared token classes, and every call site must use them. The reason there are two opacities and three treatments today is that this was inlined at 40+ call sites.
+
+### Rejected alternatives, and why (do not re-propose these)
+
+- **Weight/contrast change only, no surface.** Too subtle. In a 41-item grouped nav you cannot locate the active row at a glance. Fails the functional job.
+- **Solid saturated accent fill on the selected row.** Legible, but a big saturated blue block dominates the rail and competes with the content area. Wrong for a dense ERP where the nav should recede.
+- **Literally growing the selected item.** The founder floated this. Do not implement size growth on selection: it causes layout shift in a nav list and reads janky on every click. The raised-surface treatment delivers the same "it lifts and becomes an object" intent with nothing moving. A subtle scale on *hover* is acceptable; on *selection* it is not.
+
+### Verify
+
+- `grep -rn "border-l-2 border-primary\|border-b-2 border-primary" frontend/src` returns **0**.
+- `grep -rn "bg-primary/1[05]" frontend/src` returns 0 for selection states (badges and chips may legitimately keep a tint — justify each survivor by name).
+- `grep -rn "shadow-\[0_0_" frontend/src` returns 0.
+- `grep -rnE "rgba\([0-9]" frontend/src/app/c` returns only token-derived values.
+- No decorative `animate-pulse` remains; skeletons only.
+- Screenshot the sidebar with an item selected and the tab control in both states, in **light and dark**.
+
+---
+
+## PHASE 9 — Double page headers
 
 Several pages render the route title in the top bar **and** an `<h1>` immediately below saying nearly the same thing — `/d/depreciation` shows "Depreciation" then "Asset Depreciation"; `/d/safety` shows "Safety" then "HSE / Safety Management". Two headers stacked in the first 120px of every page is a large part of why the console reads as cluttered.
 
@@ -241,7 +297,8 @@ Screenshot 10 pages showing one title each.
 - **Behaviour is frozen.** No API, data-shape, auth or business-logic changes, except the report-shape changes explicitly required by Phases 5 and 6.
 - **Permissions are frozen.** Per-role visible module sets must be identical before and after. This applies to the Phase 2 flyout.
 - **Accessibility.** Visible focus ring on every interactive element. Body text clears WCAG AA in **both** themes.
-- **No new hardcoded hex** outside the print stylesheet.
+- **No new hardcoded hex or `rgba()`** outside the print stylesheet.
+- **No generic-template design.** The founder reads accent bars, accent-tinted selected surfaces, outer glows, decorative pulses and unicode arrows as AI-generated filler, and has rejected them by name. This applies to anything new you add in any phase, not only to Phase 8. When you need to express state, express it with surface, weight and contrast before reaching for colour, and never with a glow.
 - Run `pytest -n 4` (from `backend/`, with `PYTHONPATH=.`) and `npm run build` after each phase. **Do not delete or skip tests to go faster.**
 - Delete `.next/` before any build you intend to verify against — Next.js will otherwise serve stale pre-edit HTML from cache and you will confirm your own old output.
 - `pkill -f "next start"` does not kill the Windows `node.exe` holding the port. Kill by port: `Get-NetTCPConnection -LocalPort <port> -State Listen | Stop-Process`.
@@ -256,6 +313,8 @@ Screenshot 10 pages showing one title each.
 - [ ] The 3 chart reports render as charts/stat cards, screenshotted with real data.
 - [ ] `budget-vs-actual-material-qty` returns its own spec'd columns.
 - [ ] All 16 previously-empty reports verified against seeded data.
+- [ ] Selection styling replaced everywhere: zero accent bars, zero accent-tint selected surfaces, zero glow shadows, zero decorative pulse, zero unicode arrows as controls. Sidebar item and tab control both use the shared raised-surface treatment, defined once. Screenshots in light and dark.
+- [ ] `rgba()` colours swept alongside hex; the purple, pink and green non-token colours are gone.
 - [ ] One page title per page.
 - [ ] `pytest -n 4` green; `npm run build` clean; `npx tsc --noEmit` clean.
 - [ ] Committed and pushed to `origin/main`, ancestry verified.

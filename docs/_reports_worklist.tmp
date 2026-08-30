@@ -1,0 +1,54 @@
+ 1. `all-expense-deduction-retention` - All Expense Deduction / Retention Report
+ 2. `asset-allocation` - Asset Allocation Report
+ 3. `asset-status` - Asset Status Report
+ 4. `boq-bom` - BOQ BOM Report
+ 5. `boq-item` - BOQ Item Report
+ 6. `boq-measurement-book` - BOQ Measurement Book
+ 7. `boq-workorder-summary` - BOQ Workorder Summary Report
+ 8. `budget-vs-actual-cost-code` - Budget vs Actual (Cost Code)
+ 9. `budget-vs-actual-material-cost` - Budget vs Actual (Material Cost)
+10. `budget-vs-actual-material-qty` - Budget vs Actual (Material Qty)
+11. `company-expense` - Company Expense Report
+12. `company-transactions` - Company Transactions Report
+13. `company-user-activity-leaderboard` - Company User Activity Leaderboard
+14. `cost-code-expense-analysis` - Cost Code Expense Analysis
+15. `cost-code-library` - Cost Code Library
+16. `daily-based-equipment-used` - Daily based Equipment Used Report
+17. `equipment-expense-summary` - Equipment Expense Summary
+18. `equipment-library` - Equipment Library
+19. `equipment-trip` - Equipment Trip Report
+20. `equipment-usage-detail` - Equipment Usage Detail Report
+21. `fuel-efficiency` - Fuel Efficiency Report
+22. `lead-status-funnel` - Lead Status Funnel Report
+23. `material-library` - Material Library
+24. `material-purchase-item` - Material Purchase Item Report
+25. `material-received-without-po` - Material Received without PO
+26. `material-request-item` - Material Request Item Report
+27. `monthly-pl` - Monthly P&L Report
+28. `ot-shift` - OT & Shift Report
+29. `party-library` - Party Library
+30. `payroll-library` - Payroll Library
+31. `project-activity-leaderboard` - Project Activity Leaderboard
+32. `project-financial-summary` - Project Financial Summary
+33. `project-level-party-balance` - Project level Party Balance Report
+34. `project-operational-summary` - Project Operational Summary
+35. `project-wise-expense-summary` - Project Wise Expense Summary
+36. `project-wise-sales-summary` - Project Wise Sales Summary
+37. `quotation` - Quotation Report
+38. `quotation-item` - Quotation Item Report
+39. `rate-card-library` - Rate Card Library
+40. `site-inspection` - Site Inspection Report
+41. `staff-salary` - Staff Salary Report
+42. `subcon-deduction-retention` - Subcon Deduction / Retention Report
+43. `subcon-material-issue` - Subcon Material Issue Summary
+44. `subcon-measurement-book` - Subcon Measurement Book
+45. `subcon-workorder-summary` - Subcon Workorder Summary Report
+46. `task-boq-billed-unbilled` - Task BOQ Billed & Unbilled Qty Report
+47. `task-material` - Task Material Report
+48. `task-resource-budget-vs-actual` - Task Resource Budget Vs Actual Report
+49. `task-revenue-expense` - Task Revenue & Expense Report
+50. `todo-report` - To Do Report
+51. `unbilled-item` - Unbilled Item Report
+52. `warehouse-current-stock` - Warehouse Current Stock Report
+53. `warehouse-stock-movement` - Warehouse Stock Movement Report
+54. `warehouse-transaction` - Warehouse Transaction Report
