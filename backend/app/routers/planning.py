@@ -47,6 +47,12 @@ class CompanyTaskResponse(TaskResponse):
     project_name: Optional[str] = None
     assigned_to_name: Optional[str] = None
 
+
+class TaskTreeNode(TaskResponse):
+    children: List["TaskTreeNode"] = Field(default_factory=list)
+
+TaskTreeNode.model_rebuild()
+
 class TaskCreateRequest(BaseModel):
     project_id: UUID
     parent_id: Optional[UUID] = None
@@ -236,6 +242,49 @@ def get_tasks(project_id: UUID, db: Session = Depends(get_db), _: None = Depends
     tasks = db.query(Task).filter(Task.project_id == project_id).all()
     annotate_critical(tasks, db)
     return tasks
+
+
+@router.get("/tasks/hierarchy/{project_id}", response_model=List[TaskTreeNode])
+def get_task_hierarchy(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    tasks = db.query(Task).filter(Task.project_id == project_id).all()
+    annotate_critical(tasks, db)
+
+    nodes = {
+        t.id: TaskTreeNode(
+            id=t.id,
+            project_id=t.project_id,
+            parent_id=t.parent_id,
+            name=t.name,
+            duration_days=t.duration_days,
+            start_date=t.start_date,
+            end_date=t.end_date,
+            status=t.status,
+            priority=t.priority,
+            assigned_to=t.assigned_to,
+            boq_item_id=t.boq_item_id,
+            progress=float(t.progress or 0.0),
+            baseline_start=t.baseline_start,
+            baseline_end=t.baseline_end,
+            is_critical=getattr(t, "is_critical", False),
+            children=[],
+        )
+        for t in tasks
+    }
+
+    roots: List[TaskTreeNode] = []
+    for t in tasks:
+        node = nodes[t.id]
+        if t.parent_id and t.parent_id in nodes:
+            nodes[t.parent_id].children.append(node)
+        else:
+            roots.append(node)
+
+    return roots
+
 
 @router.get("/tasks/company/{company_id}", response_model=List[CompanyTaskResponse])
 def get_company_tasks(company_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
