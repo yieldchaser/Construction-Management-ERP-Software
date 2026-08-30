@@ -99,30 +99,50 @@ app/c/[company_id]/p/[project_id]/transaction/page.tsx
 
 Separately, console shadow usage overall is heavy and worth pruning: `shadow-2xl` 59, `shadow-lg` 52, `shadow-sm` 49, `shadow-md` 35, `shadow-xs` 32, `shadow-xl` 17.
 
-## What to build instead
+## What to build instead — this is decided, do not redesign it
 
-The bevel is skeuomorphic: a fake light source, a fake raised edge. What reads as engineered rather than generated is **flat surfaces separated by a crisp hairline border and a real background step** — the idiom of Linear, Vercel and Stripe. No inset highlight. No drop shadow on inline UI.
+Four candidates were prototyped and compared side by side in both themes, using the real token values, and the founder's architect picked one. **You are implementing a decision, not making one.** Do not substitute your own approach.
 
-Target treatment for a selected/raised element:
+The bevel is skeuomorphic: a fake light source, a fake raised edge. The replacement takes its separation from a genuine surface change and nothing else.
 
-- **Background:** a genuine solid step (`--elevated` against `--card`, or `--card` against `--background`). The surface change alone carries the separation.
-- **Border:** one crisp `1px solid` hairline in `--border-custom`, or a slightly stronger variant. Full border, not one edge — a single-edge accent bar is separately banned on this project.
-- **Text:** `--foreground` at semibold for selected, `--muted` at medium for unselected.
-- **Accent:** the icon only.
-- **Shadow:** none.
+### The treatment: background step only
 
-Keep drop shadows only where an element genuinely floats above the page and needs to detach from it: modals, drawers, popovers, the collapsed-rail flyout. Inline UI — sidebar rows, tabs, cards, table rows, stat tiles — gets no shadow at all.
+For any **selected or active inline element** — sidebar row, tab, segmented-control thumb, selected list row, selected card:
 
-## Do not mass-apply before showing it
+- **Background:** steps to `--elevated`. That step alone carries the separation.
+- **Text:** `--foreground` at `font-semibold` when selected; `--muted` at `font-medium` when not.
+- **Accent:** the icon only, in `--primary`.
+- **Shadow:** none. No `box-shadow` of any kind.
+- **Border:** none added. The element keeps whatever container border it already had; you are not adding one.
 
-This is the second rejected selection treatment. Do not guess a third and convert 25 sites.
+That is the whole spec. Removing the `[box-shadow:...]` and letting `bg-elevated` do the work is most of the change.
 
-1. Build a **single static comparison page** rendering, side by side, in both light and dark: the current bevel, and two flat candidates (border-only; and background-step-plus-border). Show each as a sidebar row, a tab control and a card.
-2. **Screenshot it and put it in your report for the founder to choose from.** Then stop that phase there and proceed to Part 3; do not convert the 25 sites until he has picked one.
+### Containers and floating elements
 
-If the run completes without an answer, leave the bevel in place, deliver the comparison, and say so plainly. Converting on a guess is the failure mode being avoided.
+- **Cards, panels, table containers:** keep their existing `1px solid --border-custom`. Drop the shadow. A card is defined by its hairline, not by a glow.
+- **Genuinely floating elements only** — modals, drawers, popovers, the collapsed-rail flyout — keep exactly one soft drop shadow. These detach from the page and need it.
+- **Everything inline** — sidebar rows, tabs, cards, table rows, stat tiles — gets no shadow at all.
 
-Once a choice exists, apply it to all 25 sites plus any equivalent inline shadows, and audit the 244 generic `shadow-*` uses against the "inline gets none, floating gets one" rule.
+Audit the 244 generic `shadow-*` uses against that inline-versus-floating rule and remove the ones that fail it.
+
+### Why not the alternatives (do not re-propose these)
+
+- **Step plus a stronger hairline.** Crisp, but in dark mode the hairline reads as a light rim around the selected row. The founder has now rejected two edge treatments; a third rim is a bad bet.
+- **Recessed — selected row darker than the rail.** Distinctive in dark, but a darker-than-background row reads as *disabled* rather than selected, and the effect inverts between themes.
+- **Any border-only treatment.** Makes a nav row look like an input field.
+
+### Fix this token collision as part of the work
+
+In `:root.light-theme`, `--elevated` and `--border` are **the same value**, `#E5E7EB`. So any element that uses `bg-elevated` together with `border-border-custom` has an **invisible border in light mode**. Since the new treatment leans on `--elevated` everywhere, this matters more now than it did.
+
+Give light `--border` a value one step darker than `--elevated` — around `#D1D5DB` — so hairlines stay visible against an elevated surface. Verify the contrast of the border against both `--card` (`#FFFFFF`) and `--elevated` (`#E5E7EB`), and confirm the dark theme is unaffected.
+
+### Verify
+
+- `grep -rn "inset_0_1px_0\|inset 0 1px 0" frontend/src` → **0**.
+- No `box-shadow` on any selected/active inline element.
+- Screenshot the sidebar with an item selected, a tab control, and a card, in **light and dark**, and confirm no rim or halo on any of them.
+- Confirm the light-mode hairline is visible on an elevated surface after the token fix.
 
 ## Still banned, from previous rounds
 
@@ -283,8 +303,10 @@ Do not invent benchmarks, user counts, or roadmap promises.
 - [ ] All 82 re-probed live; Sentry feed clean. Before/after issue count reported.
 
 **Part 2**
-- [ ] Comparison page built and screenshotted in light and dark, with the current bevel and two flat candidates. **Delivered for the founder to choose; not mass-applied without an answer.**
-- [ ] If a choice was given: all 25 bevel sites converted, plus the 244 generic shadows audited against inline-vs-floating.
+- [ ] All 25 bevel sites converted to the background-step treatment; `grep -rn "inset_0_1px_0\|inset 0 1px 0" frontend/src` returns 0.
+- [ ] No `box-shadow` on any selected/active inline element; the 244 generic `shadow-*` uses audited against inline-versus-floating.
+- [ ] Light `--border` darkened so hairlines stay visible on `--elevated`; dark theme unchanged.
+- [ ] Screenshots of a selected sidebar row, a tab control and a card in light and dark, showing no rim or halo.
 
 **Part 3**
 - [ ] `docs/WORKFLOW_TRUTH_MAP.md` covers every sidebar module with verbatim labels, preconditions, required fields, endpoints, permissions, success criteria.
@@ -303,7 +325,7 @@ Do not invent benchmarks, user counts, or roadmap promises.
 ## Final report
 
 Part 1: what was broken, the fix, the 16-report classification table, Sentry before/after.
-Part 2: the comparison screenshots, and whether you applied anything.
+Part 2: the bevel count before and after, and the light/dark screenshots.
 Part 3: verdict counts, coverage fraction, every `D-0xx` filed with what was broken.
 Part 4: what you removed and why.
 
