@@ -21,6 +21,8 @@ interface ReportCategory {
   title: string;
   icon: IconName;
   reports: ReportItem[];
+}
+
 // C4: 24 active report slugs implemented in backend/app/routers/reports.py.
 // All remaining catalogue entries are honestly badged as "Coming soon" to prevent
 // misleading 404s when users attempt to view or download unimplemented reports.

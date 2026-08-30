@@ -13,6 +13,7 @@ interface WorkOrder {
   sNo: number;
   subContractor: string;
   progress: string;
+  progressPct?: number | null;
   woValue: number;
   billedValue: number;
   status: "Draft" | "Pending Approval" | "Approved" | "Rejected";
