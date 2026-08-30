@@ -190,6 +190,8 @@ export default function CustomFieldsPage() {
             >
               <option value="project">Project fields</option>
               <option value="invoice">Invoice fields</option>
+              <option value="lead">Lead fields</option>
+              <option value="vendor">Vendor fields</option>
             </select>
             <button onClick={() => setShowFieldModal(true)} className="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-md text-sm font-semibold transition-all">
               New Field
@@ -245,6 +247,8 @@ export default function CustomFieldsPage() {
                 <select className="w-full bg-input border border-border-custom rounded-md px-4 py-2 text-foreground" value={fieldForm.entity_type} onChange={(e) => setFieldForm({...fieldForm, entity_type: e.target.value})}>
                   <option value="project">Project</option>
                   <option value="invoice">Invoice</option>
+                  <option value="lead">Lead</option>
+                  <option value="vendor">Vendor</option>
                 </select>
               </div>
               <div>
