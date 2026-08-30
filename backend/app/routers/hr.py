@@ -449,13 +449,14 @@ def punch(payload: PunchRequest, db: Session = Depends(get_db), current_user: Us
         return log
     else:
         # punch_type == "out"
+        # Search for an open punch-in within the last 24 hours up to punch_time (handles shifts crossing midnight / timezones)
         log = db.query(AttendanceLog).filter(
             AttendanceLog.employee_id == payload.employee_id,
             AttendanceLog.project_id == payload.project_id,
-            AttendanceLog.attendance_date >= today_start,
-            AttendanceLog.attendance_date < today_end,
+            AttendanceLog.attendance_date >= punch_time - timedelta(hours=24),
+            AttendanceLog.attendance_date <= punch_time,
             AttendanceLog.punch_out.is_(None)
-        ).first()
+        ).order_by(AttendanceLog.attendance_date.desc()).first()
         if not log:
             raise HTTPException(status_code=400, detail="No open punch-in found for today.")
 
