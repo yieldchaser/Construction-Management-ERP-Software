@@ -41,20 +41,20 @@
   --input: #F3F4F6;
   --muted: #4B5563;      /* WCAG compliant medium gray (gray-600) for excellent legibility */
   
-  --primary: #0284C7;
-  --primary-hover: #0369A1;
+  --primary: #0369A1;
+  --primary-hover: #075985;
   --secondary: #0D9488;
   --accent: #EA580C;
   --accent-hover: #C2410C;
-  --success: #10B981;
-  --warning: #F59E0B;
-  --danger: #EF4444;
-  --info: #3B82F6;
+  --success: #065F46;
+  --warning: #92400E;
+  --danger: #B91C1C;
+  --info: #1D4ED8;
 
   /* Categorical Chart Palette (Light Mode - refined contrast) */
-  --chart-1: #0284C7;
-  --chart-2: #059669;
-  --chart-3: #D97706;
+  --chart-1: #0369A1;
+  --chart-2: #065F46;
+  --chart-3: #92400E;
   --chart-4: #7C3AED;
   --chart-5: #DB2777;
   --chart-6: #0891B2;
