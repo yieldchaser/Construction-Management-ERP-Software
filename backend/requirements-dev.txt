@@ -1,0 +1,17 @@
+# Test-only dependencies. NOT installed in production — backend/requirements.txt
+# is what Render installs. Keep it that way.
+#
+# pytest-xdist is here because the suite is 1,100 small tests whose cost is
+# per-test fixture setup, not a few slow tests (profiled 2026-08-30: the slowest
+# single test is 9.5s and the top 12 total ~40s of 214s). Serial runs cost ~214s;
+# `-n 4` costs ~65s. Measured over three consecutive full runs: 68s / 63s / 67s,
+# zero failures each, so it is stable despite the file-backed SQLite fixtures.
+pytest
+pytest-asyncio
+pytest-xdist
+
+# Usage:
+#   pip install -r backend/requirements-dev.txt
+#   python -m pytest -q -p no:warnings -n 4        # full suite, ~65s
+#   python -m pytest -q -p no:warnings -n 4 -x     # stop at first failure
+#   python -m pytest -q -p no:warnings --lf        # re-run only what failed
