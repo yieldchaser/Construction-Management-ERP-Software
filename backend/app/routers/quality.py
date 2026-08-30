@@ -28,7 +28,7 @@ from app.database import get_db
 from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership, require_permission
 from app.models import (
     QualityChecklist, ChecklistItem, SiteInspection,
-    InspectionResponse, NCR, MaterialTestResult, Project, User
+    InspectionResponse, NCR, MaterialTestResult, Project, User, Task
 )
 from app.workflow_controls import enforce_entry_creation_window
 from app.routers.delete_logs import log_deletion
@@ -92,6 +92,7 @@ class InspectionResponse_(BaseModel):
     id: uuid.UUID
     project_id: uuid.UUID
     checklist_id: uuid.UUID
+    task_id: Optional[uuid.UUID] = None
     zone: Optional[str]
     inspection_date: datetime
     status: str
@@ -254,6 +255,12 @@ def create_inspection(payload: InspectionCreate, db: Session = Depends(get_db), 
     require_permission(db, current_user, project.company_id, "quality:edit")
     # Workflow Controls: Entry Controls (creation date window)
     enforce_entry_creation_window(db, project.company_id, payload.inspection_date)
+    if payload.task_id:
+        task = db.query(Task).filter(Task.id == payload.task_id).first()
+        if not task:
+            raise HTTPException(status_code=404, detail="Task not found")
+        if task.project_id != payload.project_id:
+            raise HTTPException(status_code=400, detail="Task does not belong to this project")
     insp = SiteInspection(**payload.model_dump(), inspected_by=current_user.id)
     db.add(insp)
     db.commit()
@@ -262,10 +269,16 @@ def create_inspection(payload: InspectionCreate, db: Session = Depends(get_db), 
 
 
 @router.get("/inspections/{project_id}", response_model=List[InspectionResponse_])
-def list_inspections(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
-    return db.query(SiteInspection).filter(
-        SiteInspection.project_id == project_id
-    ).order_by(SiteInspection.inspection_date.desc()).all()
+def list_inspections(
+    project_id: uuid.UUID,
+    task_id: Optional[uuid.UUID] = None,
+    db: Session = Depends(get_db),
+    _: None = Depends(verify_project_access)
+):
+    query = db.query(SiteInspection).filter(SiteInspection.project_id == project_id)
+    if task_id:
+        query = query.filter(SiteInspection.task_id == task_id)
+    return query.order_by(SiteInspection.inspection_date.desc()).all()
 
 
 @router.get("/inspections/{insp_id}/responses")
