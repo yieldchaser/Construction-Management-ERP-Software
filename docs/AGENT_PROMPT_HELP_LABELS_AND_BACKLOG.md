@@ -1,4 +1,4 @@
-# AGENT PROMPT — Close the label gap, fix two content bugs, fix four code defects
+# AGENT PROMPT — Close the label gap, fix two content bugs, fix two code defects
 
 Paste this whole file as the task. Do not stop until the Definition of Done is met.
 
@@ -87,55 +87,42 @@ There are 6 articles describing a SiteFlow mobile app. There is no native Androi
 
 ---
 
-# PART 3 — Fix these. Do not file them.
+# PART 3 — Two code fixes
 
-Everything below is implementable and decided. **Fix it in this run.** Do not add any of it to `docs/BACKLOG.md` — the backlog is reserved for work the founder does himself, and converting a fix you could make into a record just throws away the investigation that found it.
-
-There is exactly **one** backlog item in this task, in Part 4.
+Both are decided, small, and carry no regression risk. **Fix them in this run; do not file them.**
 
 ## 3.1 — The Labour Contractor empty state is a dead end
 
-This is the defect that started the investigation. The founder opened Attendance → Labour Contractor, saw an empty list, and could not tell how to add a contractor.
+This is the defect that started the investigation, and it is the only thing wrong with that feature.
 
-`frontend/src/app/c/[company_id]/d/attendance/page.tsx:813-816` renders a bare centred string:
+**What the feature is, so nobody "fixes" it into something else:** Attendance → Labour Contractor lists each labour contractor as a card (name, contact) with a button reading **"Log Daily Crew Size →"**. That opens a drawer titled "Log Subcontractor Crew Attendance" containing a **Crew Size Matrix** — Labor Role, Worker Count, Shift Multiplier, Overtime (Hrs), Allowance (₹), Deductions (₹), Notes — plus a site photo. It records who the labour contractor is and how many workers of each trade they put on site that day. That is exactly what it should do. **It works. Do not remove it, rename it, or restructure it.**
+
+The single problem is the empty state at `frontend/src/app/c/[company_id]/d/attendance/page.tsx:813-816`, a bare centred string:
 
 ```
 No subcontractors registered for this company yet.
 ```
 
-No icon, no action, no route to the thing that fixes it. The contractors it lists are created on a different page entirely — Procurement & Materials → **Subcontractors** — which posts to `/apis/v3/billing/subcontractors`, the same endpoint this tab reads at line 254.
+No icon, no action, no route onward. The contractors it lists are registered on a different page — Procurement & Materials → **Subcontractors** — which posts to `/apis/v3/billing/subcontractors`, the same endpoint this tab reads at line 254. A first-time user has no way to discover that.
 
-**Fix:** replace that bare string with the shared `EmptyState` component (`frontend/src/components/ui/EmptyState.tsx`, already used correctly on `/d/depreciation`). Give it an icon, a title, one line explaining that labour contractors are registered as subcontractors, and a **CTA linking to `/c/{companyId}/d/subcon`**. Match the depreciation implementation's shape.
+**Fix:** replace the bare string with the shared `EmptyState` component (`frontend/src/components/ui/EmptyState.tsx`, already used correctly on `/d/depreciation`). Icon, a title, one line saying labour contractors are registered as subcontractors, and a CTA linking to `/c/{companyId}/d/subcon`. Match the depreciation implementation's shape.
 
-Do not rename the tab. "Labour Contractor" is domain-correct for what it does — it records daily crew counts per labour role. The problem was never the name; it was that the empty state told the user nothing.
+## 3.2 — The "Reserved" inventory column can only ever show zero
 
-## 3.2 — Muster roll has no staleness signal
+`WarehouseInventory.reserved_qty` is constructed as `0.0` in four places (`dpr.py:159`, `procurement.py:982`, `procurement.py:1230`, `production.py:254`) and **never incremented or decremented anywhere in the codebase.** Inventory reservation was scaffolded and never built.
 
-`MusterRoll` derives its figures from `AttendanceLog` and `SubcontractorAttendance` at the moment the row is created (`labour.py`, `_derive_day_figures`). `get_muster_roll` then returns the stored row with no recompute, so crew rows entered later that day never reach an already-written register. Nothing tells anyone the register has drifted from its sources.
+It is nonetheless displayed to users in two places:
 
-**Fix:** in `GET /apis/v3/labour/muster-roll/{project_id}`, recompute the derived figures for each row's day and compare them to the stored values. Add a boolean to `MusterRollResponse` — `sources_changed` — set true when they differ. Surface it in the UI as a quiet note on that row, offering the existing re-post as the way to refresh it.
+- `frontend/src/app/c/[company_id]/d/procurement/page.tsx:781` — a "Reserved" column in the inventory table.
+- `frontend/src/app/c/[company_id]/d/production/page.tsx:472` — the line `{available} available · {reserved} reserved`.
 
-**Do not recompute on read into the response, and do not mutate stored register rows.** Freezing is correct for a statutory register: it is a point-in-time attestation, and R2-333 idempotency already makes re-posting the same project + contractor + day + role update the row in place. You are adding a signal, not changing the document.
+So the product shows a stock figure that is structurally incapable of being anything but zero, implying a reservation feature that does not exist.
 
-## 3.3 — Two scaffolded fields are exposed but never maintained
+**Fix: remove those two displays only.** Delete the "Reserved" column and its header from the procurement inventory table, and drop the "· N reserved" clause from the production line.
 
-Found by sweeping all 114 stored aggregate columns in `models.py` for a maintenance path. Neither produces a wrong number today; both invite someone to trust a figure nothing maintains.
+**Leave the backend completely alone** — keep the `reserved_qty` column, keep it in the API responses, keep the delete guard as it is. Reservation is a real feature the founder may want later, and leaving the schema and API intact means it can be built without a migration or an API change. You are removing a misleading display, not deleting a capability.
 
-### `CRMQuotationItem.billed_qty` / `unbilled_qty`
-
-Accepted as **user input** on quotation-item creation (`crm.py:237-238`) and returned in three response shapes (`crm.py:710, 794, 857`), but no billing flow ever updates them — even though `Bill.quotation_id` links bills to quotations. Whatever someone types at quotation time stays there forever. Nothing downstream reads them: `reports.py` has zero references, and `_rep_unbilled_item` works off GRN items.
-
-**Fix:** stop accepting them as user input. Remove both from the create schema, and derive them on read — `billed_qty` from bills linked to that quotation via `quotation_id`, and `unbilled_qty` as `qty - billed_qty`, floored at zero. Keep the response fields so nothing downstream breaks; they simply become computed rather than typed.
-
-If the bill-to-quotation-item linkage is not granular enough to attribute a billed quantity per item, do **not** invent an attribution rule. Instead return `billed_qty` as 0 and `unbilled_qty` as `qty`, remove them from the create schema anyway so they can no longer be typed, and say so plainly in your report.
-
-### `WarehouseInventory.reserved_qty`
-
-Always constructed as `0.0` (`dpr.py:159`, `procurement.py:982, 1230`, `production.py:254`), never incremented or decremented anywhere, yet surfaced in three API responses (`procurement.py:1156, 1277`, `production.py:529`) and used in a delete guard at `procurement.py:1266` that can therefore never trip on it. Inventory reservation was scaffolded and never built.
-
-**Fix:** stop surfacing it. Remove `reserved_qty` from those three response shapes and drop the `reserved_qty` term from the delete guard, leaving the `on_hand_qty` check intact. **Keep the database column** — dropping it needs a migration, and CI-applied migrations are currently blocked, so leave the schema alone and change only what the API exposes.
-
-Check the frontend for anything rendering a "Reserved" figure from those responses and remove that display too, or the UI will show `undefined`.
+Do not touch `CRMQuotationItem.billed_qty` / `unbilled_qty`. They are also unmaintained, but the frontend hardcodes them to `0` on create (`crm/page.tsx:584-585`) and never displays them, so they are inert. Changing them is churn with a regression risk and no user-visible benefit.
 
 ---
 
@@ -145,14 +132,18 @@ Add exactly **one** row to `docs/BACKLOG.md`, in the existing table format, with
 
 **Subscription billing is documented but not built.** There is no payment processor anywhere in the backend — no Stripe, no Razorpay, no gateway of any kind. Meanwhile the marketing help ships "Pricing and Renewal in SiteFlow", "SiteFlow Subscription and Refund Policy Explained" and "TDS on SiteFlow Subscription Payment — Section 194J Guide", and Settings has a Subscription tab. Subscription collection is currently a manual, out-of-product process.
 
-Note in the row that this is **founder-owned and deliberately deferred** — he will add a payment endpoint himself when needed. Priority MEDIUM. **Do not build it, and do not treat it as a defect.**
+Mark it **founder-owned and deliberately deferred** — he will add a payment endpoint himself. Priority MEDIUM. **Do not build it and do not treat it as a defect.**
+
+While you are in `docs/BACKLOG.md`, **close `D-021`**. It recorded that GitHub Actions was billing-blocked. The repository is now public, Actions run free, and recent workflow runs succeed. Mark it CLOSED with that reason. Do not remove the row.
 
 ## What was checked and found sound — do not "fix" these
 
 Recorded so you do not mistake correct code for a defect:
 
+- **The Labour Contractor feature itself**, per 3.1. Only its empty state changes.
+- **The labour data model.** A deliberate three-layer design carrying finding id R2-507: `AttendanceLog` holds individual punches (one row per person), `SubcontractorAttendance` holds contractor crew counts (one row is N workers), and `MusterRoll` is the statutory register derived from both when its fields are left null. No double-counting path exists — `reports.py` has zero references to `SubcontractorAttendance` and reads only the derived register. `CompanyTeam.priority_type == "subcontractor"` covering every engaged firm is correct, since the same firm sends crew some days and bills a work order other months.
+- **Muster roll figures are frozen at write time on purpose.** A statutory register is a point-in-time attestation, and R2-333 idempotency makes re-posting the same project + contractor + day + role update the row in place. Do not recompute on read and do not mutate stored register rows.
 - **Bill payment maintenance is correct.** `paid_amount` increments on settlement and decrements on payment delete, status transitions both ways across Paid / Partially Paid / Unpaid, money comparisons use an epsilon, settlement rows are read before the cascade delete removes them, and the bank posting is reversed for non-cash methods (`finance.py:275-340`).
-- **The labour model is correct.** It is a deliberate three-layer design carrying finding id R2-507: `AttendanceLog` holds individual punches (one row per person), `SubcontractorAttendance` holds subcontractor crew counts (one row is N workers), and `MusterRoll` is the statutory register derived from both when its fields are left null. There is no double-counting path — `reports.py` has zero references to `SubcontractorAttendance` and reads only the derived register. `CompanyTeam.priority_type == "subcontractor"` covering every engaged firm is likewise correct, since the same firm sends crew some days and bills a work order other months.
 
 ## Cross-cutting rules
 
@@ -173,15 +164,14 @@ Recorded so you do not mistake correct code for a defect:
 - [ ] Mistitled mobile-app article retitled; `body` untouched. Duplicate-title check across all 86 files reported.
 - [ ] `git status` shows **no changes to any `body` field** under `frontend/src/content/help/`.
 - [ ] The 6 mobile-app articles otherwise unchanged.
-- [ ] Labour Contractor empty state uses `EmptyState` with a CTA to `/c/{companyId}/d/subcon`.
-- [ ] `MusterRollResponse` carries `sources_changed`; stored rows unmutated.
-- [ ] `billed_qty`/`unbilled_qty` removed from the create schema and derived on read (or returned 0/qty with the reason stated).
-- [ ] `reserved_qty` removed from the three responses and the delete guard; DB column left in place; frontend display removed.
-- [ ] Exactly ONE `D-0xx` row added, for subscription billing only.
+- [ ] Labour Contractor empty state uses `EmptyState` with a CTA to `/c/{companyId}/d/subcon`; the feature itself untouched.
+- [ ] The two Reserved displays removed from the procurement inventory table and the production line; backend, API and DB column all untouched.
+- [ ] `billed_qty`/`unbilled_qty` deliberately NOT changed.
+- [ ] Exactly ONE new `D-0xx` row added, for subscription billing only; `D-021` marked CLOSED (repo is public, Actions run free).
 - [ ] `pytest -n 4` green; `tsc --noEmit` clean; `npm run build` clean; pushed and ancestry-verified.
 
 ## Final report
 
-The validator self-test output, before and after. Every label you changed, with the file:line you read it from. What you found about Add Employee. The duplicate-title check result. What you did for each of the four Part 3 fixes, and the single backlog id.
+The validator self-test output, before and after. Every label you changed, with the file:line you read it from. What you found about Add Employee. The duplicate-title check result. What you did for each of the two Part 3 fixes, the single new backlog id, and confirmation that D-021 is closed.
 
 State plainly what you did not finish. Do not claim a number you did not measure.
