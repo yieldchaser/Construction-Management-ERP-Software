@@ -53,8 +53,8 @@ audit. They are the highest-value items here because they are both a competitor 
 | 1 | Subcontractor WO shows billed value at a glance | **HAVE** | Shipped in R2-762. `WOResponse` has `billed_amount` computed from active bills. |
 | 2 | Unread message counts on the task list | **HAVE** | Shipped in Tier 3 Item 13: `POST /chat/groups/{group_id}/read` and `unread_count` on `ChatGroupResponse`. |
 | 3 | Download equipment expense bills as PDF | **HAVE** | Shipped in Tier 2 Item 9 via `GET /equipment/expenses/{bill_id}/pdf`. |
-| 4 | Downloaded files keep their original file name | **PARTIAL** | `downloadWithAuth` exists and is shared across three surfaces (our R2-454 fix); confirm it sets the anchor `download` attribute from the server's `Content-Disposition` rather than a synthetic name. |
-| 5 | "Rented equipment" field at stock level | **MISSING** | No `rented`/`rental` anywhere in models. Owned-vs-rented is a real distinction for plant costing — it changes whether depreciation or hire charge applies. |
+| 4 | Downloaded files keep their original file name | **HAVE** | Shipped in Tier 4 Item 17: `expose_headers` includes `Content-Disposition`, and `downloadWithAuth` parses RFC 6266 `filename*` and fallback. |
+| 5 | "Rented equipment" field at stock level | **HAVE** | Shipped in Tier 4 Item 15: `ownership_type` exists on `equipment` table; `GET /equipment/{company_id}?ownership_type=...` supports `Owned`, `Hired`, and `Rented` alias. |
 | 6 | Search + pagination on party document lists | **HAVE** | Shipped in Tier 3 Item 10: pagination and search with `X-Total-Count` headers across Parties, Bills, Transactions, and Materials. |
 | 7 | Filters on company-level payment requests | **HAVE** | Shipped in Tier 2 Item 8 with `project_id` and `status` query filters on `GET /finance/payment-requests/{company_id}`. |
 | 8 | Project name shown on settled/unsettled bills | **HAVE** | Shipped in Tier 2 Item 6 (`project_name` included on bills and transaction rows, surfaced in settlement view). |
@@ -63,7 +63,7 @@ audit. They are the highest-value items here because they are both a competitor 
 | 11 | OT rate editable at the attendance level | **PARTIAL** | `overtime_rate` exists as a column (`models.py:1629`) but is set at the profile level, not per attendance row. |
 | 12 | Subcontractor rate library | **MISSING** | No `SubcontractorRate` model. We have `LibraryParty` and a cost-code library; this is a rate card per subcontractor per item. |
 | 13 | Liveliness check + delay on attendance punch | **MISSING** | `face_recognition.py` exists but has no liveness detection. Anti-spoofing for attendance is the point of the feature — without it, face punch is a photo of a photo away from being defeated. Consider its weight before building: it is the one item here with a fraud dimension. |
-| 14 | Full task hierarchy visible when tagging attendance | **PARTIAL** | Tasks and predecessor links exist (`planning.py`); the attendance tagger does not render the hierarchy. |
+| 14 | Full task hierarchy visible when tagging attendance | **HAVE** | Shipped in Tier 4 Item 16: `GET /planning/tasks/hierarchy/{project_id}` exposes nested WBS task tree with all parent-child relationships. |
 | 15 | Quotations linkable directly to leads | **HAVE** | `CRMQuotation.lead_id` is non-nullable (`models.py:1188`) — quotations already hang off leads. |
 | 16 | Bug fixes (image crash, equipment category) | **n/a** | Their defects. |
 
@@ -99,7 +99,7 @@ Published as "fixes and improvements" with no detail. Nothing to gap-check.
 | Material Unit management with Dual Unit support | **HAVE** | Shipped in Tier 3 Item 11: `unit` and `alternate_unit` validation, storage, and unit master search. |
 | Add Fuel entries directly from Petrol Pumps | **MISSING** | `FuelLog` exists with odometer and date guards (our R2-570) but no vendor/pump linkage. |
 | Duplicate entry validation for invoices, bills, challans, transfers, E-Way Bills | **PARTIAL** | Invoice-number clash 409 exists (`crm.py`), three-way PO/GRN uniqueness exists with a DB constraint (our R2-594). No challan or E-Way concept at all. |
-| Assign Inspections directly to Tasks | **MISSING** | `Inspection` has no `task_id`. |
+| Assign Inspections directly to Tasks | **HAVE** | Shipped in Tier 4 Item 14: `task_id` validated on `SiteInspection`, returned in `InspectionResponse_`, and filterable on `GET /quality/inspections/{project_id}?task_id=...`. |
 | GST editable in Material Sales items | **PARTIAL** | `gst_rate` exists on library items; editability at the sales line needs checking per surface. |
 | Item Code, Lead Time, Unit Cost on Material Items | **HAVE** | `item_code`, `lead_time`, `unit_cost` all present on `LibraryMaterial` (`library.py`). |
 
