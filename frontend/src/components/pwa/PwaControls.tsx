@@ -72,7 +72,7 @@ export default function PwaControls() {
   };
 
   return (
-    <div className="rounded-lg border border-border-custom bg-elevated p-4 shadow-[0_0_40px_rgba(0,0,0,0.18)]">
+    <div className="rounded-lg border border-border-custom bg-elevated p-4 shadow-md">
       <div className="flex items-center justify-between gap-3">
         <div>
           <div className="text-[10px] uppercase tracking-[0.2em] text-muted">Mobile PWA</div>

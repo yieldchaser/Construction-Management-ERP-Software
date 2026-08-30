@@ -7,6 +7,8 @@ import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
 import Icon, { type IconName } from "@/components/marketing/Icon";
 import PageShell from "@/components/layout/PageShell";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 interface Task {
   id: string;
@@ -220,15 +222,24 @@ export default function DPRPage() {
             <h3 className="text-xs font-bold text-muted uppercase tracking-wider">Chronological DPR Activity Feed</h3>
             <div className="space-y-4">
               {logs.length === 0 ? (
-                <p className="text-xs text-muted text-center py-10">No daily logs reported for this project yet. Click "Create DPR" to submit one!</p>
+                <EmptyState
+                  icon="task_alt"
+                  title="No daily progress logs reported"
+                  description="Submit daily progress reports with executed quantities, weather, and labor deployment."
+                  action={{
+                    label: "Create DPR",
+                    onClick: () => setIsCreateDPROpen(true),
+                    icon: "add",
+                  }}
+                />
               ) : (
                 logs.map((log) => (
                   <div key={log.id} className="p-4 rounded-md border border-border-custom bg-input space-y-2 text-xs">
                     <div className="flex justify-between items-center text-[10px] text-muted">
-                      <span className="font-bold text-zinc-300">Reported By: {log.reported_by}</span>
+                      <span className="font-bold text-foreground">Reported By: {log.reported_by}</span>
                       <span>Weather: <strong className="text-muted">{log.weather}</strong> · {new Date(log.dpr_date).toLocaleDateString()}</span>
                     </div>
-                    <div className="border-l-2 border-primary pl-3 my-2">
+                    <div className="border-l-2 border-border-custom pl-3 my-2">
                       <p className="text-foreground text-xs font-semibold">Qty Executed: {log.executed_qty}</p>
                       {log.notes && <p className="text-muted mt-1">{log.notes}</p>}
                     </div>

@@ -6,6 +6,9 @@ import { authHeaders } from '@/lib/siteflow';
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Icon, { type IconName } from '@/components/marketing/Icon';
+import PageShell from '@/components/layout/PageShell';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { Skeleton, CardSkeleton } from '@/components/ui/Skeleton';
 
 const API = `${getApiHost()}/apis/v3`;
 
@@ -60,10 +63,10 @@ interface PPECheck {
 }
 
 const SEVERITY_COLOR: Record<string, string> = {
-  Critical: 'rgba(239, 68, 68, 0.15)',
-  High:     'rgba(245, 158, 11, 0.15)',
-  Medium:   'rgba(217, 119, 6, 0.15)',
-  Low:      'rgba(16, 185, 129, 0.15)',
+  Critical: 'color-mix(in srgb, var(--danger) 15%, transparent)',
+  High:     'color-mix(in srgb, var(--warning) 15%, transparent)',
+  Medium:   'color-mix(in srgb, var(--chart-3) 15%, transparent)',
+  Low:      'color-mix(in srgb, var(--success) 15%, transparent)',
 };
 const SEVERITY_BORDER: Record<string, string> = {
   Critical: 'var(--danger)',
@@ -240,68 +243,78 @@ export default function SafetyPage() {
     { label: 'PPE Compliance', icon: 'safety_vest' },
   ];
   return (
-    <div className="min-h-0 flex-1 flex flex-col overflow-hidden bg-background text-foreground p-6 sm:p-8 font-sans">
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-xl bg-danger/15 border border-danger/30 flex items-center justify-center text-danger">
-            <Icon name="safety_vest" className="w-5 h-5" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-foreground">HSE / Safety Management</h1>
-            <p className="text-xs text-muted">Incident tracking, toolbox talks & PPE compliance</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Flash */}
-      {msg && (
-        <div className="p-3 rounded-lg bg-primary/10 border border-primary/25 mb-5 text-sm text-primary">
-          {msg}
-        </div>
-      )}
-
-      {/* Tab Bar */}
-      <div className="flex gap-1 mb-6 bg-card border border-border-custom rounded-xl p-1">
-        {tabs.map((t, i) => (
-          <button
-            key={i}
-            onClick={() => setTab(i)}
-            className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-semibold transition-all inline-flex items-center justify-center gap-2 ${
-              tab === i
-                ? "bg-primary/15 text-primary border-b-2 border-primary"
-                : "text-muted hover:text-foreground"
-            }`}
-          >
-            <Icon name={t.icon} className="w-4 h-4" />
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      {/* ─── Tab 0: Incident Board ────────────────────────────────────────── */}
-      {tab === 0 && (
-        <div>
-          <div className="flex justify-between items-center mb-5">
-            <h2 className="text-base font-semibold text-foreground">Incident Board</h2>
-            <button
-              onClick={() => setShowIncidentModal(true)}
-              className="py-2 px-4 rounded-lg bg-danger text-white text-xs font-semibold hover:opacity-90 transition-opacity"
-            >
-              + Report Incident
-            </button>
-          </div>
-
-          {loading ? (
-            <p className="text-muted text-sm">Loading…</p>
-          ) : incidents.length === 0 ? (
-            <div className="text-center py-16 text-muted">
-              <div className="mb-3 flex justify-center">
-                <Icon name="shield" className="w-10 h-10 opacity-40" />
-              </div>
-              <p>No incidents logged. Stay safe!</p>
+    <div className="min-h-0 flex-1 flex flex-col overflow-hidden bg-background text-foreground font-sans">
+      <div className="flex-1 overflow-y-auto">
+        <PageShell width="wide">
+        {/* Header */}
+        <div className="mb-6">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-xl bg-danger/15 border border-danger/30 flex items-center justify-center text-danger">
+              <Icon name="safety_vest" className="w-5 h-5" />
             </div>
-          ) : (
+            <div>
+              <h1 className="text-xl font-bold text-foreground">HSE / Safety Management</h1>
+              <p className="text-xs text-muted">Incident tracking, toolbox talks & PPE compliance</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Flash */}
+        {msg && (
+          <div className="p-3 rounded-lg bg-primary/10 border border-primary/25 mb-5 text-sm text-primary">
+            {msg}
+          </div>
+        )}
+
+        {/* Tab Bar */}
+        <div className="flex gap-1 mb-6 bg-card border border-border-custom rounded-xl p-1">
+          {tabs.map((t, i) => (
+            <button
+              key={i}
+              onClick={() => setTab(i)}
+              className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-semibold transition-all inline-flex items-center justify-center gap-2 cursor-pointer ${
+                tab === i
+                  ? "bg-elevated text-foreground shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)]"
+                  : "text-muted hover:text-foreground"
+              }`}
+            >
+              <Icon name={t.icon} className={`w-4 h-4 ${tab === i ? "text-primary" : "text-muted"}`} />
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* ─── Tab 0: Incident Board ────────────────────────────────────────── */}
+        {tab === 0 && (
+          <div>
+            <div className="flex justify-between items-center mb-5">
+              <h2 className="text-base font-semibold text-foreground">Incident Board</h2>
+              <button
+                onClick={() => setShowIncidentModal(true)}
+                className="py-2 px-4 rounded-lg bg-danger text-white text-xs font-semibold hover:opacity-90 transition-opacity cursor-pointer"
+              >
+                + Report Incident
+              </button>
+            </div>
+
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <CardSkeleton key={i} />
+                ))}
+              </div>
+            ) : incidents.length === 0 ? (
+              <EmptyState
+                icon="siren"
+                title="No incidents logged"
+                description="Maintain safety compliance by reporting and tracking any site incident or near miss."
+                action={{
+                  label: "Report Incident",
+                  onClick: () => setShowIncidentModal(true),
+                  icon: "add",
+                }}
+              />
+            ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {incidents.map((inc) => (
                 <div
@@ -491,12 +504,16 @@ export default function SafetyPage() {
             </button>
           </div>
           {talks.length === 0 ? (
-            <div className="text-center py-16 text-muted">
-              <div className="mb-3 flex justify-center">
-                <Icon name="toolbox_talk" className="w-10 h-10 opacity-40" />
-              </div>
-              <p>No toolbox talks logged yet.</p>
-            </div>
+            <EmptyState
+              icon="toolbox_talk"
+              title="No toolbox talks recorded"
+              description="Log daily safety briefings, hazard awareness sessions and attendee records."
+              action={{
+                label: "Add Talk",
+                onClick: () => setShowTalkModal(true),
+                icon: "add",
+              }}
+            />
           ) : (
             <div className="flex flex-col gap-3">
               {talks.map((t) => (
@@ -567,12 +584,16 @@ export default function SafetyPage() {
             {/* Check list */}
             <div>
               {ppeChecks.length === 0 ? (
-                <div className="text-center py-16 text-muted">
-                  <div className="mb-3 flex justify-center">
-                    <Icon name="safety_vest" className="w-10 h-10 opacity-40" />
-                  </div>
-                  <p>No PPE checks recorded yet.</p>
-                </div>
+                <EmptyState
+                  icon="safety_vest"
+                  title="No PPE checks logged"
+                  description="Audit on-site protective equipment compliance and worker gear."
+                  action={{
+                    label: "Record Check",
+                    onClick: () => setShowPPEModal(true),
+                    icon: "add",
+                  }}
+                />
               ) : (
                 <div className="flex flex-col gap-3">
                   {ppeChecks.map((c) => {
@@ -926,6 +947,8 @@ export default function SafetyPage() {
           </div>
         </div>
       )}
+      </PageShell>
+      </div>
     </div>
   );
 }

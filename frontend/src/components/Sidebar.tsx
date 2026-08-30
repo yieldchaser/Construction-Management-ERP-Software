@@ -552,22 +552,35 @@ export default function Sidebar() {
                     className="relative group/rail flex flex-col items-center py-1"
                     onMouseEnter={() => setHoveredFlyout(group.id)}
                     onMouseLeave={() => setHoveredFlyout(null)}
+                    onFocus={() => setHoveredFlyout(group.id)}
+                    onBlur={(e) => {
+                      if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                        setHoveredFlyout(null);
+                      }
+                    }}
                   >
                     <button
                       type="button"
                       className={`h-10 w-10 flex items-center justify-center rounded-lg transition-all ${
                         hasActiveChild
-                          ? "bg-primary text-white shadow-sm"
+                          ? "bg-elevated text-foreground shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)]"
                           : "text-muted hover:text-foreground hover:bg-elevated"
                       }`}
                       title={group.label}
+                      aria-label={group.label}
                     >
-                      <Icon name={group.iconName} className="w-5 h-5" />
+                      <Icon
+                        name={group.iconName}
+                        className={`w-5 h-5 ${hasActiveChild ? "text-primary" : ""}`}
+                      />
                     </button>
 
-                    {/* Flyout Popover on Hover */}
+                    {/* Flyout Popover on Hover / Focus */}
                     {hoveredFlyout === group.id && (
-                      <div className="absolute left-full top-0 ml-2 w-52 bg-card border border-border-custom rounded-lg shadow-xl py-2 z-50 animate-fade-in space-y-0.5">
+                      <div
+                        className="absolute left-full top-0 ml-2 w-56 bg-card border border-border-custom rounded-lg shadow-xl py-2 z-50 animate-fade-in space-y-0.5"
+                        role="menu"
+                      >
                         <div className="px-3 py-1.5 border-b border-border-custom mb-1 flex items-center justify-between">
                           <span className="text-[11px] font-bold text-foreground uppercase tracking-wider">
                             {group.label}
@@ -582,13 +595,17 @@ export default function Sidebar() {
                               key={item.id}
                               href={item.href}
                               prefetch={true}
+                              role="menuitem"
                               className={`flex items-center gap-2.5 px-3 py-1.5 text-xs rounded-md transition-all mx-1.5 ${
                                 isActive
-                                  ? "bg-primary/10 text-primary font-bold"
+                                  ? "bg-elevated text-foreground font-semibold shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)]"
                                   : "text-muted hover:text-foreground hover:bg-elevated font-medium"
                               }`}
                             >
-                              <Icon name={item.iconName} className="w-4 h-4 shrink-0" />
+                              <Icon
+                                name={item.iconName}
+                                className={`w-4 h-4 shrink-0 ${isActive ? "text-primary" : "text-muted"}`}
+                              />
                               <span className="truncate">{item.label}</span>
                             </Link>
                           );
@@ -607,16 +624,20 @@ export default function Sidebar() {
                     type="button"
                     onClick={() => toggleGroup(group.id)}
                     className={`w-full flex items-center justify-between px-2.5 py-1.5 text-[11px] font-bold tracking-wider uppercase rounded-md transition-all cursor-pointer ${
-                      hasActiveChild ? "text-primary" : "text-muted hover:text-foreground hover:bg-elevated/60"
+                      hasActiveChild ? "text-foreground font-bold" : "text-muted hover:text-foreground hover:bg-elevated/60"
                     }`}
                   >
                     <div className="flex items-center gap-2 truncate">
-                      <Icon name={group.iconName} className="w-3.5 h-3.5 shrink-0 opacity-80" />
+                      <Icon
+                        name={group.iconName}
+                        className={`w-3.5 h-3.5 shrink-0 ${hasActiveChild ? "text-primary" : "opacity-80"}`}
+                      />
                       <span className="truncate">{group.label}</span>
                     </div>
-                    <span className="text-[9px] opacity-70 ml-1">
-                      {isGroupOpen ? "▼" : "▶"}
-                    </span>
+                    <Icon
+                      name={isGroupOpen ? "chevron_down" : "chevron_right"}
+                      className="w-3 h-3 text-muted shrink-0"
+                    />
                   </button>
 
                   {/* Group Items */}
@@ -634,11 +655,14 @@ export default function Sidebar() {
                             prefetch={true}
                             className={`flex items-center gap-2.5 px-2.5 py-1.5 text-xs rounded-md transition-all block ${
                               isActive
-                                ? "bg-primary/10 text-primary font-semibold border-l-2 border-primary"
+                                ? "bg-elevated text-foreground font-semibold shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)]"
                                 : "text-muted hover:text-foreground hover:bg-elevated font-medium"
                             }`}
                           >
-                            <Icon name={item.iconName} className="w-3.5 h-3.5 shrink-0" />
+                            <Icon
+                              name={item.iconName}
+                              className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-primary" : "text-muted"}`}
+                            />
                             <span className="truncate">{item.label}</span>
                           </Link>
                         );
@@ -688,11 +712,14 @@ export default function Sidebar() {
                   prefetch={true}
                   className={`flex flex-col items-center justify-center py-1.5 border rounded-md text-[10px] font-medium transition-all ${
                     pathname.includes("/d/mom")
-                      ? "bg-primary/15 border-primary text-primary"
+                      ? "bg-elevated text-foreground font-semibold shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)] border-border-custom"
                       : "bg-card hover:bg-elevated border-border-custom text-muted hover:text-foreground"
                   }`}
                 >
-                  <Icon name="note" className="w-4 h-4" />
+                  <Icon
+                    name="note"
+                    className={`w-4 h-4 ${pathname.includes("/d/mom") ? "text-primary" : "text-muted"}`}
+                  />
                   <span className="mt-0.5">MOM</span>
                 </Link>
                 <Link
@@ -700,11 +727,14 @@ export default function Sidebar() {
                   prefetch={true}
                   className={`flex flex-col items-center justify-center py-1.5 border rounded-md text-[10px] font-medium transition-all ${
                     pathname.includes("/d/todo")
-                      ? "bg-primary/15 border-primary text-primary"
+                      ? "bg-elevated text-foreground font-semibold shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)] border-border-custom"
                       : "bg-card hover:bg-elevated border-border-custom text-muted hover:text-foreground"
                   }`}
                 >
-                  <Icon name="check" className="w-4 h-4" />
+                  <Icon
+                    name="check"
+                    className={`w-4 h-4 ${pathname.includes("/d/todo") ? "text-primary" : "text-muted"}`}
+                  />
                   <span className="mt-0.5">To Do</span>
                 </Link>
                 <Link
@@ -712,11 +742,14 @@ export default function Sidebar() {
                   prefetch={true}
                   className={`flex flex-col items-center justify-center py-1.5 border rounded-md text-[10px] font-medium transition-all ${
                     pathname.includes("/d/chat")
-                      ? "bg-primary/15 border-primary text-primary"
+                      ? "bg-elevated text-foreground font-semibold shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)] border-border-custom"
                       : "bg-card hover:bg-elevated border-border-custom text-muted hover:text-foreground"
                   }`}
                 >
-                  <Icon name="chat_bubble" className="w-4 h-4" />
+                  <Icon
+                    name="chat_bubble"
+                    className={`w-4 h-4 ${pathname.includes("/d/chat") ? "text-primary" : "text-muted"}`}
+                  />
                   <span className="mt-0.5">Chat</span>
                 </Link>
               </div>

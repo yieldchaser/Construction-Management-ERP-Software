@@ -1892,14 +1892,18 @@ def _rep_budget_vs_actual_material_cost(db: Session, cid: uuid.UUID, pid: Option
         rows = []
         for b in q.all():
             proj = db.query(Project).filter(Project.id == b.project_id).first()
-            budget_qty = float(b.quantity or 0)
+            qty = float(b.quantity or 0)
+            rate = float(b.rate or 0)
+            budget_cost = float(b.amount if b.amount is not None else (qty * rate))
+            actual_cost = 0.0
+            variance_cost = budget_cost - actual_cost
             rows.append({
                 "Project": proj.name if proj else "",
                 "Material": b.item_name or "",
                 "Unit": b.unit or "Unit",
-                "Budget Qty": _clean(budget_qty),
-                "Actual Qty": 0,
-                "Variance Qty": _clean(budget_qty),
+                "Budget Cost (INR)": _clean(budget_cost),
+                "Actual Cost (INR)": _clean(actual_cost),
+                "Variance (INR)": _clean(variance_cost),
             })
         return rows
     except Exception:
@@ -1908,7 +1912,31 @@ def _rep_budget_vs_actual_material_cost(db: Session, cid: uuid.UUID, pid: Option
 
 
 def _rep_budget_vs_actual_material_qty(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
-    return _rep_budget_vs_actual_material_cost(db, cid, pid)
+    try:
+        proj_ids = _project_ids_for_company(db, cid)
+        if not proj_ids:
+            return []
+        q = db.query(BOQItem).filter(BOQItem.project_id.in_(proj_ids))
+        if pid:
+            q = q.filter(BOQItem.project_id == pid)
+        rows = []
+        for b in q.all():
+            proj = db.query(Project).filter(Project.id == b.project_id).first()
+            budget_qty = float(b.quantity or 0)
+            actual_qty = 0.0
+            variance_qty = budget_qty - actual_qty
+            rows.append({
+                "Project": proj.name if proj else "",
+                "Material": b.item_name or "",
+                "Unit": b.unit or "Unit",
+                "Budget Qty": _clean(budget_qty),
+                "Actual Qty": _clean(actual_qty),
+                "Variance Qty": _clean(variance_qty),
+            })
+        return rows
+    except Exception:
+        logger.exception("Report 'budget-vs-actual-material-qty' failed; returning fallback")
+        return _REPORT_FAILED
 
 
 def _rep_project_financial_summary(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
@@ -2006,12 +2034,36 @@ def _rep_monthly_pl(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
         if pid:
             bills = bills.filter(Bill.project_id == pid)
         all_bills = bills.all()
-        total_rev = sum(float(b.total_payable or 0) for b in all_bills if is_revenue_invoice_type(b.invoice_type))
-        total_exp = sum(float(b.total_payable or 0) for b in all_bills if is_expense_invoice_type(b.invoice_type))
-        net_pl = total_rev - total_exp
-        return [{
-            "(No tabular header captured - likely a chart/summary style report)": f"Revenue: {total_rev}, Expense: {total_exp}, Net P&L: {net_pl}"
-        }]
+        
+        months_data = {}
+        for b in all_bills:
+            created = b.invoice_date or b.created_at
+            month_key = created.strftime("%Y-%m") if hasattr(created, "strftime") else "All Time"
+            if month_key not in months_data:
+                months_data[month_key] = {"rev": 0.0, "exp": 0.0}
+            amt = float(b.total_payable or 0)
+            if is_revenue_invoice_type(b.invoice_type):
+                months_data[month_key]["rev"] += amt
+            elif is_expense_invoice_type(b.invoice_type):
+                months_data[month_key]["exp"] += amt
+        
+        if not months_data:
+            return []
+            
+        rows = []
+        for m_key in sorted(months_data.keys(), reverse=True):
+            rev = months_data[m_key]["rev"]
+            exp = months_data[m_key]["exp"]
+            net = rev - exp
+            margin = round((net / rev * 100), 1) if rev > 0 else (0.0 if net >= 0 else -100.0)
+            rows.append({
+                "Month": m_key,
+                "Revenue (INR)": _clean(rev),
+                "Expense (INR)": _clean(exp),
+                "Net P&L (INR)": _clean(net),
+                "Profit Margin (%)": margin,
+            })
+        return rows
     except Exception:
         logger.exception("Report 'monthly-pl' failed; returning fallback")
         return _REPORT_FAILED
@@ -2161,10 +2213,27 @@ def _rep_cost_code_expense_analysis(db: Session, cid: uuid.UUID, pid: Optional[u
         if pid:
             bills_q = bills_q.filter(Bill.project_id == pid)
         exp_bills = [b for b in bills_q.all() if is_expense_invoice_type(b.invoice_type)]
-        total = sum(float(b.total_payable or 0) for b in exp_bills)
-        return [{
-            "(No flat table captured - appears to be a chart/analysis view with a date-range dropdown, e.g. 'This Month')": f"Total Cost Code Expense: {total}"
-        }]
+        total_expense = sum(float(b.total_payable or 0) for b in exp_bills)
+        
+        groups = {}
+        for b in exp_bills:
+            key = b.cost_code or b.category or "General Expense"
+            if key not in groups:
+                groups[key] = {"total": 0.0, "count": 0, "category": b.category or "Operations"}
+            groups[key]["total"] += float(b.total_payable or 0)
+            groups[key]["count"] += 1
+            
+        rows = []
+        for cc_code, data in sorted(groups.items(), key=lambda x: x[1]["total"], reverse=True):
+            share_pct = round((data["total"] / total_expense * 100), 1) if total_expense > 0 else 0.0
+            rows.append({
+                "Cost Code": cc_code,
+                "Category": data["category"],
+                "Total Expense (INR)": _clean(data["total"]),
+                "Bill Count": data["count"],
+                "Share (%)": share_pct,
+            })
+        return rows
     except Exception:
         logger.exception("Report 'cost-code-expense-analysis' failed; returning fallback")
         return _REPORT_FAILED
@@ -2484,21 +2553,23 @@ def _rep_material_request_item(db: Session, cid: uuid.UUID, pid: Optional[uuid.U
             ind = db.query(MaterialIndent).filter(MaterialIndent.id == it.indent_id).first()
             proj = db.query(Project).filter(Project.id == ind.project_id).first() if ind and ind.project_id else None
             req_qty = float(it.quantity or 0)
+            req_user = _team_user_name(db, ind.requested_by) if (ind and ind.requested_by) else ""
+            app_user = _team_user_name(db, ind.approved_by) if (ind and ind.approved_by) else ""
             rows.append({
-                "Request Date": _clean(ind.indent_date or ind.created_at) if ind else "",
+                "Request Date": _clean(ind.created_at) if ind else "",
                 "Request No.": ind.indent_number if ind else "",
                 "Project Name": proj.name if proj else "",
                 "Material Name": it.material_name,
-                "Specifications": it.specifications or "",
+                "Specifications": getattr(it, "specifications", "") or "",
                 "Unit": it.unit,
                 "Request Quantity": _clean(req_qty),
                 "Ordered Quantity": 0,
                 "Pending Quantity": _clean(req_qty),
                 "PO No.": "",
-                "Requested by": "",
+                "Requested by": req_user,
                 "Status": ind.status if ind else "pending",
-                "Approved/Rejected By": "",
-                "Request Notes": ind.notes if ind else "",
+                "Approved/Rejected By": app_user,
+                "Request Notes": getattr(ind, "notes", "") or "",
             })
         return rows
     except Exception:
@@ -2998,9 +3069,26 @@ def _rep_lead_status_funnel(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID
     try:
         q = db.query(CRMLead).filter(CRMLead.company_id == cid)
         leads = q.all()
-        return [{
-            "(No tabular columns - rendered as a funnel/visual chart, not a data table)": f"Total Leads: {len(leads)}"
-        }]
+        total_leads = len(leads)
+        
+        stages = ["New Lead", "Contacted", "Follow-Up", "Proposal Stage", "Negotiation", "Won", "Lost"]
+        counts = {s: 0 for s in stages}
+        for l in leads:
+            st = l.status or "New Lead"
+            if st in counts:
+                counts[st] += 1
+            else:
+                counts[st] = counts.get(st, 0) + 1
+        
+        rows = []
+        for stage, count in counts.items():
+            pct = round((count / total_leads * 100), 1) if total_leads > 0 else 0.0
+            rows.append({
+                "Stage": stage,
+                "Lead Count": count,
+                "Conversion Rate (%)": pct,
+            })
+        return rows
     except Exception:
         logger.exception("Report 'lead-status-funnel' failed; returning fallback")
         return _REPORT_FAILED

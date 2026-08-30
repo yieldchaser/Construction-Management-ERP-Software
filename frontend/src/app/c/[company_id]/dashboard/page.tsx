@@ -1640,29 +1640,29 @@ export default function DashboardPage() {
 
                   {/* Bar 1: Invoiced */}
                   <div className="flex flex-col items-center gap-2 w-16">
-                    <span className="text-[10px] font-semibold text-success">Rs 18.5 L</span>
-                    <div className="w-full bg-success/80 rounded-t-md h-48 shadow-[0_0_15px_rgba(0,229,163,0.1)]" />
+                    <span className="text-[10px] font-semibold text-success">₹18.5 L</span>
+                    <div className="w-full bg-success/80 rounded-t-md h-48" />
                     <span className="text-[10px] text-muted">Claim Invoiced</span>
                   </div>
 
                   {/* Bar 2: Materials */}
                   <div className="flex flex-col items-center gap-2 w-16">
-                    <span className="text-[10px] font-semibold text-primary">-Rs 6.2 L</span>
-                    <div className="w-full bg-primary/80 rounded-t-md h-16 shadow-[0_0_15px_rgba(232,24,76,0.1)]" />
+                    <span className="text-[10px] font-semibold text-danger">-₹6.2 L</span>
+                    <div className="w-full bg-danger/80 rounded-t-md h-16" />
                     <span className="text-[10px] text-muted">Material POs</span>
                   </div>
 
                   {/* Bar 3: Labour */}
                   <div className="flex flex-col items-center gap-2 w-16">
-                    <span className="text-[10px] font-semibold text-primary">-Rs 3.1 L</span>
-                    <div className="w-full bg-primary/80 rounded-t-md h-8" />
+                    <span className="text-[10px] font-semibold text-danger">-₹3.1 L</span>
+                    <div className="w-full bg-danger/80 rounded-t-md h-8" />
                     <span className="text-[10px] text-muted">Labour Pay</span>
                   </div>
 
                   {/* Bar 4: Net P&L */}
                   <div className="flex flex-col items-center gap-2 w-16">
-                    <span className="text-[10px] font-semibold text-gradient-accent">Rs 9.2 L</span>
-                    <div className="w-full bg-gradient-to-t from-secondary to-primary rounded-t-md h-24 shadow-[0_0_20px_rgba(124,92,255,0.15)] animate-pulse" />
+                    <span className="text-[10px] font-semibold text-primary">₹9.2 L</span>
+                    <div className="w-full bg-primary/80 rounded-t-md h-24" />
                     <span className="text-[10px] text-muted font-medium">Net Profit</span>
                   </div>
                 </div>

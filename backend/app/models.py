@@ -511,7 +511,7 @@ class GoodsReceiptNote(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
-    po_id = Column(UUID(as_uuid=True), ForeignKey("purchase_orders.id", ondelete="CASCADE"), nullable=False)
+    po_id = Column(UUID(as_uuid=True), ForeignKey("purchase_orders.id", ondelete="SET NULL"), nullable=True)
     grn_number = Column(String(100), nullable=False)
     received_date = Column(DateTime(timezone=True), nullable=False)
     received_by = Column(UUID(as_uuid=True), ForeignKey("company_team.id"), nullable=True)
@@ -521,7 +521,7 @@ class GRNItem(Base):
     __tablename__ = "grn_items"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     grn_id = Column(UUID(as_uuid=True), ForeignKey("goods_receipt_notes.id", ondelete="CASCADE"), nullable=False)
-    po_item_id = Column(UUID(as_uuid=True), ForeignKey("purchase_order_items.id", ondelete="CASCADE"), nullable=False)
+    po_item_id = Column(UUID(as_uuid=True), ForeignKey("purchase_order_items.id", ondelete="SET NULL"), nullable=True)
     received_qty = Column(Numeric(18, 4), nullable=False)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 

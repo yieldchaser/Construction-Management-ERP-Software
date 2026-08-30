@@ -5,6 +5,9 @@ import { useParams } from "next/navigation";
 import { getApi, authHeaders, resolveCompanyId, fmtINR } from "@/lib/siteflow";
 import { useProject } from "@/context/ProjectContext";
 import { useCompanySettings } from "@/context/CompanySettingsContext";
+import PageShell from "@/components/layout/PageShell";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Skeleton, TableSkeleton } from "@/components/ui/Skeleton";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -1609,13 +1612,14 @@ export default function PayrollPage() {
   const [parties, setParties] = useState<Party[]>([]);
   const [holidays, setHolidays] = useState<Holiday[]>([]);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
-
-  const toast = (m: string) => {
-    setToastMsg(m);
-    setTimeout(() => setToastMsg(null), 2500);
-  };
+  const toast = useCallback((msg: string) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(null), 3000);
+  }, []);
+  const [loading, setLoading] = useState(false);
 
   const reloadAll = useCallback(async () => {
+    setLoading(true);
     const id = await resolveCompanyId(companyId);
     setCid(id);
     const [emps, des, lts, ccs, pts, hls] = await Promise.all([
@@ -1632,6 +1636,7 @@ export default function PayrollPage() {
     setCostCodes(ccs);
     setParties(pts);
     setHolidays(hls);
+    setLoading(false);
   }, [companyId]);
 
   useEffect(() => {
@@ -1642,47 +1647,52 @@ export default function PayrollPage() {
   }, [reloadAll, projects]);
 
   return (
-    <div className="flex-1 overflow-y-auto p-6">
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-foreground">Payroll</h2>
-      </div>
-
-      <div className="mb-5 flex gap-1 border-b border-border-custom">
-        {TABS.map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`px-4 py-2 text-sm font-medium ${
-              tab === t ? "border-b-2 border-primary text-foreground" : "text-muted hover:text-foreground"
-            }`}
-          >
-            {t}
-          </button>
-        ))}
-      </div>
-
-      {tab === "People" && (
-        <PeopleTab
-          companyId={cid}
-          projectId={activeProjectId}
-          employees={employees}
-          designations={designations}
-          leaveTemplates={leaveTemplates}
-          costCodes={costCodes}
-          reload={reloadAll}
-          toast={toast}
-        />
-      )}
-      {tab === "Attendance" && <AttendanceTab companyId={cid} employees={employees} holidays={holidays} />}
-      {tab === "Team Leaves" && <TeamLeavesTab companyId={cid} />}
-      {tab === "My Leaves" && <MyLeavesTab companyId={cid} employees={employees} leaveTemplates={leaveTemplates} />}
-      {tab === "Holidays" && <HolidaysTab companyId={cid} />}
-
-      {toastMsg && (
-        <div className="fixed bottom-4 right-4 z-50 rounded-md bg-primary px-4 py-2 text-sm text-white shadow-lg">
-          {toastMsg}
+    <div className="flex-1 overflow-y-auto">
+      <PageShell width="wide">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-foreground">Payroll</h2>
         </div>
-      )}
+
+        <div className="mb-5 inline-flex items-center gap-1 p-1 bg-card border border-border-custom rounded-lg shrink-0">
+          {TABS.map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setTab(t)}
+              className={`px-3.5 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                tab === t
+                  ? "bg-elevated text-foreground shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)]"
+                  : "text-muted hover:text-foreground hover:bg-elevated/40"
+              }`}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+
+        {tab === "People" && (
+          <PeopleTab
+            companyId={cid}
+            projectId={activeProjectId}
+            employees={employees}
+            designations={designations}
+            leaveTemplates={leaveTemplates}
+            costCodes={costCodes}
+            reload={reloadAll}
+            toast={toast}
+          />
+        )}
+        {tab === "Attendance" && <AttendanceTab companyId={cid} employees={employees} holidays={holidays} />}
+        {tab === "Team Leaves" && <TeamLeavesTab companyId={cid} />}
+        {tab === "My Leaves" && <MyLeavesTab companyId={cid} employees={employees} leaveTemplates={leaveTemplates} />}
+        {tab === "Holidays" && <HolidaysTab companyId={cid} />}
+
+        {toastMsg && (
+          <div className="fixed bottom-4 right-4 z-50 rounded-md bg-primary px-4 py-2 text-sm text-white shadow-lg">
+            {toastMsg}
+          </div>
+        )}
+      </PageShell>
     </div>
   );
 }

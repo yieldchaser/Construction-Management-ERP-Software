@@ -99,7 +99,7 @@ function MetricCard({
   note: string;
 }) {
   return (
-    <div className="rounded-lg border border-border-custom bg-elevated p-4 shadow-[0_0_0_1px_rgba(255,255,255,0.01)]">
+    <div className="rounded-lg border border-border-custom bg-elevated p-4 shadow-xs">
       <div className="text-[10px] uppercase tracking-[0.26em] text-muted">{label}</div>
       <div className={`mt-2 text-3xl font-black ${accent}`}>{value}</div>
       <div className="mt-1 text-xs text-muted">{note}</div>

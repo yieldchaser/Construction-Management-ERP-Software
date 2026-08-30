@@ -8,6 +8,8 @@ import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 import Icon, { type IconName } from "@/components/marketing/Icon";
 
+import PageShell from "@/components/layout/PageShell";
+
 type PinCategory = "RFI" | "Clash" | "Observation" | "Approval";
 type RevStatus = "current" | "superseded" | "locked";
 
@@ -385,7 +387,9 @@ export default function DrawingsPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">            <div className="flex items-center gap-1 px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto">
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <PageShell width="wide">
+        <div className="flex items-center gap-1 px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto">
         {[
           { key: "drawings", label: "Blueprints & RFI" },
           { key: "files", label: "Project Files" },
@@ -468,7 +472,7 @@ export default function DrawingsPage() {
 
                   {/* Blueprint grid overlay */}
                   <div className="absolute inset-0 pointer-events-none"
-                    style={{ backgroundImage: "linear-gradient(rgba(124,92,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(124,92,255,0.04) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
+                    style={{ backgroundImage: "linear-gradient(var(--border-custom) 1px, transparent 1px), linear-gradient(90deg, var(--border-custom) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
 
                   {/* SUPERSEDED / LOCKED watermark */}
                   {activeRev && activeRev.status !== "current" && (
@@ -754,6 +758,8 @@ export default function DrawingsPage() {
           </div>
         </div>
       )}
+    
+      </PageShell>
     </div>
   );
 }

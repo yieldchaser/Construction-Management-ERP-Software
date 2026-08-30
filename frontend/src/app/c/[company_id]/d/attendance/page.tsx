@@ -1162,35 +1162,35 @@ export default function AttendancePage() {
                 <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">Project Setting</h3>
                 <p className="text-[10px] text-muted mt-0.5">Configure project details, members and geofence parameters</p>
               </div>
-              <button onClick={() => setIsSettingsModalOpen(false)} className="text-muted hover:text-foreground cursor-pointer">✕</button>
+              <button
+                onClick={() => setIsSettingsModalOpen(false)}
+                className="text-muted hover:text-foreground cursor-pointer p-1"
+                aria-label="Close modal"
+              >
+                <Icon name="close" className="w-4 h-4" />
+              </button>
             </div>
 
             {/* Modal Tabs */}
-            <div className="px-6 py-3 border-b border-border-custom flex items-center gap-4 bg-elevated">
-              <span
-                onClick={() => setSettingsTab("details")}
-                className={`text-xs font-bold pb-1 cursor-pointer transition-all ${
-                  settingsTab === "details" ? "text-primary border-b-2 border-primary" : "text-muted hover:text-foreground"
-                }`}
-              >
-                Project Details
-              </span>
-              <span
-                onClick={() => setSettingsTab("members")}
-                className={`text-xs font-bold pb-1 cursor-pointer transition-all ${
-                  settingsTab === "members" ? "text-primary border-b-2 border-primary" : "text-muted hover:text-foreground"
-                }`}
-              >
-                Members
-              </span>
-              <span
-                onClick={() => setSettingsTab("location")}
-                className={`text-xs font-bold pb-1 cursor-pointer transition-all ${
-                  settingsTab === "location" ? "text-primary border-b-2 border-primary" : "text-muted hover:text-foreground"
-                }`}
-              >
-                Location Structure
-              </span>
+            <div className="px-6 py-2.5 border-b border-border-custom flex items-center gap-1 bg-elevated">
+              {(["details", "members", "location"] as const).map((tabKey) => {
+                const labels: Record<string, string> = { details: "Project Details", members: "Members", location: "Location Structure" };
+                const isActive = settingsTab === tabKey;
+                return (
+                  <button
+                    key={tabKey}
+                    type="button"
+                    onClick={() => setSettingsTab(tabKey)}
+                    className={`text-xs font-semibold px-3 py-1.5 rounded-md cursor-pointer transition-all ${
+                      isActive
+                        ? "bg-card text-foreground shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)]"
+                        : "text-muted hover:text-foreground hover:bg-card/40"
+                    }`}
+                  >
+                    {labels[tabKey]}
+                  </button>
+                );
+              })}
             </div>
 
             {/* Grid Content */}

@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { getApi, authHeaders, fmtINR, initials } from "@/lib/siteflow";
+import Icon from "@/components/marketing/Icon";
 
 export type ProjectSettingsData = {
   id: string;
@@ -154,18 +155,25 @@ export default function ProjectSettingsModal({
       <div className="w-full max-w-2xl rounded-lg border border-border-custom bg-card">
         <div className="flex items-center justify-between border-b border-border-custom px-6 py-4">
           <h3 className="text-lg font-semibold text-foreground">Project Settings</h3>
-          <button onClick={onClose} className="text-muted hover:text-foreground">✕</button>
+          <button
+            onClick={onClose}
+            className="text-muted hover:text-foreground p-1 cursor-pointer"
+            aria-label="Close modal"
+          >
+            <Icon name="close" className="w-4 h-4" />
+          </button>
         </div>
 
-        <div className="flex gap-1 px-6 pt-3 border-b border-border-custom">
+        <div className="flex gap-1 px-6 py-2.5 border-b border-border-custom bg-elevated/40">
           {(["details", "members", "locations"] as const).map((t) => (
             <button
               key={t}
+              type="button"
               onClick={() => setTab(t)}
-              className={`px-3 py-2 text-sm capitalize ${
+              className={`px-3.5 py-1.5 text-xs font-semibold rounded-md capitalize transition-all cursor-pointer ${
                 tab === t
-                  ? "border-b-2 border-primary text-primary font-medium"
-                  : "text-muted"
+                  ? "bg-card text-foreground shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)]"
+                  : "text-muted hover:text-foreground hover:bg-card/40"
               }`}
             >
               {t === "details" ? "Project Details" : t === "members" ? "Members" : "Location Structure"}

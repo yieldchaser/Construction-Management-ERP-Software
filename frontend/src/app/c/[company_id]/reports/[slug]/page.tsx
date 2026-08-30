@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 import Icon from "@/components/marketing/Icon";
+import PageShell from "@/components/layout/PageShell";
 import { isMissingOrDemoTenant, redirectToLogin } from "@/lib/company-guard";
 // R2-755: shared CSV guard, so this export cannot drift from the other four.
 import { csvSafeCell, csvQuote } from "@/lib/csv";
@@ -55,7 +56,7 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
     title: "Lead Status Funnel Report",
     hasDownload: false,
     filters: [{ label: "Lead Date", type: "date"  }, { label: "Lead Status", type: "select", options: ["All"] }, { label: "Lead Source", type: "select", options: ["All"] }, { label: "Assignees", type: "select", options: ["All"] }],
-    columns: ['(No tabular columns - rendered as a funnel/visual chart, not a data table)']
+    columns: ['Stage', 'Lead Count', 'Conversion Rate (%)']
   },
   "project-wise-sales-summary": {
     title: "Project Wise Sales Summary",
@@ -157,7 +158,7 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
     title: "Cost Code Expense Analysis",
     hasDownload: false,
     filters: [{ label: "Project Name", type: "select", options: ["All"] }, { label: "Expense Date", type: "date" }],
-    columns: ['(No flat table captured - appears to be a chart/analysis view with a date-range dropdown, e.g. \'This Month\')']
+    columns: ['Cost Code', 'Category', 'Total Expense (INR)', 'Bill Count', 'Share (%)']
   },
   "project-wise-expense-summary": {
     title: "Project Wise Expense Summary",
@@ -409,7 +410,7 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
     title: "Monthly P&L Report",
     hasDownload: false,
     filters: [{ label: "Project Name", type: "select", options: ["All"] }, { label: "Expense Date", type: "date" }, { label: "Expense Type", type: "select", options: ["All"] }],
-    columns: ['(No tabular header captured - likely a chart/summary style report)']
+    columns: ['Month', 'Revenue (INR)', 'Expense (INR)', 'Net P&L (INR)', 'Profit Margin (%)']
   },
   "project-activity-leaderboard": {
     title: "Project Activity Leaderboard",
@@ -499,7 +500,7 @@ const REPORT_METADATA: Record<string, ReportMeta> = {
     title: "Budget vs Actual (Material Cost)",
     hasDownload: false,
     filters: [{ label: "Project", type: "select", options: ["All"] }, { label: "Material", type: "select", options: ["All"] }],
-    columns: ['Project', 'Material', 'Unit', 'Budget Qty', 'Actual Qty', 'Variance Qty']
+    columns: ['Project', 'Material', 'Unit', 'Budget Cost (INR)', 'Actual Cost (INR)', 'Variance (INR)']
   },
   "budget-vs-actual-material-qty": {
     title: "Budget vs Actual (Material Qty)",
@@ -923,7 +924,8 @@ export default function DynamicReportViewPage() {
         </div>
 
         {/* Dynamic Data Table or Visual Dashboard Charts */}
-        <div className="flex-1 overflow-auto p-6">
+        <div className="flex-1 overflow-auto">
+          <PageShell width="wide">
           {slug === "lead-status-funnel" ? (() => {
             const totalLeadsCount = crmLeads.length;
             // R2-437: these arrays matched none of the seven statuses the CRM
@@ -1082,6 +1084,74 @@ export default function DynamicReportViewPage() {
                 </div>
               </div>
             );
+          })() : slug === "monthly-pl" ? (() => {
+            const rows = processedData;
+            const totalRev = rows.reduce((acc, r) => acc + (Number(r["Revenue (INR)"]) || 0), 0);
+            const totalExp = rows.reduce((acc, r) => acc + (Number(r["Expense (INR)"]) || 0), 0);
+            const netPL = totalRev - totalExp;
+            const margin = totalRev > 0 ? ((netPL / totalRev) * 100).toFixed(1) : "0.0";
+
+            return (
+              <div className="max-w-4xl mx-auto space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="p-4 bg-card border border-border-custom rounded-xl">
+                    <div className="text-[10px] text-muted uppercase font-bold">Total Revenue</div>
+                    <div className="text-xl font-bold text-success mt-1">₹{totalRev.toLocaleString("en-IN")}</div>
+                  </div>
+                  <div className="p-4 bg-card border border-border-custom rounded-xl">
+                    <div className="text-[10px] text-muted uppercase font-bold">Total Expense</div>
+                    <div className="text-xl font-bold text-danger mt-1">₹{totalExp.toLocaleString("en-IN")}</div>
+                  </div>
+                  <div className="p-4 bg-card border border-border-custom rounded-xl">
+                    <div className="text-[10px] text-muted uppercase font-bold">Net Profit / Loss</div>
+                    <div className={`text-xl font-bold mt-1 ${netPL >= 0 ? "text-primary" : "text-danger"}`}>
+                      ₹{netPL.toLocaleString("en-IN")}
+                    </div>
+                  </div>
+                  <div className="p-4 bg-card border border-border-custom rounded-xl">
+                    <div className="text-[10px] text-muted uppercase font-bold">Profit Margin</div>
+                    <div className="text-xl font-bold text-foreground mt-1">{margin}%</div>
+                  </div>
+                </div>
+
+                {/* Monthly Breakdown Table */}
+                <div className="rounded-xl border border-border-custom bg-card overflow-hidden">
+                  <div className="px-5 py-3 border-b border-border-custom bg-elevated/40">
+                    <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Monthly P&L Ledger</h3>
+                  </div>
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="bg-elevated text-muted border-b border-border-custom">
+                        <th className="px-4 py-2.5 text-left font-semibold">Month</th>
+                        <th className="px-4 py-2.5 text-right font-semibold">Revenue (INR)</th>
+                        <th className="px-4 py-2.5 text-right font-semibold">Expense (INR)</th>
+                        <th className="px-4 py-2.5 text-right font-semibold">Net P&L (INR)</th>
+                        <th className="px-4 py-2.5 text-right font-semibold">Margin (%)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rows.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="py-8 text-center text-muted">No monthly transactions recorded yet.</td>
+                        </tr>
+                      ) : (
+                        rows.map((r, i) => (
+                          <tr key={i} className="border-t border-border-custom hover:bg-elevated/40 transition-colors">
+                            <td className="px-4 py-2.5 text-foreground font-semibold">{r["Month"]}</td>
+                            <td className="px-4 py-2.5 text-right text-success font-medium">₹{Number(r["Revenue (INR)"] || 0).toLocaleString("en-IN")}</td>
+                            <td className="px-4 py-2.5 text-right text-danger font-medium">₹{Number(r["Expense (INR)"] || 0).toLocaleString("en-IN")}</td>
+                            <td className={`px-4 py-2.5 text-right font-bold ${Number(r["Net P&L (INR)"] || 0) >= 0 ? "text-primary" : "text-danger"}`}>
+                              ₹{Number(r["Net P&L (INR)"] || 0).toLocaleString("en-IN")}
+                            </td>
+                            <td className="px-4 py-2.5 text-right text-muted">{r["Profit Margin (%)"]}%</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            );
           })() : (
             /* STANDARD DATA TABLE */
             loading ? (
@@ -1146,6 +1216,7 @@ export default function DynamicReportViewPage() {
             </div>
             )
           )}
+          </PageShell>
         </div>
 
         {/* Back Navigation Bar */}

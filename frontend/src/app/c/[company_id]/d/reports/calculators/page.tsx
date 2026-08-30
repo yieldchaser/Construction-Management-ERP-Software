@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
+import PageShell from "@/components/layout/PageShell";
 import {
   BRICK_PRESETS,
   calcBrickFrontend,
@@ -350,6 +351,8 @@ export default function CalculatorsPage() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
+      <PageShell width="wide">
+
       {/* Sidebar Navigation */}
       
 
@@ -2053,6 +2056,8 @@ export default function CalculatorsPage() {
           </div>
         </div>
       </main>
+    
+      </PageShell>
     </div>
   );
 }

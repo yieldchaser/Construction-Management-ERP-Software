@@ -7,6 +7,8 @@ import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
 import Icon from "@/components/marketing/Icon";
 
+import PageShell from "@/components/layout/PageShell";
+
 interface ChatGroup {
   id: string;
   name: string;
@@ -374,7 +376,7 @@ export default function ChatPage() {
                   }}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all cursor-pointer ${
                     activeGroup?.id === g.id
-                      ? "bg-primary/10 text-primary border-l-2 border-primary"
+                      ? "bg-elevated text-foreground font-semibold shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)]"
                       : "hover:bg-elevated/50 text-muted hover:text-foreground"
                   }`}
                 >
@@ -904,7 +906,6 @@ export default function ChatPage() {
           </div>
         </div>
       )}
-
     </div>
   );
 }

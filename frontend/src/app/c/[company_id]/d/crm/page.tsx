@@ -657,15 +657,16 @@ export default function CRMPage() {
     <div className="flex-1 overflow-y-auto">
       <PageShell width="wide">
       {/* Sub-tabs */}
-      <div className="mb-4 flex gap-1 border-b border-border-custom">
+      <div className="mb-4 inline-flex items-center gap-1 p-1 bg-card border border-border-custom rounded-lg shrink-0">
         {(["leads", "quotation"] as const).map((t) => (
           <button
             key={t}
+            type="button"
             onClick={() => setTab(t)}
-            className={`px-4 py-2 text-sm font-medium capitalize ${
+            className={`px-3.5 py-1.5 text-xs font-semibold rounded-md capitalize transition-all cursor-pointer ${
               tab === t
-                ? "border-b-2 border-primary text-foreground"
-                : "text-muted hover:text-foreground"
+                ? "bg-elevated text-foreground shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)]"
+                : "text-muted hover:text-foreground hover:bg-elevated/40"
             }`}
           >
             {t === "leads" ? "Leads" : "Quotation"}

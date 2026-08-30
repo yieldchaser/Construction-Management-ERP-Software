@@ -7,6 +7,8 @@ import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
 import Icon, { type IconName } from "@/components/marketing/Icon";
 
+import PageShell from "@/components/layout/PageShell";
+
 interface Task {
   id: string;
   name: string;
@@ -483,6 +485,8 @@ export default function GanttSchedulerPage() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
+      <PageShell width="wide">
+
       {/* Main Workspace Frame */}
       <main className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
@@ -1067,6 +1071,8 @@ export default function GanttSchedulerPage() {
           </div>
         </div>
       )}
+    
+      </PageShell>
     </div>
   );
 }
