@@ -121,6 +121,7 @@ def test_accept_claims_account_and_logs_into_the_company(client, db, make_tenant
 def test_duplicate_invite_is_rejected(client, db, make_tenant, auth_headers, monkeypatch):
     invitee_email = "twice@example.com"
     monkeypatch.setattr(settings, "EMAIL_OTP_DEMO_ALLOWLIST", invitee_email)
+    monkeypatch.setattr(settings, "OTP_DEMO_CODE", "654321")
     company, owner, role = _setup_owner(db, make_tenant, f"owner-{uuid.uuid4().hex[:8]}@example.com")
     payload = {"email": invitee_email, "name": "Twice", "role_id": str(role.id)}
     headers = auth_headers(owner, company)

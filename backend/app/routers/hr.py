@@ -473,7 +473,8 @@ def punch(payload: PunchRequest, db: Session = Depends(get_db), current_user: Us
         # back aware from Postgres (naive from SQLite), and mixing flavors
         # raised TypeError, 500ing punch-out and leaving the row open (R2-728).
         if log.punch_in:
-            delta = (punch_time - _aware_utc(log.punch_in)).total_seconds() / 3600
+            now = punch_time
+            delta = (now - _aware_utc(log.punch_in)).total_seconds() / 3600
             if delta < 0:
                 raise HTTPException(status_code=400, detail="punch_out time cannot be earlier than punch_in time.")
             log.hours_worked = Decimal(str(round(delta, 2)))
