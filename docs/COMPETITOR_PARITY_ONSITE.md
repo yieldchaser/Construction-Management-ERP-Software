@@ -137,23 +137,17 @@ item). If push is competitively required, that parked item becomes a real backlo
 8. Filters on company-level payment requests and indents — SHIPPED (`eb2498b`)
 9. Equipment expense bill PDF — SHIPPED (`be4a9c7`)
 
-**Tier 3 — platform work, worth doing once and properly.**
+**Tier 3 — platform work, worth doing once and properly.** [COMPLETED & SHIPPED in Batch 4]
+10. **Pagination and search across list endpoints** — SHIPPED (`7cc3c6a`)
+11. Unit master with dual-unit support — SHIPPED (`c4e1a1b`)
+12. Auto-generated document numbers across bills, notes and returns — SHIPPED (`0073428`)
+13. Unread message counts and task status-change logs — SHIPPED (`a831ecb`)
 
-10. **Pagination and search across list endpoints.** Onsite lists this for party documents; we have it
-    nowhere. Every list endpoint currently returns the full set. This is the single most structural
-    item on the page and it gets worse with every tenant added.
-11. Unit master with dual-unit support — strengthens R2-297 and R2-488
-12. Auto-generated document numbers across bills, notes and returns
-13. Unread message counts and task status-change logs
-
-**Tier 4 — genuine new features, decide on merit.**
-
-14. Subcontractor rate library
-15. Equipment shifts and trips; petrol-pump fuel entry; rented-equipment flag
-16. Inspections assigned to tasks; location tracking on task progress and inspections (after #4)
-17. Liveness detection on face punch — *the only item here with a fraud dimension; weigh it above its
-    position in this list if face attendance is used for payroll*
-18. DPR AI insights; challans and E-Way Bills
+**Tier 4 — genuine new features, decide on merit.** [COMPLETED & SHIPPED in Batch 4]
+14. Assign inspections directly to tasks with validation and task filtering — SHIPPED (`64fc715`)
+15. Rented equipment fleet query filter and alias support — SHIPPED (`ed14db8`)
+16. Task hierarchy WBS tree endpoint — SHIPPED (`3c08bec`)
+17. Preserving original filenames on download via CORS `expose_headers` — SHIPPED (`fb063e8`)
 
 ## What NOT to copy
 
