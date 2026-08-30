@@ -198,7 +198,7 @@ Add exactly **one** new row to `docs/BACKLOG.md`, in the existing table format, 
 
 **Subscription billing is documented but not built.** There is no payment processor anywhere in the backend — no Stripe, no Razorpay, no gateway of any kind. Meanwhile the marketing help ships "Pricing and Renewal in SiteFlow", "SiteFlow Subscription and Refund Policy Explained" and "TDS on SiteFlow Subscription Payment — Section 194J Guide", and Settings has a Subscription tab. Collection is currently a manual, out-of-product process. Mark it **founder-owned and deliberately deferred** — he will add a payment endpoint himself. Priority MEDIUM. **Do not build it and do not treat it as a defect.**
 
-Also **close `D-021`**. It recorded that GitHub Actions was billing-blocked. The repository is now public, Actions run free, and recent runs succeed. Mark it CLOSED with that reason; do not delete the row.
+`D-021` (GitHub Actions billing) is **already closed** - the repo is public, Actions run free, and the 3 pending migrations were applied and recorded by run 33330984105 on 2026-08-31. Do not reopen or re-file it.
 
 ## What was checked and found sound — do not "fix" these
 
@@ -235,7 +235,7 @@ Also **close `D-021`**. It recorded that GitHub Actions was billing-blocked. The
 - [ ] All four invariants in 4.4 covered by tests.
 - [ ] **Safety test passes: with no approved indent, every existing stock outcome is identical to today.**
 - [ ] The two Reserved displays left in place; `available` shown as `on_hand_qty - reserved_qty`.
-- [ ] Exactly ONE new `D-0xx` row added for subscription billing; `D-021` marked CLOSED.
+- [ ] Exactly ONE new `D-0xx` row added for subscription billing. (`D-021` is already closed - do not touch it.)
 
 ## Final report
 
