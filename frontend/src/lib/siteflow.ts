@@ -13,18 +13,20 @@ export const authHeaders = (): Record<string, string> | undefined => {
 // <a href> navigation cannot attach it and the endpoints require one), then
 // hand the blob to a programmatic anchor. Throws on non-2xx so callers can
 // surface the failure instead of opening an empty tab.
-export const downloadWithAuth = async (path: string): Promise<void> => {
+export const downloadWithAuth = async (path: string, fallbackName: string = "document.pdf"): Promise<void> => {
   const res = await fetch(getApi(path), { headers: authHeaders() });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const blob = await res.blob();
   const disposition = res.headers.get("content-disposition") || "";
-  const filename =
-    disposition.match(/filename="?([^";]+)"?/i)?.[1] || "document.pdf";
+  const filenameStarMatch = disposition.match(/filename\*=UTF-8''([^;\r\n]+)/i);
+  const filenameMatch = disposition.match(/filename="?([^";\r\n]+)"?/i);
+  const rawFilename = filenameStarMatch?.[1] || filenameMatch?.[1] || fallbackName;
+  const filename = decodeURIComponent(rawFilename);
   const url = URL.createObjectURL(blob);
   try {
     const a = document.createElement("a");
     a.href = url;
-    a.download = decodeURIComponent(filename);
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     a.remove();
