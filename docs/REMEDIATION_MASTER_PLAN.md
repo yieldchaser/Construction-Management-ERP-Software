@@ -55,6 +55,45 @@ checked each one.
 
 ---
 
+## STATUS — 2026-08-30, after run 2, independently verified
+
+**Run 2 closed D-014, D-015, D-016 and D-018 (all four parity tiers) in 48 commits.** I verified this
+myself rather than accepting the report:
+
+| Check | Result |
+|---|---|
+| Full backend suite (`python -m pytest`, not just `tests/coverage`) | **0 failures**, exit 0 |
+| Frontend production build | exit 0, TypeScript clean, 23/23 pages |
+| G0's test edits — weakening or legitimate repair? | **Legitimate.** Fixtures gained `state="Karnataka"` and `hsn_sac` because R2-041/D4 and R2-747 made those mandatory; plus the `utf-8-sig` BOM fix. Underlying code re-checked and intact |
+| R2-764 (the sweep-class finding) | **4 of 4 write paths** through ONE shared helper — crm:613, finance:175, hr:1583, library:549 |
+| R2-756 | `uan` column + additive migration + refusal when missing |
+| R2-762 | `billed_amount` / `progress_pct` real; renders an em dash when null, not a fabricated 0 |
+| R2-754 | holidays subtracted from the working-days denominator |
+| R2-760 | `log_deletion` call sites 32 → 52 |
+| Pagination (parity Tier 3) | backward compatible — optional params, array response preserved, count in `X-Total-Count` |
+| New columns without migrations | none — only `uan`, and it has one |
+
+**Two things I corrected during verification:**
+
+1. **48 commits were never pushed.** Run 2's ancestry check was inverted —
+   `git merge-base --is-ancestor origin/main HEAD` asks "am I ahead of main", not "did I land". It
+   reported OK while everything sat local. Pushed; `origin/main` now carries the work.
+2. **Two regression pins were repaired more weakly than necessary** (R2-036 became a bare substring
+   check that passes on the import line alone). Both now count the classifier helper calls. All 180
+   pins pass.
+
+**One new finding filed: R2-765 / D-020** — chat unread counts are tracked in a module-level in-memory
+dict, so mark-as-read dies on every deploy and differs per worker.
+
+### REMAINING WORK — only two items
+
+- **D-020 / R2-765** — persist the chat read watermark (small)
+- **D-017** — pre-login index page performance, in its own session
+
+Everything else in Parts A–E is closed. Kickoff for both: `docs/AGENT_KICKOFF_RUN3.md`.
+
+---
+
 ## 0. Where the evidence lives
 
 | Document | What it holds | You need it for |
