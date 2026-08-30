@@ -94,6 +94,22 @@ Everything else in Parts A–E is closed. Kickoff for both: `docs/AGENT_KICKOFF_
 
 ---
 
+## STATUS — 2026-08-30, after run 3
+
+**Run 3 closed D-020 (R2-765) and D-017. All coding items in Parts A–E are now closed.**
+
+| Task | Commit | Proof |
+|---|---|---|
+| R2-765 (D-020): delete `_group_user_last_read` dict; persist to `ChatGroupMember.last_read_at` + migration | `c8cb315` | Gate test `test_r2_765_chat_watermark_persisted.py` failed before fix (dict clear → count reset), passed after. 1097 passed, 4 skipped, 0 failures. |
+| D-017: image re-encoding (25.50 MB → 1.39 MB, -94.5%); `TypewriterText` `visibilitychange` pause | `64fd645` | Frontend build: `✓ Compiled successfully in 44s`. 0 TypeScript errors. All animations preserved. |
+| Push verification | both | `git merge-base --is-ancestor HEAD origin/main && echo LANDED` → `LANDED` |
+
+**Open items remaining (all founder/ops — no coding agents required):**
+- **D-021** — GitHub Actions billing block (Render keep-alive + migration CI). Founder must fix billing and re-run workflow.
+
+---
+
+
 ## 0. Where the evidence lives
 
 | Document | What it holds | You need it for |
