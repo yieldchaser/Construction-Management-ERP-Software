@@ -5,6 +5,7 @@ Phase 12 — Equipment & Machinery Tracking Router
 
 import uuid
 from datetime import datetime, timezone
+from decimal import Decimal
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func
