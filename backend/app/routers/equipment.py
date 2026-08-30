@@ -453,3 +453,20 @@ def delete_fuel_log(log_id: uuid.UUID, db: Session = Depends(get_db), current_us
     db.delete(fl)
     db.commit()
 
+
+@router.get("/expenses/{bill_id}/pdf")
+def get_equipment_expense_pdf(
+    bill_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Download equipment expense bill as PDF (Competitor Parity 14.9.4 #3)."""
+    from app.models import Bill
+    from app.routers.billing import get_bill_pdf
+    bill = db.query(Bill).filter(Bill.id == bill_id).first()
+    if not bill:
+        raise HTTPException(status_code=404, detail="Equipment expense bill not found")
+    if bill.invoice_type != "equipment":
+        raise HTTPException(status_code=400, detail="Bill is not an equipment expense")
+    return get_bill_pdf(bill_id=bill_id, db=db, current_user=current_user)
+
