@@ -102,9 +102,13 @@ dict, so mark-as-read dies on every deploy and differs per worker.
 
 ### Two things worth doing before launch, neither blocking
 
-1. **Cross-tenant probe the 29 new endpoints.** The 180-probe isolation sweep that this audit relies on
-   **predates them**. Their gates were read statically and look right, but they have never been
-   exercised against a foreign tenant the way the original 106 routes were.
+1. ~~**Cross-tenant probe the 29 new endpoints.**~~ **DONE 2026-08-30 — 55 live probes, zero leaks.**
+   29/29 reject anonymous callers (401); the 7 endpoints taking a caller-supplied tenant identifier all
+   answered **403** when fired at Demo Construction Ltd from an AK Construction session ("You do not
+   have access to this company/project"); and all 19 DELETE-by-record-id routes returned a clean 404
+   with no 500s. The 19 DELETE handlers were additionally verified mechanically to resolve the owning
+   company **from the loaded row** and call `get_company_membership` **before** any mutation — 0
+   exceptions. Re-runnable: `scripts/verification/probe_new_endpoints.py`.
 2. **Sentry at a 90-day window** once the current Vercel/Render deploys settle. Several deploys landed
    in quick succession; the pre-deploy baseline was 0 unresolved.
 

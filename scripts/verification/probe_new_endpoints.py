@@ -8,7 +8,26 @@ WHAT IT PROVES
     Pass 1 (implemented below, needs no credentials): every endpoint rejects an
     unauthenticated caller with 401/403. Result 2026-08-30: 29/29 rejected.
 
-    Pass 2 (authenticated cross-tenant) needs a bearer token for a user who is NOT
+    Pass 2 (authenticated cross-tenant) — RUN 2026-08-30, ALL CLEAN. From a live
+    AK Construction session against Demo Construction Ltd (a tenant that account is
+    not a member of), all seven endpoints that accept a CALLER-SUPPLIED tenant
+    identifier answered 403 with an explicit refusal:
+
+        GET  /billing/bills/{demo_company}              403 "You do not have access to this company"
+        GET  /billing/next-number/{demo_company}        403 "You do not have access to this company"
+        GET  /billing/bills?company_id={demo_company}   403 "You do not have access to this company"
+        GET  /hr/timesheets/project/{demo_project}/headers   403 "...to this project"
+        GET  /planning/tasks/hierarchy/{demo_project}        403 "...to this project"
+        POST /reports/generate/{demo_project}                403 "...to this project"
+        POST /reports/{demo_project}/generate                403 "...to this project"
+
+    Pass 3 (authenticated DELETE, non-existent id) — RUN 2026-08-30: all 19
+    DELETE-by-record-id routes returned a clean 404, no 500s, so each resolves the
+    row and exits without mutating when it is absent.
+
+    TOTAL: 55 live probes, zero leaks.
+
+    Historical note — pass 2 originally needed a bearer token for a user who is NOT
     a member of the target tenant. Membership as of 2026-08-30:
         upadhyayprateek574@gmail.com    -> AK Construction, ZZ R8 Throwaway
         prateekupadhyay162002@gmail.com -> AK Construction, Test Claude B2
