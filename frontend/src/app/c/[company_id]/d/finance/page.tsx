@@ -1973,7 +1973,14 @@ export default function FinancePage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="text-xs text-muted">No Tally connection yet. Connect a Tally company to start exporting vouchers.</div>
+                  <EmptyState
+                    title="No Tally connection yet"
+                    description="Connect your Tally Prime company to export vouchers, map accounting ledgers, and sync financial transactions."
+                    action={{
+                      label: "Connect Tally",
+                      onClick: openTallySetup,
+                    }}
+                  />
                 )}
               </div>
 

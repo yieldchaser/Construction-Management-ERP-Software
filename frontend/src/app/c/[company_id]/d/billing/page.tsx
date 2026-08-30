@@ -9,6 +9,7 @@ import { authHeaders, downloadWithAuth } from "@/lib/siteflow";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import SegmentedTabs from "@/components/ui/Tabs";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 // Types
 interface Deduction {
@@ -625,43 +626,7 @@ export default function SubcontractorBillingPage() {
                                   {d.type}: ₹{d.amount.toLocaleString()}
                                 </span>
                               ))}
-              </div>
-
-              {/* Tower-wise P&L Summary */}
-              {pnlData.length > 0 && (
-                <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
-                  <div className="px-5 py-4 border-b border-border-custom">
-                    <h2 className="text-xs font-bold uppercase tracking-wider text-muted">Tower-wise P&L Breakdown</h2>
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-xs text-left">
-                      <thead>
-                        <tr className="border-b border-border-custom text-muted">
-                          <th className="px-5 py-3 font-bold">Tower/Phase</th>
-                          <th className="px-5 py-3 font-bold text-right">Budget</th>
-                          <th className="px-5 py-3 font-bold text-right">PO Value</th>
-                          <th className="px-5 py-3 font-bold text-right">WO Value</th>
-                          <th className="px-5 py-3 font-bold text-right">Billed</th>
-                          <th className="px-5 py-3 font-bold text-right">Variance</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {pnlData.map((p) => (
-                          <tr key={p.tower_id} className="border-b border-border-custom hover:bg-elevated transition-all">
-                            <td className="px-5 py-3.5 text-foreground font-semibold">{p.tower_name}</td>
-                            <td className="px-5 py-3.5 text-right font-sans text-muted">₹{(p.budget || 0).toLocaleString()}</td>
-                            <td className="px-5 py-3.5 text-right font-sans text-warning">₹{(p.total_po_value || 0).toLocaleString()}</td>
-                            <td className="px-5 py-3.5 text-right font-sans">₹{(p.total_wo_value || 0).toLocaleString()}</td>
-                            <td className="px-5 py-3.5 text-right font-sans text-primary">₹{(p.total_billed || 0).toLocaleString()}</td>
-                            <td className="px-5 py-3.5 text-right font-sans text-muted">₹{((p.budget || 0) - (p.total_billed || 0)).toLocaleString()}</td>
-                          </tr>
-                        ))}
-                        {pnlData.length === 0 && <tr><td colSpan={6} className="px-5 py-6 text-center text-muted">No tower data yet.</td></tr>}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
+                            </div>
                           </td>
                           <td className="px-5 py-3.5">
                             <span className="text-muted font-bold uppercase text-[10px]">{bill.preTax ? "Pre-Tax" : "Post-Tax"}</span>
@@ -738,10 +703,59 @@ export default function SubcontractorBillingPage() {
                           </td>
                         </tr>
                       ))}
+                      {bills.length === 0 && (
+                        <tr>
+                          <td colSpan={9} className="p-8">
+                            <EmptyState
+                              title="No RA bills found"
+                              description="Create contractor running account bills or supplier invoices to process progress payments."
+                              action={{
+                                label: "+ Submit RA Bill",
+                                onClick: () => setShowBillModal(true),
+                              }}
+                            />
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
               </div>
+
+              {/* Tower-wise P&L Summary */}
+              {pnlData.length > 0 && (
+                <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
+                  <div className="px-5 py-4 border-b border-border-custom">
+                    <h2 className="text-xs font-bold uppercase tracking-wider text-muted">Tower-wise P&L Breakdown</h2>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs text-left">
+                      <thead>
+                        <tr className="border-b border-border-custom text-muted">
+                          <th className="px-5 py-3 font-bold">Tower/Phase</th>
+                          <th className="px-5 py-3 font-bold text-right">Budget</th>
+                          <th className="px-5 py-3 font-bold text-right">PO Value</th>
+                          <th className="px-5 py-3 font-bold text-right">WO Value</th>
+                          <th className="px-5 py-3 font-bold text-right">Billed</th>
+                          <th className="px-5 py-3 font-bold text-right">Variance</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {pnlData.map((p) => (
+                          <tr key={p.tower_id} className="border-b border-border-custom hover:bg-elevated transition-all">
+                            <td className="px-5 py-3.5 text-foreground font-semibold">{p.tower_name}</td>
+                            <td className="px-5 py-3.5 text-right font-sans text-muted">₹{(p.budget || 0).toLocaleString()}</td>
+                            <td className="px-5 py-3.5 text-right font-sans text-warning">₹{(p.total_po_value || 0).toLocaleString()}</td>
+                            <td className="px-5 py-3.5 text-right font-sans">₹{(p.total_wo_value || 0).toLocaleString()}</td>
+                            <td className="px-5 py-3.5 text-right font-sans text-primary">₹{(p.total_billed || 0).toLocaleString()}</td>
+                            <td className="px-5 py-3.5 text-right font-sans text-muted">₹{((p.budget || 0) - (p.total_billed || 0)).toLocaleString()}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
 
             </div>
           )}
@@ -784,6 +798,20 @@ export default function SubcontractorBillingPage() {
                           </td>
                         </tr>
                       ))}
+                      {workOrders.length === 0 && (
+                        <tr>
+                          <td colSpan={6} className="p-8">
+                            <EmptyState
+                              title="No work orders found"
+                              description="Create contractor work orders to formalize scopes of work and manage progress billing."
+                              action={{
+                                label: "+ Create Work Order",
+                                onClick: () => setShowWOModal(true),
+                              }}
+                            />
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -833,6 +861,16 @@ export default function SubcontractorBillingPage() {
                           <td className="px-5 py-3.5 text-muted">{note.date}</td>
                         </tr>
                       ))}
+                      {notes.length === 0 && (
+                        <tr>
+                          <td colSpan={7} className="p-8">
+                            <EmptyState
+                              title="No debit or credit notes recorded"
+                              description="Debit and credit note adjustments linked to subcontractor billing will appear here."
+                            />
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>

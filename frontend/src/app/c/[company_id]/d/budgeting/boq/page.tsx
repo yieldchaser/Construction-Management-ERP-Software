@@ -9,6 +9,7 @@ import { useParams } from "next/navigation";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import SegmentedTabs from "@/components/ui/Tabs";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface BOQItem {
@@ -357,10 +358,23 @@ export default function BOQPage() {
           {tab === "boq" && (
             <div className="flex flex-col h-full overflow-hidden">
               {!projectId && (
-                <div className="p-6 text-center text-muted text-xs">Select a project to view its BOQ.</div>
+                <EmptyState
+                  title="No project selected"
+                  description="Select a project from the top dropdown to view and manage its Bill of Quantities."
+                />
               )}
               {projectId && boqItems.length === 0 && (
-                <div className="p-6 text-center text-muted text-xs">No BOQ items yet. Import an Excel (.xlsx) with item_name, unit, qty, rate, cost_code to populate this view.</div>
+                <EmptyState
+                  title="No BOQ items found"
+                  description="Import a Bill of Quantities Excel (.xlsx) spreadsheet with item names, units, quantities, rates, and cost codes."
+                  action={{
+                    label: "Import Excel",
+                    onClick: () => {
+                      const el = document.getElementById("boq-upload");
+                      if (el) (el as HTMLInputElement).click();
+                    },
+                  }}
+                />
               )}
               {/* Filters */}
               <div className="flex items-center gap-3 px-5 py-3 border-b border-border-custom shrink-0">
@@ -627,7 +641,10 @@ export default function BOQPage() {
               <div className="grid gap-3">
                 {revisionLoading && <div className="text-[10px] text-muted">Loading revisions...</div>}
                 {!revisionLoading && revisions.length === 0 && (
-                  <div className="bg-input border border-dashed border-border-custom rounded-md p-6 text-center text-[10px] text-muted">No revisions yet.</div>
+                  <EmptyState
+                    title="No revisions recorded yet"
+                    description="BOQ revisions and budget amendment logs will appear here once new baselines are saved."
+                  />
                 )}
                 {revisions.map((rev, idx) => (
                   <div key={rev.id} className={`bg-input border rounded-md p-5 ${idx === 0 ? "border-border-custom ring-1 ring-primary/10" : "border-border-custom"}`}>

@@ -8,6 +8,7 @@ import Icon, { type IconName } from "@/components/marketing/Icon";
 import SegmentedTabs from "@/components/ui/Tabs";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { CardSkeleton } from "@/components/ui/Skeleton";
 
 interface Equipment {
@@ -373,10 +374,14 @@ export default function EquipmentTrackingPage() {
                   )}
 
                   {projectFleet.length === 0 ? (
-                    <div className="bg-card border border-dashed border-border-custom rounded-lg p-10 text-center">
-                      <div className="text-xs font-bold text-foreground">No equipment yet</div>
-                      <p className="text-[11px] text-muted mt-1">Click '+ Add Equipment' to add your first asset.</p>
-                    </div>
+                    <EmptyState
+                      title="No equipment yet"
+                      description="Register machinery, vehicles, and tools to track deployments, fuel logs, and running hours."
+                      action={{
+                        label: "+ Add Equipment",
+                        onClick: () => setIsAddEqOpen(true),
+                      }}
+                    />
                   ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {projectFleet.map((eq) => {
@@ -449,7 +454,10 @@ export default function EquipmentTrackingPage() {
 
                   <div className="space-y-3">
                     {timelineEvents.length === 0 ? (
-                      <div className="text-center text-[11px] text-muted italic py-6">No usage or refuel events yet.</div>
+                      <EmptyState
+                        title="No usage or refuel events yet"
+                        description="Equipment refuels and machine-hour logs will appear here in chronological order."
+                      />
                     ) : (
                     timelineEvents.map((evt) => (
                       <div key={evt.id} className="p-3.5 rounded-md border border-border-custom bg-input text-xs flex justify-between items-start gap-4">
@@ -546,7 +554,14 @@ export default function EquipmentTrackingPage() {
                         </thead>
                         <tbody>
                           {completedRuns.length === 0 ? (
-                            <tr><td colSpan={8} className="px-5 py-10 text-center text-muted">No completed runs yet. Use Start/Stop Wizard on fleet cards.</td></tr>
+                            <tr>
+                              <td colSpan={8} className="p-8">
+                                <EmptyState
+                                  title="No completed runs yet"
+                                  description="Deploy fleet assets and log stop meters using the Start/Stop wizard on equipment cards."
+                                />
+                              </td>
+                            </tr>
                           ) : completedRuns.map((run, idx) => (
                             <tr key={idx} className="border-b border-border-custom hover:bg-elevated transition-all">
                               <td className="px-5 py-3">
@@ -608,7 +623,14 @@ export default function EquipmentTrackingPage() {
                       </thead>
                       <tbody>
                         {maintenanceLogs.length === 0 ? (
-                          <tr><td colSpan={7} className="px-5 py-10 text-center text-muted">No maintenance schedules recorded.</td></tr>
+                          <tr>
+                            <td colSpan={7} className="p-8">
+                              <EmptyState
+                                title="No maintenance schedules recorded"
+                                description="Schedule preventive maintenance or record servicing records for your equipment fleet."
+                              />
+                            </td>
+                          </tr>
                         ) : maintenanceLogs.map((log) => {
                           const eq = fleet.find(e => e.id === log.equipment_id);
                           const isOverdue = log.completed_date === null && new Date(log.scheduled_date) < new Date();

@@ -439,7 +439,7 @@ export default function SafetyPage() {
                     />
                   ))}
                   {Object.keys(stats.type_breakdown).length === 0 && (
-                    <p className="text-xs text-muted">No data yet.</p>
+                    <EmptyState title="No incident breakdown data yet" description="Incident category statistics will appear as safety events are logged." />
                   )}
                 </div>
                 <div className="p-5 rounded-xl bg-card border border-border-custom shadow-sm">
@@ -454,7 +454,7 @@ export default function SafetyPage() {
                     />
                   ))}
                   {Object.keys(stats.severity_breakdown).length === 0 && (
-                    <p className="text-xs text-muted">No data yet.</p>
+                    <EmptyState title="No severity breakdown data yet" description="Severity level statistics will appear as safety events are logged." />
                   )}
                 </div>
               </div>

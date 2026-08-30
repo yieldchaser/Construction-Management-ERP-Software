@@ -397,10 +397,26 @@ def approve_indent(indent_id: UUID, db: Session = Depends(get_db), current_user:
     indent.status = "approved"
     indent.approved_by = membership.id
     indent.approved_at = datetime.now(timezone.utc)
+
+    items = db.query(MaterialIndentItem).filter(MaterialIndentItem.indent_id == indent.id).all()
+    for item in items:
+        inv = db.query(WarehouseInventory).filter(
+            WarehouseInventory.project_id == indent.project_id,
+            WarehouseInventory.material_name == item.material_name
+        ).first()
+        if inv is None:
+            item.reserved_qty = 0.0
+            continue
+        available = float(inv.on_hand_qty) - float(inv.reserved_qty)
+        to_reserve = min(float(item.quantity), max(0.0, available))
+        inv.reserved_qty = float(inv.reserved_qty) + to_reserve
+        item.reserved_qty = to_reserve
+        db.add(inv)
+        db.add(item)
+
     db.commit()
     db.refresh(indent)
 
-    items = db.query(MaterialIndentItem).filter(MaterialIndentItem.indent_id == indent.id).all()
     item_schemas = [
         IndentItemSchema(
             material_name=i.material_name,
@@ -432,6 +448,20 @@ def reject_indent(indent_id: UUID, db: Session = Depends(get_db), current_user: 
         raise HTTPException(status_code=400, detail=f"Only pending indents can be rejected (current status: {indent.status})")
 
     indent.status = "rejected"
+
+    items = db.query(MaterialIndentItem).filter(MaterialIndentItem.indent_id == indent.id).all()
+    for item in items:
+        if item.reserved_qty and float(item.reserved_qty) > 0:
+            inv = db.query(WarehouseInventory).filter(
+                WarehouseInventory.project_id == indent.project_id,
+                WarehouseInventory.material_name == item.material_name
+            ).first()
+            if inv:
+                inv.reserved_qty = max(0.0, float(inv.reserved_qty) - float(item.reserved_qty))
+                db.add(inv)
+            item.reserved_qty = 0.0
+            db.add(item)
+
     db.commit()
     db.refresh(indent)
 

@@ -7,6 +7,7 @@ import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -288,7 +289,16 @@ export default function MoMPage() {
                 <tbody>
                   {moms.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-5 py-10 text-center text-muted">No MOM records match the current filters.</td>
+                      <td colSpan={6} className="p-8">
+                        <EmptyState
+                          title="No MOM records found"
+                          description="Record Minutes of Meeting with attendees, discussion points, and project action items."
+                          action={{
+                            label: "+ New MOM",
+                            onClick: () => openCreate(),
+                          }}
+                        />
+                      </td>
                     </tr>
                   ) : (
                     moms.map((m) => (

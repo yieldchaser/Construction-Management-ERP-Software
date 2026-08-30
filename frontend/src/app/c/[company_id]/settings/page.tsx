@@ -1223,7 +1223,12 @@ export default function CompanySettingsPage() {
 
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                       {branches.length === 0 ? (
-                        <div className="col-span-full text-center p-8 border border-dashed border-border-custom rounded-md text-muted text-xs">No branches configured.</div>
+                        <div className="col-span-full">
+                          <EmptyState
+                            title="No branches configured"
+                            description="Add branch offices or regional operational hubs."
+                          />
+                        </div>
                       ) : branches.map((b) => (
                         <div key={b.id} className="bg-card border border-border-custom rounded-lg p-5 rounded-lg space-y-3">
                           <div className="flex justify-between items-center">
@@ -1498,7 +1503,12 @@ export default function CompanySettingsPage() {
                   )}
 
                   {holidays.length === 0 ? (
-                    <div className="col-span-full text-center p-8 border border-dashed border-border-custom rounded-md text-muted text-xs">No holidays configured.</div>
+                    <div className="col-span-full">
+                      <EmptyState
+                        title="No holidays configured"
+                        description="Configure company holidays and calendar observances."
+                      />
+                    </div>
                   ) : (
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                       {holidays.map((h) => (
@@ -1754,7 +1764,12 @@ export default function CompanySettingsPage() {
                 )}
 
                 {holidays.length === 0 ? (
-                  <div className="col-span-full text-center p-8 border border-dashed border-border-custom rounded-md text-muted text-xs">No holidays configured.</div>
+                  <div className="col-span-full">
+                    <EmptyState
+                      title="No holidays configured"
+                      description="Configure company holidays and calendar observances."
+                    />
+                  </div>
                 ) : (
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {holidays.map((h) => (
@@ -2190,7 +2205,10 @@ export default function CompanySettingsPage() {
               {/* Existing rule blocks for this category */}
               <div className="space-y-3">
                 {approvalRulesForCat(approvalCat).length === 0 ? (
-                  <div className="text-center p-8 border border-dashed border-border-custom rounded-md text-muted text-xs">No approval rules configured for {approvalCat}.</div>
+                  <EmptyState
+                    title={`No approval rules configured for ${approvalCat}`}
+                    description="Create threshold-based multi-level approval hierarchies for transactions."
+                  />
                 ) : (
                   approvalRulesForCat(approvalCat).map((r) => {
                     const e = ruleEdits[r.id] ?? { min_amount: r.min_amount, max_amount: r.max_amount ?? "", levels: r.levels, approvers: r.approvers };
@@ -2289,8 +2307,10 @@ export default function CompanySettingsPage() {
 
                 <div className="rounded-lg border border-border-custom p-4 space-y-2">
                   <div className="text-[10px] uppercase tracking-wider text-muted font-bold">Activity Log</div>
-                  <p className="text-[11px] text-muted">Auth and sync events for the Google Sheets integration will appear here once the connection is live.</p>
-                  <div className="text-center text-xs text-muted py-4">No activity recorded yet.</div>
+                  <EmptyState
+                    title="No activity recorded yet"
+                    description="Auth and sync events for the Google Sheets integration will appear here once the connection is live."
+                  />
                 </div>
 
                 <div className="p-4 bg-warning/10 border border-warning/20 text-warning text-xs rounded-lg">
@@ -2375,7 +2395,10 @@ export default function CompanySettingsPage() {
                 <div className="space-y-2">
                   <div className="text-[10px] uppercase tracking-wider text-muted font-bold">Keys</div>
                   {biKeys.length === 0 ? (
-                    <span className="text-[10px] text-muted">No API keys created.</span>
+                    <EmptyState
+                      title="No API keys created"
+                      description="Create API keys to pull project feeds into PowerBI or Tableau."
+                    />
                   ) : (
                     <div className="space-y-1.5">
                       {biKeys.map((k) => (

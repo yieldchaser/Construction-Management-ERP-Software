@@ -1444,11 +1444,10 @@ export default function HRPayrollPage() {
               )}
 
               {!payrollRun && (
-                <div className="bg-card border border-border-custom rounded-md p-16 text-center">
-                  <Icon name="money_bag" className="w-10 h-10 mx-auto mb-3 text-muted" />
-                  <p className="text-sm text-muted font-semibold">No payroll run yet</p>
-                  <p className="text-xs text-muted mt-1">Select a month and click "Compute Payroll" to generate payslips</p>
-                </div>
+                <EmptyState
+                  title="No payroll run yet"
+                  description="Select a payroll month and click 'Compute Payroll' to calculate employee wages, deductions, and net disbursements."
+                />
               )}
             </div>
           )}
@@ -1608,7 +1607,12 @@ export default function HRPayrollPage() {
                     <tbody className="divide-y divide-border-custom">
                       {holidays.length === 0 ? (
                         <tr>
-                          <td colSpan={4} className="py-8 text-center text-muted">No holidays added yet.</td>
+                          <td colSpan={4} className="p-8">
+                            <EmptyState
+                              title="No holidays added yet"
+                              description="Configure company statutory holidays and paid festival leaves."
+                            />
+                          </td>
                         </tr>
                       ) : (
                         holidays.map((h) => (

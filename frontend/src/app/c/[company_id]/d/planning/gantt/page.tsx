@@ -10,6 +10,7 @@ import Icon, { type IconName } from "@/components/marketing/Icon";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import SegmentedTabs from "@/components/ui/Tabs";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 interface Task {
   id: string;
@@ -145,8 +146,29 @@ export default function GanttSchedulerPage() {
   const [msName, setMsName] = useState("");
   const [msDate, setMsDate] = useState("");
   const [msType, setMsType] = useState<Milestone["type"]>("start");
-  const [msStatus, setMsStatus] = useState<"upcoming" | "achieved">("upcoming");
+  const [msStatus, setMsStatus] = useState<Milestone["status"]>("upcoming");
   const [msDesc, setMsDesc] = useState("");
+  const [baselineSaving, setBaselineSaving] = useState(false);
+
+  const handleSetBaseline = async () => {
+    if (!projectId) return;
+    setBaselineSaving(true);
+    try {
+      const apiHost = getApiHost();
+      const res = await fetch(`${apiHost}/apis/v3/planning/projects/${projectId}/baseline`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+      });
+      if (res.ok) {
+        setSuccess("Baseline saved successfully");
+        fetchTasks();
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setBaselineSaving(false);
+    }
+  };
 
   // Form states for creating task
   const [taskName, setTaskName] = useState("");
@@ -546,7 +568,10 @@ export default function GanttSchedulerPage() {
               })}
 
               {!listLoading && milestones.length === 0 && (
-                <div className="text-center text-[11px] text-muted italic py-6">No milestones logged for this project yet. Add one below.</div>
+                <EmptyState
+                  title="No milestones logged for this project yet"
+                  description="Add key stage gates and contractual completion milestones below."
+                />
               )}
 
               {/* Create Milestone */}
@@ -590,27 +615,27 @@ export default function GanttSchedulerPage() {
                     <label className="text-muted font-semibold">Status</label>
                     <select
                       value={msStatus}
-                      onChange={(e) => setMsStatus(e.target.value as "upcoming" | "achieved")}
+                      onChange={(e) => setMsStatus(e.target.value as Milestone["status"])}
                       className="w-full bg-elevated border border-border-custom rounded-lg p-2 text-foreground"
                     >
-                      <option value="upcoming">Upcoming</option>
+                      <option value="pending">Pending</option>
                       <option value="achieved">Achieved</option>
+                      <option value="delayed">Delayed</option>
                     </select>
                   </div>
                   <div className="col-span-2 space-y-1">
-                    <label className="text-muted font-semibold">Description</label>
-                    <textarea
+                    <label className="text-muted font-semibold">Scope & Description</label>
+                    <input
+                      type="text"
                       value={msDesc}
                       onChange={(e) => setMsDesc(e.target.value)}
-                      rows={2}
-                      placeholder="Inspection scope, payment stage, remarks..."
-                      className="w-full bg-elevated border border-border-custom rounded-lg p-2 text-foreground focus:outline-none focus:border-primary/50"
+                      placeholder="Optional details, sign-off criteria..."
+                      className="w-full bg-input border border-border-custom rounded px-3 py-1.5 text-foreground"
                     />
                   </div>
-                  <button
-                    type="submit"
-                    className="col-span-2 mt-1 bg-primary rounded-md py-2 font-bold text-white hover:opacity-90 transition-all text-xs"
-                  >
+                </div>
+                <div className="flex justify-end">
+                  <button type="submit" className="px-4 py-2 bg-primary text-white font-bold rounded-lg text-xs hover:opacity-90">
                     Save Milestone
                   </button>
                 </div>
@@ -620,49 +645,64 @@ export default function GanttSchedulerPage() {
 
           {/* ── BASELINE TAB ── */}
           {mainTab === "baseline" && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-4 text-[10px]">
-                <div className="flex items-center gap-1.5"><div className="w-10 h-2 rounded bg-info/10" /> Baseline (Planned)</div>
-                <div className="flex items-center gap-1.5"><div className="w-10 h-2 rounded bg-success" /> Actual Progress</div>
-                <div className="flex items-center gap-1.5"><div className="w-10 h-2 rounded bg-danger" /> Critical Path</div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xs font-bold text-foreground">Active Schedule vs. Approved Baseline</h3>
+                  <p className="text-[10px] text-muted mt-0.5">Tracking schedule variance (SV) and critical path slippage against target dates</p>
+                </div>
+                <button
+                  onClick={handleSetBaseline}
+                  disabled={baselineSaving}
+                  className="px-3.5 py-1.5 bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary rounded-lg text-xs font-bold transition-all disabled:opacity-50"
+                >
+                  {baselineSaving ? "Freezing..." : "📸 Freeze New Baseline"}
+                </button>
               </div>
+
               {tasks.map(t => {
-                const hasBaseline = !!t.baseline_start && !!t.baseline_end;
-                const pct = t.progress ?? 0;
-                const delay = hasBaseline && t.end_date
-                  ? Math.max(0, (new Date(t.end_date).getTime() - new Date(t.baseline_end!).getTime()) / 86400000)
-                  : 0;
+                const bStart = t.baseline_start ? new Date(t.baseline_start).getTime() : null;
+                const pStart = new Date(t.start_date).getTime();
+                const diffDays = bStart ? Math.round((pStart - bStart) / (1000 * 60 * 60 * 24)) : 0;
                 return (
-                  <div key={t.id} className="bg-input border border-border-custom rounded-md p-4 space-y-2">
-                    <div className="flex items-center justify-between">
+                  <div key={t.id} className="bg-input border border-border-custom rounded-md p-4 flex items-center justify-between">
+                    <div>
                       <div className="flex items-center gap-2">
-                        {t.is_critical && <span className="text-[8px] bg-danger/10 border border-danger/20 text-danger px-1.5 py-0.5 rounded font-bold">CRITICAL</span>}
                         <span className="text-xs font-semibold text-foreground">{t.name}</span>
+                        {t.is_critical && <span className="text-[8px] bg-danger/10 border border-danger/20 text-danger px-1.5 py-0.5 rounded font-bold">CRITICAL</span>}
                       </div>
-                      <div className="text-right text-[10px]">
-                        {hasBaseline && delay > 0 && <span className="text-danger font-bold">+{delay.toFixed(0)}d delay</span>}
-                        {hasBaseline && delay === 0 && pct === 100 && <span className="text-success font-bold">✓ On Time</span>}
-                        {pct < 100 && pct > 0 && <span className="text-warning font-bold">{pct}% done</span>}
-                        {!hasBaseline && <span className="text-muted">No baseline</span>}
+                      <div className="text-[10px] text-muted mt-1 space-x-3 font-sans">
+                        <span>Planned: {fmtDate(t.start_date)} → {fmtDate(t.end_date)}</span>
+                        {t.baseline_start && (
+                          <span className="text-muted">Baseline: {fmtDate(t.baseline_start)} → {fmtDate(t.baseline_end)}</span>
+                        )}
                       </div>
                     </div>
-                    {/* Baseline bar */}
-                    <div className="text-[9px] text-muted">
-                      Baseline: {hasBaseline ? `${fmtDate(t.baseline_start)} → ${fmtDate(t.baseline_end)}` : "not captured"}
-                    </div>
-                    <div className="h-2 bg-info/10 rounded-full relative overflow-hidden">
-                      <div className={`h-full rounded-full ${t.is_critical ? "bg-danger/10" : "bg-info/10"}`} style={{ width: hasBaseline ? "100%" : "0%" }} />
-                    </div>
-                    {/* Actual bar */}
-                    <div className="text-[9px] text-muted">Actual: {fmtDate(t.start_date)} → {t.end_date ? fmtDate(t.end_date) : "Ongoing"}</div>
-                    <div className="h-2 bg-elevated rounded-full overflow-hidden">
-                      <div className="h-full rounded-full bg-success" style={{ width: `${pct}%` }} />
+                    <div>
+                      {bStart ? (
+                        diffDays === 0 ? (
+                          <span className="text-[10px] text-success font-bold font-sans">ON TARGET</span>
+                        ) : diffDays > 0 ? (
+                          <span className="text-[10px] text-danger font-bold font-sans">+{diffDays}d DELAY</span>
+                        ) : (
+                          <span className="text-[10px] text-info font-bold font-sans">{diffDays}d AHEAD</span>
+                        )
+                      ) : (
+                        <span className="text-[9px] text-muted italic">No baseline set</span>
+                      )}
                     </div>
                   </div>
                 );
               })}
               {tasks.length === 0 && (
-                <div className="text-center text-[11px] text-muted italic py-6">No WBS tasks yet. Create tasks in the WBS tab to see planned vs actual.</div>
+                <EmptyState
+                  title="No WBS tasks yet"
+                  description="Create tasks in the WBS tab to see planned vs actual and freeze schedule baselines."
+                  action={{
+                    label: "Go to WBS Tasks",
+                    onClick: () => setMainTab("wbs"),
+                  }}
+                />
               )}
             </div>
           )}
@@ -696,7 +736,10 @@ export default function GanttSchedulerPage() {
                 );
               })}
               {!listLoading && lookahead.length === 0 && (
-                <div className="text-center text-[11px] text-muted italic py-6">No tasks scheduled in the next 14 days.</div>
+                <EmptyState
+                  title="No tasks scheduled in next 14 days"
+                  description="No project tasks have planned execution dates within the upcoming 14-day rolling window."
+                />
               )}
             </div>
           )}
@@ -925,7 +968,10 @@ export default function GanttSchedulerPage() {
                     </div>
                   ))}
                   {todos.length === 0 && (
-                    <p className="text-[10px] text-muted italic">No sub-task todos added yet.</p>
+                    <EmptyState
+                      title="No sub-task checklist items"
+                      description="Break down this activity into actionable field checklist items."
+                    />
                   )}
                 </div>
               </div>
@@ -1048,7 +1094,10 @@ export default function GanttSchedulerPage() {
                     </div>
                   ))}
                   {comments.length === 0 && (
-                    <p className="text-[10px] text-muted italic">No feed updates posted yet. Write a message or record a memo.</p>
+                    <EmptyState
+                      title="No activity updates posted yet"
+                      description="Post progress notes, site observations, or record voice memos for this task."
+                    />
                   )}
                 </div>
 

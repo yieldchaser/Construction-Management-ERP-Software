@@ -9,6 +9,7 @@ import Icon from "@/components/marketing/Icon";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import { TableSkeleton } from "@/components/ui/Skeleton";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { isMissingOrDemoTenant, redirectToLogin } from "@/lib/company-guard";
 // R2-755: shared CSV guard, so this export cannot drift from the other four.
 import { csvSafeCell, csvQuote } from "@/lib/csv";
@@ -1112,7 +1113,10 @@ export default function DynamicReportViewPage() {
                   {/* Legend list */}
                   <div className="space-y-4">
                     {entries.length === 0 ? (
-                      <div className="text-xs text-muted py-6 text-center">No expense transactions recorded yet for this company.</div>
+                      <EmptyState
+                        title="No expense transactions recorded yet"
+                        description="Cost code expenses will populate here as material receipts and contractor payments are recorded."
+                      />
                     ) : (
                       entries.map(([ccName, ccAmt], idx) => {
                         const pct = totalSpent > 0 ? ((ccAmt / totalSpent) * 100).toFixed(1) : "0.0";
@@ -1187,7 +1191,12 @@ export default function DynamicReportViewPage() {
                     <tbody>
                       {rows.length === 0 ? (
                         <tr>
-                          <td colSpan={5} className="py-8 text-center text-muted">No monthly transactions recorded yet.</td>
+                          <td colSpan={5} className="p-8">
+                            <EmptyState
+                              title="No monthly transactions recorded yet"
+                              description="Monthly revenue and expense summaries will appear as bills and invoices are processed."
+                            />
+                          </td>
                         </tr>
                       ) : (
                         rows.map((r, i) => (
@@ -1227,29 +1236,11 @@ export default function DynamicReportViewPage() {
                 <tbody>
                   {processedData.length === 0 ? (
                     <tr>
-                      <td colSpan={meta.columns.length + 1} className="py-16 text-center">
-                        <div className="sticky left-0 w-full flex flex-col items-center justify-center gap-3">
-                          <svg className="w-12 h-12 text-muted/30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 012.008 1.24l.885 1.77a2.25 2.25 0 002.007 1.24h1.98a2.25 2.25 0 002.007-1.24l.885-1.77a2.25 2.25 0 012.007-1.24h3.86m-18 0h18m-18 0v-7.5A2.25 2.25 0 015.25 3h13.5A2.25 2.25 0 0121 5.25v7.5m-18 0v6a2.25 2.25 0 002.25 2.25h13.5A2.25 2.25 0 0021 18.75v-6" />
-                          </svg>
-                          <div className="flex flex-col gap-1">
-                            <span className="text-sm font-bold text-white tracking-wide">No data available for this report yet</span>
-                            <span className="text-[10px] text-muted max-w-[320px] mx-auto leading-relaxed">
-                              Try clearing active filters or check database records to populate this spreadsheet.
-                            </span>
-                          </div>
-                          {(Object.entries(filterValues).some(([label, val]) => {
-                            const def = meta.filters.find(f => f.label === label)?.type === "select" ? "All" : "";
-                            return val !== def;
-                          }) || searchQuery !== "") && (
-                            <button
-                              onClick={handleResetFilters}
-                              className="mt-2 px-3.5 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-lg text-[10px] font-bold transition-all"
-                            >
-                              Reset Active Filters
-                            </button>
-                          )}
-                        </div>
+                      <td colSpan={meta.columns.length + 1} className="p-8">
+                        <EmptyState
+                          title="No data available for this report yet"
+                          description="Try clearing active filters or verify that underlying project transactions exist."
+                        />
                       </td>
                     </tr>
                   ) : (

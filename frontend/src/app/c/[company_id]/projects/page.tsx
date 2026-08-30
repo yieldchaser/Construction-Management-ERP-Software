@@ -1110,7 +1110,14 @@ function ProjectSettingsModal({
                     <button onClick={() => deleteLocation(l.id)} className="text-xs text-muted hover:text-danger">Delete</button>
                   </div>
                 ))}
-                {locations.length === 0 && <div className="px-3 py-4 text-sm text-muted">No locations yet.</div>}
+                {locations.length === 0 && (
+                  <div className="p-4">
+                    <EmptyState
+                      title="No locations yet"
+                      description="Add project site locations, zones, or tower areas."
+                    />
+                  </div>
+                )}
               </div>
             </div>
           )}

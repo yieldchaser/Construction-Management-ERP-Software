@@ -115,7 +115,6 @@ def parse_help_content(help_file_path):
         if src_start != -1:
             open_sq = block.find("[", src_start)
             if open_sq != -1:
-                # Find matching closing bracket
                 depth = 0
                 close_sq = -1
                 for ci in range(open_sq, len(block)):
@@ -135,11 +134,21 @@ def parse_help_content(help_file_path):
         for c_match in re.finditer(r'<code>\s*(GET|POST|PUT|DELETE|PATCH)\s+([^\s<]+)\s*</code>', block, re.IGNORECASE):
             code_endpoints.append((c_match.group(1).upper(), c_match.group(2).strip()))
             
+        a_match = re.search(r'a:\s*\((.*?)\),\s*text:', block, re.DOTALL)
+        a_body = a_match.group(1) if a_match else ""
+        
+        # Extract quoted UI labels from JSX text
+        a_clean = re.sub(r'<code[^>]*>.*?</code>', '', a_body, flags=re.DOTALL)
+        a_clean = re.sub(r'<[^>]+>', '', a_clean)
+        raw_quoted = re.findall(r'"([^"\n]+)"', a_clean)
+        quoted_labels = [q_str.strip() for q_str in raw_quoted if q_str.strip() and len(q_str.strip()) > 1]
+            
         entries.append({
             "q": q,
             "block": block,
             "sources": sources,
-            "code_endpoints": code_endpoints
+            "code_endpoints": code_endpoints,
+            "labels": quoted_labels
         })
         
     return entries
@@ -150,12 +159,14 @@ def validate_entries(entries, real_routes):
     for i, entry in enumerate(entries, 1):
         q = entry["q"]
         sources = entry["sources"]
+        labels = entry.get("labels", [])
         
         # 1. Assert sources is non-empty
         if not sources:
             violations.append(f"Entry {i} ('{q}'): 'sources' field is missing or empty.")
             continue
             
+        file_sources = []
         # 2. Validate all sources
         for s in sources:
             # Endpoint citation: "METHOD /apis/v3/..."
@@ -174,6 +185,7 @@ def validate_entries(entries, real_routes):
                     if not os.path.exists(fpath_abs):
                         violations.append(f"Entry {i} ('{q}'): cited file '{fpath_rel}' does not exist.")
                     else:
+                        file_sources.append(fpath_abs)
                         with open(fpath_abs, "r", encoding="utf-8") as f:
                             lines = f.readlines()
                         if line_num < 1 or line_num > len(lines):
@@ -195,6 +207,20 @@ def validate_entries(entries, real_routes):
                 if not has_citation:
                     violations.append(f"Entry {i} ('{q}'): endpoint '{claim_str}' mentioned in answer body but missing from sources array.")
                     
+        # 4. Check all quoted UI labels appear in at least one of the entry's cited files
+        if labels and file_sources:
+            file_contents = {}
+            for fpath_abs in file_sources:
+                if os.path.exists(fpath_abs):
+                    with open(fpath_abs, "r", encoding="utf-8") as f:
+                        file_contents[fpath_abs] = f.read()
+                        
+            for lbl in labels:
+                found_in_any = any(txt and lbl in txt for txt in file_contents.values())
+                if not found_in_any:
+                    cited_rel = [os.path.relpath(p, REPO_ROOT).replace("\\", "/") for p in file_sources]
+                    violations.append(f"Entry {i} ('{q}'): quoted UI label \"{lbl}\" was not found in any cited file: {cited_rel}")
+                    
     return violations
 
 def self_test():
@@ -206,7 +232,8 @@ def self_test():
         "q": "Test Bad Endpoint",
         "block": "<code>POST /apis/v3/fabricated/fake_route</code>",
         "sources": ["POST /apis/v3/fabricated/fake_route", "frontend/src/components/Sidebar.tsx:10"],
-        "code_endpoints": [("POST", "/apis/v3/fabricated/fake_route")]
+        "code_endpoints": [("POST", "/apis/v3/fabricated/fake_route")],
+        "labels": []
     }]
     v_ep = validate_entries(bad_ep_entry, real_routes)
     assert any("cited endpoint 'POST /apis/v3/fabricated/fake_route' does not exist" in v for v in v_ep), f"Self-test failed to catch bad endpoint: {v_ep}"
@@ -216,7 +243,8 @@ def self_test():
         "q": "Test Bad File",
         "block": "<p>Hello</p>",
         "sources": ["frontend/src/non_existent_file_12345.tsx:100"],
-        "code_endpoints": []
+        "code_endpoints": [],
+        "labels": []
     }]
     v_file = validate_entries(bad_file_entry, real_routes)
     assert any("cited file 'frontend/src/non_existent_file_12345.tsx' does not exist" in v for v in v_file), f"Self-test failed to catch bad file: {v_file}"
@@ -226,22 +254,35 @@ def self_test():
         "q": "Test Bad Line",
         "block": "<p>Hello</p>",
         "sources": ["frontend/src/components/Sidebar.tsx:9999999"],
-        "code_endpoints": []
+        "code_endpoints": [],
+        "labels": []
     }]
     v_line = validate_entries(bad_line_entry, real_routes)
     assert any("line 9999999 out of range" in v for v in v_line), f"Self-test failed to catch out of range line: {v_line}"
     
-    # Test case 4: valid mock entry
+    # Test case 4: deliberately wrong UI label
+    bad_label_entry = [{
+        "q": "Test Bad UI Label",
+        "block": '<p>Click the "+ NonExistent Fake Button 12345" button</p>',
+        "sources": ["frontend/src/components/Sidebar.tsx:10"],
+        "code_endpoints": [],
+        "labels": ["+ NonExistent Fake Button 12345"]
+    }]
+    v_label = validate_entries(bad_label_entry, real_routes)
+    assert any('quoted UI label "+ NonExistent Fake Button 12345" was not found in any cited file' in v for v in v_label), f"Self-test failed to catch bad UI label: {v_label}"
+    
+    # Test case 5: valid mock entry
     valid_entry = [{
         "q": "Test Valid Entry",
-        "block": "<p>Valid</p><code>POST /apis/v3/projects/</code>",
+        "block": '<p>Select "Projects"</p><code>POST /apis/v3/projects/</code>',
         "sources": ["POST /apis/v3/projects/", "frontend/src/components/Sidebar.tsx:10"],
-        "code_endpoints": [("POST", "/apis/v3/projects/")]
+        "code_endpoints": [("POST", "/apis/v3/projects/")],
+        "labels": ["Projects"]
     }]
     v_valid = validate_entries(valid_entry, real_routes)
     assert len(v_valid) == 0, f"Self-test falsely failed valid entry: {v_valid}"
     
-    print("[self-test] All 4 self-test cases PASSED (bad endpoint caught, bad file caught, bad line caught, valid entry passed).")
+    print("[self-test] All 5 self-test cases PASSED (bad endpoint, bad file, bad line, bad UI label caught, valid entry passed).")
 
 def verify():
     self_test()

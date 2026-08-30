@@ -943,21 +943,18 @@ ${tasksXml}
             {loadingTS ? (
               <div className="p-10 text-center text-sm text-muted">Loading timesheets…</div>
             ) : timesheets.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-center">
-                <svg width="96" height="96" viewBox="0 0 24 24" fill="none" className="text-muted/40 mb-4">
-                  <path d="M12 8v4l3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" />
-                </svg>
-                <p className="text-sm font-semibold text-muted">No Timesheet Available.</p>
-                <button
-                  onClick={() => {
-                    setTsFormError(null);
-                    setTsDrawerOpen(true);
+              <div className="py-12">
+                <EmptyState
+                  title="No timesheets available"
+                  description="Log employee work hours, daily activities, and task allocations."
+                  action={{
+                    label: "+ Add Timesheet",
+                    onClick: () => {
+                      setTsFormError(null);
+                      setTsDrawerOpen(true);
+                    },
                   }}
-                  className="mt-2 text-xs text-primary hover:underline cursor-pointer"
-                >
-                  Add New Timesheet.
-                </button>
+                />
               </div>
             ) : (
               <table className="w-full text-left text-xs border-collapse">

@@ -138,7 +138,14 @@ export default function SubconScorecardsPage() {
                     </tr>
                   ))}
                   {comparative.length === 0 && (
-                    <tr><td colSpan={9} className="px-5 py-8 text-center text-muted">No performance data yet. Data will be auto-calculated from billing and task completion.</td></tr>
+                    <tr>
+                      <td colSpan={9} className="p-8">
+                        <EmptyState
+                          title="No comparative performance data yet"
+                          description="Subcontractor performance metrics will calculate automatically from work orders, RA billing, and task milestones."
+                        />
+                      </td>
+                    </tr>
                   )}
                 </tbody>
               </table>
@@ -178,7 +185,14 @@ export default function SubconScorecardsPage() {
                     );
                   })}
                   {scorecards.length === 0 && (
-                    <tr><td colSpan={7} className="px-5 py-8 text-center text-muted">No scorecards recorded yet.</td></tr>
+                    <tr>
+                      <td colSpan={7} className="p-8">
+                        <EmptyState
+                          title="No scorecards recorded yet"
+                          description="Scorecards evaluate subcontractor performance across quality, schedule adherence, and billing compliance."
+                        />
+                      </td>
+                    </tr>
                   )}
                 </tbody>
               </table>

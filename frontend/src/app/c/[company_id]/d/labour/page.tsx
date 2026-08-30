@@ -8,6 +8,7 @@ import { authHeaders } from "@/lib/siteflow";
 import SegmentedTabs from "@/components/ui/Tabs";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { TableSkeleton } from "@/components/ui/Skeleton";
 
 interface ReliabilityScore {
@@ -208,7 +209,12 @@ export default function LabourPage() {
                   </div>
                 );
               })}
-              {reliability.length === 0 && <div className="bg-card border border-border-custom rounded-lg p-8 rounded-lg border border-border-custom text-center text-muted text-xs">No reliability data yet.</div>}
+              {reliability.length === 0 && (
+                <EmptyState
+                  title="No reliability data yet"
+                  description="Contractor reliability scores will calculate automatically based on on-time delivery, billing accuracy, and quality."
+                />
+              )}
             </div>
           )}
 
@@ -231,7 +237,20 @@ export default function LabourPage() {
                         <td className="px-5 py-3.5 text-muted">{r.acknowledgement_number || "—"}</td>
                       </tr>
                     ))}
-                    {bocw.length === 0 && <tr><td colSpan={6} className="px-5 py-8 text-center text-muted">No BOCW records yet.</td></tr>}
+                    {bocw.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="p-8">
+                          <EmptyState
+                            title="No BOCW records yet"
+                            description="Track Building and Other Construction Workers compliance by adding monthly contractor contribution records."
+                            action={{
+                              label: "+ Add BOCW",
+                              onClick: () => setShowBocwModal(true),
+                            }}
+                          />
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -258,7 +277,20 @@ export default function LabourPage() {
                         <td className="px-5 py-3.5 text-muted">{m.notes || "—"}</td>
                       </tr>
                     ))}
-                    {muster.length === 0 && <tr><td colSpan={7} className="px-5 py-8 text-center text-muted">No muster roll entries yet.</td></tr>}
+                    {muster.length === 0 && (
+                      <tr>
+                        <td colSpan={7} className="p-8">
+                          <EmptyState
+                            title="No muster roll entries yet"
+                            description="Log daily labour muster rolls to record shifts, present headcounts, and overtime."
+                            action={{
+                              label: "+ Add Muster",
+                              onClick: () => setShowMusterModal(true),
+                            }}
+                          />
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>

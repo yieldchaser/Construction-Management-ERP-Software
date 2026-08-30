@@ -296,7 +296,16 @@ export default function SubconPage() {
             {loading ? (
               <div className="px-4 py-8 text-center text-muted text-xs">Loading subcontractors...</div>
             ) : subcontractors.length === 0 ? (
-              <div className="px-4 py-8 text-center text-muted text-xs">No subcontractors yet. Create one from the Work Order form.</div>
+              <div className="p-6">
+                <EmptyState
+                  title="No subcontractors yet"
+                  description="Subcontractors added during work order creation will appear in this company directory."
+                  action={{
+                    label: "+ New Work Order",
+                    onClick: () => setShowWOModal(true),
+                  }}
+                />
+              </div>
             ) : (
               <ul className="divide-y divide-border-custom/40">
                 {subcontractors.map(p => (

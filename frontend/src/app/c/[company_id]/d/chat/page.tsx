@@ -522,12 +522,11 @@ export default function ChatPage() {
               {/* Chat Message list panel */}
               <div className="flex-1 overflow-y-auto p-6 space-y-4">
                 {messages.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center text-center space-y-3">
-                    <Icon name="chat_bubble" className="w-10 h-10 text-muted/30" />
-                    <h3 className="text-xs font-bold text-muted">No messages yet</h3>
-                    <p className="text-[10px] text-muted max-w-xs leading-relaxed">
-                      This is the beginning of the chat group. Send a text, an attachment, or log a Minutes of Meeting (MOM).
-                    </p>
+                  <div className="h-full flex items-center justify-center">
+                    <EmptyState
+                      title="No messages yet"
+                      description="This is the beginning of the chat group. Send a text, upload a drawing, or record a Minutes of Meeting."
+                    />
                   </div>
                 ) : (
                   messages.map((msg) => {

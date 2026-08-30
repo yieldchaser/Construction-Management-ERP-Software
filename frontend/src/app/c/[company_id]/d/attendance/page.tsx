@@ -772,7 +772,12 @@ export default function AttendancePage() {
                         <tbody>
                           {dbLogs.length === 0 ? (
                             <tr>
-                              <td colSpan={7} className="px-5 py-6 text-center text-muted">No attendance logs logged yet for today. Use the form above to record punches!</td>
+                              <td colSpan={7} className="p-8">
+                                <EmptyState
+                                  title="No attendance logs found for today"
+                                  description="Punches recorded via mobile face recognition or the form above will appear here."
+                                />
+                              </td>
                             </tr>
                           ) : (
                             dbLogs.map((log) => {
@@ -811,8 +816,15 @@ export default function AttendancePage() {
                 <div className="space-y-5">
                   <div className="grid gap-4 md:grid-cols-3">
                     {subcontractors.length === 0 ? (
-                      <div className="md:col-span-3 bg-card border border-border-custom rounded-lg p-6 text-center text-muted text-xs">
-                        No subcontractors registered for this company yet.
+                      <div className="md:col-span-3">
+                        <EmptyState
+                          title="No subcontractors found"
+                          description="Register subcontractors to log daily labour crew attendance and track worker headcounts."
+                          action={{
+                            label: "Manage Subcontractors",
+                            href: `/c/${companyId}/d/subcon`,
+                          }}
+                        />
                       </div>
                     ) : (
                       subcontractors.map((sc) => (
@@ -1086,7 +1098,16 @@ export default function AttendancePage() {
                          </tr>
                        ) : payslips.length === 0 ? (
                          <tr>
-                           <td colSpan={8} className="py-6 text-center text-muted">No payroll run yet for this company.</td>
+                           <td colSpan={8} className="p-8">
+                             <EmptyState
+                               title="No payroll run yet for this company"
+                               description="Run payroll from the HR module to generate monthly employee payslips."
+                               action={{
+                                 label: "Go to HR Payroll",
+                                 href: `/c/${companyId}/d/hr`,
+                               }}
+                             />
+                           </td>
                          </tr>
                        ) : (
                          payslips.map((emp) => (

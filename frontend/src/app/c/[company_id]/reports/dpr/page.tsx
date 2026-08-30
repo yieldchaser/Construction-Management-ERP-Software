@@ -10,6 +10,7 @@ import { isMissingOrDemoTenant, redirectToLogin } from "@/lib/company-guard";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import { CardSkeleton } from "@/components/ui/Skeleton";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 export default function DPRReportPage() {
   const params = useParams();
@@ -130,7 +131,12 @@ export default function DPRReportPage() {
 
   const emptyRow = (colSpan: number) => (
     <tr>
-      <td colSpan={colSpan} className="py-8 text-center text-muted">No data available for this report yet.</td>
+      <td colSpan={colSpan} className="p-8">
+        <EmptyState
+          title="No DPR data available yet"
+          description="Daily progress reports, site activities, labour headcounts, and material usage logs will appear here."
+        />
+      </td>
     </tr>
   );
 

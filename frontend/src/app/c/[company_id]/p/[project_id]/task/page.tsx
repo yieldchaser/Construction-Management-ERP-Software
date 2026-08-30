@@ -143,8 +143,16 @@ export default function TaskPage() {
 
       {/* Gantt timeline */}
       <div className="rounded-lg border border-border-custom bg-card p-4">
-        <div className="text-xs uppercase tracking-wider text-muted mb-3">Gantt</div>
-        {rows.length === 0 && <div className="text-sm text-muted py-4">No tasks scheduled yet.</div>}
+        {rows.length === 0 && (
+          <EmptyState
+            title="No tasks scheduled yet"
+            description="Create project activities, assign responsible engineers, and set planned start and end dates."
+            action={{
+              label: "Go to Gantt & WBS",
+              href: `/c/${companyId}/d/planning/gantt`,
+            }}
+          />
+        )}
         {rows.map((r) => {
           const left = clamp(((span.max.getTime() - r.start.getTime()) / (span.max.getTime() - span.min.getTime())) * 100, 0, 100);
           const width = clamp((r.totalDays / span.days) * 100, 1, 100);

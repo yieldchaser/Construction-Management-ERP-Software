@@ -10,6 +10,7 @@ import Icon, { type IconName } from "@/components/marketing/Icon";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import SegmentedTabs from "@/components/ui/Tabs";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 // Types
 interface IndentItem {
@@ -331,6 +332,26 @@ export default function ProcurementPage() {
     }
   };
 
+  // Reject Indent
+  const handleRejectIndent = async (id: string) => {
+    try {
+      const apiHost = getApiHost();
+      const res = await fetch(`${apiHost}/apis/v3/procurement/indents/${id}/reject`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(`Rejection failed: ${typeof err.detail === "string" ? err.detail : `HTTP ${res.status}`}`);
+        return;
+      }
+      fetchProcurementData();
+    } catch (err) {
+      console.error("Indent reject error:", err);
+      alert("Rejection failed. Check your connection.");
+    }
+  };
+
   // Add Purchase Order Submission (Multi-item support)
   const handleCreatePO = async () => {
     let gross = 0;
@@ -606,7 +627,14 @@ export default function ProcurementPage() {
             <div className="space-y-4">
               <h2 className="text-xs font-bold text-muted uppercase tracking-wider">Indent & Requisitions</h2>
               {indents.length === 0 ? (
-                <div className="text-center py-14 text-muted text-xs">No indents yet. Create one with "+ Material Indent".</div>
+                <EmptyState
+                  title="No indents found"
+                  description="Create your first material requisition to request site materials from procurement."
+                  action={{
+                    label: "+ Material Indent",
+                    onClick: () => setShowIndentModal(true),
+                  }}
+                />
               ) : (
               <div className="grid gap-4 md:grid-cols-2">
                 {indents.map((ind) => (
@@ -623,39 +651,30 @@ export default function ProcurementPage() {
                         // Find current warehouse stock context directly on indent card (Screen 5720)
                         const stock = inventory.find(inv => inv.name === item.name);
                         return (
-                          <div key={i} className="text-xs flex justify-between items-center">
-                            <div>
-                              <span className="text-muted block font-bold">{item.name} (Req Qty: {item.qty} {item.unit})</span>
-                              {item.specOverride && <span className="text-[10px] text-muted block">Spec: {item.specOverride}</span>}
-                              {item.photoUrl && (
-                                <div className="flex items-center gap-2">
-                                  <button
-                                    onClick={() => setPreviewUrl(item.photoUrl!)}
-                                    className="text-[9px] text-primary underline mt-1 inline-flex items-center gap-1"
-                                  >
-                                    <Icon name="image" className="w-3 h-3" />View item photo proof
-                                  </button>
-                                </div>
+                          <div key={i} className="flex justify-between items-center text-xs">
+                            <span className="font-semibold text-foreground">{item.name}</span>
+                            <div className="flex items-center gap-3">
+                              <span className="text-muted font-sans font-bold">{item.qty} {item.unit}</span>
+                              {stock && (
+                                <span className="text-[10px] bg-elevated px-2 py-0.5 rounded text-muted font-sans">
+                                  avail: <span className="font-bold text-foreground">{stock.onHand}</span>
+                                </span>
                               )}
-                            </div>
-                            <div className="text-right">
-                              <span className="text-[9px] uppercase text-muted block">Warehouse Stock</span>
-                              <strong className={`font-sans font-bold ${stock && stock.onHand < stock.minAlertThreshold ? "text-danger" : "text-success"}`}>
-                                {stock ? `${stock.onHand} ${stock.unit}` : "No stock logs"}
-                              </strong>
                             </div>
                           </div>
                         );
                       })}
                     </div>
 
-                    {ind.status === "pending" && (
-                      <div className="flex gap-2 justify-end border-t border-border-custom pt-3">
-                        <button onClick={() => handleApproveIndent(ind.id)} className="px-3 py-1.5 bg-success/10 hover:bg-success/10 border border-success/20 text-success rounded-lg text-[10px] font-bold inline-flex items-center gap-1.5">
-                          <Icon name="thumbs_up" className="w-3 h-3" />Approve Indent
-                        </button>
-                      </div>
-                    )}
+                    <div className="flex justify-between items-center pt-2 border-t border-border-custom text-[11px] text-muted">
+                      <span>By {ind.requestedBy} on {ind.date}</span>
+                      {ind.status === "pending" && (
+                        <div className="flex gap-2">
+                          <button onClick={() => handleApproveIndent(ind.id)} className="px-3 py-1 bg-success/10 text-success border border-success/20 rounded font-bold hover:bg-success/20">Approve</button>
+                          <button onClick={() => handleRejectIndent(ind.id)} className="px-3 py-1 bg-danger/10 text-danger border border-danger/20 rounded font-bold hover:bg-danger/20">Reject</button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -684,7 +703,16 @@ export default function ProcurementPage() {
                     <tbody>
                       {pos.length === 0 ? (
                         <tr>
-                          <td colSpan={7} className="px-5 py-10 text-center text-muted">No purchase orders available.</td>
+                          <td colSpan={7} className="p-8">
+                            <EmptyState
+                              title="No purchase orders found"
+                              description="Create purchase orders to procure materials and equipment from suppliers."
+                              action={{
+                                label: "+ Purchase Order",
+                                onClick: () => setShowPOModal(true),
+                              }}
+                            />
+                          </td>
                         </tr>
                       ) : (
                         pos.map((po) => (
@@ -761,6 +789,7 @@ export default function ProcurementPage() {
                       <th className="px-5 py-3 font-semibold">Unit</th>
                       <th className="px-5 py-3 font-semibold">Current Stock</th>
                       <th className="px-5 py-3 font-semibold">Reserved Stock</th>
+                      <th className="px-5 py-3 font-semibold">Available Stock</th>
                       <th className="px-5 py-3 font-semibold">Reorder Level</th>
                       <th className="px-5 py-3 font-semibold">Status</th>
                     </tr>
@@ -768,7 +797,12 @@ export default function ProcurementPage() {
                   <tbody>
                     {inventory.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="px-5 py-10 text-center text-muted">No inventory yet. Receive material via a GRN.</td>
+                        <td colSpan={7} className="p-8">
+                          <EmptyState
+                            title="No warehouse inventory yet"
+                            description="Receive materials against approved purchase orders via GRN to build inventory stock."
+                          />
+                        </td>
                       </tr>
                     ) : (
                     inventory.map((inv, idx) => (
@@ -779,6 +813,9 @@ export default function ProcurementPage() {
                           {inv.onHand} {inv.unit}
                         </td>
                         <td className="px-5 py-3 text-muted font-sans">{inv.reserved} {inv.unit}</td>
+                        <td className="px-5 py-3 text-foreground font-sans font-semibold">
+                          {(inv.onHand - inv.reserved).toFixed(2)} {inv.unit}
+                        </td>
                         <td className="px-5 py-3 text-muted font-sans">{inv.minAlertThreshold} {inv.unit}</td>
                         <td className="px-5 py-3">
                           {inv.onHand < 0 ? (
@@ -816,7 +853,12 @@ export default function ProcurementPage() {
                   <tbody>
                     {transactions.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="px-5 py-10 text-center text-muted">No material transactions yet.</td>
+                        <td colSpan={5} className="p-8">
+                          <EmptyState
+                            title="No material transactions yet"
+                            description="All material receipts, issues to site, and warehouse transfers will be recorded here."
+                          />
+                        </td>
                       </tr>
                     ) : (
                     transactions.map((txn, idx) => (
@@ -1220,7 +1262,14 @@ export default function ProcurementPage() {
             </div>
 
             <div className="flex-1 p-6 overflow-y-auto space-y-6">
-              <div className="text-muted">No vendor quotes yet. Quote comparisons will appear here once RFQs are answered.</div>
+              <EmptyState
+                title="No vendor quotes yet"
+                description="Quote comparisons will appear here once supplier bids are received for RFQs."
+                action={{
+                  label: "Go to RFQ Management",
+                  href: `/c/${companyId}/d/procurement/rfq`,
+                }}
+              />
             </div>
           </div>
         </div>

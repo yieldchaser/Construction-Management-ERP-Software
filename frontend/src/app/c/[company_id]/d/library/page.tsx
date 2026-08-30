@@ -8,6 +8,7 @@ import Icon, { type IconName } from "@/components/marketing/Icon";
 import SegmentedTabs from "@/components/ui/Tabs";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 type LibraryType =
   | "party"
@@ -751,7 +752,16 @@ export default function LibraryHubPage() {
               <tbody className="divide-y divide-border-custom">
                 {filteredData.length === 0 ? (
                   <tr>
-                    <td colSpan={12} className="px-6 py-12 text-center text-muted font-semibold">No rate card items registered.</td>
+                    <td colSpan={12} className="p-8">
+                      <EmptyState
+                        title="No rate card items found"
+                        description="Build your central rate card library with standardized rates, units, and markup configurations."
+                        action={{
+                          label: "+ Add Item",
+                          onClick: () => setIsRateDrawerOpen(true),
+                        }}
+                      />
+                    </td>
                   </tr>
                 ) : (
                   filteredData.map((item) => {

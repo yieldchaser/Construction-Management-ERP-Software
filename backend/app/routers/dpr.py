@@ -140,14 +140,18 @@ def create_dpr(req: DPRCreateRequest, db: Session = Depends(get_db), current_use
     db.flush()
 
     # Process material consumption state updates
+    saved_materials = []
     for mat in req.materials_consumed:
         inv = db.query(WarehouseInventory).filter(
             WarehouseInventory.project_id == project_uuid,
             WarehouseInventory.material_name == mat.material_name
         ).first()
 
+        released_qty = 0.0
         if inv:
             inv.on_hand_qty = float(inv.on_hand_qty) - mat.quantity
+            released_qty = min(float(inv.reserved_qty), float(mat.quantity))
+            inv.reserved_qty = max(0.0, float(inv.reserved_qty) - released_qty)
             db.add(inv)
         else:
             # Create a warehouse row even if it has negative balance (allow workflow flexibility)
@@ -172,6 +176,13 @@ def create_dpr(req: DPRCreateRequest, db: Session = Depends(get_db), current_use
             created_at=dpr.dpr_date,
         )
         db.add(txn)
+
+        mat_dict = mat.dict() if hasattr(mat, "dict") else dict(mat)
+        mat_dict["reserved_released"] = released_qty
+        saved_materials.append(mat_dict)
+
+    dpr.materials_consumed = saved_materials
+    db.add(dpr)
 
     db.commit()
     db.refresh(dpr)
@@ -351,6 +362,7 @@ def delete_dpr(dpr_id: uuid.UUID, db: Session = Depends(get_db), current_user: U
             if isinstance(mat, dict):
                 qty = float(mat.get("quantity", 0))
                 name = mat.get("material_name")
+                reserved_released = float(mat.get("reserved_released", 0))
                 if qty > 0 and name:
                     inv = db.query(WarehouseInventory).filter(
                         WarehouseInventory.project_id == dpr.project_id,
@@ -358,6 +370,11 @@ def delete_dpr(dpr_id: uuid.UUID, db: Session = Depends(get_db), current_user: U
                     ).first()
                     if inv:
                         inv.on_hand_qty = float(inv.on_hand_qty) + qty
+                        if reserved_released > 0:
+                            inv.reserved_qty = min(
+                                float(inv.on_hand_qty),
+                                float(inv.reserved_qty) + reserved_released
+                            )
                         db.add(inv)
     db.query(MaterialTransaction).filter(MaterialTransaction.source_ref_id == dpr.id).delete()
 

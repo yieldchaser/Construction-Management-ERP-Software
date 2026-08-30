@@ -6,6 +6,7 @@ import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 interface Field {
   id: string;
@@ -209,7 +210,16 @@ export default function CustomFieldsPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {fields.length === 0 ? (
-            <div className="col-span-full text-center text-muted py-12">No custom fields defined yet</div>
+            <div className="col-span-full">
+              <EmptyState
+                title="No custom fields defined yet"
+                description="Create user-defined custom attributes for projects, workers, inventory, or billing entities."
+                action={{
+                  label: "+ Define Field",
+                  onClick: () => setShowFieldModal(true),
+                }}
+              />
+            </div>
           ) : (
             fields.map((f) => (
               <div key={f.id} className="bg-card border border-border-custom rounded-lg p-6 hover:bg-elevated transition-all">

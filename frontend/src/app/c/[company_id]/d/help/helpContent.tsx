@@ -26,7 +26,7 @@ export interface ModuleLink {
   href: string;
 }
 
-export function HELP_MODULE_LINKS(companyId: string): ModuleLink[] {
+export const HELP_MODULE_LINKS = (companyId: string): ModuleLink[] => {
   const p = (path: string) => `/c/${companyId}${path.startsWith("/") ? path : `/${path}`}`;
   return [
     { label: "Dashboard", href: p("/dashboard") },
@@ -113,20 +113,20 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
                 <Link className="help-link" href={c(companyId, "/projects")}>
                   "Projects"
                 </Link>
-                , and click the "+ New Project" button in the header.
+                , and click the "+ Create Project" button in the header.
               </p>
               <p className="mt-2">
                 Required fields: Project Name, Project Code, State (for GST place of supply), and Location (latitude,longitude coordinates). Optional fields: Client Name, Address, City, Planned Start Date, Planned End Date, and Estimated Value.
               </p>
               <p className="mt-2">
-                Save result: Submitting calls <code>POST /apis/v3/projects/</code>, inserts the record in the projects table with status "Ongoing", and sets up the project workspace.
+                Save result: Submitting calls <code>POST /apis/v3/projects/</code>, inserts the record in the projects table, and sets up the project workspace.
               </p>
               <p className="mt-2">
                 Next step: Switch your active workspace project in the top bar to begin scheduling tasks and uploading drawings.
               </p>
             </>
           ),
-          text: "create project new code location lat long state place of supply ongoing site start date",
+          text: "create project new code location lat long state place of supply site start date",
           sources: [
             "frontend/src/components/Sidebar.tsx:105",
             "frontend/src/app/c/[company_id]/projects/page.tsx:1",
@@ -145,7 +145,7 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
                 <Link className="help-link" href={c(companyId, "/settings")}>
                   "Settings"
                 </Link>
-                , and choose the "Team Members" tab.
+                , and choose the "Team" tab.
               </p>
               <p className="mt-2">
                 Required fields: Full Name, Mobile Number or Email, and Assigned Role. Optional fields: Designation and Project Assignments.
@@ -177,7 +177,7 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
                 <Link className="help-link" href={c(companyId, "/settings")}>
                   "Settings"
                 </Link>
-                , and choose the "Roles & Permissions" tab.
+                , and choose the "Roles & Access" tab.
               </p>
               <p className="mt-2">
                 Required fields: Role Name. Optional fields: Description and Granular Permission Checkboxes across modules.
@@ -186,7 +186,7 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
                 Save result: Submitting calls <code>POST /apis/v3/settings/roles/{"{companyId}"}</code>, storing the role policy. Permission updates apply fail-closed enforcement across all API routes.
               </p>
               <p className="mt-2">
-                Next step: Assign the configured role to team members under the Team Members tab.
+                Next step: Assign the configured role to team members under the Team tab.
               </p>
             </>
           ),
@@ -217,7 +217,7 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
                 <Link className="help-link" href={c(companyId, "/d/budget")}>
                   "Budget"
                 </Link>
-                , and click the "Import BOQ" button.
+                , and click the "↑ Import Excel" button.
               </p>
               <p className="mt-2">
                 Required fields: An Excel spreadsheet (.xlsx or .xlsm) with columns: Description/Item Name, Qty, Unit, and Rate (or Supply Rate and Installation Rate). Optional fields: Section Name and Cost Code.
@@ -233,7 +233,7 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           text: "import boq bill of quantities excel xlsx rate qty unit supply installation cost code items upload",
           sources: [
             "frontend/src/components/Sidebar.tsx:308",
-            "frontend/src/app/c/[company_id]/d/budget/page.tsx:1",
+            "frontend/src/app/c/[company_id]/d/budgeting/boq/page.tsx:1",
             "POST /apis/v3/budgeting/boq/import",
           ],
         },
@@ -249,7 +249,7 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
                 <Link className="help-link" href={c(companyId, "/d/budget")}>
                   "Budget"
                 </Link>
-                , and click the "Allocate Budget" button.
+                , and click the "+ Set Budget" button.
               </p>
               <p className="mt-2">
                 Required fields: Project ID. Optional category budgets: Material Budget, Labour Budget, Subcontractor Budget, and Equipment Budget.
@@ -281,13 +281,13 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
                 <Link className="help-link" href={c(companyId, "/d/planning")}>
                   "Planning"
                 </Link>
-                .
+                . Choose the "WBS Tasks" tab.
               </p>
               <p className="mt-2">
                 Required fields: Task Name, Start Date, and Duration (in days). Optional fields: Parent Task (for WBS hierarchy), Priority, Assigned To user, and BOQ Item link.
               </p>
               <p className="mt-2">
-                Save result: Clicking "+ Add Task" calls <code>POST /apis/v3/planning/tasks</code>, inserting the schedule task and rendering its interactive bar on the Gantt timeline.
+                Save result: Clicking "Save WBS Task" calls <code>POST /apis/v3/planning/tasks</code>, inserting the schedule task and rendering its interactive bar on the Gantt timeline.
               </p>
               <p className="mt-2">
                 Next step: Link dependencies between tasks to automatically compute the Critical Path (CPM) and total float.
@@ -297,7 +297,7 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           text: "planning tasks gantt chart schedule duration start date wbs cpm critical path dependencies",
           sources: [
             "frontend/src/components/Sidebar.tsx:113",
-            "frontend/src/app/c/[company_id]/d/planning/page.tsx:1",
+            "frontend/src/app/c/[company_id]/d/planning/gantt/page.tsx:1",
             "POST /apis/v3/planning/tasks",
           ],
         },
@@ -313,13 +313,13 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
                 <Link className="help-link" href={c(companyId, "/d/planning")}>
                   "Planning"
                 </Link>
-                , and choose the "Milestones" or "Lookahead" tab.
+                , and choose the "Milestones", "Baseline", or "14-Day Lookahead" tab.
               </p>
               <p className="mt-2">
                 Required fields: Milestone Name, Date, and Type (start, inspection, critical, payment, or handover).
               </p>
               <p className="mt-2">
-                Save result: Adding a milestone calls <code>POST /apis/v3/planning/milestones</code>. Setting a baseline snapshots current planned start and end dates for slippage tracking.
+                Save result: Adding a milestone and clicking "Save Milestone" calls <code>POST /apis/v3/planning/milestones</code>. Setting a baseline snapshots current planned start and end dates for slippage tracking.
               </p>
               <p className="mt-2">
                 Next step: Use the 3-week Lookahead view for site supervisor weekly execution commitments.
@@ -329,7 +329,7 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           text: "milestones baseline lookahead slippage schedule snapshot critical handover payment inspection",
           sources: [
             "frontend/src/components/Sidebar.tsx:113",
-            "frontend/src/app/c/[company_id]/d/planning/page.tsx:1",
+            "frontend/src/app/c/[company_id]/d/planning/gantt/page.tsx:1",
             "POST /apis/v3/planning/milestones",
           ],
         },
@@ -343,9 +343,9 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
               <p className="mt-2">
                 Navigation: Open the sidebar, navigate to "Site Operations", and select{" "}
                 <Link className="help-link" href={c(companyId, "/d/dpr")}>
-                  "DPR (Daily Progress)"
+                  "DPR"
                 </Link>
-                . Click "+ New DPR".
+                . Click "+ Create DPR".
               </p>
               <p className="mt-2">
                 Required fields: Report Date (dpr_date) and Executed Quantity (executed_qty). Optional fields: Associated Task, Weather condition, Workers Deployed, Materials Consumed array, Site Photos, Notes, and Issues.
@@ -450,7 +450,7 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
                 <Link className="help-link" href={c(companyId, "/d/procurement")}>
                   "Procurement"
                 </Link>
-                , select the "RFQ" tab, and click "+ New RFQ".
+                , open RFQ Management, and click "+ Create RFQ".
               </p>
               <p className="mt-2">
                 Required fields: RFQ Title, Due Date, Selected Vendors, and Line Items with requested quantities and specifications.
@@ -466,7 +466,7 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           text: "rfq request for quotation vendor comparison bid evaluation commercial procurement tender",
           sources: [
             "frontend/src/components/Sidebar.tsx:229",
-            "frontend/src/app/c/[company_id]/d/procurement/page.tsx:1",
+            "frontend/src/app/c/[company_id]/d/procurement/rfq/page.tsx:1",
             "POST /apis/v3/procurement/rfq",
           ],
         },
@@ -522,7 +522,7 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
                 <Link className="help-link" href={c(companyId, "/d/billing")}>
                   "Billing & Invoices"
                 </Link>
-                , and click "+ Create Bill".
+                , and click "+ Submit RA Bill".
               </p>
               <p className="mt-2">
                 Required fields: Vendor (party_company_user_id), Invoice Number, Invoice Date, Invoice Type ("material" or "subcon"), and Subtotal. Optional fields: GST %, Deductions (TDS, Retention), and Pre-tax deduction flag.
@@ -550,11 +550,11 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
                 Preconditions: Subcontractor party registered; work order contract created.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, navigate to "Procurement & Materials", select{" "}
-                <Link className="help-link" href={c(companyId, "/d/subcon")}>
-                  "Subcontractors"
+                Navigation: Open the sidebar, navigate to "Finance & Billing", select{" "}
+                <Link className="help-link" href={c(companyId, "/d/billing")}>
+                  "Billing & Invoices"
                 </Link>
-                , and choose the "RA Bills" tab. Click "+ Create RA Bill".
+                , and choose the "RA Bills (Subcon)" tab. Click "+ Submit RA Bill".
               </p>
               <p className="mt-2">
                 Required fields: Subcontractor, Invoice Number, Invoice Date, Gross Certified Amount (Subtotal), and GST %. Deductions configured: Retention % (e.g., 5%) and TDS Section (e.g., 1% or 2%).
@@ -569,8 +569,8 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
           ),
           text: "subcontractor ra bill running account work order tds retention defect liability certified amount",
           sources: [
-            "frontend/src/components/Sidebar.tsx:253",
-            "frontend/src/app/c/[company_id]/d/subcon/page.tsx:1",
+            "frontend/src/components/Sidebar.tsx:283",
+            "frontend/src/app/c/[company_id]/d/billing/page.tsx:1",
             "POST /apis/v3/billing/bills",
           ],
         },
@@ -586,7 +586,7 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
                 <Link className="help-link" href={c(companyId, "/d/finance")}>
                   "Finance"
                 </Link>
-                , choose the "Payments" tab, and click "+ New Payment".
+                , choose the "Payment Requests" tab, and click "+ Create Payment Request".
               </p>
               <p className="mt-2">
                 Required fields: Party, Payment Type ("in" for customer receipts, "out" for vendor payouts), Amount, Payment Method (Bank Transfer, Cheque, UPI, Cash), and Payment Date.
@@ -650,16 +650,16 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
                 <Link className="help-link" href={c(companyId, "/settings")}>
                   "Settings"
                 </Link>
-                , and choose the "Approval Rules" tab. Click "+ Add Approval Rule".
+                , and choose the "Multi Level Approval" tab. Click "Publish Rule Block".
               </p>
               <p className="mt-2">
                 Required fields: Module (PO, Bill, Indent, Payment), Minimum Amount Threshold, and Approver Role sequence (Level 1, Level 2, Level 3).
               </p>
               <p className="mt-2">
-                Save result: Submitting calls <code>POST /apis/v3/settings/approval-rules/{"{companyId}"}</code>, enforcing sequential multi-tiered authorization on documents exceeding value limits.
+                Save result: Submitting calls <code>POST /apis/v3/settings/approval-rules/{"{companyId}"}</code>, storing the rule block for amount-range routing.
               </p>
               <p className="mt-2">
-                Note: The approval rules defined here are not automatically enforced on every arbitrary transaction type unless enabled in the system workflow settings.
+                Note: The approval rules defined here are not applied to transactions that fall outside the configured threshold.
               </p>
               <p className="mt-2">
                 Next step: Documents trigger approval alerts to authorized approvers before advancing to execution.
@@ -681,11 +681,11 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
                 Preconditions: reports:view permission.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, select{" "}
+                Navigation: Open the sidebar, and select{" "}
                 <Link className="help-link" href={c(companyId, "/analytics")}>
                   "Analytics"
                 </Link>
-                , and choose the "Financial" tab.
+                .
               </p>
               <p className="mt-2">
                 Calculation: Revenue recognized from certified client bills minus direct costs (materials issued + labour paid + subcontractor certified + equipment hire) minus indirect allocations.
@@ -725,7 +725,7 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
                 <Link className="help-link" href={c(companyId, "/d/hr")}>
                   "HR & Staff"
                 </Link>
-                , and click "+ Add Employee".
+                , and click "+ Add Staff".
               </p>
               <p className="mt-2">
                 Required fields: Full Name, Monthly Salary, and Designation. Optional fields: Project Assignment, Phone, Email, UAN (for EPF), PAN, Bank Account Details, and Joining Date.
@@ -787,9 +787,9 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
               <p className="mt-2">
                 Navigation: Open the sidebar, select{" "}
                 <Link className="help-link" href={c(companyId, "/d/labour")}>
-                  "Labour Management"
+                  "Labour"
                 </Link>
-                , and click "+ Daily Muster Roll".
+                , choose the "Muster Roll" tab, and click "+ Add Muster".
               </p>
               <p className="mt-2">
                 Required fields: Project, Date, Trade / Category (Mason, Carpenter, Helper), and Headcount. Optional fields: Overtime hours and Subcontractor allocation.
@@ -817,11 +817,11 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
                 Preconditions: Employees active; monthly attendance logged or full-month policy enabled.
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, select{" "}
-                <Link className="help-link" href={c(companyId, "/d/payroll-attendance")}>
-                  "Payroll"
+                Navigation: Open the sidebar, navigate to "Finance & Billing", select{" "}
+                <Link className="help-link" href={c(companyId, "/d/hr")}>
+                  "HR & Staff"
                 </Link>
-                , and click "Run Payroll".
+                , choose the "Payroll Runs" tab, and click "Compute Payroll".
               </p>
               <p className="mt-2">
                 Required fields: Month (1-12) and Year (YYYY).
@@ -834,10 +834,10 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
               </p>
             </>
           ),
-          text: "run payroll payslips salary epf esi pt deductions basic hra bank payout export",
+          text: "run payroll payslips salary epf esi pt deductions basic hra bank payout export compute",
           sources: [
-            "frontend/src/components/Sidebar.tsx:292",
-            "frontend/src/app/c/[company_id]/d/payroll-attendance/page.tsx:1",
+            "frontend/src/components/Sidebar.tsx:300",
+            "frontend/src/app/c/[company_id]/d/hr/page.tsx:1",
             "POST /apis/v3/hr/payroll/run",
           ],
         },
@@ -925,7 +925,7 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
                 <Link className="help-link" href={c(companyId, "/d/equipment")}>
                   "Equipment"
                 </Link>
-                , select the asset, and click "Deploy to Project".
+                , select the asset, and click "Start Wizard".
               </p>
               <p className="mt-2">
                 Required fields: Target Project and Start Date. Optional fields: Operator Name and Initial Odometer Reading.
@@ -957,7 +957,7 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
                 <Link className="help-link" href={c(companyId, "/d/equipment")}>
                   "Equipment"
                 </Link>
-                , select the asset, and click "+ Log Fuel".
+                , select the asset, and click "Refuel".
               </p>
               <p className="mt-2">
                 Required fields: Project, Log Date (logged_date), Liters Dispensed (liters), and Cost Per Liter (cost_per_liter). Optional fields: Meter/Odometer Reading and Fuel Slip Photo.
@@ -1029,7 +1029,7 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
                 <Link className="help-link" href={c(companyId, "/d/crm")}>
                   "CRM & Leads"
                 </Link>
-                , and click "+ New Lead".
+                , and click "New Lead +".
               </p>
               <p className="mt-2">
                 Required fields: Lead Title, Lead Type (e.g. Commercial, Residential, Infra), Contact Person (contact_name), and Phone Number (phone_no). Optional fields: Client Name, Estimated Value, Source, and Status stage.
@@ -1061,7 +1061,7 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
                 <Link className="help-link" href={c(companyId, "/d/crm")}>
                   "CRM & Leads"
                 </Link>
-                , open the Lead details modal, switch to the "Quotations" tab, and click "+ Create Quotation".
+                , open the Lead details modal, switch to the "Quotation" tab, and click "New Quotation +".
               </p>
               <p className="mt-2">
                 Required fields: Quotation Subject, Quotation Number, and Line Items (Item Name, Quantity (qty), Unit Rate, Unit). Optional fields: GST %, Markup %, Terms & Conditions, and Discount.
@@ -1093,7 +1093,7 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
                 <Link className="help-link" href={c(companyId, "/d/library")}>
                   "Library"
                 </Link>
-                , and choose the "Rate Cards" tab. Click "+ Add Rate".
+                , and choose the "Rate Library" tab. Click "+ Add to Library".
               </p>
               <p className="mt-2">
                 Required fields: Item Name, Item Code, Unit of Measurement, Standard Cost Rate, and Selling Rate. Optional fields: Category and Description.
@@ -1129,11 +1129,11 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
                 Preconditions: Owner role; Tally Prime installed on your accounting machine with Tally XML Server enabled (e.g. port 9000).
               </p>
               <p className="mt-2">
-                Navigation: Open the sidebar, navigate to "Setup & Config", select{" "}
-                <Link className="help-link" href={c(companyId, "/settings")}>
-                  "Settings"
+                Navigation: Open the sidebar, select{" "}
+                <Link className="help-link" href={c(companyId, "/d/finance")}>
+                  "Finance"
                 </Link>
-                , and choose the "Tally Integration" tab.
+                , and choose the "Tally Sync" tab. Click "Connect Tally".
               </p>
               <p className="mt-2">
                 Required fields: Tally Company Name, Host/Port or SiteFlow Tally Desktop Agent token.
@@ -1146,10 +1146,10 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
               </p>
             </>
           ),
-          text: "tally prime sync xml export accounting ledger cost centre voucher deduplication integration",
+          text: "tally prime sync xml export accounting ledger cost centre voucher deduplication integration connect",
           sources: [
-            "frontend/src/components/Sidebar.tsx:378",
-            "frontend/src/app/c/[company_id]/settings/page.tsx:1",
+            "frontend/src/components/Sidebar.tsx:276",
+            "frontend/src/app/c/[company_id]/d/finance/page.tsx:1",
             "POST /apis/v3/tally/connections",
           ],
         },
@@ -1165,7 +1165,7 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
                 <Link className="help-link" href={c(companyId, "/settings")}>
                   "Settings"
                 </Link>
-                , and choose the "Zoho Books" tab. Click "Connect Zoho Books".
+                , and choose the "Integrations" tab. Under Zoho Books, click "Connect".
               </p>
               <p className="mt-2">
                 OAuth flow: Redirects to Zoho OAuth login via <code>GET /apis/v3/integrations/zoho-books/authorize</code> and saves encrypted refresh tokens in company credentials.
@@ -1197,7 +1197,7 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
                 <Link className="help-link" href={c(companyId, "/settings")}>
                   "Settings"
                 </Link>
-                , and choose the "Cloud Integrations" tab.
+                , and choose the "Integrations" tab. Under Google Drive, click "Connect".
               </p>
               <p className="mt-2">
                 Features: Daily automated database & document backup to your Google Drive folder, plus direct one-click spreadsheet export of attendance and payroll runs.
@@ -1210,7 +1210,7 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
               </p>
             </>
           ),
-          text: "google drive backup google sheets export cloud backup automated archive spreadsheets",
+          text: "google drive backup google sheets export cloud backup automated archive spreadsheets integrations",
           sources: [
             "frontend/src/components/Sidebar.tsx:378",
             "frontend/src/app/c/[company_id]/settings/page.tsx:1",
@@ -1229,7 +1229,7 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
                 <Link className="help-link" href={c(companyId, "/settings")}>
                   "Settings"
                 </Link>
-                , and choose the "BI & API Feeds" tab. Click "+ Generate API Key".
+                , and choose the "Integrations" tab. Under BI Data Export, enter a key label and click "Create".
               </p>
               <p className="mt-2">
                 Required fields: Key Name and Expiration Period (30, 90, 365 days, or Never).
@@ -1242,7 +1242,7 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
               </p>
             </>
           ),
-          text: "bi data feed api key power bi tableau live data streaming analytics export integration",
+          text: "bi data feed api key power bi tableau live data streaming analytics export integration create",
           sources: [
             "frontend/src/components/Sidebar.tsx:378",
             "frontend/src/app/c/[company_id]/settings/page.tsx:1",

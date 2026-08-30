@@ -207,7 +207,18 @@ export default function TowersPage() {
                         </tr>
                       ))}
                       {pnl.length === 0 && (
-                        <tr><td colSpan={6} className="px-5 py-6 text-center text-muted">No P&L data yet. Add towers and link POs/WOs/bills.</td></tr>
+                        <tr>
+                          <td colSpan={6} className="p-8">
+                            <EmptyState
+                              title="No tower P&L data yet"
+                              description="Add towers and link POs, work orders, and bills to track phase-wise profit and loss."
+                              action={{
+                                label: "+ Add Tower",
+                                onClick: () => setShowForm(true),
+                              }}
+                            />
+                          </td>
+                        </tr>
                       )}
                     </tbody>
                   </table>

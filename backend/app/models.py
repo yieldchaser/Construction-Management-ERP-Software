@@ -459,6 +459,7 @@ class MaterialIndentItem(Base):
     indent_id = Column(UUID(as_uuid=True), ForeignKey("material_indents.id", ondelete="CASCADE"), nullable=False)
     material_name = Column(String(255), nullable=False)
     quantity = Column(Numeric(18, 4), nullable=False)
+    reserved_qty = Column(Numeric(18, 4), default=0.0, nullable=False)
     unit = Column(String(50), nullable=False)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
