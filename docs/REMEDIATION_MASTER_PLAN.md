@@ -85,12 +85,30 @@ myself rather than accepting the report:
 **One new finding filed: R2-765 / D-020** — chat unread counts are tracked in a module-level in-memory
 dict, so mark-as-read dies on every deploy and differs per worker.
 
-### REMAINING WORK — only two items
+### REMAINING WORK — code complete
 
-- **D-020 / R2-765** — persist the chat read watermark (small)
-- **D-017** — pre-login index page performance, in its own session
+**All of Parts A, B, C and E are closed, plus D-017 and D-020.** Verified independently 2026-08-30:
 
-Everything else in Parts A–E is closed. Kickoff for both: `docs/AGENT_KICKOFF_RUN3.md`.
+| Check | Result |
+|---|---|
+| Backend suite (`python -m pytest -n 4`, whole suite) | **0 failures**, exit 0 |
+| Frontend production build | exit 0, TypeScript clean, 23/23 pages |
+| Every image on 11 marketing pages | **194 requests, 0 broken** |
+| Production schema vs models | `chat_group_members.last_read_at`, `staff_employees.uan`, `bills.po_id` all **PRESENT**; `crm_leads` priority collapsed to **1 bucket** |
+| 29 new endpoints from runs 2-3 | 28 carry explicit tenant/permission gates; the 29th (`GET /library/units`) is authenticated at the router and returns a static constant with no tenant data |
+| Assets | 106 files / ~74 MB → **59 files / ~4.7 MB**, largest 0.53 MB |
+
+**The only open backlog row is D-021 — GitHub Actions billing — which is founder-owned, not code.**
+
+### Two things worth doing before launch, neither blocking
+
+1. **Cross-tenant probe the 29 new endpoints.** The 180-probe isolation sweep that this audit relies on
+   **predates them**. Their gates were read statically and look right, but they have never been
+   exercised against a foreign tenant the way the original 106 routes were.
+2. **Sentry at a 90-day window** once the current Vercel/Render deploys settle. Several deploys landed
+   in quick succession; the pre-deploy baseline was 0 unresolved.
+
+Kickoff, if more work is queued: `docs/AGENT_KICKOFF_RUN3.md`.
 
 ---
 
