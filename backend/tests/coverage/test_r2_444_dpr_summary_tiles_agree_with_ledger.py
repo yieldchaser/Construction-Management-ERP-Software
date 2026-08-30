@@ -43,7 +43,7 @@ def test_r2_444_summary_tiles_agree_with_stock_ledger(client, db, make_tenant, a
         headers=hdr,
         json={
             "project_id": str(project.id),
-            "dpr_date": datetime.now().isoformat(),
+            "dpr_date": datetime.utcnow().isoformat(),
             "executed_qty": 12.0,
             "materials_consumed": [{"material_name": "ZZ R8 Phantom Sand", "quantity": 500.0, "unit": "cft"}],
         },

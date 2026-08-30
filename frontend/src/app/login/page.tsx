@@ -43,7 +43,7 @@ const COUNTRY_CODES = [
 ];
 
 export default function LoginPage() {
-  const [method, setMethod] = useState<Method>("phone");
+  const [method, setMethod] = useState<Method>("email_otp");
   const [stage, setStage] = useState<Stage>("input");
 
   const [mobile, setMobile] = useState("");
@@ -455,12 +455,11 @@ export default function LoginPage() {
     window.location.href = getApi("/auth/google/authorize");
   };
 
-  // ── UI helpers ────────────────────────────────────────────────────────────
   const tabBtn = (m: Method, label: string) => (
     <button
       type="button"
       onClick={() => reset(m)}
-      className={`flex-1 py-2.5 text-xs font-semibold rounded-md transition-all motion-reduce:transition-none ${
+      className={`w-full py-2.5 px-1 sm:px-2 text-center text-[11px] sm:text-xs font-semibold rounded-md transition-all motion-reduce:transition-none whitespace-nowrap overflow-hidden text-ellipsis ${
         method === m
           ? "alx-bg-gradient-primary text-alx-on-primary shadow-sm shadow-alx-primary/30"
           : "bg-alx-surface-container-low text-alx-on-surface-variant hover:text-alx-on-surface hover:bg-alx-surface-container border border-alx-outline-variant/40"
@@ -605,10 +604,10 @@ export default function LoginPage() {
                 <span className="flex-shrink mx-4 text-xs font-bold text-alx-on-surface-variant uppercase tracking-widest">Or</span>
                 <div className="flex-grow border-t border-alx-outline-variant/40" />
               </div>
-              <div className="flex gap-2">
-                {tabBtn("phone", "Phone OTP")}
+              <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                 {tabBtn("email_otp", "Email OTP")}
-                {tabBtn("password", "Password")}
+                {tabBtn("phone", "Phone OTP")}
+                {tabBtn("password", "Email & Password")}
               </div>
             </>
           )}

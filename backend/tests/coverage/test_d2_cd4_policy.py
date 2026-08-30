@@ -296,8 +296,10 @@ def test_cd4_exactly_one_place_applies_ceiling():
     not also made company-driven.
     """
     import pathlib
-    hr_text = pathlib.Path("app/routers/hr.py").read_text()
-    stat_text = pathlib.Path("app/routers/statutory.py").read_text()
+    hr_path = pathlib.Path("app/routers/hr.py") if pathlib.Path("app/routers/hr.py").exists() else pathlib.Path("backend/app/routers/hr.py")
+    stat_path = pathlib.Path("app/routers/statutory.py") if pathlib.Path("app/routers/statutory.py").exists() else pathlib.Path("backend/app/routers/statutory.py")
+    hr_text = hr_path.read_text(encoding="utf-8")
+    stat_text = stat_path.read_text(encoding="utf-8")
     # hr must have ceiling handling
     assert "pf_wage_ceiling" in hr_text
     # statutory must still have its literal 15000 (hard cap) and not company ceiling logic
