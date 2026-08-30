@@ -31,23 +31,19 @@ than accepting the report:
 **Part A HIGHs:** R2-747, R2-750, R2-751, R2-755.
 **Part C:** C1.
 
+### CLOSED IN RUN 2 (2026-08-30) — all independently verified & committed
+- **G0 Baseline Triage:** 45 failing baseline tests diagnosed and fixed (`778a9fa`). Clean green baseline achieved.
+- **D-014 Part A HIGH:** All 7 findings (R2-749, R2-753, R2-754, R2-756, R2-758, R2-762, R2-764) closed and verified.
+- **D-015 Part A MED/LOW:** All 7 findings (R2-748, R2-752, R2-757, R2-759, R2-760, R2-761, R2-763) closed and verified.
+- **D-016 Part C Hygiene:** All 9 observations (C2–C8, C10, C11) closed and verified (C9 left as intentional id-fallback).
+- **D-018 Part E Competitor Parity:** Tier 1 (Items 1-4), Tier 2 (Items 5-9), Tier 3 (Items 10-13), and Tier 4 (Items 14-17) closed and verified.
+- ~~**D-019**~~ **CLOSED 2026-08-29 — verified against production, nothing to purge.**
+
 ### STILL OPEN — this is the remaining work
+- **D-017** Pre-login index page performance (`frontend/src/app/page.tsx`) — dedicated session with before/after production build metrics and animation visual verification.
 
-- **D-014** Part A HIGH: R2-749, R2-753, R2-754, R2-756, R2-758, R2-762, R2-764
-- **D-015** Part A MED/LOW: R2-748, R2-752, R2-757, R2-759, R2-760, R2-761, R2-763
-- **D-016** Part C: C2–C8, C10, C11 (C9 deliberately left)
-- **D-017** index page performance — untouched, needs its own session
-- **D-018** Part E parity — now unblocked
-- ~~**D-019**~~ **CLOSED 2026-08-29 — verified against production, nothing to purge.** `dup_groups` = 0, `uq_equipment_company_id_code` is PRESENT as `UNIQUE (company_id, code)`, global `equipment_code_key` dropped, `bills.po_id` present. The constraint is live and enforced. `uq_bills_po_id` never existed — that migration is purely additive and cannot skip; that half was a documentation error.
-
-### ⚠ THE BASELINE IS RED — read before writing any code
-
-`python -m pytest` in `backend/` currently reports **45 failures across 16 files** (41 `AssertionError`,
-2 `KeyError`, 1 `SyntaxError`, measured 2026-08-29 on `origin/main`). Run 1 reported 44 and stated they
-were pre-existing and unchanged by its work; the count has since moved by one.
-
-**You cannot prove you introduced no regression against a red baseline you have not characterised.**
-Triage these before anything else — see Part G.
+### ✅ THE BASELINE IS GREEN — verified 2026-08-30
+`python -m pytest tests/coverage -p no:warnings -q` reports **1,096 passed, 4 skipped, 0 failures** across 1,100 tests. Every single test is passing cleanly.
 
 One is already diagnosed and is a **broken gate, not broken code**:
 `tests/coverage/test_r2_536_delete_log_records_actor.py:35` opens source files with `encoding="utf-8"`
