@@ -6,7 +6,7 @@ Work continuously. Do not stop between parts. Do not file anything to `docs/BACK
 
 ---
 
-## PART 1 — Reservations can never be released once approved
+## PART 1: Reservations can never be released once approved
 
 ### Reproduced
 
@@ -17,7 +17,7 @@ REJECT-AFTER-APPROVE: 400 {"detail":"Only pending indents can be rejected (curre
 RESERVED STILL HELD: 40.0
 ```
 
-`reject_indent` (`procurement.py:448`) requires `status == "pending"`. Reservation is only ever written by `approve_indent`. So the release block added inside `reject_indent` is **unreachable dead code** — `item.reserved_qty` is always `0` when it runs.
+`reject_indent` (`procurement.py:448`) requires `status == "pending"`. Reservation is only ever written by `approve_indent`. So the release block added inside `reject_indent` is **unreachable dead code**, because `item.reserved_qty` is always `0` when it runs.
 
 There are exactly three indent endpoints (create, approve, reject) and three status writes: `approved` (397), `rejected` (450), `ordered` (676). None of them can release. An approved indent whose material is never consumed holds that stock **forever**, and `available` drifts down monotonically with no way back.
 
@@ -43,7 +43,7 @@ Replace it with a test that **approves first**, asserts `reserved_qty == 40.0`, 
 
 ---
 
-## PART 2 — Reservations do not protect any stock
+## PART 2: Reservations do not protect any stock
 
 ### Reproduced
 
@@ -72,7 +72,7 @@ Apply the same release there that `dpr.py:150` already performs, for outgoing ty
 
 ---
 
-## PART 3 — `item.reserved_qty` drifts out of sync with the warehouse
+## PART 3: `item.reserved_qty` drifts out of sync with the warehouse
 
 On consumption, `dpr.py` decrements `WarehouseInventory.reserved_qty` but **never** decrements the `MaterialIndentItem.reserved_qty` that caused it. After an indent reserves 40 and a DPR consumes all 40, the warehouse reads `0` while the item still claims `40`.
 
@@ -94,7 +94,7 @@ Return the released amount so DPR keeps storing it in `reserved_released` for it
 
 ---
 
-## PART 4 — Invariant tests that actually bite
+## PART 4: Invariant tests that actually bite
 
 The suite claims `reserved_qty <= on_hand_qty` as an invariant but tests no path that can break it. Add tests, each of which must fail against `71b7084`:
 
@@ -110,16 +110,16 @@ Make the display honest too: wherever **Available Stock** is shown, it must neve
 
 ---
 
-## PART 5 — Four empty states the last run missed
+## PART 5: Four empty states the last run missed
 
 The previous report claimed all 44 bare strings were converted and gave a 67-row table. Four genuine bare table and list empty states remain, and the whole `payroll-attendance` page is absent from that table despite being in the original sweep.
 
 | File | String | Verdict |
 |---|---|---|
-| `d/payroll-attendance/page.tsx:1503` | `No leave requests yet.` | CTA — open the leave request drawer on that page |
-| `d/payroll-attendance/page.tsx:1574` | `No holidays added yet.` | CTA — link to the holiday calendar in `settings` |
-| `d/library/page.tsx:701` | `No materials registered.` | CTA — open the add-material drawer on that page |
-| `components/rbac/TeamSection.tsx:129` | `No team members found.` | CTA — open the invite-member flow |
+| `d/payroll-attendance/page.tsx:1503` | `No leave requests yet.` | CTA, open the leave request drawer on that page |
+| `d/payroll-attendance/page.tsx:1574` | `No holidays added yet.` | CTA, link to the holiday calendar in `settings` |
+| `d/library/page.tsx:701` | `No materials registered.` | CTA, open the add-material drawer on that page |
+| `components/rbac/TeamSection.tsx:129` | `No team members found.` | CTA, open the invite-member flow |
 
 `No team members found` was named explicitly in the previous specification and still shipped bare. Convert all four to the shared `EmptyState` component, matching `/d/depreciation`.
 
@@ -127,13 +127,13 @@ The previous report claimed all 44 bare strings were converted and gave a 67-row
 
 ---
 
-## PART 6 — Backlog id
+## PART 6: Backlog id
 
 The subscription-billing row landed as `R2-336` in the findings table. It belongs with the other founder-owned items, alongside the closed `D-021`, with a `D-0xx` id. Move it, keep the text, do not duplicate it.
 
 ---
 
-## PART 7 — The help answers read like API documentation
+## PART 7: The help answers read like API documentation
 
 All 37 console help answers use one rigid template: `Preconditions:` / `Navigation:` / `Required fields:` / `Optional fields:` / `Save result:` / `Next step:`. Counted in `helpContent.tsx`: 37, 37, 30, 19, 37, 37. Every answer, no exceptions.
 
