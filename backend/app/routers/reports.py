@@ -2209,20 +2209,96 @@ def _rep_company_transactions(db: Session, cid: uuid.UUID, pid: Optional[uuid.UU
 
 def _rep_cost_code_expense_analysis(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
     try:
-        bills_q = db.query(Bill).filter(Bill.company_id == cid, Bill.status != "Cancelled")
+        # Pre-load LibraryCostCode map for category enrichment
+        cc_map = {}
+        for cc in db.query(LibraryCostCode).filter(LibraryCostCode.company_id == cid).all():
+            if cc.code:
+                cc_map[cc.code] = cc.name or "Operations"
+
+        groups = {}
+        total_expense = 0.0
+
+        # 1. Expenses from Payments (out / expense)
+        payments_q = db.query(Payment).filter(
+            Payment.company_id == cid,
+            func.lower(Payment.payment_type).in_(["out", "expense", "payment_out"])
+        )
+        if pid:
+            payments_q = payments_q.filter(Payment.project_id == pid)
+        
+        for p in payments_q.all():
+            amt = float(p.amount or 0)
+            if amt <= 0:
+                continue
+            cc_code = (p.cost_code or "").strip()
+            cat = (p.category or "").strip()
+            if not cc_code and cat:
+                cc_code = cat
+            if not cc_code:
+                cc_code = "General Expense"
+            
+            resolved_cat = p.category or cc_map.get(cc_code) or "Operations"
+            if cc_code not in groups:
+                groups[cc_code] = {"total": 0.0, "count": 0, "category": resolved_cat}
+            groups[cc_code]["total"] += amt
+            groups[cc_code]["count"] += 1
+            total_expense += amt
+
+        # 2. Expenses from Bills (expense types)
+        bills_q = db.query(Bill).filter(
+            Bill.company_id == cid,
+            Bill.status != "Cancelled"
+        )
         if pid:
             bills_q = bills_q.filter(Bill.project_id == pid)
-        exp_bills = [b for b in bills_q.all() if is_expense_invoice_type(b.invoice_type)]
-        total_expense = sum(float(b.total_payable or 0) for b in exp_bills)
         
-        groups = {}
-        for b in exp_bills:
-            key = b.cost_code or b.category or "General Expense"
-            if key not in groups:
-                groups[key] = {"total": 0.0, "count": 0, "category": b.category or "Operations"}
-            groups[key]["total"] += float(b.total_payable or 0)
-            groups[key]["count"] += 1
-            
+        settled_bill_ids = set()
+        settlements = db.query(PaymentSettlement).join(
+            Payment, PaymentSettlement.payment_id == Payment.id
+        ).filter(Payment.company_id == cid).all()
+        for s in settlements:
+            settled_bill_ids.add(s.bill_id)
+
+        for b in bills_q.all():
+            if not is_expense_invoice_type(b.invoice_type):
+                continue
+            b_tot = float(b.total_payable or 0)
+            if b_tot <= 0 or b.id in settled_bill_ids:
+                continue
+
+            extracted_items = []
+            if b.items_json:
+                try:
+                    import json
+                    parsed = json.loads(b.items_json) if isinstance(b.items_json, str) else b.items_json
+                    if isinstance(parsed, list):
+                        for it in parsed:
+                            if isinstance(it, dict):
+                                code = it.get("cost_code_name") or it.get("cost_code") or it.get("cost_code_id")
+                                it_amt = float(it.get("amount") or (float(it.get("qty", 0)) * float(it.get("rate", 0))))
+                                if code and it_amt > 0:
+                                    extracted_items.append((code, it_amt))
+                except Exception:
+                    pass
+
+            if extracted_items:
+                for code, it_amt in extracted_items:
+                    cc_code = str(code).strip()
+                    resolved_cat = cc_map.get(cc_code) or "Operations"
+                    if cc_code not in groups:
+                        groups[cc_code] = {"total": 0.0, "count": 0, "category": resolved_cat}
+                    groups[cc_code]["total"] += it_amt
+                    groups[cc_code]["count"] += 1
+                    total_expense += it_amt
+            else:
+                cc_code = "General Expense"
+                resolved_cat = cc_map.get(cc_code) or "Operations"
+                if cc_code not in groups:
+                    groups[cc_code] = {"total": 0.0, "count": 0, "category": resolved_cat}
+                groups[cc_code]["total"] += b_tot
+                groups[cc_code]["count"] += 1
+                total_expense += b_tot
+
         rows = []
         for cc_code, data in sorted(groups.items(), key=lambda x: x[1]["total"], reverse=True):
             share_pct = round((data["total"] / total_expense * 100), 1) if total_expense > 0 else 0.0
@@ -2262,7 +2338,7 @@ def _rep_project_level_party_balance(db: Session, cid: uuid.UUID, pid: Optional[
                 bal_type = "To Pay" if net_bal > 0 else ("Advance" if net_bal < 0 else "Settled")
                 rows.append({
                     "Party Name": party_name,
-                    "Party Type": ct.priority_type or ct.role or "Vendor",
+                    "Party Type": ct.priority_type or "Vendor",
                     "Project Name": proj.name if proj else "",
                     "Salary": 0.0,
                     "Material Purchase": _clean(mat_purch),
@@ -3105,7 +3181,7 @@ def _rep_company_user_activity_leaderboard(db: Session, cid: uuid.UUID, pid: Opt
             total_act = dpr_cnt + todo_cnt
             rows.append({
                 "Creator Name": user_name,
-                "Role": ct.priority_type or ct.role or "Member",
+                "Role": ct.priority_type or "Member",
                 "Activity Count": total_act,
                 "Progress Count": dpr_cnt,
                 "To Do Count (leaderboard-style": todo_cnt,

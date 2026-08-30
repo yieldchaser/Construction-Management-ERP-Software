@@ -172,8 +172,8 @@ export default function ProjectSettingsModal({
               onClick={() => setTab(t)}
               className={`px-3.5 py-1.5 text-xs font-semibold rounded-md capitalize transition-all cursor-pointer ${
                 tab === t
-                  ? "bg-card text-foreground shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)]"
-                  : "text-muted hover:text-foreground hover:bg-card/40"
+                  ? "bg-card text-foreground font-semibold"
+                  : "text-muted hover:text-foreground hover:bg-card/40 font-medium"
               }`}
             >
               {t === "details" ? "Project Details" : t === "members" ? "Members" : "Location Structure"}

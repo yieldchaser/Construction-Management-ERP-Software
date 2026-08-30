@@ -382,7 +382,7 @@ export default function ChatPage() {
                   }}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all cursor-pointer ${
                     activeGroup?.id === g.id
-                      ? "bg-elevated text-foreground font-semibold shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)]"
+                      ? "bg-elevated text-foreground font-semibold"
                       : "hover:bg-elevated/50 text-muted hover:text-foreground"
                   }`}
                 >

@@ -614,7 +614,7 @@ export default function Sidebar() {
                       type="button"
                       className={`h-10 w-10 flex items-center justify-center rounded-lg transition-all ${
                         hasActiveChild
-                          ? "bg-elevated text-foreground shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)]"
+                          ? "bg-elevated text-foreground"
                           : "text-muted hover:text-foreground hover:bg-elevated"
                       }`}
                       title={group.label}
@@ -670,7 +670,7 @@ export default function Sidebar() {
                             prefetch={true}
                             className={`flex items-center gap-2.5 px-2.5 py-1.5 text-xs rounded-md transition-all block ${
                               isActive
-                                ? "bg-elevated text-foreground font-semibold shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)]"
+                                ? "bg-elevated text-foreground font-semibold"
                                 : "text-muted hover:text-foreground hover:bg-elevated font-medium"
                             }`}
                           >
@@ -727,7 +727,7 @@ export default function Sidebar() {
                   prefetch={true}
                   className={`flex flex-col items-center justify-center py-1.5 border rounded-md text-[10px] font-medium transition-all ${
                     pathname.includes("/d/mom")
-                      ? "bg-elevated text-foreground font-semibold shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)] border-border-custom"
+                      ? "bg-elevated text-foreground font-semibold border-border-custom"
                       : "bg-card hover:bg-elevated border-border-custom text-muted hover:text-foreground"
                   }`}
                 >
@@ -742,7 +742,7 @@ export default function Sidebar() {
                   prefetch={true}
                   className={`flex flex-col items-center justify-center py-1.5 border rounded-md text-[10px] font-medium transition-all ${
                     pathname.includes("/d/todo")
-                      ? "bg-elevated text-foreground font-semibold shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)] border-border-custom"
+                      ? "bg-elevated text-foreground font-semibold border-border-custom"
                       : "bg-card hover:bg-elevated border-border-custom text-muted hover:text-foreground"
                   }`}
                 >
@@ -757,7 +757,7 @@ export default function Sidebar() {
                   prefetch={true}
                   className={`flex flex-col items-center justify-center py-1.5 border rounded-md text-[10px] font-medium transition-all ${
                     pathname.includes("/d/chat")
-                      ? "bg-elevated text-foreground font-semibold shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)] border-border-custom"
+                      ? "bg-elevated text-foreground font-semibold border-border-custom"
                       : "bg-card hover:bg-elevated border-border-custom text-muted hover:text-foreground"
                   }`}
                 >
@@ -829,7 +829,7 @@ export default function Sidebar() {
                   onClick={closeFlyoutImmediate}
                   className={`flex items-center gap-2.5 px-3 py-1.5 text-xs rounded-md transition-all mx-1.5 ${
                     isActive
-                      ? "bg-elevated text-foreground font-semibold shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)]"
+                      ? "bg-elevated text-foreground font-semibold"
                       : "text-muted hover:text-foreground hover:bg-elevated font-medium"
                   }`}
                 >

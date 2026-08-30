@@ -333,7 +333,7 @@ export default function TransactionPage() {
       <div className="flex flex-wrap items-center gap-2">
         <button
           onClick={() => setTypeFilter("All")}
-          className={`rounded-lg px-3 py-1.5 text-xs font-semibold border transition-all cursor-pointer ${typeFilter === "All" ? "bg-elevated text-foreground shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)] border-border-custom" : "border-border-custom bg-card text-muted hover:bg-elevated/40 hover:text-foreground"}`}
+          className={`rounded-lg px-3 py-1.5 text-xs font-semibold border transition-all cursor-pointer ${typeFilter === "All" ? "bg-elevated text-foreground border-border-custom" : "border-border-custom bg-card text-muted hover:bg-elevated/40 hover:text-foreground"}`}
         >
           All
         </button>
@@ -341,7 +341,7 @@ export default function TransactionPage() {
           <button
             key={t.key}
             onClick={() => setTypeFilter(t.key)}
-            className={`rounded-lg px-3 py-1.5 text-xs font-semibold border transition-all cursor-pointer ${typeFilter === t.key ? "bg-elevated text-foreground shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)] border-border-custom" : "border-border-custom bg-card text-muted hover:bg-elevated/40 hover:text-foreground"}`}
+            className={`rounded-lg px-3 py-1.5 text-xs font-semibold border transition-all cursor-pointer ${typeFilter === t.key ? "bg-elevated text-foreground border-border-custom" : "border-border-custom bg-card text-muted hover:bg-elevated/40 hover:text-foreground"}`}
           >
             {t.label}
           </button>
@@ -758,7 +758,7 @@ function NewTransactionModal({
                   key={m}
                   type="button"
                   onClick={() => setPayMode(m)}
-                  className={`rounded-md px-3 py-1.5 text-xs font-semibold border transition-all cursor-pointer ${payMode === m ? "bg-elevated text-foreground shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)] border-border-custom" : "border-border-custom bg-card text-muted hover:bg-elevated/40"}`}
+                  className={`rounded-md px-3 py-1.5 text-xs font-semibold border transition-all cursor-pointer ${payMode === m ? "bg-elevated text-foreground border-border-custom" : "border-border-custom bg-card text-muted hover:bg-elevated/40"}`}
                 >
                   {m}
                 </button>

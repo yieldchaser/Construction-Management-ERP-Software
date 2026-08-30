@@ -200,7 +200,7 @@ export default function ProjectDetailLayout({ children }: { children: React.Reac
               href={href}
               className={`whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-semibold transition-all ${
                 active
-                  ? "bg-elevated text-foreground shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)] border border-border-custom"
+                  ? "bg-elevated text-foreground font-semibold border border-border-custom"
                   : "text-muted hover:text-foreground hover:bg-elevated border border-transparent"
               }`}
             >
@@ -216,7 +216,7 @@ export default function ProjectDetailLayout({ children }: { children: React.Reac
             onClick={() => setMoreOpen((o) => !o)}
             className={`whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-semibold transition-all inline-flex items-center gap-1 cursor-pointer ${
               moreOpen
-                ? "bg-elevated text-foreground shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)] border border-border-custom"
+                ? "bg-elevated text-foreground font-semibold border border-border-custom"
                 : "text-muted hover:text-foreground hover:bg-elevated border border-transparent"
             }`}
           >

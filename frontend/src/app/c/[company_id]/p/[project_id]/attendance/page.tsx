@@ -1146,7 +1146,7 @@ export default function AttendancePage() {
                 <button
                   key={langName}
                   onClick={() => { setLang(langName); setShowLanguageDrawer(false); }}
-                  className={`inline-flex items-center gap-2 py-3 px-4 border rounded-md text-xs font-bold text-left transition-all ${lang === langName ? "bg-elevated text-foreground font-semibold shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)] border-border-custom" : "bg-card border-border-custom text-muted hover:bg-elevated hover:text-foreground"}`}
+                  className={`inline-flex items-center gap-2 py-3 px-4 border rounded-md text-xs font-bold text-left transition-all ${lang === langName ? "bg-elevated text-foreground font-semibold border-border-custom" : "bg-card border-border-custom text-muted hover:bg-elevated hover:text-foreground"}`}
                 >
                   <Icon name="globe" className="w-4 h-4" />{langName}
                 </button>
@@ -1183,8 +1183,8 @@ export default function AttendancePage() {
                   onClick={() => setSettingsTab(t.id as any)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                     settingsTab === t.id
-                      ? "bg-elevated text-foreground shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)]"
-                      : "text-muted hover:text-foreground"
+                      ? "bg-elevated text-foreground font-semibold"
+                      : "text-muted hover:text-foreground hover:bg-elevated/40 font-medium"
                   }`}
                 >
                   {t.label}

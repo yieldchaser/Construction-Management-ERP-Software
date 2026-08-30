@@ -61,7 +61,7 @@ export function SegmentedTabs<T extends string = string>({
               size === "sm" ? "px-2.5 py-1 text-xs" : "px-3.5 py-1.5 text-xs"
             } ${
               isActive
-                ? "bg-elevated text-foreground shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)]"
+                ? "bg-elevated text-foreground font-semibold"
                 : "text-muted hover:text-foreground hover:bg-elevated/40"
             }`}
           >

@@ -1581,8 +1581,8 @@ export default function FinancePage() {
                         <input type="number" value={newParty.opening_balance} onChange={(e) => setNewParty({ ...newParty, opening_balance: e.target.value })} className="w-full bg-input border border-border-custom rounded-md p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
                         {newParty.opening_balance && (
                           <div className="flex gap-3 mt-2">
-                            <button type="button" onClick={() => setNewParty({ ...newParty, opening_balance_type: "pay" })} className={`flex-1 py-2 rounded-md border text-[10px] font-semibold transition-all ${newParty.opening_balance_type === "pay" ? "border-border-custom bg-elevated text-foreground font-semibold shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)]" : "border-border-custom bg-card text-muted hover:bg-elevated/40"}`}>Party will pay (To Pay)</button>
-                            <button type="button" onClick={() => setNewParty({ ...newParty, opening_balance_type: "receive" })} className={`flex-1 py-2 rounded-md border text-[10px] font-semibold transition-all ${newParty.opening_balance_type === "receive" ? "border-border-custom bg-elevated text-foreground font-semibold shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)]" : "border-border-custom bg-card text-muted hover:bg-elevated/40"}`}>Party will receive (Advance Received)</button>
+                            <button type="button" onClick={() => setNewParty({ ...newParty, opening_balance_type: "pay" })} className={`flex-1 py-2 rounded-md border text-[10px] font-semibold transition-all ${newParty.opening_balance_type === "pay" ? "border-border-custom bg-elevated text-foreground font-semibold" : "border-border-custom bg-card text-muted hover:bg-elevated/40"}`}>Party will pay (To Pay)</button>
+                            <button type="button" onClick={() => setNewParty({ ...newParty, opening_balance_type: "receive" })} className={`flex-1 py-2 rounded-md border text-[10px] font-semibold transition-all ${newParty.opening_balance_type === "receive" ? "border-border-custom bg-elevated text-foreground font-semibold" : "border-border-custom bg-card text-muted hover:bg-elevated/40"}`}>Party will receive (Advance Received)</button>
                           </div>
                         )}
                       </div>
@@ -3129,7 +3129,7 @@ export default function FinancePage() {
                     <label className="text-[10px] text-muted uppercase font-bold block mb-1">Transfer Type</label>
                     <div className="flex gap-2">
                       {["Bank To Bank", "Cash Deposit", "Cash Withdraw"].map((t) => (
-                        <label key={t} className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg border cursor-pointer select-none transition-all ${transferType === t ? "border-border-custom bg-elevated text-foreground font-semibold shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)]" : "border-border-custom bg-card hover:bg-elevated/40 text-muted"}`}>
+                        <label key={t} className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg border cursor-pointer select-none transition-all ${transferType === t ? "border-border-custom bg-elevated text-foreground font-semibold" : "border-border-custom bg-card hover:bg-elevated/40 text-muted"}`}>
                           <input
                             type="radio"
                             name="transferType"

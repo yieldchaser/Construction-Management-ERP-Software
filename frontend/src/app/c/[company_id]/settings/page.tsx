@@ -1932,7 +1932,7 @@ export default function CompanySettingsPage() {
                         const active = settings.custom_pdf_template_enabled ? o.v === "Custom" : o.v === "Default";
                         return (
                           <button key={o.v} type="button" onClick={() => savePdfSettings({ custom_pdf_template_enabled: o.v === "Custom" })}
-                            className={`text-left rounded-lg border p-4 space-y-1.5 transition-all cursor-pointer ${active ? "border-border-custom bg-elevated text-foreground shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)]" : "border-border-custom bg-card text-muted hover:bg-elevated/40"}`}>
+                            className={`text-left rounded-lg border p-4 space-y-1.5 transition-all cursor-pointer ${active ? "border-border-custom bg-elevated text-foreground font-semibold" : "border-border-custom bg-card text-muted hover:bg-elevated/40"}`}>
                             <div className="text-xs font-bold text-foreground">{o.t}</div>
                             <div className="text-[10px] text-muted">{o.d}</div>
                           </button>
@@ -1952,7 +1952,7 @@ export default function CompanySettingsPage() {
                         const active = (settings.document_company_name_display ?? "company") === o.v;
                         return (
                           <button key={o.v} type="button" onClick={() => savePdfSettings({ document_company_name_display: o.v })}
-                            className={`text-left rounded-lg border p-4 space-y-1.5 transition-all cursor-pointer ${active ? "border-border-custom bg-elevated text-foreground shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)]" : "border-border-custom bg-card text-muted hover:bg-elevated/40"}`}>
+                            className={`text-left rounded-lg border p-4 space-y-1.5 transition-all cursor-pointer ${active ? "border-border-custom bg-elevated text-foreground font-semibold" : "border-border-custom bg-card text-muted hover:bg-elevated/40"}`}>
                             <div className="text-xs font-bold text-foreground">{o.t}</div>
                             <div className="text-[10px] text-muted">{o.d}</div>
                           </button>
@@ -1973,7 +1973,7 @@ export default function CompanySettingsPage() {
                         const active = Boolean(settings.is_zatca_enable) === o.v;
                         return (
                           <button key={o.t} type="button" onClick={() => saveZatca({ is_zatca_enable: o.v })}
-                            className={`text-left rounded-lg border p-4 space-y-1.5 transition-all cursor-pointer ${active ? "border-border-custom bg-elevated text-foreground shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)]" : "border-border-custom bg-card text-muted hover:bg-elevated/40"}`}>
+                            className={`text-left rounded-lg border p-4 space-y-1.5 transition-all cursor-pointer ${active ? "border-border-custom bg-elevated text-foreground font-semibold" : "border-border-custom bg-card text-muted hover:bg-elevated/40"}`}>
                             <div className="text-xs font-bold text-foreground">{o.t}</div>
                             <div className="text-[10px] text-muted">{o.d}</div>
                           </button>

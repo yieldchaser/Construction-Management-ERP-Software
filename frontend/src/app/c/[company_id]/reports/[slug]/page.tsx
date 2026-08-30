@@ -604,6 +604,7 @@ export default function DynamicReportViewPage() {
 
   const [rows, setRows] = useState<Record<string, any>[]>([]);
   const [loading, setLoading] = useState(false);
+  const [reportError, setReportError] = useState<string | null>(null);
   const [crmLeads, setCrmLeads] = useState<any[]>([]);
   const [financePayments, setFinancePayments] = useState<any[]>([]);
 
@@ -611,13 +612,26 @@ export default function DynamicReportViewPage() {
     if (isMissingOrDemoTenant(companyId)) return;
     const fetchReport = async () => {
       setLoading(true);
+      setReportError(null);
       try {
         const res = await fetch(`${getApiHost()}/apis/v3/reports/data/${slug}?company_id=${companyId}`, {
           headers: { ...(authHeaders() || {}) }
         });
-        const data = await res.json();
-        setRows(data.rows || []);
-      } catch {
+        if (!res.ok) {
+          setReportError(`Failed to load report data (HTTP ${res.status}).`);
+          setRows([]);
+        } else {
+          const data = await res.json();
+          if (data.errors && data.errors.length > 0) {
+            setReportError(data.errors[0]);
+            setRows([]);
+          } else {
+            setReportError(null);
+            setRows(data.rows || []);
+          }
+        }
+      } catch (err: any) {
+        setReportError(err?.message || "Failed to load report data.");
         setRows([]);
       } finally {
         setLoading(false);
@@ -953,6 +967,20 @@ export default function DynamicReportViewPage() {
         {/* Dynamic Data Table or Visual Dashboard Charts */}
         <div className="flex-1 overflow-auto">
           <PageShell width="wide">
+          {reportError && (
+            <div className="mb-4 p-4 rounded-xl bg-danger/10 border border-danger/20 text-danger text-xs flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="font-bold">Report Error:</span>
+                <span>{reportError}</span>
+              </div>
+              <button
+                onClick={() => setRefreshTrigger(prev => prev + 1)}
+                className="px-3 py-1 bg-danger/20 hover:bg-danger/30 rounded text-xs font-semibold transition-colors cursor-pointer"
+              >
+                Retry
+              </button>
+            </div>
+          )}
           {slug === "lead-status-funnel" ? (() => {
             const totalLeadsCount = crmLeads.length;
             // R2-437: these arrays matched none of the seven statuses the CRM

@@ -37,7 +37,7 @@
   --sidebar: #FFFFFF;    /* Clean white sidebar */
   --card: #FFFFFF;       /* Clean white cards */
   --elevated: #E5E7EB;   /* Distinct hover background */
-  --border: #E5E7EB;     /* Crisp gray-200 border for clean division */
+  --border: #D1D5DB;     /* Distinct gray-300 border for clean visible division against elevated & card */
   --input: #F3F4F6;
   --muted: #4B5563;      /* WCAG compliant medium gray (gray-600) for excellent legibility */
   

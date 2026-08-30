@@ -18,76 +18,69 @@
 
 # SiteFlow
 
-SiteFlow connects the office and the site: BOQ and budgets, task scheduling, procurement, subcontractor running-account billing, finance and cashbook, HR and payroll, quality and safety, equipment, production, and executive reporting all run on one multi-tenant data model. The field side is a mobile-first PWA with GPS-geofenced and face-recognised attendance, so site activity feeds cost and progress in real time.
+SiteFlow connects the office and the site. BOQ and budgets, task scheduling, procurement, subcontractor running-account billing, finance and cashbook, HR and payroll, quality and safety, equipment, production, and executive reporting all run on one multi-tenant data model. The field side is a mobile-first PWA with GPS-geofenced and face-recognized attendance, so site activity feeds cost and progress in real time.
 
-This repository is the application source. It is not a marketing site generator: the marketing pages live inside the same Next.js app, but they are content, not the product.
+This repository contains the complete application source, including the Next.js 16 frontend console, public marketing pages, and the FastAPI backend service.
 
-## 🚀 Live deployments
+## Live Deployments
 
-| Surface | URL |
-| --- | --- |
-| Frontend (console + marketing) | https://site-flow-omega.vercel.app |
-| Backend API | https://construction-erp-backend-73vm.onrender.com |
+| Surface | URL | Status |
+| --- | --- | --- |
+| Frontend (Console + Marketing) | https://site-flow-omega.vercel.app | Active |
+| Backend API Gateway | https://construction-erp-backend-73vm.onrender.com | Active (/apis/v3) |
 
-The API is versioned under `/apis/v3`. Both URLs above were checked directly and return 200. The older `siteflow-erp.vercel.app` domain referenced in earlier docs no longer resolves (returns 404) and is not the current production frontend.
+The API is versioned under `/apis/v3`.
 
-## 🧱 Tech stack
+## Tech Stack
 
-| Layer | Technology |
-| --- | --- |
-| Frontend | Next.js 16.2.9 (App Router), React 19.2.4, TypeScript 5, Tailwind CSS v4 |
-| Frontend auth SDK | firebase 11.10.0 (browser-side phone auth) |
-| Backend | FastAPI (Python 3.12), Uvicorn, SQLAlchemy 2.0, Pydantic v2 (pydantic-settings) |
-| Auth/crypto | python-jose (JWT), passlib + bcrypt, firebase-admin (token verify) |
-| Data | Supabase PostgreSQL in production, SQLite for local dev (same models) |
-| Docs/imports | openpyxl (BOQ Excel import), slowapi (rate limiting on sensitive routes) |
-| Observability | sentry-sdk (optional backend error reporting) |
+| Layer | Technology | Version / Implementation Details |
+| --- | --- | --- |
+| Frontend Framework | Next.js (App Router) | Next.js 16.2.9, React 19.2.4, TypeScript 5 |
+| Styling & Design Tokens | Tailwind CSS | Tailwind CSS v4, Semantic WCAG AA tokens, PageShell layout |
+| Frontend Auth SDK | Firebase Auth | Firebase 11.10.0 (Browser-side phone verification) |
+| Backend Framework | FastAPI | Python 3.12, Uvicorn, Pydantic v2 (pydantic-settings) |
+| ORM & Database | SQLAlchemy | SQLAlchemy 2.0, PostgreSQL (Supabase prod) / SQLite (dev) |
+| Auth & Cryptography | Security Libs | python-jose (JWT), passlib + bcrypt, firebase-admin, cryptography (Fernet) |
+| Document Processing | Libraries | openpyxl (BOQ Excel import), reportlab / native PDF generators |
+| Rate Limiting | slowapi | Per-IP and per-endpoint sliding window limits on sensitive routes |
 
-Versions are read from `frontend/package.json` and `backend/requirements.txt`. They are minimums where ranges are specified (for example `fastapi>=0.110.0`).
+## Architecture
 
-## 🏗️ Architecture
-
-The repo is a monorepo with two independent packages (no workspace linker at the root):
+SiteFlow is structured as a clean monorepo with separated frontend and backend codebases:
 
 ```
 siteflow/
-├── frontend/                 # Next.js 16 app: console + marketing site + PWA shell
-├── backend/                  # FastAPI app (app/) + tests (tests/coverage) + requirements.txt
+├── frontend/                 # Next.js 16 app: console, PageShell, marketing, and PWA shell
+├── backend/                  # FastAPI app (app/), test suite (tests/coverage), requirements.txt
 ├── supabase/
-│   └── migrations/           # Hand-authored, additive SQL migrations (no ORM tool)
-├── docs/                     # Reference docs: ROADMAP, parity tasks, security/RBAC design
-└── To Fix/                   # Local working specs; PROMPT_*.md archived under To Fix/_prompt_archive/ (both gitignored)
+│   └── migrations/           # Hand-authored, additive SQL migrations
+└── docs/                     # Architectural specs, workflow truth map, audit reports
 ```
 
-Recon/reference material such as `onsiteteams-recon/` (competitor research),
-generated artifacts under `static/`/`context/`/`outputs/`/`scratch/`, and the HTML
-captures + screenshots inside `To Fix/` are kept on disk only and excluded from
-version control (see `.gitignore`). The `PROMPT_*.md` working specs are moved into
-`To Fix/_prompt_archive/` (also gitignored) so they stay on disk for reference without
-being committed.
-
-The deployment topology and request flow:
+### Request Flow & Topology
 
 ```mermaid
 graph TD
     subgraph Client["Frontend - Next.js 16 on Vercel"]
-        MKT["Marketing site: / /products /resources /blog ..."]
+        MKT["Marketing site: / /products /resources /blog"]
         CON["Console: /c/[company_id]/..."]
         PRJ["Project: /c/[company_id]/p/[project_id]/..."]
-        PWA["Mobile PWA: geofenced + face attendance, offline punch queue"]
+        PWA["Mobile PWA: geofenced + face attendance"]
     end
 
     subgraph API["Backend - FastAPI on Render"]
-        GW["API gateway: /apis/v3"]
-        RT["Feature routers: finance, hr, procurement, reports, billing, tally, ..."]
-        AU["Auth + session JWT"]
+        GW["API Gateway: /apis/v3"]
+        RT["Feature Routers: finance, hr, procurement, reports, billing, tally, ..."]
+        AU["Auth + Session JWT Engine"]
         GW --> RT
         GW --> AU
     end
 
-    subgraph Store["Supabase"]
-        DB[("PostgreSQL - one multi-tenant model")]
-        BLOB[("Storage - file blobs")]
+    subgraph Store["Database & External"]
+        DB[("PostgreSQL - Multi-Tenant Model")]
+        TALLY["Tally Prime (XML Vouchers)"]
+        ZOHO["Zoho Books (REST API)"]
+        GDRIVE["Google Drive & Sheets"]
     end
 
     MKT -->|HTTPS REST| GW
@@ -95,250 +88,102 @@ graph TD
     PRJ -->|HTTPS REST| GW
     PWA -->|HTTPS REST| GW
     RT --> DB
-    RT --> BLOB
-    RT -->|XML sync| TALLY["Tally Prime"]
-    RT -->|OAuth| GS["Google Sheets"]
-    RT -->|OAuth| ZOHO["Zoho Books"]
-    RT -->|OAuth| GDRIVE["Google Drive"]
-    RT -->|API key feeds| BI["PowerBI / Tableau"]
+    RT -->|XML Export| TALLY
+    RT -->|OAuth Sync| ZOHO
+    RT -->|OAuth Sync| GDRIVE
 ```
 
-### Multi-tenant model
+### Multi-Tenant Data Isolation
 
-`Company` is the tenant root. A `User` joins a company through a `CompanyTeam` membership row (with a role), so data is isolated per company. Transactional tables carry a `company_id` (and usually a `project_id`) and enforce company-scoped uniqueness where numbering matters (for example `UNIQUE(company_id, po_number)`). The frontend resolves a human-readable company slug to the UUID primary key.
+`Company` serves as the tenant boundary. Every user account belongs to a company via a `CompanyTeam` membership record specifying roles and permissions. All operational, financial, and inventory tables carry a `company_id` foreign key, ensuring strict query isolation across tenants. Project-specific records additionally link to a `project_id`.
 
-```mermaid
-graph TD
-    Company["Company - tenant root"] --> Team["CompanyTeam - membership + role"]
-    Team --> User["User"]
-    Company --> Project["Project - carries company_id"]
-    Project --> Txn["Transactional tables - company_id (+ project_id)"]
-```
+### Navigation Architecture (7 Domain Groups)
 
-### Console vs marketing site
+The console sidebar organizes application capabilities into 7 clear domain groups:
 
-The console lives under scoped routes:
+1. **Planning & Progress**: Dashboard overview, Tasks & Gantt timeline, Daily Progress Reports (DPR), Bill of Quantities (BOQ), and Drawings revision control.
+2. **Procurement & Materials**: Material Indents, Purchase Orders (PO), Goods Receipt Notes (GRN), Three-Way Matching, and Warehouse Inventory.
+3. **Financial Control**: Client Sale Invoices, Vendor Bills, Payments & Vouchers, Bank Accounts, Cashbook, Budgets, and Retentions / Deductions.
+4. **Workforce & Safety**: Employee Directory, GPS Geofenced Attendance, Face Recognition Punching, Labor Muster Roll, Monthly Payroll Runs, Safety Incidents, and Quality Checklists / NCRs.
+5. **Plant & Equipment**: Equipment Asset Inventory, Site Deployments & Log Sheets, Fuel Consumption Logging, and Production Batching Recipes.
+6. **CRM & Business Development**: Lead Pipeline Kanban, Quotations & Cost Estimations, and Master Rate Card Library.
+7. **Reports & Analytics**: 82 Production-Ready Standard Spreadsheet Reports with dynamic multi-column filtering and multi-format export (CSV, PDF, HTML), plus Civil Engineering Quantity Calculators.
 
-- `/c/[company_id]/...` for company-level modules (dashboard, finance, HR, procurement, reports, settings, enterprise switching)
-- `/c/[company_id]/p/[project_id]/...` for project-scoped modules (tasks, BOQ, drawings, quality, safety, equipment, production)
+### Design System & WCAG AA Tokens
 
-The public marketing site is served from the root routes (`/`, `/products`, `/blog`, `/resources`, `/integrations`, `/SiteFlow-pricing`, `/about`, `/contact`, `/help`, `/terms`, `/privacy`).
+SiteFlow enforces a strict, bevel-free design standard built around the reusable `PageShell` component and semantic CSS tokens:
+- **Dark Theme (Default)**: Background `#111113`, Card `#19191C`, Elevated `#222225`, Border `rgba(255,255,255,0.07)`, Primary `#0284C7`.
+- **Light Theme**: Background `#F3F4F6`, Card `#FFFFFF`, Elevated `#E5E7EB`, Border `#D1D5DB` (gray-300 for crisp visual hierarchy), Primary `#0369A1`.
+- All semantic status tokens (`--success`, `--warning`, `--danger`, `--info`, `--primary`) maintain a minimum contrast ratio of 4.5:1 against surfaces in both themes to guarantee full WCAG AA compliance.
 
-### Theming
+## Authentication & Security
 
-Dark is the default. The light theme is toggled by adding a `light-theme` class to `<html>` (persisted in `localStorage`), implemented in `components/ThemeToggle.tsx`. All colors are CSS custom properties in `frontend/src/app/globals.css`:
+All authentication channels funnel into a unified session JWT engine:
+- **Phone OTP**: Verified via MSG91 with single-use, HMAC-SHA256 hashed, TTL-bound OTP codes.
+- **Email OTP**: Direct SMTP or Brevo HTTPS API with time-expiring verification hashes.
+- **Google OAuth**: Single-use signed handoff code preventing token leakage in query parameters.
+- **Email & Password**: Salted bcrypt hashing via passlib.
+- **Firebase Phone Auth**: Validated on the backend via Firebase Admin SDK.
 
-- Dark: background `#111113`, card `#19191C`, border `rgba(255,255,255,0.07)`, primary `#7C3AED`
-- Light: background `#F3F4F6`, card `#FFFFFF`, primary `#6D28D9`
+Security posture:
+- Strict multi-tenant query filtering on all database interactions.
+- Granular role-based permissions (`module:action`) enforced at router endpoints.
+- Rate-limiting middleware (`slowapi`) on authentication endpoints.
+- Fernet encryption for external OAuth tokens stored at rest.
 
-## 🔐 Authentication
+## Getting Started
 
-All login methods funnel into one shared session JWT and one post-auth/onboarding path:
+Prerequisites: Node.js 18+ and npm, Python 3.12+, and Git.
 
-```mermaid
-graph LR
-    P["Phone OTP - MSG91"] --> S
-    E["Email OTP - SMTP or Brevo"] --> S
-    G["Google OAuth - signed handoff code"] --> S
-    PW["Email + password - bcrypt"] --> S
-    F["Firebase phone auth - ID token verify"] --> S
-    S["Shared session JWT"] --> O["One post-auth / onboarding path"]
-```
-
-- Phone OTP (MSG91) with HMAC-hashed, TTL-bound, single-use codes
-- Email OTP (SMTP or Brevo HTTPS API) using the same hardened OTP machinery
-- Google OAuth (identity scopes), exchanged via a one-time signed handoff code
-- Email + password (bcrypt hashed)
-- Firebase phone auth (additive; the backend verifies the Firebase ID token and mints its own session)
-
-When no SMS/email provider is configured, only a demo allowlist can log in; everyone else gets a clear 503. The app refuses to start in a non-local environment without a strong `SECRET_KEY`.
-
-## 📦 Feature inventory
-
-Derived from the backend routers and the frontend page tree, not from prior docs.
-
-### 🏗️ Project and execution
-- Projects, company/project dashboards (financial and operational views)
-- Task scheduler with hierarchical tasks, dependencies, and Critical Path Method floats
-- Gantt, list, and resources views; S-curve progress; project milestones, baseline vs actual tracking, and rolling lookahead
-- BOQ import (Excel) and budgeting with cost-code allocation, plus BOQ budget-revision history
-- Drawings: versioned revisions, pin-based RFI/clash/observation markups, approval workflow
-- Daily Progress Report (DPR), team schedule, todos, towers, project files
-
-### 📦 Procurement and inventory
-- Material indents, purchase orders (with approval workflow), goods receipt notes
-- Warehouse inventory and material transactions
-- Three-way PO/GRN/invoice matching
-- RFQ and vendor performance scoring
-
-### 💰 Billing, finance, and compliance
-- Subcontractor work orders and RA bills with TDS/retention deductions (pre-tax and post-tax paths)
-- Debit and credit notes
-- Finance payments, cashbook, ledger, project P&L
-- Payment and voucher approval gate
-- Tally Prime integration (`/apis/v3/tally`): exports vendor bills, sales invoices, and payments as a Tally-importable voucher XML (double-entry, optional ledger auto-create and cost-centre allocation) for import into Tally Prime; and ZATCA e-invoice generation (`/bills/{id}/zatca`)
-- Statutory reports (PF, ESI, BOCW cess, TDS, professional tax) via the statutory router
-
-### 🧑‍💼 Subcontractor and labour
-- Subcontractor registration (no-login external parties), directory, work orders, attendance, performance, and scorecards
-- Staff employees, geofenced attendance (Haversine), face recognition, weekly timesheets
-- Payroll runs (PF/ESI/TDS) with payslip CSV export; leave management with per-employee leave balances (entitlement vs approved-used)
-
-### ✅ Quality, safety, equipment, production
-- Quality checklists (IS-code library), site inspections, NCR, material/lab tests
-- Safety incidents, toolbox talks, PPE compliance, LTIF rate
-- Equipment fleet registry, fuel burn, maintenance
-- Production recipes, batches, material consumption, and variance tracking
-
-### 📈 CRM, library, and reporting
-- CRM leads, quotations, RFQ
-- Library: parties, materials, cost codes
-- Company and project analytics (operational + financial S-curve, burn rate)
-- Reports directory (sales, payments, progress, purchase, party balances, tax, assets)
-- Civil Engineering Calculators: IS 456 / SP 34 compliant quantity takeoff tools available across public tools (`/resources/...`) and internal ERP (`/c/[company_id]/d/reports/calculators`):
-  - **Paint Quantity**: Interior & exterior wall area deductions, 2-coat coverage (economy, premium, luxury, texture), putty, and primer requirements.
-  - **Brick Calculator**: Modular, traditional, UK (BS 3921), and US (ASTM) brick presets with editable mortar joints, leaf thickness, and price per brick.
-  - **Concrete Volume & Mix**: Wet/dry volume conversions (1.54 factor), flat slab/beam, rectangular & circular columns, stair flight wedges, M5–M25 grades, and material rates.
-  - **Steel Calculator**: Quick weight table, column main bars (primary & secondary) with IS 13920 dual-zone stirrups, one-way & two-way slab steel with $L_d$ development length.
-  - **Bar Bending Schedule (BBS)**: Straight, stirrups, L-bend, U-bar, cranked, and circular rings with IS 2502 ($9d$) vs. IS 13920 ($12d$) seismic hook toggles and drawing metadata export.
-  - **Ready Mix Concrete (RMC)**: Structure-specific pour estimation (slabs, columns, beams, footings), $M15$–$M45$ grade advisories, transit mixer dispatch loads ($6/7/8 \text{ m}^3$), and RMC rate estimates.
-  - **House Construction Cost**: Built-up area tier rates with Metro, Tier-2, and GCC city regional multipliers and phase-wise cost breakdowns.
-- Client progress reports with PDF export; DPR CSV export
-- Minutes of meeting, site chat, custom fields
-
-### 🔧 Cross-cutting
-- Multi-company switching (`CompanySwitcher`), branches, roles, approval rules, payroll settings, company terms, company file assets
-- Pure inline-SVG charts with a built-in chart-type switcher (bar, line, area, smooth, pie, donut, scatter, funnel, heatmap/grid, sunburst/rose, stacked, grouped, table) on the company dashboard
-- Installable PWA with a service worker (`public/sw.js`) and offline punch queue
-- Integrations (all backend routers under `/apis/v3/integrations/*`, plus Tally): **Tally Prime** (voucher XML export for import into Tally Prime), **Google Sheets** (payroll export), **Google Drive** (file backup), **Zoho Books** (push vendor bills, `.in`/`.com`/`.eu` data tiers, GST-aware), and **BI Data Export** (per-company API keys serving CSV/JSON feeds for PowerBI/Tableau). All OAuth integrations store tokens Fernet-encrypted at rest and are env-gated (return 503 when unconfigured). GPS geofencing is a native PWA feature, not a third-party connector. WhatsApp is planned; OneDrive and QuickBooks were evaluated and dropped.
-
-## ⚙️ Getting started
-
-Prerequisites: Node.js 18+ and npm, Python 3.12+, and either a Supabase project (production) or a local SQLite file (development).
-
-### Backend
+### Backend Setup
 
 ```bash
 cd backend
 python -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
+
+# Linux / macOS:
+source .venv/bin/activate
+# Windows:
+.venv\Scripts\activate
+
 pip install -r requirements.txt
-cp ../.env.example .env           # then edit (see Environment variables below)
+cp ../.env.example .env
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-The OpenAPI docs are at `http://localhost:8000/docs`. On first run, SQLAlchemy `create_all` builds the SQLite schema (`test.db`, which is gitignored and generated locally).
+Interactive OpenAPI documentation is available at `http://localhost:8000/docs`.
 
-Optional demo/seed data: if a `backend/seed_demo_data.py` (or `scripts/seed_demo_data.py`) script is present in your local checkout, run it to populate sample data. The main repo does not ship one by default; create your own fixtures as needed.
-
-### Frontend
+### Frontend Setup
 
 ```bash
 cd frontend
 npm install
-cp .env.local.example .env.local   # or create one; see Environment variables below
 npm run dev
 ```
 
-The app runs at `http://localhost:3000`.
+The application will start at `http://localhost:3000`.
 
-### Local dev vs production data
+### Running Verification Tests
 
-Local development uses SQLite (`DATABASE_URL=sqlite:///./test.db`). Production uses Supabase PostgreSQL (`DATABASE_URL=postgresql://...`). The models adapt the UUID type per dialect (a `SQLiteUUID` shim avoids a known SQLite float-read bug), so the same code runs on both.
+```bash
+# Backend Test Suite (Targeted reflection and domain suites):
+cd backend
+pytest tests/coverage -n 4
 
-## 🔑 Environment variables
+# Frontend TypeScript and Production Build:
+cd frontend
+npx tsc --noEmit
+npm run build
+```
 
-Copy `.env.example` to `.env` for the backend. Frontend variables are build-time (`NEXT_PUBLIC_*`).
+## Integrations
 
-### Backend (read by `app/config.py` unless noted)
+- **Tally Prime**: Direct XML voucher export for Purchases, Sales, and Payments matching Tally double-entry accounting schemas.
+- **Zoho Books**: OAuth synchronization of vendor bills and sales invoices across global regions (.in, .com, .eu).
+- **Google Drive & Sheets**: Automated backup of generated documents and payroll run spreadsheets.
+- **BI Data Feeds**: Secure API key authenticated REST feeds for Power BI and Tableau ingestion.
+- **ZATCA E-Invoicing**: Phase 1 TLV base64 QR generation and UBL 2.1 XML compliance for Saudi operations.
 
-| Variable | Required? | Purpose / fallback when unset |
-| --- | --- | --- |
-| `ENVIRONMENT` | No (default `local`) | Set to `production` on Render. Outside local values, `SECRET_KEY` becomes mandatory. |
-| `DATABASE_URL` | Yes | `sqlite:///./test.db` in dev; Supabase Postgres in prod. |
-| `SECRET_KEY` | Yes in prod | JWT signing key. App refuses to start with a weak/known key outside local env. |
-| `ALGORITHM` | No | `HS256`. |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` | No | `1440` (24h). |
-| `SMS_PROVIDER` / `SMS_PROVIDER_API_KEY` | Optional | MSG91 phone OTP. Empty key disables real SMS; only demo allowlist logs in (503 otherwise). |
-| `MSG91_SENDER_ID` / `MSG91_OTP_TEMPLATE_ID` | Optional | MSG91 template config. |
-| `OTP_TTL_SECONDS` / `OTP_MAX_ATTEMPTS` | No | `300` / `5`. |
-| `OTP_DEMO_ALLOWLIST` / `OTP_DEMO_CODE` | No | Demo phone numbers + code for local/dev only. |
-| `BREVO_API_KEY` | Optional | Email OTP via Brevo HTTPS API (preferred over SMTP on blocked ports). |
-| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASSWORD` / `SMTP_FROM` / `SMTP_USE_TLS` | Optional | Email OTP via SMTP. |
-| `EMAIL_OTP_DEMO_ALLOWLIST` | No | Demo emails allowed to log in without SMTP. |
-| `PASSWORD_MIN_LENGTH` | No | `8`. |
-| `GOOGLE_LOGIN_CLIENT_ID` / `GOOGLE_LOGIN_CLIENT_SECRET` | Optional | Google login; falls back to the Sheets credentials if unset. |
-| `FIREBASE_SERVICE_ACCOUNT_JSON` / `FIREBASE_SERVICE_ACCOUNT_PATH` | Optional | Firebase phone auth; `/auth/firebase/verify` returns 503 if both empty. |
-| `FRONTEND_ORIGIN_REGEX` | No | CORS allow-regex for this project's Vercel preview deploys. |
-| `FRONTEND_URL` | Optional | Comma-separated explicit prod frontend origins (read directly in `main.py`). |
-| `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` | Optional | File blobs move to Supabase Storage; otherwise stored in the DB `data` column. |
-| `SENTRY_DSN` | Optional | Backend error reporting; cleanly skipped when empty. |
-| `GOOGLE_SHEETS_CLIENT_ID` / `GOOGLE_SHEETS_CLIENT_SECRET` | Optional | Google Sheets integration OAuth. |
-| `GOOGLE_DRIVE_CLIENT_ID` / `GOOGLE_DRIVE_CLIENT_SECRET` | Optional | Google Drive integration OAuth; falls back to the Google Sheets client when unset. |
-| `ZOHO_CLIENT_ID` / `ZOHO_CLIENT_SECRET` / `ZOHO_REGION` | Optional | Zoho Books integration OAuth. `ZOHO_REGION` (default `in`) drives the accounts + API base URLs (`.in`/`.com`/`.eu`). |
-| `TOKEN_ENCRYPTION_KEY` | Optional | Fernet (base64) key that encrypts Google Sheets OAuth tokens at rest in `GoogleSheetsConnection`; connections created while it is unset store plaintext tokens. |
-| `BACKEND_PUBLIC_URL` / `FRONTEND_PUBLIC_URL` | Optional | OAuth redirect bases; fall back to request/frontend origins. |
-| `ADMIN_MIGRATION_SECRET` | Optional | One-off admin migrations (for example file backfill); routes reject with 403 when empty. |
+## License
 
-### Frontend (Next.js build-time)
-
-| Variable | Required? | Purpose |
-| --- | --- | --- |
-| `NEXT_PUBLIC_API_URL` | Optional | Used by the PWA bootstrap. The main API client resolves the host at runtime: `localhost:8000` in dev, the Render backend URL in production. |
-| `NEXT_PUBLIC_FIREBASE_API_KEY` / `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` / `NEXT_PUBLIC_FIREBASE_PROJECT_ID` / `NEXT_PUBLIC_FIREBASE_APP_ID` | Optional | Firebase phone auth in the browser. |
-
-## 🗄️ Database and migrations
-
-`supabase/migrations/` holds hand-authored, additive SQL migrations. There is no ORM migration tool (no Alembic). In local dev the schema is created from the models via `Base.metadata.create_all`. In production, migrations are now auto-applied on startup by `backend/app/migration_runner.py` (invoked from `backend/app/main.py` lifespan): it discovers `supabase/migrations/*.sql` in sorted order, tracks applied files in the `supabase_migrations` table (created if missing via `CREATE TABLE IF NOT EXISTS`), and executes pending files via raw SQL in a per-file transaction (idempotent — migrations themselves use `IF NOT EXISTS` / `DO $$` guards plus the tracking table, and checksum + `ON CONFLICT DO NOTHING` prevents re-runs). Both SQLite (dev, tracked no-op + unique-index backfill) and Postgres (prod, real execution) are handled; each file is logged on apply. For manual or CI invocation, run `python scripts/apply_migrations.py` (supports `--strict` to fail on error and `SUPABASE_MIGRATIONS_DIR` override). New migrations should be additive and backward-compatible; do not drop or rename columns in place without a backfill plan.
-
-## ☁️ Deployment & Infrastructure Scaling
-
-- **Frontend**: Vercel (Next.js 16 App Router).
-- **Backend**: Render (Uvicorn/FastAPI).
-- **Database & Storage**: Supabase (PostgreSQL + Object Storage).
-- **Automated Deployments**: Vercel and Render deploy automatically on pushes to `main`.
-- **Keep-Alive Worker**: A GitHub Actions workflow (`.github/workflows/keep_alive.yml`) pings the Render backend every 10 minutes to mitigate free-tier cold starts.
-- **Sentry deploy check (standing rule 16)**: SENTRY_DSN configured. Check Sentry at 90-day window before and after every deploy -- '0 unresolved' at default 14d is not '0 unresolved' (six were sitting just outside it, and two from outage would have aged out within a fortnight while still being real). 0 unresolved at 90 days is definition of done.
-
-### 📊 Free-Tier Capacity & Infrastructure Scaling Roadmap
-
-| Tier Stage | Stack Allocation | Active Capacity | Operational Notes & Upgrade Drivers |
-| --- | --- | --- | --- |
-| **All-Free Mode** *(Current)* | **Vercel**: Hobby (100GB/mo)<br>**Render**: Free (512MB RAM, shared CPU, 15m sleep)<br>**Supabase**: Free (500MB DB, 1GB Storage) | **3–5** Active Companies<br>**15–30** DAUs<br>**~100** MAUs | Render 15-min sleep causes 30–50s cold-start delays on idle. 512MB RAM cap limits heavy concurrent PDF/BOQ imports. |
-| **Stage 1: Launch** *($7/mo)* | **Render**: Starter ($7/mo)<br>**Vercel / Supabase**: Free | **10–15** Active Companies<br>**~50** DAUs | **Eliminates 15-min cold starts completely.** Keeps FastAPI server awake 24/7. |
-| **Stage 2: Growth** *($32/mo)* | **Render**: Starter ($7/mo)<br>**Supabase**: Pro ($25/mo) | **30–50** Active Companies<br>**~300** DAUs | Unlocks 8GB DB, 100GB Storage for site photos & CAD drawings, removes 7-day DB auto-pause, and enables PITR backups. |
-| **Stage 3: Scale** *($75+/mo)* | **Render**: Standard ($25/mo)<br>**Supabase**: Pro + Compute ($50/mo) | **150+** Active Companies<br>**3,000+** DAUs | 2GB RAM / Dedicated vCPU backend handles high-concurrency multi-site ERP operations without latency. |
-
-## 🛡️ Security posture
-
-Hardened (verified in code):
-
-- OTP codes are HMAC-SHA256 hashed, TTL-bound, attempt-capped, and single-use; the plaintext is never stored or returned.
-- `SECRET_KEY` is mandatory and rejected if it matches a known-leaked dev value outside local environments.
-- Passwords are bcrypt-hashed (passlib). Google OAuth uses a one-time signed handoff code; the session JWT is never placed in a redirect URL.
-- CORS is scoped (explicit origins plus a Vercel preview regex) in `main.py`.
-- Rate limiting is applied per-endpoint via slowapi on sensitive routes (auth/OTP).
-- Multi-tenant isolation is enforced on every write endpoint and on tenant-scoped read endpoints via company/project membership guards (`get_company_membership` / `verify_company_access` / `verify_project_access`). Cross-tenant rejection is covered by regression tests in `backend/tests/coverage/test_router_tenant_isolation.py` and `test_finance_tenant_isolation.py`.
-- Role-based access control (RBAC): a flat `module:action` permission taxonomy lives in `backend/app/permissions.py`; per-role grants are stored on `CompanyRole.permissions` and enforced with `require_permission(...)` on high-risk actions (`approve`, `payroll:run`, `settings:manage`, `team:manage`, `data:delete`) and on everyday create/update (`<module>:edit`) writes, plus `:view` gating on sensitive financial/payroll reads. Failsafes: `partner` members always pass, and members with no un-migrated role (empty permissions) fail open. A secret-gated backfill (`POST /apis/v3/admin/migrations/backfill-rbac`) seeds the default roles and assigns un-roled members.
-- A settings Roles/Team editor in the console (`frontend/src/components/rbac/*`, `PermissionsContext`) lets admins configure role permissions and assign members.
-- Pydantic request models validate value ranges at the API boundary (non-negative amounts/quantities, 0–100 percentages).
-
-Known debt / deferred (be honest, not hidden):
-
-- Google Sheets OAuth tokens (access + refresh) are encrypted at rest with Fernet (`backend/app/crypto.py`) using `TOKEN_ENCRYPTION_KEY` before being written to `GoogleSheetsConnection`; legacy connection rows created before the key was configured remain plaintext.
-- Security headers (HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy) and the Content-Security-Policy are set in the frontend itself, in `frontend/next.config.ts`'s `headers()` function (not at the hosting edge); the CSP is enforced via the `Content-Security-Policy` header (not Report-Only).
-- Multi-language attendance (English, Hinglish, Hindi, Tamil) is real and implemented client-side: translation objects for all four languages exist in `frontend/src/app/c/[company_id]/d/attendance/page.tsx` and the equivalent project-level attendance page.
-
-## 📐 Conventions
-
-Inferred from the codebase and standing project policy:
-
-- Zero fabrication: no invented counts, no "trusted by" claims, no aspirational features described as shipped. Partial or deferred work is labelled as such.
-- No em dashes in user-facing copy.
-- Migrations are additive-only; schema changes go through `supabase/migrations/`.
-- Theme changes use the CSS custom properties in `globals.css`, never hardcoded colors in components.
-- New backend modules are routers registered under the `/apis/v3` prefix in `app/main.py`.
-
-## 📄 License
-
-SiteFlow is released under the MIT License. See [LICENSE](LICENSE).
+SiteFlow is open-source software licensed under the MIT License. See [LICENSE](LICENSE) for details.

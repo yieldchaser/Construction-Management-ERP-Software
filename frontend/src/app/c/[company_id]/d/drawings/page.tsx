@@ -554,7 +554,7 @@ export default function DrawingsPage() {
                           <div className="absolute left-[9px] top-5 bottom-0 w-px bg-white/5" />
                         )}
                         <div className={`absolute left-1.5 top-3.5 h-3 w-3 rounded-full border-2 transition-all ${isActive ? "bg-primary border-primary" : `${m.dot} border-border-custom`}`} />
-                        <div className={`mb-2 rounded-md p-3 border transition-all ${isActive ? "bg-elevated text-foreground font-semibold shadow-xs [box-shadow:inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)] border-border-custom" : "border-transparent hover:bg-elevated"}`}>
+                        <div className={`mb-2 rounded-md p-3 border transition-all ${isActive ? "bg-elevated text-foreground font-semibold border-border-custom" : "border-transparent hover:bg-elevated"}`}>
                           <button onClick={() => { setActiveRevId(rev.id); setSelectedPinId(null); setImgLoaded(false); }} className="w-full text-left">
                             <div className="flex items-center justify-between mb-1">
                               <span className="text-xs font-extrabold text-foreground">{rev.version}</span>
