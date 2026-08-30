@@ -3,7 +3,7 @@ import logging
 import uuid
 from datetime import datetime, timezone
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status, File, Form, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, status, File, Form, UploadFile, Response, Query
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.database import get_db
@@ -1211,7 +1211,16 @@ class FinanceSummaryResponse(BaseModel):
 
 
 @router.get("/transactions/{company_id}", response_model=FinanceSummaryResponse)
-def get_company_transactions(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access), current_user: User = Depends(get_current_user)):
+def get_company_transactions(
+    company_id: uuid.UUID,
+    search: Optional[str] = None,
+    limit: Optional[int] = Query(None, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+    response: Response = None,
+    db: Session = Depends(get_db),
+    _: None = Depends(verify_company_access),
+    current_user: User = Depends(get_current_user),
+):
     require_module_view(db, current_user, company_id, "finance")
     # R2-328: scope by company, not current project membership - Payment.project_id
     # is nullable and SET NULL on project delete, so membership-scoping silently
@@ -1293,6 +1302,27 @@ def get_company_transactions(company_id: uuid.UUID, db: Session = Depends(get_db
     company_balance = round(cash_balance + bank_balance, 2)
 
     rows.sort(key=lambda r: r.date, reverse=True)
+
+    if search and search.strip():
+        term = search.strip().lower()
+        rows = [
+            r for r in rows
+            if term in (r.details or "").lower()
+            or term in (r.party or "").lower()
+            or term in (r.ref or "").lower()
+        ]
+
+    total_txns = len(rows)
+    if response is not None:
+        response.headers["X-Total-Count"] = str(total_txns)
+        if limit is not None:
+            response.headers["X-Limit"] = str(limit)
+            response.headers["X-Offset"] = str(offset)
+
+    if offset:
+        rows = rows[offset:]
+    if limit is not None:
+        rows = rows[:limit]
 
     return FinanceSummaryResponse(
         total_invoice=round(total_invoice, 2),

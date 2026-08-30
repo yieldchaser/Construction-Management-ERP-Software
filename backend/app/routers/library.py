@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from sqlalchemy import Numeric
@@ -146,6 +146,10 @@ def next_party_id_custom(db: Session, company_id: uuid.UUID) -> str:
 def get_library_parties(
     company_id: uuid.UUID,
     party_type: Optional[str] = None,
+    search: Optional[str] = None,
+    limit: Optional[int] = Query(None, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+    response: Response = None,
     db: Session = Depends(get_db),
     _: None = Depends(verify_company_access),
 ):
@@ -153,6 +157,28 @@ def get_library_parties(
     if party_type:
         from sqlalchemy import func
         query = query.filter(func.lower(models.LibraryParty.party_type) == party_type.strip().lower())
+    if search and search.strip():
+        term = f"%{search.strip()}%"
+        from sqlalchemy import or_
+        query = query.filter(
+            or_(
+                models.LibraryParty.name.ilike(term),
+                models.LibraryParty.phone.ilike(term),
+                models.LibraryParty.email.ilike(term),
+                models.LibraryParty.tax_no.ilike(term),
+                models.LibraryParty.party_id_custom.ilike(term),
+            )
+        )
+    total = query.count()
+    if response is not None:
+        response.headers["X-Total-Count"] = str(total)
+        if limit is not None:
+            response.headers["X-Limit"] = str(limit)
+            response.headers["X-Offset"] = str(offset)
+    if offset:
+        query = query.offset(offset)
+    if limit is not None:
+        query = query.limit(limit)
     return query.all()
 
 @router.post("/parties")
@@ -395,10 +421,38 @@ def delete_library_workforce(item_id: uuid.UUID, db: Session = Depends(get_db), 
     return {"success": True}
 
 
-# ─── MATERIALS ───
 @router.get("/materials/{company_id}")
-def get_library_materials(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
-    return db.query(models.LibraryMaterial).filter(models.LibraryMaterial.company_id == company_id).all()
+def get_library_materials(
+    company_id: uuid.UUID,
+    search: Optional[str] = None,
+    limit: Optional[int] = Query(None, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+    response: Response = None,
+    db: Session = Depends(get_db),
+    _: None = Depends(verify_company_access),
+):
+    query = db.query(models.LibraryMaterial).filter(models.LibraryMaterial.company_id == company_id)
+    if search and search.strip():
+        term = f"%{search.strip()}%"
+        from sqlalchemy import or_
+        query = query.filter(
+            or_(
+                models.LibraryMaterial.name.ilike(term),
+                models.LibraryMaterial.category.ilike(term),
+                models.LibraryMaterial.item_code.ilike(term),
+            )
+        )
+    total = query.count()
+    if response is not None:
+        response.headers["X-Total-Count"] = str(total)
+        if limit is not None:
+            response.headers["X-Limit"] = str(limit)
+            response.headers["X-Offset"] = str(offset)
+    if offset:
+        query = query.offset(offset)
+    if limit is not None:
+        query = query.limit(limit)
+    return query.all()
 
 @router.post("/materials")
 def create_library_material(payload: MaterialCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):

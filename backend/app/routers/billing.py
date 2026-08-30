@@ -3,7 +3,7 @@ import logging
 from uuid import UUID
 from datetime import datetime, timezone
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status, Query
 
 logger = logging.getLogger(__name__)
 from sqlalchemy import func
@@ -479,15 +479,36 @@ def cancel_work_order(wo_id: UUID, db: Session = Depends(get_db), current_user: 
     )
 
 # 2. Bills
-@router.get("/bills", response_model=List[BillResponse])
-def get_bills(project_id: UUID, invoice_type: Optional[str] = None, db: Session = Depends(get_db), _: None = Depends(verify_project_access), current_user: User = Depends(get_current_user)):
-    project = db.query(Project).filter(Project.id == project_id).first()
-    require_module_view(db, current_user, project.company_id, "billing")
-    query = db.query(Bill).filter(Bill.project_id == project_id)
-    if invoice_type:
-        query = query.filter(Bill.invoice_type == invoice_type)
+def _bills_query_and_serialize(
+    query,
+    db: Session,
+    search: Optional[str] = None,
+    limit: Optional[int] = None,
+    offset: int = 0,
+    response: Optional[Response] = None,
+) -> List[BillResponse]:
+    if search and search.strip():
+        term = f"%{search.strip()}%"
+        from sqlalchemy import or_
+        query = query.filter(
+            or_(
+                Bill.invoice_number.ilike(term),
+                Bill.payment_ref.ilike(term),
+            )
+        )
+    total = query.count()
+    if response is not None:
+        response.headers["X-Total-Count"] = str(total)
+        if limit is not None:
+            response.headers["X-Limit"] = str(limit)
+            response.headers["X-Offset"] = str(offset)
+    if offset:
+        query = query.offset(offset)
+    if limit is not None:
+        query = query.limit(limit)
     bills = query.all()
-    
+
+    project_name_by_id = {p.id: p.name for p in db.query(Project.id, Project.name).all()}
     res = []
     for b in bills:
         deductions = db.query(TransactionDeduction).filter(TransactionDeduction.bill_id == b.id).all()
@@ -532,10 +553,59 @@ def get_bills(project_id: UUID, invoice_type: Optional[str] = None, db: Session 
                 match_status=_derive_bill_match_status(db, b),
                 wo_id=b.wo_id,
                 po_id=b.po_id,
-                project_name=project.name if project else None,
+                project_name=project_name_by_id.get(b.project_id),
             )
         )
     return res
+
+
+@router.get("/bills", response_model=List[BillResponse])
+def get_bills(
+    project_id: Optional[UUID] = None,
+    company_id: Optional[UUID] = None,
+    invoice_type: Optional[str] = None,
+    search: Optional[str] = None,
+    limit: Optional[int] = Query(None, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+    response: Response = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if not project_id and not company_id:
+        raise HTTPException(status_code=400, detail="Either project_id or company_id is required")
+    if project_id:
+        verify_project_access(project_id, db, current_user)
+        project = db.query(Project).filter(Project.id == project_id).first()
+        require_module_view(db, current_user, project.company_id, "billing")
+        query = db.query(Bill).filter(Bill.project_id == project_id)
+    else:
+        verify_company_access(company_id, db, current_user)
+        require_module_view(db, current_user, company_id, "billing")
+        query = db.query(Bill).filter(Bill.company_id == company_id)
+
+    if invoice_type:
+        query = query.filter(Bill.invoice_type == invoice_type)
+
+    return _bills_query_and_serialize(query, db, search, limit, offset, response)
+
+
+@router.get("/bills/{company_id}", response_model=List[BillResponse])
+def get_bills_by_company(
+    company_id: UUID,
+    invoice_type: Optional[str] = None,
+    search: Optional[str] = None,
+    limit: Optional[int] = Query(None, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+    response: Response = None,
+    db: Session = Depends(get_db),
+    _: None = Depends(verify_company_access),
+    current_user: User = Depends(get_current_user),
+):
+    require_module_view(db, current_user, company_id, "billing")
+    query = db.query(Bill).filter(Bill.company_id == company_id)
+    if invoice_type:
+        query = query.filter(Bill.invoice_type == invoice_type)
+    return _bills_query_and_serialize(query, db, search, limit, offset, response)
 
 @router.post("/bills/{bill_id}/cancel", response_model=BillResponse)
 def cancel_bill(bill_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
