@@ -88,6 +88,10 @@ class FolderCreateRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
 
 
+class FolderUpdateRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=255)
+
+
 class FolderResponse(BaseModel):
     id: uuid.UUID
     project_id: uuid.UUID
@@ -157,6 +161,36 @@ def create_folder(req: FolderCreateRequest, db: Session = Depends(get_db), curre
         name=req.name.strip(),
     )
     db.add(folder)
+    db.commit()
+    db.refresh(folder)
+    return FolderResponse(
+        id=folder.id,
+        project_id=folder.project_id,
+        parent_id=folder.parent_id,
+        name=folder.name,
+        created_at=folder.created_at,
+    )
+
+
+@router.put("/folders/{folder_id}", response_model=FolderResponse)
+def update_folder(folder_id: uuid.UUID, req: FolderUpdateRequest, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    folder = db.query(FileFolder).filter(FileFolder.id == folder_id).first()
+    if not folder:
+        raise HTTPException(status_code=404, detail="Folder not found")
+    project = _require_project(folder.project_id, db)
+    get_company_membership(db, current_user, project.company_id)
+
+    new_name = req.name.strip()
+    existing = db.query(FileFolder).filter(
+        FileFolder.project_id == folder.project_id,
+        FileFolder.parent_id == folder.parent_id,
+        FileFolder.name == new_name,
+        FileFolder.id != folder_id,
+    ).first()
+    if existing:
+        raise HTTPException(status_code=400, detail=f"Folder '{new_name}' already exists here")
+
+    folder.name = new_name
     db.commit()
     db.refresh(folder)
     return FolderResponse(

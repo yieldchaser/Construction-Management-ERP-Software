@@ -624,6 +624,30 @@ def update_task(task_id: UUID, request: TaskUpdateRequest, db: Session = Depends
     )
     return task
 
+
+@router.delete("/tasks/{task_id}")
+def delete_task(task_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    task = db.query(Task).filter(Task.id == task_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    project = db.query(Project).filter(Project.id == task.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found for this task")
+    get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "planning:edit")
+
+    # delete predecessors/successors relations first if any
+    db.query(TaskPredecessor).filter(
+        (TaskPredecessor.task_id == task_id) | (TaskPredecessor.predecessor_id == task_id)
+    ).delete(synchronize_session=False)
+
+    from app.routers.delete_logs import log_deletion
+    log_deletion(db, project.company_id, "task", task.id, f"Task: {task.name}", deleted_by=current_user.name)
+    db.delete(task)
+    db.commit()
+    return {"success": True}
+
+
 @router.post("/tasks/{task_id}/predecessors", status_code=status.HTTP_201_CREATED)
 def add_predecessor(task_id: UUID, request: PredecessorCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     task = db.query(Task).filter(Task.id == task_id).first()
@@ -983,4 +1007,18 @@ def update_project_v3(project_id: UUID, payload: ProjectUpdateSchema, db: Sessio
     db.commit()
     db.refresh(proj)
     return proj
+
+
+@router.delete("/projects/{project_id}")
+def delete_project(project_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    proj = db.query(Project).filter(Project.id == project_id).first()
+    if not proj:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, proj.company_id)
+    require_permission(db, current_user, proj.company_id, "planning:edit")
+    from app.routers.delete_logs import log_deletion
+    log_deletion(db, proj.company_id, "project", proj.id, f"Project: {proj.name}", deleted_by=current_user.name)
+    db.delete(proj)
+    db.commit()
+    return {"success": True}
 

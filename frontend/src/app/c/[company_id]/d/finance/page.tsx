@@ -739,6 +739,25 @@ export default function FinancePage() {
     }
   };
 
+  const handleDeleteBankAccount = async (accId: string) => {
+    if (!confirm("Are you sure you want to delete this bank account?")) return;
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/finance/accounts/${accId}`, {
+        method: "DELETE",
+        headers: authHeaders() || {},
+      });
+      if (res.ok) {
+        setBankAccounts(prev => prev.filter(b => b.id !== accId));
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || "Failed to delete bank account");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Error deleting bank account");
+    }
+  };
+
   const handleCreateCashAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -860,6 +879,22 @@ export default function FinancePage() {
     setShowTallySetup(true);
   };
 
+  const deleteTallyConnection = async () => {
+    if (!tallyConn?.id || !confirm("Disconnect and delete Tally integration settings?")) return;
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/tally/connections/${tallyConn.id}`, {
+        method: "DELETE",
+        headers: authHeaders() || {},
+      });
+      if (res.ok) {
+        setTallyConn(null);
+        setTallyMsg({ type: "ok", text: "Tally connection removed." });
+      }
+    } catch (e: any) {
+      setTallyMsg({ type: "err", text: e?.message || "Failed to remove Tally connection." });
+    }
+  };
+
   const saveTallyConnection = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!tallyCompany.trim() || !tallyMobile.trim()) {
@@ -869,8 +904,9 @@ export default function FinancePage() {
     setTallySaving(true);
     setTallyMsg(null);
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/tally/connections`, {
-        method: "POST",
+      const url = tallyConn?.id ? `${getApiHost()}/apis/v3/tally/connections/${tallyConn.id}` : `${getApiHost()}/apis/v3/tally/connections`;
+      const res = await fetch(url, {
+        method: tallyConn?.id ? "PUT" : "POST",
         headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           company_id: companyId,
@@ -960,34 +996,87 @@ export default function FinancePage() {
 
   const savePartyMapping = async (partyId: string, ledgerName: string) => {
     if (!ledgerName.trim()) return;
+    const existing = tallyPartyMappings.find(m => m.onsite_party_id === partyId);
     try {
-      await fetch(`${getApiHost()}/apis/v3/tally/mappings/party`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
-        body: JSON.stringify({ company_id: companyId, onsite_party_id: partyId, tally_ledger_name: ledgerName.trim() }),
-      });
+      if (existing) {
+        await fetch(`${getApiHost()}/apis/v3/tally/mappings/party/${existing.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+          body: JSON.stringify({ tally_ledger_name: ledgerName.trim() }),
+        });
+      } else {
+        await fetch(`${getApiHost()}/apis/v3/tally/mappings/party`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+          body: JSON.stringify({ company_id: companyId, onsite_party_id: partyId, tally_ledger_name: ledgerName.trim() }),
+        });
+      }
       await fetchTallyData();
     } catch (e) {
       console.error("Failed to save party mapping", e);
     }
   };
 
+  const deletePartyMapping = async (mapId: string) => {
+    try {
+      await fetch(`${getApiHost()}/apis/v3/tally/mappings/party/${mapId}`, {
+        method: "DELETE",
+        headers: authHeaders() || {},
+      });
+      await fetchTallyData();
+    } catch (e) {
+      console.error("Failed to delete party mapping", e);
+    }
+  };
+
   const saveLedgerMappings = async () => {
     try {
-      await fetch(`${getApiHost()}/apis/v3/tally/mappings/ledger`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
-        body: JSON.stringify({ company_id: companyId, onsite_transaction_type: "Material Purchase", posting_mode: "lumpsum", tally_voucher_type: "Purchase", tally_ledger_name: purchaseLedgerInput.trim() || "Purchase A/c" }),
-      });
-      await fetch(`${getApiHost()}/apis/v3/tally/mappings/ledger`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
-        body: JSON.stringify({ company_id: companyId, onsite_transaction_type: "Sales Invoice", posting_mode: "lumpsum", tally_voucher_type: "Sales", tally_ledger_name: salesLedgerInput.trim() || "Sales A/c" }),
-      });
+      const existingPurchase = tallyLedgerMappings.find(m => m.onsite_transaction_type === "Material Purchase");
+      const existingSales = tallyLedgerMappings.find(m => m.onsite_transaction_type === "Sales Invoice");
+
+      if (existingPurchase) {
+        await fetch(`${getApiHost()}/apis/v3/tally/mappings/ledger/${existingPurchase.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+          body: JSON.stringify({ tally_ledger_name: purchaseLedgerInput.trim() || "Purchase A/c" }),
+        });
+      } else {
+        await fetch(`${getApiHost()}/apis/v3/tally/mappings/ledger`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+          body: JSON.stringify({ company_id: companyId, onsite_transaction_type: "Material Purchase", posting_mode: "lumpsum", tally_voucher_type: "Purchase", tally_ledger_name: purchaseLedgerInput.trim() || "Purchase A/c" }),
+        });
+      }
+
+      if (existingSales) {
+        await fetch(`${getApiHost()}/apis/v3/tally/mappings/ledger/${existingSales.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+          body: JSON.stringify({ tally_ledger_name: salesLedgerInput.trim() || "Sales A/c" }),
+        });
+      } else {
+        await fetch(`${getApiHost()}/apis/v3/tally/mappings/ledger`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+          body: JSON.stringify({ company_id: companyId, onsite_transaction_type: "Sales Invoice", posting_mode: "lumpsum", tally_voucher_type: "Sales", tally_ledger_name: salesLedgerInput.trim() || "Sales A/c" }),
+        });
+      }
       await fetchTallyData();
       setTallyMsg({ type: "ok", text: "Ledger mappings saved." });
     } catch (e) {
       console.error("Failed to save ledger mappings", e);
+    }
+  };
+
+  const deleteLedgerMapping = async (mapId: string) => {
+    try {
+      await fetch(`${getApiHost()}/apis/v3/tally/mappings/ledger/${mapId}`, {
+        method: "DELETE",
+        headers: authHeaders() || {},
+      });
+      await fetchTallyData();
+    } catch (e) {
+      console.error("Failed to delete ledger mapping", e);
     }
   };
 
@@ -997,16 +1086,37 @@ export default function FinancePage() {
       return;
     }
     if (!costCentreInput.trim()) return;
+    const existing = tallyCostCentreMappings.find(m => m.project_id === activeProjectId);
     try {
-      await fetch(`${getApiHost()}/apis/v3/tally/mappings/cost-centre`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
-        body: JSON.stringify({ company_id: companyId, project_id: activeProjectId, tally_cost_centre_name: costCentreInput.trim() }),
-      });
+      if (existing) {
+        await fetch(`${getApiHost()}/apis/v3/tally/mappings/cost-centre/${existing.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+          body: JSON.stringify({ tally_cost_centre_name: costCentreInput.trim() }),
+        });
+      } else {
+        await fetch(`${getApiHost()}/apis/v3/tally/mappings/cost-centre`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+          body: JSON.stringify({ company_id: companyId, project_id: activeProjectId, tally_cost_centre_name: costCentreInput.trim() }),
+        });
+      }
       await fetchTallyData();
       setTallyMsg({ type: "ok", text: "Cost centre mapping saved." });
     } catch (e) {
       console.error("Failed to save cost centre mapping", e);
+    }
+  };
+
+  const deleteCostCentreMapping = async (mapId: string) => {
+    try {
+      await fetch(`${getApiHost()}/apis/v3/tally/mappings/cost-centre/${mapId}`, {
+        method: "DELETE",
+        headers: authHeaders() || {},
+      });
+      await fetchTallyData();
+    } catch (e) {
+      console.error("Failed to delete cost centre mapping", e);
     }
   };
 
@@ -2110,7 +2220,14 @@ export default function FinancePage() {
                           </div>
                           
                           <div className="flex items-center gap-2">
-                            <span className="text-muted cursor-pointer hover:text-foreground font-bold p-1">⋮</span>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteBankAccount(acc.id)}
+                              className="p-1.5 rounded-lg bg-danger/10 hover:bg-danger/20 border border-danger/20 text-danger text-xs transition-all cursor-pointer"
+                              title="Delete bank account"
+                            >
+                              <Icon name="trash" className="w-3.5 h-3.5" />
+                            </button>
                           </div>
                         </div>
 

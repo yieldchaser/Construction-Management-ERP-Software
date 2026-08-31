@@ -341,6 +341,24 @@ def set_primary_branch(branch_id: uuid.UUID, db: Session = Depends(get_db), curr
     return branch
 
 
+@router.delete("/branches/{branch_id}")
+def delete_branch(branch_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    branch = db.query(CompanyBranch).filter(CompanyBranch.id == branch_id).first()
+    if not branch:
+        raise HTTPException(status_code=404, detail="Branch not found")
+    get_company_membership(db, current_user, branch.company_id)
+    require_permission(db, current_user, branch.company_id, "settings:manage")
+    if branch.is_primary:
+        other = db.query(CompanyBranch).filter(CompanyBranch.company_id == branch.company_id, CompanyBranch.id != branch_id).first()
+        if other:
+            other.is_primary = True
+    from app.routers.delete_logs import log_deletion
+    log_deletion(db, branch.company_id, "branch", branch.id, f"Branch: {branch.branch_name}", deleted_by=current_user.name)
+    db.delete(branch)
+    db.commit()
+    return {"success": True}
+
+
 @router.get("/approval-rules/{company_id}", response_model=List[ApprovalRuleResponse])
 def list_approval_rules(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     return db.query(ApprovalRule).filter(ApprovalRule.company_id == company_id).all()

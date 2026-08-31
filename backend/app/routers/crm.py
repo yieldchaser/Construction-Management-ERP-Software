@@ -517,6 +517,33 @@ def create_lead_source(company_id: uuid.UUID, payload: LookupCreate, db: Session
     return obj
 
 
+@router.put("/lead-sources/{source_id}", response_model=LookupResponse)
+def update_lead_source(source_id: uuid.UUID, payload: LookupCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    obj = db.query(CRMLeadSource).filter(CRMLeadSource.id == source_id).first()
+    if not obj:
+        raise HTTPException(status_code=404, detail="Lead source not found")
+    get_company_membership(db, current_user, obj.company_id)
+    require_permission(db, current_user, obj.company_id, "crm:edit")
+    obj.name = payload.name
+    db.commit()
+    db.refresh(obj)
+    return obj
+
+
+@router.delete("/lead-sources/{source_id}")
+def delete_lead_source(source_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    obj = db.query(CRMLeadSource).filter(CRMLeadSource.id == source_id).first()
+    if not obj:
+        raise HTTPException(status_code=404, detail="Lead source not found")
+    get_company_membership(db, current_user, obj.company_id)
+    require_permission(db, current_user, obj.company_id, "crm:edit")
+    from app.routers.delete_logs import log_deletion
+    log_deletion(db, obj.company_id, "lead_source", obj.id, f"Lead Source: {obj.name}", deleted_by=current_user.name)
+    db.delete(obj)
+    db.commit()
+    return {"success": True}
+
+
 @router.get("/lead-categories/{company_id}", response_model=List[LookupResponse])
 def list_lead_categories(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     comp_uuid = uuid.UUID(str(company_id))
@@ -533,6 +560,33 @@ def create_lead_category(company_id: uuid.UUID, payload: LookupCreate, db: Sessi
     return obj
 
 
+@router.put("/lead-categories/{category_id}", response_model=LookupResponse)
+def update_lead_category(category_id: uuid.UUID, payload: LookupCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    obj = db.query(CRMLeadCategory).filter(CRMLeadCategory.id == category_id).first()
+    if not obj:
+        raise HTTPException(status_code=404, detail="Lead category not found")
+    get_company_membership(db, current_user, obj.company_id)
+    require_permission(db, current_user, obj.company_id, "crm:edit")
+    obj.name = payload.name
+    db.commit()
+    db.refresh(obj)
+    return obj
+
+
+@router.delete("/lead-categories/{category_id}")
+def delete_lead_category(category_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    obj = db.query(CRMLeadCategory).filter(CRMLeadCategory.id == category_id).first()
+    if not obj:
+        raise HTTPException(status_code=404, detail="Lead category not found")
+    get_company_membership(db, current_user, obj.company_id)
+    require_permission(db, current_user, obj.company_id, "crm:edit")
+    from app.routers.delete_logs import log_deletion
+    log_deletion(db, obj.company_id, "lead_category", obj.id, f"Lead Category: {obj.name}", deleted_by=current_user.name)
+    db.delete(obj)
+    db.commit()
+    return {"success": True}
+
+
 @router.get("/lead-statuses/{company_id}", response_model=List[LookupResponse])
 def list_lead_statuses(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     comp_uuid = uuid.UUID(str(company_id))
@@ -547,6 +601,33 @@ def create_lead_status(company_id: uuid.UUID, payload: LookupCreate, db: Session
     db.add(obj)
     db.commit()
     return obj
+
+
+@router.put("/lead-statuses/{status_id}", response_model=LookupResponse)
+def update_lead_status(status_id: uuid.UUID, payload: LookupCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    obj = db.query(CRMLeadStatus).filter(CRMLeadStatus.id == status_id).first()
+    if not obj:
+        raise HTTPException(status_code=404, detail="Lead status not found")
+    get_company_membership(db, current_user, obj.company_id)
+    require_permission(db, current_user, obj.company_id, "crm:edit")
+    obj.name = payload.name
+    db.commit()
+    db.refresh(obj)
+    return obj
+
+
+@router.delete("/lead-statuses/{status_id}")
+def delete_lead_status(status_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    obj = db.query(CRMLeadStatus).filter(CRMLeadStatus.id == status_id).first()
+    if not obj:
+        raise HTTPException(status_code=404, detail="Lead status not found")
+    get_company_membership(db, current_user, obj.company_id)
+    require_permission(db, current_user, obj.company_id, "crm:edit")
+    from app.routers.delete_logs import log_deletion
+    log_deletion(db, obj.company_id, "lead_status", obj.id, f"Lead Status: {obj.name}", deleted_by=current_user.name)
+    db.delete(obj)
+    db.commit()
+    return {"success": True}
 
 
 # --- Quotation Endpoints ---

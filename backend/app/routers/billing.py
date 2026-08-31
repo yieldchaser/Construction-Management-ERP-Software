@@ -1871,6 +1871,18 @@ class SubcontractorCreateRequest(BaseModel):
     address: Optional[str] = None
 
 
+class SubcontractorUpdateRequest(BaseModel):
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    tax_no: Optional[str] = None
+    gstin: Optional[str] = None
+    bank_name: Optional[str] = None
+    account_number: Optional[str] = None
+    ifsc_code: Optional[str] = None
+    address: Optional[str] = None
+
+
 class SubcontractorResponse(BaseModel):
     company_team_id: UUID
     library_party_id: UUID
@@ -1965,3 +1977,64 @@ def list_subcontractors(company_id: UUID, db: Session = Depends(get_db), _: None
             )
         )
     return res
+
+
+@router.put("/subcontractors/{team_id}", response_model=SubcontractorResponse)
+def update_subcontractor(team_id: UUID, req: SubcontractorUpdateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    team = db.query(models.CompanyTeam).filter(models.CompanyTeam.id == team_id).first()
+    if not team:
+        raise HTTPException(status_code=404, detail="Subcontractor not found")
+    get_company_membership(db, current_user, team.company_id)
+    require_permission(db, current_user, team.company_id, "team:manage")
+
+    party = None
+    if team.library_party_id:
+        party = db.query(models.LibraryParty).filter(models.LibraryParty.id == team.library_party_id).first()
+
+    if party:
+        if req.name and req.name.strip():
+            party.name = req.name.strip()
+        if req.phone is not None:
+            party.phone = req.phone
+        if req.email is not None:
+            party.email = req.email
+        tax_no = req.tax_no or req.gstin
+        if tax_no is not None:
+            party.tax_no = tax_no
+        if req.bank_name is not None:
+            party.bank_name = req.bank_name
+        if req.account_number is not None:
+            party.account_number = req.account_number
+        if req.ifsc_code is not None:
+            party.ifsc_code = req.ifsc_code
+        if req.address is not None:
+            party.address = req.address
+
+    db.commit()
+    return SubcontractorResponse(
+        company_team_id=team.id,
+        library_party_id=team.library_party_id or team.id,
+        name=party.name if party else "Subcontractor",
+    )
+
+
+@router.delete("/subcontractors/{team_id}")
+def delete_subcontractor(team_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    team = db.query(models.CompanyTeam).filter(models.CompanyTeam.id == team_id).first()
+    if not team:
+        raise HTTPException(status_code=404, detail="Subcontractor not found")
+    get_company_membership(db, current_user, team.company_id)
+    require_permission(db, current_user, team.company_id, "team:manage")
+
+    from app.routers.delete_logs import log_deletion
+    party_name = "Subcontractor"
+    if team.library_party_id:
+        party = db.query(models.LibraryParty).filter(models.LibraryParty.id == team.library_party_id).first()
+        if party:
+            party_name = party.name
+            db.delete(party)
+
+    log_deletion(db, team.company_id, "subcontractor", team.id, f"Subcontractor: {party_name}", deleted_by=current_user.name)
+    db.delete(team)
+    db.commit()
+    return {"success": True}

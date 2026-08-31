@@ -86,6 +86,7 @@ export default function EquipmentTrackingPage() {
 
   // Modal open states
   const [isAddEqOpen, setIsAddEqOpen] = useState(false);
+  const [editingEqId, setEditingEqId] = useState<string | null>(null);
   
   // Start/Stop wizard modal states
   const [activeDeployingEq, setActiveDeployingEq] = useState<Equipment | null>(null);
@@ -175,6 +176,16 @@ export default function EquipmentTrackingPage() {
     }
   }, [companyId, projectId]);
 
+  const handleEditEquipment = (eq: Equipment) => {
+    setEditingEqId(eq.id);
+    setEqName(eq.name);
+    setEqCode(eq.code);
+    setEqCategory(eq.category);
+    setEqOwnership(eq.ownership_type);
+    setEqRate(String(eq.hourly_rate));
+    setIsAddEqOpen(true);
+  };
+
   const handleAddEquipment = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs: Record<string, string> = {};
@@ -186,8 +197,9 @@ export default function EquipmentTrackingPage() {
     }
     setValidationErrors({});
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/equipment`, {
-        method: "POST",
+      const url = editingEqId ? `${getApiHost()}/apis/v3/equipment/${editingEqId}` : `${getApiHost()}/apis/v3/equipment`;
+      const res = await fetch(url, {
+        method: editingEqId ? "PUT" : "POST",
         headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           company_id: companyId,
@@ -200,6 +212,7 @@ export default function EquipmentTrackingPage() {
       });
       if (res.ok) {
         setIsAddEqOpen(false);
+        setEditingEqId(null);
         setEqName("");
         setEqCode("");
         setEqRate("0");
@@ -357,7 +370,7 @@ export default function EquipmentTrackingPage() {
           title="Equipment & Machinery Logs"
           subtitle="GPS verified mileage and refueling timeline"
         >
-          <button onClick={() => setIsAddEqOpen(true)} className="px-3.5 py-1.5 bg-primary rounded-md text-xs font-bold text-white hover:opacity-90 transition-all cursor-pointer">
+          <button onClick={() => { setEditingEqId(null); setEqName(""); setEqCode(""); setEqRate("0"); setIsAddEqOpen(true); }} className="px-3.5 py-1.5 bg-primary rounded-md text-xs font-bold text-white hover:opacity-90 transition-all cursor-pointer">
             + Add Equipment
           </button>
         </PageHeader>
@@ -464,6 +477,12 @@ export default function EquipmentTrackingPage() {
                                 </button>
                               )}
 
+                            <button
+                              onClick={() => handleEditEquipment(eq)}
+                              className="text-[10px] bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary px-2.5 py-1.5 rounded-md transition-all inline-flex items-center gap-1 cursor-pointer"
+                            >
+                              <Icon name="edit" className="w-3 h-3" />Edit
+                            </button>
                             <button
                               onClick={() => { setActiveFuelingEq(eq); setFuelLiters(""); setFuelRate(""); }}
                               className="text-[10px] bg-elevated border border-border-custom text-muted hover:text-foreground px-2.5 py-1.5 rounded-md transition-all inline-flex items-center gap-1"
@@ -949,7 +968,7 @@ export default function EquipmentTrackingPage() {
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-background border border-border-custom rounded-lg w-full max-w-md shadow-2xl p-6 space-y-4">
             <div className="flex justify-between items-center border-b border-border-custom pb-2">
-              <h3 className="text-xs font-extrabold text-foreground">Add Equipment Assets</h3>
+              <h3 className="text-xs font-extrabold text-foreground">{editingEqId ? "Edit Equipment Asset" : "Add Equipment Assets"}</h3>
               <button onClick={() => setIsAddEqOpen(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
 
@@ -991,7 +1010,7 @@ export default function EquipmentTrackingPage() {
 
               <div className="flex gap-2 justify-end border-t border-border-custom pt-4">
                 <button type="button" onClick={() => setIsAddEqOpen(false)} className="px-4 py-2 bg-elevated text-muted hover:text-foreground rounded-md text-xs">Cancel</button>
-                <button type="submit" className="px-5 py-2.5 bg-primary text-white font-bold rounded-md text-xs">Save Asset</button>
+                <button type="submit" className="px-5 py-2.5 bg-primary text-white font-bold rounded-md text-xs">{editingEqId ? "Update Asset" : "Save Asset"}</button>
               </div>
             </form>
           </div>

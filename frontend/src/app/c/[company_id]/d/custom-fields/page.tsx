@@ -8,6 +8,7 @@ import { useParams } from "next/navigation";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
+import Icon from "@/components/marketing/Icon";
 
 interface Field {
   id: string;
@@ -171,6 +172,26 @@ export default function CustomFieldsPage() {
     } catch (_e) { void _e; setMessage("Error"); }
   };
 
+  const handleDeleteField = async (fieldId: string) => {
+    if (!confirm("Are you sure you want to delete this custom field? This will delete all stored values for this field.")) return;
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/custom-fields/fields/${fieldId}`, {
+        method: "DELETE",
+        headers: authHeaders() || {},
+      });
+      if (res.ok) {
+        setFields(prev => prev.filter(f => f.id !== fieldId));
+        setMessage("Custom field deleted successfully");
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setMessage(err.detail || "Failed to delete field");
+      }
+    } catch (_e) {
+      void _e;
+      setMessage("Error deleting custom field");
+    }
+  };
+
   const openValueModal = (field: Field) => {
     setSelectedField(field);
     setValueForm({ field_id: field.id, entity_type: field.entity_type, entity_id: projectId || "", value_text: "", value_number: 0, value_date: "" });
@@ -239,9 +260,19 @@ export default function CustomFieldsPage() {
                   <span className="text-muted">Current value: </span>
                   <span className="text-foreground font-medium">{formatFieldValue(f)}</span>
                 </div>
-                <button onClick={() => openValueModal(f)} className="w-full px-3 py-2 bg-input hover:bg-elevated text-foreground rounded-md text-xs font-medium transition-all">
-                  Set Value
-                </button>
+                <div className="flex gap-2 items-center">
+                  <button onClick={() => openValueModal(f)} className="flex-1 px-3 py-2 bg-input hover:bg-elevated text-foreground rounded-md text-xs font-medium transition-all cursor-pointer">
+                    Set Value
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteField(f.id)}
+                    className="p-2 rounded-md bg-danger/10 hover:bg-danger/20 border border-danger/20 text-danger text-xs transition-all cursor-pointer"
+                    title="Delete custom field"
+                  >
+                    <Icon name="trash" className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             ))
           )}

@@ -36,6 +36,15 @@ class EquipmentCreate(BaseModel):
     hourly_rate: float = Field(0.0, ge=0)
 
 
+class EquipmentUpdate(BaseModel):
+    name: Optional[str] = None
+    code: Optional[str] = None
+    category: Optional[str] = None
+    ownership_type: Optional[str] = Field(None, pattern="^(Owned|Hired)$")
+    status: Optional[str] = None
+    hourly_rate: Optional[float] = Field(None, ge=0)
+
+
 class EquipmentResponse(BaseModel):
     id: uuid.UUID
     company_id: uuid.UUID
@@ -143,6 +152,35 @@ def add_equipment(payload: EquipmentCreate, db: Session = Depends(get_db), curre
     data["hourly_rate"] = Decimal(str(data["hourly_rate"]))
     eq = Equipment(**data)
     db.add(eq)
+    db.commit()
+    db.refresh(eq)
+    return eq
+
+
+@router.put("/{equipment_id}", response_model=EquipmentResponse)
+def update_equipment(equipment_id: uuid.UUID, payload: EquipmentUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    eq = db.query(Equipment).filter(Equipment.id == equipment_id).first()
+    if not eq:
+        raise HTTPException(status_code=404, detail="Equipment not found")
+    get_company_membership(db, current_user, eq.company_id)
+    require_permission(db, current_user, eq.company_id, "equipment:edit")
+
+    if payload.code and payload.code != eq.code:
+        existing = db.query(Equipment).filter(
+            Equipment.code == payload.code,
+            Equipment.company_id == eq.company_id,
+            Equipment.id != equipment_id,
+        ).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Equipment code already exists")
+
+    update_data = payload.model_dump(exclude_unset=True)
+    if "hourly_rate" in update_data and update_data["hourly_rate"] is not None:
+        update_data["hourly_rate"] = Decimal(str(update_data["hourly_rate"]))
+
+    for k, v in update_data.items():
+        setattr(eq, k, v)
+
     db.commit()
     db.refresh(eq)
     return eq

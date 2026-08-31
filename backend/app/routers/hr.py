@@ -1415,6 +1415,21 @@ def update_employee(employee_id: uuid.UUID, payload: EmployeeUpdate, db: Session
     return emp
 
 
+@router.delete("/employees/{employee_id}")
+def deactivate_employee(employee_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Deactivate / offboard an employee while keeping payroll and attendance history intact."""
+    emp = db.query(StaffEmployee).filter(StaffEmployee.id == employee_id).first()
+    if not emp:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    get_company_membership(db, current_user, emp.company_id)
+    require_permission(db, current_user, emp.company_id, "payroll:edit")
+    emp.status = "inactive"
+    from app.routers.delete_logs import log_deletion
+    log_deletion(db, emp.company_id, "employee", emp.id, f"Employee deactivated: {emp.name}", deleted_by=current_user.name)
+    db.commit()
+    return {"success": True, "message": "Employee deactivated successfully"}
+
+
 # ─── Designations (company-scoped lookup) ───────────────────────────────────
 
 class DesignationResponse(BaseModel):
@@ -1443,6 +1458,33 @@ def create_designation(company_id: uuid.UUID, payload: DesignationCreate, db: Se
     db.add(obj)
     db.commit()
     return obj
+
+
+@router.put("/designations/{designation_id}", response_model=DesignationResponse)
+def update_designation(designation_id: uuid.UUID, payload: DesignationCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    obj = db.query(Designation).filter(Designation.id == designation_id).first()
+    if not obj:
+        raise HTTPException(status_code=404, detail="Designation not found")
+    get_company_membership(db, current_user, obj.company_id)
+    require_permission(db, current_user, obj.company_id, "payroll:edit")
+    obj.name = payload.name
+    db.commit()
+    db.refresh(obj)
+    return obj
+
+
+@router.delete("/designations/{designation_id}")
+def delete_designation(designation_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    obj = db.query(Designation).filter(Designation.id == designation_id).first()
+    if not obj:
+        raise HTTPException(status_code=404, detail="Designation not found")
+    get_company_membership(db, current_user, obj.company_id)
+    require_permission(db, current_user, obj.company_id, "payroll:edit")
+    from app.routers.delete_logs import log_deletion
+    log_deletion(db, obj.company_id, "designation", obj.id, f"Designation: {obj.name}", deleted_by=current_user.name)
+    db.delete(obj)
+    db.commit()
+    return {"success": True}
 
 
 # ─── Leave Templates (company-scoped policy) ────────────────────────────────

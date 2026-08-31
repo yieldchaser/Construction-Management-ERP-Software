@@ -50,6 +50,7 @@ export default function LibraryHubPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [partyTypeFilter, setPartyTypeFilter] = useState("");
   const [toastMessage, setToastMessage] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   // Drawers
   const [isPartyDrawerOpen, setIsPartyDrawerOpen] = useState(false);
@@ -232,8 +233,9 @@ export default function LibraryHubPage() {
     const creatorName = getStoredCreatorName();
 
     try {
-      const res = await fetch(`${apiHost}/apis/v3/library/parties`, {
-        method: "POST",
+      const url = editingId ? `${apiHost}/apis/v3/library/parties/${editingId}` : `${apiHost}/apis/v3/library/parties`;
+      const res = await fetch(url, {
+        method: editingId ? "PUT" : "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${accessToken}`
@@ -282,8 +284,9 @@ export default function LibraryHubPage() {
     if (!matName.trim()) return;
 
     try {
-      const res = await fetch(`${apiHost}/apis/v3/library/materials`, {
-        method: "POST",
+      const url = editingId ? `${apiHost}/apis/v3/library/materials/${editingId}` : `${apiHost}/apis/v3/library/materials`;
+      const res = await fetch(url, {
+        method: editingId ? "PUT" : "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${accessToken}`
@@ -327,8 +330,9 @@ export default function LibraryHubPage() {
     if (!rateName.trim()) return;
 
     try {
-      const res = await fetch(`${apiHost}/apis/v3/library/rates`, {
-        method: "POST",
+      const url = editingId ? `${apiHost}/apis/v3/library/rates/${editingId}` : `${apiHost}/apis/v3/library/rates`;
+      const res = await fetch(url, {
+        method: editingId ? "PUT" : "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${accessToken}`
@@ -384,8 +388,9 @@ export default function LibraryHubPage() {
         payload.sub_cost_code = simpleSubCode || null;
       }
 
-      const res = await fetch(`${apiHost}/apis/v3/library/${endpoint}`, {
-        method: "POST",
+      const url = editingId ? `${apiHost}/apis/v3/library/${endpoint}/${editingId}` : `${apiHost}/apis/v3/library/${endpoint}`;
+      const res = await fetch(url, {
+        method: editingId ? "PUT" : "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${accessToken}`
@@ -408,6 +413,69 @@ export default function LibraryHubPage() {
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const handleEditParty = (item: any) => {
+    setEditingId(item.id);
+    setPartyName(item.name || "");
+    setPartyPhone(item.phone || "");
+    setPartyEmail(item.email || "");
+    setPartyType(item.party_type || "Supplier");
+    setPartyAddress(item.address || "");
+    setPartyBankName(item.bank_name || "");
+    setPartyAccountName(item.account_name || "");
+    setPartyAccountNumber(item.account_number || "");
+    setPartyIfscCode(item.ifsc_code || "");
+    setPartyTaxNo(item.tax_no || "");
+    setPartyJoiningDate(item.date_of_joining ? item.date_of_joining.split("T")[0] : "");
+    setPartyAadhaar(item.aadhaar_number || "");
+    setPartyPan(item.pan_number || "");
+    setPartyEsiNumber(item.esi_number || "");
+    setPartyPfNumber(item.pf_number || "");
+    setPartyFatherName(item.father_name || "");
+    setPartyPassportNo(item.passport_no || "");
+    setPartyPassportExpiryDate(item.passport_expiry_date ? item.passport_expiry_date.split("T")[0] : "");
+    setIsPartyDrawerOpen(true);
+  };
+
+  const handleEditMaterial = (item: any) => {
+    setEditingId(item.id);
+    setMatName(item.name || "");
+    setMatUnit(item.unit || "Bag");
+    setMatAltUnit(item.alternate_unit || "");
+    setMatGst(item.gst_rate ?? 18.0);
+    setMatCategory(item.category || "Cement");
+    setMatCost(item.unit_cost ?? 420.0);
+    setMatLeadTime(item.lead_time_days ?? 2);
+    setMatHsn(item.hsn_sac || "");
+    setMatCode(item.item_code || "");
+    setMatSpecs(item.specifications || "");
+    setIsMaterialDrawerOpen(true);
+  };
+
+  const handleEditRate = (item: any) => {
+    setEditingId(item.id);
+    setRateName(item.name || "");
+    setRateCode(item.item_code || "");
+    setRateUnit(item.unit || "sqft");
+    setRateGst(item.gst_rate ?? 12.0);
+    setRateCategory(item.category || "Civil Works");
+    setRateCost(item.unit_cost ?? 180.0);
+    setRateMarkup(item.markup_value ?? 15.0);
+    setRateMarkupType(item.markup_type || "percent");
+    setRateSalePrice(item.unit_sale_price ?? 207.0);
+    setRateNote(item.note || "");
+    setRateCostCode(item.cost_code || "");
+    setRateHsn(item.hsn_sac || "");
+    setIsRateDrawerOpen(true);
+  };
+
+  const handleEditSimple = (item: any) => {
+    setEditingId(item.id);
+    setSimpleName(item.name || "");
+    setSimpleCode(item.code || "");
+    setSimpleSubCode(item.sub_cost_code || "");
+    setIsSimpleDrawerOpen(true);
   };
 
   const filteredData = libraryData.filter((item) => {
@@ -473,10 +541,30 @@ export default function LibraryHubPage() {
       >
         <button
           onClick={() => {
-            if (activeTab === "party") setIsPartyDrawerOpen(true);
-            else if (activeTab === "material") setIsMaterialDrawerOpen(true);
-            else if (activeTab === "rate") setIsRateDrawerOpen(true);
-            else setIsSimpleDrawerOpen(true);
+            setEditingId(null);
+            if (activeTab === "party") {
+              resetPartyForm();
+              setIsPartyDrawerOpen(true);
+            } else if (activeTab === "material") {
+              setMatName("");
+              setMatHsn("");
+              setMatCode("");
+              setMatSpecs("");
+              setMatAltUnit("");
+              setIsMaterialDrawerOpen(true);
+            } else if (activeTab === "rate") {
+              setRateName("");
+              setRateCode("");
+              setRateNote("");
+              setRateCostCode("");
+              setRateHsn("");
+              setIsRateDrawerOpen(true);
+            } else {
+              setSimpleName("");
+              setSimpleCode("");
+              setSimpleSubCode("");
+              setIsSimpleDrawerOpen(true);
+            }
           }}
           className="px-3.5 py-1.5 bg-primary hover:bg-primary/95 text-white rounded-lg text-xs font-bold transition-all cursor-pointer"
         >
@@ -602,12 +690,20 @@ export default function LibraryHubPage() {
                       <td className="px-6 py-4 text-muted whitespace-nowrap">{formatDateCell(item.created_at)}</td>
                       <td className="px-6 py-4 text-muted whitespace-nowrap">{formatLibraryCell(item.creator_name)}</td>
                       <td className="px-6 py-4 text-center">
-                        <button
-                          onClick={() => handleDeleteItem(item.id)}
-                          className="px-2.5 py-1 bg-elevated hover:bg-elevated/80 border border-border-custom text-foreground text-xs font-medium rounded transition-all cursor-pointer"
-                        >
-                          Remove
-                        </button>
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            onClick={() => handleEditParty(item)}
+                            className="px-2.5 py-1 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-xs font-medium rounded transition-all cursor-pointer"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteItem(item.id)}
+                            className="px-2.5 py-1 bg-elevated hover:bg-elevated/80 border border-border-custom text-foreground text-xs font-medium rounded transition-all cursor-pointer"
+                          >
+                            Remove
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -639,12 +735,20 @@ export default function LibraryHubPage() {
                         {new Date(item.created_at).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 text-center">
-                        <button
-                          onClick={() => handleDeleteItem(item.id)}
-                          className="px-2.5 py-1 bg-elevated hover:bg-elevated/80 border border-border-custom text-foreground text-xs font-medium rounded transition-all cursor-pointer"
-                        >
-                          Remove
-                        </button>
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            onClick={() => handleEditSimple(item)}
+                            className="px-2.5 py-1 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-xs font-medium rounded transition-all cursor-pointer"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteItem(item.id)}
+                            className="px-2.5 py-1 bg-elevated hover:bg-elevated/80 border border-border-custom text-foreground text-xs font-medium rounded transition-all cursor-pointer"
+                          >
+                            Remove
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -662,12 +766,13 @@ export default function LibraryHubPage() {
                   <th className="px-5 py-3">Cost Code</th>
                   <th className="px-5 py-3">Salary Per Shift</th>
                   <th className="px-5 py-3">Shift Hours</th>
+                  <th className="px-6 py-4 text-center">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border-custom">
                 {filteredData.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-6 py-12 text-center text-muted font-semibold">No workforces registered in library.</td>
+                    <td colSpan={5} className="px-6 py-12 text-center text-muted font-semibold">No workforces registered in library.</td>
                   </tr>
                 ) : (
                   filteredData.map((item) => (
@@ -676,6 +781,22 @@ export default function LibraryHubPage() {
                       <td className="px-6 py-4 text-muted">{formatLibraryCell(item.cost_code ?? item.costCode)}</td>
                       <td className="px-6 py-4 text-muted">{formatLibraryCell(item.salary_per_shift ?? item.salaryPerShift)}</td>
                       <td className="px-6 py-4 text-muted">{formatLibraryCell(item.shift_hours ?? item.shiftHours)}</td>
+                      <td className="px-6 py-4 text-center">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            onClick={() => handleEditSimple(item)}
+                            className="px-2.5 py-1 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-xs font-medium rounded transition-all cursor-pointer"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteItem(item.id)}
+                            className="px-2.5 py-1 bg-elevated hover:bg-elevated/80 border border-border-custom text-foreground text-xs font-medium rounded transition-all cursor-pointer"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -707,12 +828,20 @@ export default function LibraryHubPage() {
                       <td className="px-6 py-4 font-semibold text-foreground">{formatLibraryCell(item.name)}</td>
                       <td className="px-6 py-4 text-muted">{formatDateCell(item.created_at)}</td>
                       <td className="px-6 py-4 text-center">
-                        <button
-                          onClick={() => handleDeleteItem(item.id)}
-                          className="px-2.5 py-1 bg-elevated hover:bg-elevated/80 border border-border-custom text-foreground text-xs font-medium rounded transition-all cursor-pointer"
-                        >
-                          Remove
-                        </button>
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            onClick={() => handleEditSimple(item)}
+                            className="px-2.5 py-1 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-xs font-medium rounded transition-all cursor-pointer"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteItem(item.id)}
+                            className="px-2.5 py-1 bg-elevated hover:bg-elevated/80 border border-border-custom text-foreground text-xs font-medium rounded transition-all cursor-pointer"
+                          >
+                            Remove
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -734,12 +863,13 @@ export default function LibraryHubPage() {
                   <th className="px-5 py-3">Material Category</th>
                   <th className="px-5 py-3">Created Date</th>
                   <th className="px-5 py-3">Creator Name</th>
+                  <th className="px-6 py-4 text-center">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border-custom">
                 {filteredData.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="p-8">
+                    <td colSpan={9} className="p-8">
                       <EmptyState
                         title="No materials registered"
                         description="Add standard materials with units, categories, and HSN codes to your central library."
@@ -772,6 +902,22 @@ export default function LibraryHubPage() {
                             item.created_by_user_name ||
                             item.createdByUserName
                         )}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            onClick={() => handleEditMaterial(item)}
+                            className="px-2.5 py-1 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-xs font-medium rounded transition-all cursor-pointer"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteItem(item.id)}
+                            className="px-2.5 py-1 bg-elevated hover:bg-elevated/80 border border-border-custom text-foreground text-xs font-medium rounded transition-all cursor-pointer"
+                          >
+                            Remove
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -844,12 +990,20 @@ export default function LibraryHubPage() {
                         <td className="px-6 py-4 text-center text-muted">{formatLibraryCell(item.component_count)}</td>
                         <td className="px-6 py-4 text-muted">{formatLibraryCell(item.hsn_sac)}</td>
                         <td className="px-6 py-4 text-center">
-                          <button
-                            onClick={() => handleDeleteItem(item.id)}
-                            className="px-2.5 py-1 bg-elevated hover:bg-elevated/80 border border-border-custom text-foreground text-xs font-medium rounded transition-all cursor-pointer"
-                          >
-                            Remove
-                          </button>
+                          <div className="flex items-center justify-center gap-1.5">
+                            <button
+                              onClick={() => handleEditRate(item)}
+                              className="px-2.5 py-1 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-xs font-medium rounded transition-all cursor-pointer"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteItem(item.id)}
+                              className="px-2.5 py-1 bg-elevated hover:bg-elevated/80 border border-border-custom text-foreground text-xs font-medium rounded transition-all cursor-pointer"
+                            >
+                              Remove
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -928,7 +1082,7 @@ export default function LibraryHubPage() {
         <div className="fixed inset-0 bg-background/80 flex items-center justify-center z-50 p-4">
           <div className="w-full max-w-md bg-card border border-border-custom rounded-lg overflow-hidden shadow-lg animate-in fade-in zoom-in-95 duration-150">
             <div className="p-6 border-b border-border-custom flex justify-between items-center">
-              <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider">{activeTab === "todo" ? "Add To Do" : `Add ${activeTab.replace("-", " ")}`}</h3>
+              <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider">{editingId ? `Edit ${activeTab.replace("-", " ")}` : (activeTab === "todo" ? "Add To Do" : `Add ${activeTab.replace("-", " ")}`)}</h3>
               <button onClick={() => setIsSimpleDrawerOpen(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
 
@@ -988,7 +1142,7 @@ export default function LibraryHubPage() {
         <div className="fixed inset-0 bg-background/80 flex items-center justify-center z-50 p-4">
           <div className="w-full max-w-md bg-card border border-border-custom rounded-lg overflow-hidden shadow-lg animate-in fade-in zoom-in-95 duration-150">
             <div className="p-6 border-b border-border-custom flex justify-between items-center">
-              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">Register Library Party</h3>
+              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">{editingId ? "Edit Library Party" : "Register Library Party"}</h3>
               <button onClick={() => setIsPartyDrawerOpen(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
 
@@ -1213,7 +1367,7 @@ export default function LibraryHubPage() {
                 type="submit"
                 className="w-full py-2 bg-primary hover:bg-primary-hover text-white font-medium rounded-md text-sm transition-all mt-2 cursor-pointer"
               >
-                Register Party
+                {editingId ? "Update Party" : "Register Party"}
               </button>
             </form>
           </div>
@@ -1225,7 +1379,7 @@ export default function LibraryHubPage() {
         <div className="fixed inset-0 bg-background/80 flex items-center justify-center z-50 p-4">
           <div className="w-full max-w-md bg-card border border-border-custom rounded-lg overflow-hidden shadow-lg animate-in fade-in zoom-in-95 duration-150">
             <div className="p-6 border-b border-border-custom flex justify-between items-center">
-              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">New Material Item</h3>
+              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">{editingId ? "Edit Material Item" : "New Material Item"}</h3>
               <button onClick={() => setIsMaterialDrawerOpen(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
 
@@ -1338,7 +1492,7 @@ export default function LibraryHubPage() {
                 type="submit"
                 className="w-full py-2 bg-primary hover:bg-primary-hover text-white font-medium rounded-md text-sm transition-all mt-2 cursor-pointer"
               >
-                Save Material
+                {editingId ? "Update Material" : "Save Material"}
               </button>
             </form>
           </div>
@@ -1350,7 +1504,7 @@ export default function LibraryHubPage() {
         <div className="fixed inset-0 bg-background/80 flex items-center justify-center z-50 p-4">
           <div className="w-full max-w-md bg-card border border-border-custom rounded-lg overflow-hidden shadow-lg animate-in fade-in zoom-in-95 duration-150">
             <div className="p-6 border-b border-border-custom flex justify-between items-center">
-              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">New Rate Card Item</h3>
+              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">{editingId ? "Edit Rate Card Item" : "New Rate Card Item"}</h3>
               <button onClick={() => setIsRateDrawerOpen(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
 
@@ -1483,7 +1637,7 @@ export default function LibraryHubPage() {
                 type="submit"
                 className="w-full py-2 bg-primary hover:bg-primary-hover text-white font-medium rounded-md text-sm transition-all mt-2 cursor-pointer"
               >
-                Save Rate Card Item
+                {editingId ? "Update Rate Card Item" : "Save Rate Card Item"}
               </button>
             </form>
           </div>

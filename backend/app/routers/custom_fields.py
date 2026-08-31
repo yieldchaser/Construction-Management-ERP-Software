@@ -43,6 +43,18 @@ class CustomFieldCreate(BaseModel):
     set_default: bool = False
 
 
+class CustomFieldUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    field_label: Optional[str] = None
+    field_type: Optional[str] = Field(None, pattern=CUSTOM_FIELD_TYPE_PATTERN)
+    is_required: Optional[bool] = None
+    options: Optional[List[str]] = None
+    display_order: Optional[int] = None
+    default_value: Optional[str] = None
+    is_active: Optional[bool] = None
+
+
 class CustomFieldResponse(BaseModel):
     id: uuid.UUID
     company_id: uuid.UUID
@@ -358,6 +370,22 @@ def get_values(entity_type: str, entity_id: uuid.UUID, db: Session = Depends(get
     ).all()
 
 
+@router.put("/fields/{field_id}", response_model=CustomFieldResponse)
+@router.put("/{field_id}", response_model=CustomFieldResponse)
+def update_custom_field(field_id: uuid.UUID, payload: CustomFieldUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    cf = db.query(CustomField).filter(CustomField.id == field_id).first()
+    if not cf:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Custom field not found")
+    get_company_membership(db, current_user, cf.company_id)
+    require_permission(db, current_user, cf.company_id, "settings:manage")
+    for k, v in payload.model_dump(exclude_unset=True).items():
+        setattr(cf, k, v)
+    db.commit()
+    db.refresh(cf)
+    return cf
+
+
+@router.delete("/fields/{field_id}", status_code=status.HTTP_204_NO_CONTENT)
 @router.delete("/{field_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_custom_field(field_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """R2-760: Delete / void a custom field definition and its attached values with audit log."""

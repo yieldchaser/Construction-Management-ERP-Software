@@ -198,6 +198,46 @@ export default function TallyIntegrationPage() {
     }
   };
 
+  const handleDeleteAgent = async (agentId: string) => {
+    if (!confirm("Remove this Tally desktop agent?")) return;
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/tally/agents/${agentId}`, {
+        method: "DELETE",
+        headers: authHeaders() || {},
+      });
+      if (res.ok) {
+        setAgents(prev => prev.filter(a => a.id !== agentId));
+        showToast("Tally agent removed successfully");
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || "Failed to remove agent");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Error removing agent");
+    }
+  };
+
+  const handleDeleteBankMapping = async (mapId: string) => {
+    if (!confirm("Delete this bank mapping?")) return;
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/tally/mappings/bank/${mapId}`, {
+        method: "DELETE",
+        headers: authHeaders() || {},
+      });
+      if (res.ok) {
+        setBankMappings(prev => prev.filter(m => m.id !== mapId));
+        showToast("Bank mapping deleted successfully");
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || "Failed to delete bank mapping");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Error deleting bank mapping");
+    }
+  };
+
   const handleSaveBankMapping = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!bankForm.onsite_bank_account_details.trim() || !bankForm.tally_ledger_name.trim()) {
@@ -369,6 +409,7 @@ export default function TallyIntegrationPage() {
                         <th className="px-4 py-3">Auth Key</th>
                         <th className="px-4 py-3">Status</th>
                         <th className="px-4 py-3">Registered At</th>
+                        <th className="px-4 py-3 text-center">Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border-custom/40">
@@ -383,6 +424,16 @@ export default function TallyIntegrationPage() {
                           </td>
                           <td className="px-4 py-3 text-muted">
                             {ag.created_at ? new Date(ag.created_at).toLocaleString() : "—"}
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteAgent(ag.id)}
+                              className="px-2.5 py-1 rounded bg-elevated hover:bg-danger/10 hover:text-danger hover:border-danger/20 border border-border-custom text-muted text-xs font-medium transition-all cursor-pointer inline-flex items-center gap-1"
+                              title="Remove agent"
+                            >
+                              <Icon name="trash" className="w-3 h-3" /> Remove
+                            </button>
                           </td>
                         </tr>
                       ))}
@@ -441,6 +492,7 @@ export default function TallyIntegrationPage() {
                         <th className="px-4 py-3">SiteFlow Bank Account Details</th>
                         <th className="px-4 py-3">Tally Ledger Name</th>
                         <th className="px-4 py-3 text-right">Status</th>
+                        <th className="px-4 py-3 text-center">Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border-custom/40">
@@ -452,6 +504,16 @@ export default function TallyIntegrationPage() {
                             <span className="text-[10px] bg-success/10 text-success border border-success/20 px-2 py-0.5 rounded font-bold">
                               Mapped
                             </span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteBankMapping(bm.id)}
+                              className="px-2.5 py-1 rounded bg-elevated hover:bg-danger/10 hover:text-danger hover:border-danger/20 border border-border-custom text-muted text-xs font-medium transition-all cursor-pointer inline-flex items-center gap-1"
+                              title="Delete bank mapping"
+                            >
+                              <Icon name="trash" className="w-3 h-3" /> Delete
+                            </button>
                           </td>
                         </tr>
                       ))}

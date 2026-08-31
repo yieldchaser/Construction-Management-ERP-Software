@@ -742,6 +742,14 @@ class BankAccountCreate(BaseModel):
     upi_id: Optional[str] = None
     balance: float = 0.0
 
+class BankAccountUpdate(BaseModel):
+    account_holder_name: Optional[str] = None
+    bank_name: Optional[str] = None
+    account_number: Optional[str] = None
+    ifsc_code: Optional[str] = None
+    upi_id: Optional[str] = None
+    balance: Optional[float] = None
+
 class BankAccountResponse(BaseModel):
     id: uuid.UUID
     company_id: uuid.UUID
@@ -825,6 +833,34 @@ def create_bank_account(company_id: uuid.UUID, data: BankAccountCreate, db: Sess
     return new_acc
 
 
+@router.put("/accounts/{account_id}", response_model=BankAccountResponse)
+def update_bank_account(account_id: uuid.UUID, data: BankAccountUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    acc = db.query(BankAccount).filter(BankAccount.id == account_id).first()
+    if not acc:
+        raise HTTPException(status_code=404, detail="Bank account not found")
+    get_company_membership(db, current_user, acc.company_id)
+    require_permission(db, current_user, acc.company_id, "finance:edit")
+    for k, v in data.model_dump(exclude_unset=True).items():
+        setattr(acc, k, v)
+    db.commit()
+    db.refresh(acc)
+    return acc
+
+
+@router.delete("/accounts/{account_id}")
+def delete_bank_account(account_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    acc = db.query(BankAccount).filter(BankAccount.id == account_id).first()
+    if not acc:
+        raise HTTPException(status_code=404, detail="Bank account not found")
+    get_company_membership(db, current_user, acc.company_id)
+    require_permission(db, current_user, acc.company_id, "finance:edit")
+    from app.routers.delete_logs import log_deletion
+    log_deletion(db, acc.company_id, "bank_account", acc.id, f"Bank Account: {acc.bank_name} - {acc.account_number}", deleted_by=current_user.name)
+    db.delete(acc)
+    db.commit()
+    return {"success": True}
+
+
 # --- Cash Account (Finance tab: Accounts sub-tab) ---
 def _cash_running_balance(db, company_id: uuid.UUID) -> float:
     """Running cash balance = opening balance + (cash-in payments - cash-out payments)."""
@@ -844,6 +880,11 @@ def _cash_running_balance(db, company_id: uuid.UUID) -> float:
 class CashAccountCreate(BaseModel):
     name: Optional[str] = "Cash Account"
     opening_balance: float = Field(0.0, ge=0)
+
+
+class CashAccountUpdate(BaseModel):
+    name: Optional[str] = None
+    opening_balance: Optional[float] = Field(None, ge=0)
 
 
 class CashAccountResponse(BaseModel):
@@ -896,6 +937,41 @@ def create_cash_account(company_id: uuid.UUID, data: CashAccountCreate, db: Sess
         running_balance=_cash_running_balance(db, company_id),
         created_at=new_acc.created_at,
     )
+
+
+@router.put("/cash-account/{account_id}", response_model=CashAccountResponse)
+def update_cash_account(account_id: uuid.UUID, data: CashAccountUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    acc = db.query(CashAccount).filter(CashAccount.id == account_id).first()
+    if not acc:
+        raise HTTPException(status_code=404, detail="Cash account not found")
+    get_company_membership(db, current_user, acc.company_id)
+    require_permission(db, current_user, acc.company_id, "finance:edit")
+    for k, v in data.model_dump(exclude_unset=True).items():
+        setattr(acc, k, v)
+    db.commit()
+    db.refresh(acc)
+    return CashAccountResponse(
+        id=acc.id,
+        company_id=acc.company_id,
+        name=acc.name,
+        opening_balance=acc.opening_balance,
+        running_balance=_cash_running_balance(db, acc.company_id),
+        created_at=acc.created_at,
+    )
+
+
+@router.delete("/cash-account/{account_id}")
+def delete_cash_account(account_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    acc = db.query(CashAccount).filter(CashAccount.id == account_id).first()
+    if not acc:
+        raise HTTPException(status_code=404, detail="Cash account not found")
+    get_company_membership(db, current_user, acc.company_id)
+    require_permission(db, current_user, acc.company_id, "finance:edit")
+    from app.routers.delete_logs import log_deletion
+    log_deletion(db, acc.company_id, "cash_account", acc.id, f"Cash Account: {acc.name}", deleted_by=current_user.name)
+    db.delete(acc)
+    db.commit()
+    return {"success": True}
 
 
 # --- Company-level Party aggregation (Finance tab: Party sub-tab) ---

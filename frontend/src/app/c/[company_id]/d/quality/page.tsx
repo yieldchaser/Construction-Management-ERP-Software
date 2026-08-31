@@ -281,6 +281,25 @@ isCode: cl.is_code_reference || "—",
     }
   };
 
+  const handleDeleteChecklist = async (clId: string) => {
+    if (!confirm("Delete this quality checklist template?")) return;
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/quality/checklists/${clId}`, {
+        method: "DELETE",
+        headers: authHeaders() || {},
+      });
+      if (res.ok) {
+        setChecklists(prev => prev.filter(c => c.id !== clId));
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || "Failed to delete checklist");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Error deleting checklist");
+    }
+  };
+
   useEffect(() => {
     if (projectId) {
       loadAll();
@@ -722,15 +741,25 @@ isCode: cl.is_code_reference || "—",
                       )}
                     </div>
 
-                    <button
-                      onClick={() => {
-                        setInspForm(prev => ({ ...prev, checklistId: cl.id }));
-                        setShowInspForm(true);
-                      }}
-                      className="w-full py-2 rounded-lg bg-elevated hover:bg-elevated/80 border border-border-custom text-foreground text-xs font-bold transition-all cursor-pointer"
-                    >
-                      Start Inspection
-                    </button>
+                    <div className="flex gap-2 items-center">
+                      <button
+                        onClick={() => {
+                          setInspForm(prev => ({ ...prev, checklistId: cl.id }));
+                          setShowInspForm(true);
+                        }}
+                        className="flex-1 py-2 rounded-lg bg-elevated hover:bg-elevated/80 border border-border-custom text-foreground text-xs font-bold transition-all cursor-pointer"
+                      >
+                        Start Inspection
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteChecklist(cl.id)}
+                        className="p-2 rounded-lg bg-danger/10 hover:bg-danger/20 border border-danger/20 text-danger text-xs transition-all cursor-pointer"
+                        title="Delete checklist template"
+                      >
+                        <Icon name="trash" className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>

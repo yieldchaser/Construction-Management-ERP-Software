@@ -573,7 +573,7 @@ export default function SubconPage() {
       }
       await fetchSubconData();
       setShowAddPartyDrawer(false);
-      showToast(`Subcontractor ${partyForm.name} created successfully!`);
+      showToast(`Subcontractor ${partyForm.name} created successfully`);
       setPartyForm({
         name: "",
         phone: "",
@@ -582,10 +582,31 @@ export default function SubconPage() {
         bank_name: "",
         account_number: "",
         ifsc_code: "",
-        address: ""
+        address: "",
       });
-    } catch (err: any) {
-      alert(err?.message || "Error creating subcontractor");
+    } catch (e: any) {
+      console.error(e);
+      alert(e.message || "Failed to add subcontractor");
+    }
+  };
+
+  const handleDeleteSubcontractor = async (subId: string) => {
+    if (!confirm("Remove this subcontractor from the directory?")) return;
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/billing/subcontractors/${subId}`, {
+        method: "DELETE",
+        headers: authHeaders() || {},
+      });
+      if (res.ok) {
+        setSubcontractors(prev => prev.filter(s => s.id !== subId));
+        showToast("Subcontractor removed successfully");
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || "Failed to remove subcontractor");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Error removing subcontractor");
     }
   };
 
@@ -757,8 +778,18 @@ export default function SubconPage() {
                   <ul className="divide-y divide-border-custom/40">
                     {subcontractors.map(p => (
                       <li key={p.id} className="px-4 py-3 flex items-center justify-between text-xs">
-                        <span className="font-semibold text-foreground">{p.name}</span>
-                        <span className="text-muted">{p.gstin ? `GSTIN ${p.gstin}` : (p.phone || "—")}</span>
+                        <div>
+                          <span className="font-semibold text-foreground block">{p.name}</span>
+                          <span className="text-muted text-[10px]">{p.gstin ? `GSTIN ${p.gstin}` : (p.phone ? `Phone: ${p.phone}` : "—")}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteSubcontractor(p.id)}
+                          className="px-2.5 py-1 rounded bg-elevated hover:bg-danger/10 hover:text-danger hover:border-danger/20 border border-border-custom text-muted text-xs font-medium transition-all cursor-pointer inline-flex items-center gap-1"
+                          title="Remove subcontractor"
+                        >
+                          <Icon name="trash" className="w-3 h-3" /> Remove
+                        </button>
                       </li>
                     ))}
                   </ul>

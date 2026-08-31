@@ -644,6 +644,27 @@ export default function HRPayrollPage() {
     }
   };
 
+  const handleDeactivateEmployee = async (empId: string) => {
+    if (!confirm("Are you sure you want to deactivate/offboard this employee? This will preserve all historical payroll and attendance logs while marking them inactive.")) return;
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/hr/employees/${empId}`, {
+        method: "DELETE",
+        headers: authHeaders() || {},
+      });
+      if (res.ok) {
+        setShowDetailsDrawer(false);
+        setEmployees(prev => prev.map(e => e.id === empId ? { ...e, status: "inactive" } : e));
+        triggerLocalToast("Employee deactivated and offboarded successfully.");
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || "Failed to deactivate employee");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Error deactivating employee");
+    }
+  };
+
   const handleTimesheetAction = async (tsId: string, action: "submit" | "approve") => {
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/hr/timesheets/${tsId}/${action}`, {
@@ -2270,14 +2291,25 @@ export default function HRPayrollPage() {
               </div>
             </div>
 
-            <div className="flex gap-3 mt-8 pt-4 border-t border-border-custom">
-              <button
-                onClick={handleSaveEmployeeDetails}
-                className="flex-1 py-2.5 bg-primary text-white font-bold rounded-lg hover:bg-primary/95 text-xs transition-all"
-              >
-                Save
-              </button>
-              <button onClick={() => setShowDetailsDrawer(false)} className="px-4 py-2.5 rounded-lg border border-border-custom text-muted hover:text-foreground hover:border-border-custom text-xs">Cancel</button>
+            <div className="flex items-center justify-between gap-3 mt-8 pt-4 border-t border-border-custom">
+              {selectedEmpDetail && (
+                <button
+                  type="button"
+                  onClick={() => handleDeactivateEmployee(selectedEmpDetail.id)}
+                  className="px-3 py-2.5 rounded-lg border border-danger/30 bg-danger/10 text-danger hover:bg-danger/20 text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1.5"
+                >
+                  <Icon name="close" className="w-3.5 h-3.5" /> Deactivate / Offboard
+                </button>
+              )}
+              <div className="flex gap-2 flex-1 justify-end">
+                <button onClick={() => setShowDetailsDrawer(false)} className="px-4 py-2.5 rounded-lg border border-border-custom text-muted hover:text-foreground hover:border-border-custom text-xs cursor-pointer">Cancel</button>
+                <button
+                  onClick={handleSaveEmployeeDetails}
+                  className="px-6 py-2.5 bg-primary text-white font-bold rounded-lg hover:bg-primary/95 text-xs transition-all cursor-pointer"
+                >
+                  Save
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -46,6 +46,14 @@ class ChecklistCreate(BaseModel):
     description: Optional[str] = None
 
 
+class ChecklistUpdate(BaseModel):
+    title: Optional[str] = None
+    category: Optional[str] = None
+    is_code_reference: Optional[str] = None
+    description: Optional[str] = None
+    is_active: Optional[bool] = None
+
+
 class ChecklistResponse(BaseModel):
     id: uuid.UUID
     company_id: uuid.UUID
@@ -217,6 +225,34 @@ def list_checklists(company_id: uuid.UUID, db: Session = Depends(get_db), _: Non
         QualityChecklist.company_id == company_id,
         QualityChecklist.is_active == True
     ).all()
+
+
+@router.put("/checklists/{cl_id}", response_model=ChecklistResponse)
+def update_checklist(cl_id: uuid.UUID, payload: ChecklistUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    cl = db.query(QualityChecklist).filter(QualityChecklist.id == cl_id).first()
+    if not cl:
+        raise HTTPException(status_code=404, detail="Checklist not found")
+    get_company_membership(db, current_user, cl.company_id)
+    require_permission(db, current_user, cl.company_id, "quality:edit")
+    for k, v in payload.model_dump(exclude_unset=True).items():
+        setattr(cl, k, v)
+    db.commit()
+    db.refresh(cl)
+    return cl
+
+
+@router.delete("/checklists/{cl_id}")
+def delete_checklist(cl_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    cl = db.query(QualityChecklist).filter(QualityChecklist.id == cl_id).first()
+    if not cl:
+        raise HTTPException(status_code=404, detail="Checklist not found")
+    get_company_membership(db, current_user, cl.company_id)
+    require_permission(db, current_user, cl.company_id, "quality:edit")
+    from app.routers.delete_logs import log_deletion
+    log_deletion(db, cl.company_id, "quality_checklist", cl.id, f"Checklist: {cl.title}", deleted_by=current_user.name)
+    db.delete(cl)
+    db.commit()
+    return {"success": True}
 
 
 @router.post("/checklists/{cl_id}/items", response_model=ChecklistItemResponse, status_code=status.HTTP_201_CREATED)

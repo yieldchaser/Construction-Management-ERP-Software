@@ -62,6 +62,11 @@ class AgentCreateRequest(BaseModel):
     machine_label: str
     auth_key: str
 
+class AgentUpdateRequest(BaseModel):
+    machine_label: Optional[str] = None
+    auth_key: Optional[str] = None
+    status: Optional[str] = None
+
 class AgentResponse(BaseModel):
     id: uuid.UUID
     company_id: uuid.UUID
@@ -79,6 +84,14 @@ class LedgerMappingCreateRequest(BaseModel):
     posting_mode: str = "lumpsum"
     tally_voucher_type: Literal["Sales", "Purchase", "Receipt", "Payment", "Journal"]
     tally_ledger_name: str
+    freight_ledger: Optional[str] = None
+    surcharge_ledger: Optional[str] = None
+
+class LedgerMappingUpdateRequest(BaseModel):
+    onsite_transaction_type: Optional[Literal["Material Purchase", "Subcon Expense", "Sales Invoice"]] = None
+    posting_mode: Optional[str] = None
+    tally_voucher_type: Optional[Literal["Sales", "Purchase", "Receipt", "Payment", "Journal"]] = None
+    tally_ledger_name: Optional[str] = None
     freight_ledger: Optional[str] = None
     surcharge_ledger: Optional[str] = None
 
@@ -100,6 +113,10 @@ class PartyMappingCreateRequest(BaseModel):
     onsite_party_id: uuid.UUID
     tally_ledger_name: str
 
+class PartyMappingUpdateRequest(BaseModel):
+    onsite_party_id: Optional[uuid.UUID] = None
+    tally_ledger_name: Optional[str] = None
+
 class PartyMappingResponse(BaseModel):
     id: uuid.UUID
     company_id: uuid.UUID
@@ -113,6 +130,10 @@ class CostCentreMappingCreateRequest(BaseModel):
     company_id: uuid.UUID
     project_id: uuid.UUID
     tally_cost_centre_name: str
+
+class CostCentreMappingUpdateRequest(BaseModel):
+    project_id: Optional[uuid.UUID] = None
+    tally_cost_centre_name: Optional[str] = None
 
 class CostCentreMappingResponse(BaseModel):
     id: uuid.UUID
@@ -128,6 +149,10 @@ class BankMappingCreateRequest(BaseModel):
     onsite_bank_account_details: str
     tally_ledger_name: str
 
+class BankMappingUpdateRequest(BaseModel):
+    onsite_bank_account_details: Optional[str] = None
+    tally_ledger_name: Optional[str] = None
+
 class BankMappingResponse(BaseModel):
     id: uuid.UUID
     company_id: uuid.UUID
@@ -136,6 +161,15 @@ class BankMappingResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class ConnectionUpdateRequest(BaseModel):
+    tally_company_name: Optional[str] = None
+    registered_mobile: Optional[str] = None
+    sync_window_start_date: Optional[datetime] = None
+    voucher_number_template: Optional[str] = None
+    auto_create_missing_ledgers: Optional[bool] = None
+    round_off_ledger: Optional[str] = None
+    default_cash_ledger: Optional[str] = None
 
 class MarkSyncedRequest(BaseModel):
     bill_ids: List[uuid.UUID] = []
@@ -541,6 +575,34 @@ def get_connection(company_id: uuid.UUID, db: Session = Depends(get_db), _: None
     return conn
 
 
+@router.put("/connections/{conn_id}", response_model=ConnectionResponse)
+def update_connection(conn_id: uuid.UUID, req: ConnectionUpdateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    conn = db.query(TallyConnection).filter(TallyConnection.id == conn_id).first()
+    if not conn:
+        raise HTTPException(status_code=404, detail="Tally connection not found")
+    get_company_membership(db, current_user, conn.company_id)
+    require_permission(db, current_user, conn.company_id, "settings:manage")
+    for k, v in req.model_dump(exclude_unset=True).items():
+        setattr(conn, k, v)
+    db.commit()
+    db.refresh(conn)
+    return conn
+
+
+@router.delete("/connections/{conn_id}")
+def delete_connection(conn_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    conn = db.query(TallyConnection).filter(TallyConnection.id == conn_id).first()
+    if not conn:
+        raise HTTPException(status_code=404, detail="Tally connection not found")
+    get_company_membership(db, current_user, conn.company_id)
+    require_permission(db, current_user, conn.company_id, "settings:manage")
+    from app.routers.delete_logs import log_deletion
+    log_deletion(db, conn.company_id, "tally_connection", conn.id, f"Tally Connection: {conn.tally_company_name}", deleted_by=current_user.name)
+    db.delete(conn)
+    db.commit()
+    return {"success": True}
+
+
 # --- Agents ---
 
 @router.post("/agents", response_model=AgentResponse, status_code=status.HTTP_201_CREATED)
@@ -565,6 +627,34 @@ def register_agent(req: AgentCreateRequest, db: Session = Depends(get_db), curre
 def get_agents(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     comp_uuid = uuid.UUID(str(company_id))
     return db.query(TallyAgent).filter(TallyAgent.company_id == comp_uuid).all()
+
+
+@router.put("/agents/{agent_id}", response_model=AgentResponse)
+def update_agent(agent_id: uuid.UUID, req: AgentUpdateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    agent = db.query(TallyAgent).filter(TallyAgent.id == agent_id).first()
+    if not agent:
+        raise HTTPException(status_code=404, detail="Tally agent not found")
+    get_company_membership(db, current_user, agent.company_id)
+    require_permission(db, current_user, agent.company_id, "settings:manage")
+    for k, v in req.model_dump(exclude_unset=True).items():
+        setattr(agent, k, v)
+    db.commit()
+    db.refresh(agent)
+    return agent
+
+
+@router.delete("/agents/{agent_id}")
+def delete_agent(agent_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    agent = db.query(TallyAgent).filter(TallyAgent.id == agent_id).first()
+    if not agent:
+        raise HTTPException(status_code=404, detail="Tally agent not found")
+    get_company_membership(db, current_user, agent.company_id)
+    require_permission(db, current_user, agent.company_id, "settings:manage")
+    from app.routers.delete_logs import log_deletion
+    log_deletion(db, agent.company_id, "tally_agent", agent.id, f"Tally Agent: {agent.machine_label}", deleted_by=current_user.name)
+    db.delete(agent)
+    db.commit()
+    return {"success": True}
 
 
 # --- Ledger mappings ---
@@ -610,6 +700,34 @@ def get_ledger_mappings(company_id: uuid.UUID, db: Session = Depends(get_db), _:
     return db.query(TallyLedgerMapping).filter(TallyLedgerMapping.company_id == comp_uuid).all()
 
 
+@router.put("/mappings/ledger/{map_id}", response_model=LedgerMappingResponse)
+def update_ledger_mapping(map_id: uuid.UUID, req: LedgerMappingUpdateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    mapping = db.query(TallyLedgerMapping).filter(TallyLedgerMapping.id == map_id).first()
+    if not mapping:
+        raise HTTPException(status_code=404, detail="Ledger mapping not found")
+    get_company_membership(db, current_user, mapping.company_id)
+    require_permission(db, current_user, mapping.company_id, "settings:manage")
+    for k, v in req.model_dump(exclude_unset=True).items():
+        setattr(mapping, k, v)
+    db.commit()
+    db.refresh(mapping)
+    return mapping
+
+
+@router.delete("/mappings/ledger/{map_id}")
+def delete_ledger_mapping(map_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    mapping = db.query(TallyLedgerMapping).filter(TallyLedgerMapping.id == map_id).first()
+    if not mapping:
+        raise HTTPException(status_code=404, detail="Ledger mapping not found")
+    get_company_membership(db, current_user, mapping.company_id)
+    require_permission(db, current_user, mapping.company_id, "settings:manage")
+    from app.routers.delete_logs import log_deletion
+    log_deletion(db, mapping.company_id, "tally_ledger_mapping", mapping.id, f"Tally Ledger Mapping: {mapping.onsite_transaction_type}", deleted_by=current_user.name)
+    db.delete(mapping)
+    db.commit()
+    return {"success": True}
+
+
 # --- Party mappings ---
 
 @router.post("/mappings/party", response_model=PartyMappingResponse, status_code=status.HTTP_201_CREATED)
@@ -643,6 +761,34 @@ def create_party_mapping(req: PartyMappingCreateRequest, db: Session = Depends(g
 def get_party_mappings(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     comp_uuid = uuid.UUID(str(company_id))
     return db.query(TallyPartyMapping).filter(TallyPartyMapping.company_id == comp_uuid).all()
+
+
+@router.put("/mappings/party/{map_id}", response_model=PartyMappingResponse)
+def update_party_mapping(map_id: uuid.UUID, req: PartyMappingUpdateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    mapping = db.query(TallyPartyMapping).filter(TallyPartyMapping.id == map_id).first()
+    if not mapping:
+        raise HTTPException(status_code=404, detail="Party mapping not found")
+    get_company_membership(db, current_user, mapping.company_id)
+    require_permission(db, current_user, mapping.company_id, "settings:manage")
+    for k, v in req.model_dump(exclude_unset=True).items():
+        setattr(mapping, k, v)
+    db.commit()
+    db.refresh(mapping)
+    return mapping
+
+
+@router.delete("/mappings/party/{map_id}")
+def delete_party_mapping(map_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    mapping = db.query(TallyPartyMapping).filter(TallyPartyMapping.id == map_id).first()
+    if not mapping:
+        raise HTTPException(status_code=404, detail="Party mapping not found")
+    get_company_membership(db, current_user, mapping.company_id)
+    require_permission(db, current_user, mapping.company_id, "settings:manage")
+    from app.routers.delete_logs import log_deletion
+    log_deletion(db, mapping.company_id, "tally_party_mapping", mapping.id, f"Tally Party Mapping: {mapping.tally_ledger_name}", deleted_by=current_user.name)
+    db.delete(mapping)
+    db.commit()
+    return {"success": True}
 
 
 # --- Cost centre mappings ---
@@ -681,6 +827,36 @@ def get_cost_centre_mappings(company_id: uuid.UUID, db: Session = Depends(get_db
     return db.query(TallyCostCentreMapping).filter(TallyCostCentreMapping.company_id == comp_uuid).all()
 
 
+@router.put("/mappings/cost-centre/{map_id}", response_model=CostCentreMappingResponse)
+def update_cost_centre_mapping(map_id: uuid.UUID, req: CostCentreMappingUpdateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    mapping = db.query(TallyCostCentreMapping).filter(TallyCostCentreMapping.id == map_id).first()
+    if not mapping:
+        raise HTTPException(status_code=404, detail="Cost centre mapping not found")
+    get_company_membership(db, current_user, mapping.company_id)
+    require_permission(db, current_user, mapping.company_id, "settings:manage")
+    if req.project_id:
+        verify_project_in_company(db, req.project_id, mapping.company_id)
+    for k, v in req.model_dump(exclude_unset=True).items():
+        setattr(mapping, k, v)
+    db.commit()
+    db.refresh(mapping)
+    return mapping
+
+
+@router.delete("/mappings/cost-centre/{map_id}")
+def delete_cost_centre_mapping(map_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    mapping = db.query(TallyCostCentreMapping).filter(TallyCostCentreMapping.id == map_id).first()
+    if not mapping:
+        raise HTTPException(status_code=404, detail="Cost centre mapping not found")
+    get_company_membership(db, current_user, mapping.company_id)
+    require_permission(db, current_user, mapping.company_id, "settings:manage")
+    from app.routers.delete_logs import log_deletion
+    log_deletion(db, mapping.company_id, "tally_cost_centre_mapping", mapping.id, f"Tally Cost Centre Mapping: {mapping.tally_cost_centre_name}", deleted_by=current_user.name)
+    db.delete(mapping)
+    db.commit()
+    return {"success": True}
+
+
 # --- Bank mappings ---
 
 @router.post("/mappings/bank", response_model=BankMappingResponse, status_code=status.HTTP_201_CREATED)
@@ -714,6 +890,34 @@ def create_bank_mapping(req: BankMappingCreateRequest, db: Session = Depends(get
 def get_bank_mappings(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
     comp_uuid = uuid.UUID(str(company_id))
     return db.query(TallyBankMapping).filter(TallyBankMapping.company_id == comp_uuid).all()
+
+
+@router.put("/mappings/bank/{map_id}", response_model=BankMappingResponse)
+def update_bank_mapping(map_id: uuid.UUID, req: BankMappingUpdateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    mapping = db.query(TallyBankMapping).filter(TallyBankMapping.id == map_id).first()
+    if not mapping:
+        raise HTTPException(status_code=404, detail="Bank mapping not found")
+    get_company_membership(db, current_user, mapping.company_id)
+    require_permission(db, current_user, mapping.company_id, "settings:manage")
+    for k, v in req.model_dump(exclude_unset=True).items():
+        setattr(mapping, k, v)
+    db.commit()
+    db.refresh(mapping)
+    return mapping
+
+
+@router.delete("/mappings/bank/{map_id}")
+def delete_bank_mapping(map_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    mapping = db.query(TallyBankMapping).filter(TallyBankMapping.id == map_id).first()
+    if not mapping:
+        raise HTTPException(status_code=404, detail="Bank mapping not found")
+    get_company_membership(db, current_user, mapping.company_id)
+    require_permission(db, current_user, mapping.company_id, "settings:manage")
+    from app.routers.delete_logs import log_deletion
+    log_deletion(db, mapping.company_id, "tally_bank_mapping", mapping.id, f"Tally Bank Mapping: {mapping.tally_ledger_name}", deleted_by=current_user.name)
+    db.delete(mapping)
+    db.commit()
+    return {"success": True}
 
 
 # --- Real export flow ---

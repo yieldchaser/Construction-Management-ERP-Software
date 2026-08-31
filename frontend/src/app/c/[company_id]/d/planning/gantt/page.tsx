@@ -553,6 +553,28 @@ export default function GanttSchedulerPage() {
     }
   };
 
+  // Delete task
+  const handleDeleteTask = async (taskId: string) => {
+    if (!confirm("Are you sure you want to delete this task? All subtask relationships and dependencies will be removed.")) return;
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/planning/tasks/${taskId}`, {
+        method: "DELETE",
+        headers: authHeaders(),
+      });
+      if (res.ok) {
+        if (selectedTask?.id === taskId) {
+          setSelectedTask(null);
+        }
+        fetchTasks();
+      } else {
+        const err = await readErrorDetail(res);
+        setError(err || 'Action failed');
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   // Save comment or progress log
   const handleSaveComment = async (customVoiceUrl?: string) => {
     if (!selectedTask) return;
@@ -1267,6 +1289,17 @@ export default function GanttSchedulerPage() {
                       >
                         Set Baseline
                       </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteTask(task.id);
+                        }}
+                        className="p-1 bg-elevated hover:bg-danger/10 hover:text-danger hover:border-danger/20 border border-border-custom text-muted rounded text-[10px] cursor-pointer"
+                        title="Delete task"
+                      >
+                        <Icon name="trash" className="w-3 h-3" />
+                      </button>
                       <Icon name="arrow_forward" className="w-3.5 h-3.5 text-muted group-hover:text-foreground transition-all" />
                     </div>
                   </div>
@@ -1291,7 +1324,17 @@ export default function GanttSchedulerPage() {
                 <span className="text-[9px] uppercase tracking-wider font-extrabold text-primary">WBS Task details</span>
                 <h2 className="text-base font-extrabold text-foreground mt-1">{selectedTask.name}</h2>
               </div>
-              <button onClick={() => setSelectedTask(null)} className="text-muted hover:text-foreground cursor-pointer inline-flex items-center gap-1"><Icon name="close" className="w-3.5 h-3.5" /> Close</button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleDeleteTask(selectedTask.id)}
+                  className="px-2.5 py-1 rounded bg-danger/10 hover:bg-danger/20 border border-danger/20 text-danger text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1"
+                  title="Delete task"
+                >
+                  <Icon name="trash" className="w-3.5 h-3.5" /> Delete
+                </button>
+                <button onClick={() => setSelectedTask(null)} className="text-muted hover:text-foreground cursor-pointer inline-flex items-center gap-1"><Icon name="close" className="w-3.5 h-3.5" /> Close</button>
+              </div>
             </div>
 
             {/* Content body */}

@@ -52,6 +52,9 @@ class AssetTypeCreate(BaseModel):
     company_id: uuid.UUID
     name: str = Field(..., max_length=255)
 
+class AssetTypeUpdate(BaseModel):
+    name: str = Field(..., max_length=255)
+
 class CostCodeCreate(BaseModel):
     company_id: uuid.UUID
     code: str = Field(..., max_length=100)
@@ -60,16 +63,32 @@ class CostCodeCreate(BaseModel):
     name: str = Field(..., max_length=255)
     budget_amount: float = Field(0.0, ge=0)
 
+class CostCodeUpdate(BaseModel):
+    code: Optional[str] = Field(None, max_length=100)
+    sub_cost_code: Optional[str] = Field(None, max_length=100)
+    parent_id: Optional[uuid.UUID] = None
+    name: Optional[str] = Field(None, max_length=255)
+    budget_amount: Optional[float] = Field(None, ge=0)
+
 class DeductionCreate(BaseModel):
     company_id: uuid.UUID
+    name: str = Field(..., max_length=255)
+
+class DeductionUpdate(BaseModel):
     name: str = Field(..., max_length=255)
 
 class ProgressCreate(BaseModel):
     company_id: uuid.UUID
     name: str = Field(..., max_length=255)
 
+class ProgressUpdate(BaseModel):
+    name: str = Field(..., max_length=255)
+
 class WorkforceCreate(BaseModel):
     company_id: uuid.UUID
+    name: str = Field(..., max_length=255)
+
+class WorkforceUpdate(BaseModel):
     name: str = Field(..., max_length=255)
 
 class MaterialCreate(BaseModel):
@@ -92,6 +111,18 @@ class MaterialCreate(BaseModel):
                 raise ValueError("Alternate unit must differ from base unit")
         return self
 
+class MaterialUpdate(BaseModel):
+    name: Optional[str] = Field(None, max_length=255)
+    unit: Optional[str] = Field(None, max_length=50)
+    alternate_unit: Optional[str] = Field(None, max_length=50)
+    gst_rate: Optional[float] = Field(None, ge=0, le=100)
+    category: Optional[str] = Field(None, max_length=100)
+    unit_cost: Optional[float] = Field(None, ge=0)
+    lead_time_days: Optional[int] = Field(None, ge=0)
+    hsn_sac: Optional[str] = Field(None, max_length=50)
+    item_code: Optional[str] = Field(None, max_length=100)
+    specifications: Optional[str] = None
+
 class RateCreate(BaseModel):
     company_id: uuid.UUID
     name: str = Field(..., max_length=255)
@@ -106,6 +137,46 @@ class RateCreate(BaseModel):
     note: Optional[str] = None
     cost_code: Optional[str] = Field(None, max_length=100)
     hsn_sac: Optional[str] = Field(None, max_length=50)
+
+class RateUpdate(BaseModel):
+    name: Optional[str] = Field(None, max_length=255)
+    item_code: Optional[str] = Field(None, max_length=100)
+    unit: Optional[str] = Field(None, max_length=50)
+    gst_rate: Optional[float] = Field(None, ge=0, le=100)
+    category: Optional[str] = Field(None, max_length=100)
+    unit_cost: Optional[float] = Field(None, ge=0)
+    markup_value: Optional[float] = None
+    markup_type: Optional[str] = Field(None, max_length=10)
+    unit_sale_price: Optional[float] = Field(None, ge=0)
+    note: Optional[str] = None
+    cost_code: Optional[str] = Field(None, max_length=100)
+    hsn_sac: Optional[str] = Field(None, max_length=50)
+
+class PartyUpdate(BaseModel):
+    name: Optional[str] = Field(None, max_length=255)
+    phone: Optional[str] = Field(None, max_length=50)
+    email: Optional[str] = Field(None, max_length=255)
+    party_type: Optional[str] = Field(None, max_length=50)
+    address: Optional[str] = None
+    bank_name: Optional[str] = Field(None, max_length=100)
+    account_name: Optional[str] = Field(None, max_length=255)
+    account_number: Optional[str] = Field(None, max_length=100)
+    ifsc_code: Optional[str] = Field(None, max_length=50)
+    tax_no: Optional[str] = Field(None, max_length=50)
+    date_of_joining: Optional[str] = None
+    aadhaar_number: Optional[str] = Field(None, max_length=50)
+    pan_number: Optional[str] = Field(None, max_length=50)
+    esi_number: Optional[str] = Field(None, max_length=50)
+    pf_number: Optional[str] = Field(None, max_length=50)
+    father_name: Optional[str] = Field(None, max_length=255)
+    passport_no: Optional[str] = Field(None, max_length=50)
+    passport_expiry_date: Optional[str] = None
+    creator_name: Optional[str] = Field(None, max_length=255)
+    contractor_role: Optional[str] = Field(None, max_length=100)
+    service_rate_categories: Optional[str] = None
+    bank_account_id: Optional[uuid.UUID] = None
+    opening_balance: Optional[float] = None
+    opening_balance_type: Optional[str] = None
 
 
 def _parse_optional_datetime(value: Optional[str]) -> Optional[datetime]:
@@ -286,6 +357,28 @@ def create_library_party(payload: PartyCreate, db: Session = Depends(get_db), cu
     return party
 
 
+@router.put("/parties/{party_id}")
+def update_library_party(party_id: uuid.UUID, payload: PartyUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    party = db.query(models.LibraryParty).filter(models.LibraryParty.id == party_id).first()
+    if not party:
+        raise HTTPException(status_code=404, detail="Party not found")
+    get_company_membership(db, current_user, party.company_id)
+    require_permission(db, current_user, party.company_id, "library:edit")
+
+    update_dict = payload.model_dump(exclude_unset=True)
+    if "date_of_joining" in update_dict:
+        update_dict["date_of_joining"] = _parse_optional_datetime(update_dict["date_of_joining"])
+    if "passport_expiry_date" in update_dict:
+        update_dict["passport_expiry_date"] = _parse_optional_datetime(update_dict["passport_expiry_date"])
+
+    for k, v in update_dict.items():
+        setattr(party, k, v)
+
+    db.commit()
+    db.refresh(party)
+    return party
+
+
 @router.get("/parties/{company_id}/balances")
 def get_party_balances(
     company_id: uuid.UUID,
@@ -329,6 +422,18 @@ def create_library_asset_type(payload: AssetTypeCreate, db: Session = Depends(ge
     db.refresh(item)
     return item
 
+@router.put("/asset-types/{item_id}")
+def update_library_asset_type(item_id: uuid.UUID, payload: AssetTypeUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    item = db.query(models.LibraryAssetType).filter(models.LibraryAssetType.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Asset type not found")
+    get_company_membership(db, current_user, item.company_id)
+    require_permission(db, current_user, item.company_id, "library:edit")
+    item.name = payload.name
+    db.commit()
+    db.refresh(item)
+    return item
+
 @router.delete("/asset-types/{item_id}")
 def delete_library_asset_type(item_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     item = db.query(models.LibraryAssetType).filter(models.LibraryAssetType.id == item_id).first()
@@ -365,6 +470,19 @@ def create_library_cost_code(payload: CostCodeCreate, db: Session = Depends(get_
     db.refresh(item)
     return item
 
+@router.put("/cost-codes/{item_id}")
+def update_library_cost_code(item_id: uuid.UUID, payload: CostCodeUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    item = db.query(models.LibraryCostCode).filter(models.LibraryCostCode.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Cost code not found")
+    get_company_membership(db, current_user, item.company_id)
+    require_permission(db, current_user, item.company_id, "library:edit")
+    for k, v in payload.model_dump(exclude_unset=True).items():
+        setattr(item, k, v)
+    db.commit()
+    db.refresh(item)
+    return item
+
 @router.delete("/cost-codes/{item_id}")
 def delete_library_cost_code(item_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     item = db.query(models.LibraryCostCode).filter(models.LibraryCostCode.id == item_id).first()
@@ -390,6 +508,18 @@ def create_library_deduction(payload: DeductionCreate, db: Session = Depends(get
     require_permission(db, current_user, payload.company_id, "library:edit")
     item = models.LibraryDeduction(company_id=payload.company_id, name=payload.name)
     db.add(item)
+    db.commit()
+    db.refresh(item)
+    return item
+
+@router.put("/deductions/{item_id}")
+def update_library_deduction(item_id: uuid.UUID, payload: DeductionUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    item = db.query(models.LibraryDeduction).filter(models.LibraryDeduction.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Deduction not found")
+    get_company_membership(db, current_user, item.company_id)
+    require_permission(db, current_user, item.company_id, "library:edit")
+    item.name = payload.name
     db.commit()
     db.refresh(item)
     return item
@@ -423,6 +553,18 @@ def create_library_progress(payload: ProgressCreate, db: Session = Depends(get_d
     db.refresh(item)
     return item
 
+@router.put("/progresses/{item_id}")
+def update_library_progress(item_id: uuid.UUID, payload: ProgressUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    item = db.query(models.LibraryProgress).filter(models.LibraryProgress.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Progress not found")
+    get_company_membership(db, current_user, item.company_id)
+    require_permission(db, current_user, item.company_id, "library:edit")
+    item.name = payload.name
+    db.commit()
+    db.refresh(item)
+    return item
+
 @router.delete("/progresses/{item_id}")
 def delete_library_progress(item_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     item = db.query(models.LibraryProgress).filter(models.LibraryProgress.id == item_id).first()
@@ -448,6 +590,18 @@ def create_library_workforce(payload: WorkforceCreate, db: Session = Depends(get
     require_permission(db, current_user, payload.company_id, "library:edit")
     item = models.LibraryWorkforce(company_id=payload.company_id, name=payload.name)
     db.add(item)
+    db.commit()
+    db.refresh(item)
+    return item
+
+@router.put("/workforces/{item_id}")
+def update_library_workforce(item_id: uuid.UUID, payload: WorkforceUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    item = db.query(models.LibraryWorkforce).filter(models.LibraryWorkforce.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Workforce not found")
+    get_company_membership(db, current_user, item.company_id)
+    require_permission(db, current_user, item.company_id, "library:edit")
+    item.name = payload.name
     db.commit()
     db.refresh(item)
     return item
@@ -521,6 +675,19 @@ def create_library_material(payload: MaterialCreate, db: Session = Depends(get_d
     db.refresh(item)
     return item
 
+@router.put("/materials/{item_id}")
+def update_library_material(item_id: uuid.UUID, payload: MaterialUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    item = db.query(models.LibraryMaterial).filter(models.LibraryMaterial.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Material not found")
+    get_company_membership(db, current_user, item.company_id)
+    require_permission(db, current_user, item.company_id, "library:edit")
+    for k, v in payload.model_dump(exclude_unset=True).items():
+        setattr(item, k, v)
+    db.commit()
+    db.refresh(item)
+    return item
+
 @router.delete("/materials/{item_id}")
 def delete_library_material(item_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     item = db.query(models.LibraryMaterial).filter(models.LibraryMaterial.id == item_id).first()
@@ -567,6 +734,21 @@ def create_library_rate(payload: RateCreate, db: Session = Depends(get_db), curr
     db.refresh(item)
     return item
 
+@router.put("/rates/{item_id}")
+def update_library_rate(item_id: uuid.UUID, payload: RateUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    item = db.query(models.LibraryRate).filter(models.LibraryRate.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Rate item not found")
+    get_company_membership(db, current_user, item.company_id)
+    require_permission(db, current_user, item.company_id, "library:edit")
+    if payload.cost_code:
+        assert_cost_codes_known(db, item.company_id, codes=[payload.cost_code], status_code=422)
+    for k, v in payload.model_dump(exclude_unset=True).items():
+        setattr(item, k, v)
+    db.commit()
+    db.refresh(item)
+    return item
+
 @router.delete("/rates/{item_id}")
 def delete_library_rate(item_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     item = db.query(models.LibraryRate).filter(models.LibraryRate.id == item_id).first()
@@ -587,6 +769,9 @@ class RetentionCreate(BaseModel):
     company_id: uuid.UUID
     name: str = Field(..., max_length=255)
 
+class RetentionUpdate(BaseModel):
+    name: str = Field(..., max_length=255)
+
 
 @router.get("/retentions/{company_id}")
 def get_library_retentions(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
@@ -599,6 +784,19 @@ def create_library_retention(payload: RetentionCreate, db: Session = Depends(get
     require_permission(db, current_user, payload.company_id, "library:edit")
     item = models.LibraryRetention(company_id=payload.company_id, name=payload.name)
     db.add(item)
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.put("/retentions/{item_id}")
+def update_library_retention(item_id: uuid.UUID, payload: RetentionUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    item = db.query(models.LibraryRetention).filter(models.LibraryRetention.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Retention not found")
+    get_company_membership(db, current_user, item.company_id)
+    require_permission(db, current_user, item.company_id, "library:edit")
+    item.name = payload.name
     db.commit()
     db.refresh(item)
     return item
@@ -625,6 +823,10 @@ class MaterialCategoryCreate(BaseModel):
     name: str = Field(..., max_length=255)
     parent_id: Optional[uuid.UUID] = None
 
+class MaterialCategoryUpdate(BaseModel):
+    name: Optional[str] = Field(None, max_length=255)
+    parent_id: Optional[uuid.UUID] = None
+
 
 @router.get("/material-categories/{company_id}")
 def get_material_categories(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
@@ -641,6 +843,20 @@ def create_material_category(payload: MaterialCategoryCreate, db: Session = Depe
         parent_id=payload.parent_id,
     )
     db.add(item)
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.put("/material-categories/{item_id}")
+def update_material_category(item_id: uuid.UUID, payload: MaterialCategoryUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    item = db.query(models.MaterialCategory).filter(models.MaterialCategory.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Material category not found")
+    get_company_membership(db, current_user, item.company_id)
+    require_permission(db, current_user, item.company_id, "library:edit")
+    for k, v in payload.model_dump(exclude_unset=True).items():
+        setattr(item, k, v)
     db.commit()
     db.refresh(item)
     return item
@@ -666,6 +882,9 @@ class TodoCreate(BaseModel):
     company_id: uuid.UUID
     name: str = Field(..., max_length=255)
 
+class TodoUpdate(BaseModel):
+    name: str = Field(..., max_length=255)
+
 
 @router.get("/todos/{company_id}")
 def get_library_todos(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
@@ -678,6 +897,19 @@ def create_library_todo(payload: TodoCreate, db: Session = Depends(get_db), curr
     require_permission(db, current_user, payload.company_id, "library:edit")
     item = models.LibraryTodo(company_id=payload.company_id, name=payload.name)
     db.add(item)
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.put("/todos/{item_id}")
+def update_library_todo(item_id: uuid.UUID, payload: TodoUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    item = db.query(models.LibraryTodo).filter(models.LibraryTodo.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="To Do not found")
+    get_company_membership(db, current_user, item.company_id)
+    require_permission(db, current_user, item.company_id, "library:edit")
+    item.name = payload.name
     db.commit()
     db.refresh(item)
     return item
