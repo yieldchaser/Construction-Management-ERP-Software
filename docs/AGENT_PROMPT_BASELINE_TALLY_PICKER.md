@@ -1,6 +1,6 @@
-# AGENT PROMPT: three defects from a fresh sweep
+# AGENT PROMPT: five defects from a fresh sweep
 
-Short run. Three items, all found by re-running the sweeps against `f257a64`.
+Five items against `f257a64`. Three came from re-running the static sweeps, two from driving the live app in a browser, which is the only way the last two could have been found.
 
 Report as before: for each item, the command, its exit code, and one sentence. No pasted output. "Not run" is an acceptable answer.
 
@@ -93,9 +93,54 @@ Do not change how projects are fetched, and do not add a spinner to the sidebar.
 
 ---
 
+# PART 4: internal developer notes are rendered as user copy
+
+Two strings written for a code reviewer are on screen for the customer.
+
+**`d/home/page.tsx:468`**, on the Project Hub, under the project details heading:
+
+> Pulled from the planning projects endpoint so the home page exposes the richer project labels the workbook called out.
+
+**`settings/page.tsx:2243`**, under Custom Fields:
+
+> Define extra fields attached to a document/entity type. Wired to the generic CustomField backend (entity_type-based).
+
+Both name internals a user has no concept of: an endpoint, a workbook, a backend class, a parameter name. Rewrite each as one plain sentence saying what the thing is for, in the voice the rest of the help copy uses. No endpoint names, no class names, no reference to specs or findings.
+
+A sweep for this phrasing across the console finds exactly these two, so do not go looking for more.
+
+---
+
+# PART 5: a cold page load fires a burst of failing requests
+
+Loading a console page from cold, on a company that has no project selected, produces **twelve 422s and two 404s** before the page settles. Confirmed in the browser against production.
+
+The cause is not a stale value in storage; there is none. Components mount and fire project-scoped requests while `activeProjectId` from `ProjectContext` is still empty, so the id reaches the API as an empty string or `undefined` and the server rejects it as an unparseable UUID.
+
+It is not user visible, and the app recovers. It matters for two reasons: it makes a genuine error impossible to spot in the console, and every one of those wasted calls hits a backend that may be cold starting, which is the slowest moment in the product.
+
+**Fix it by guarding, not by suppressing.** A project-scoped fetch must not fire until `activeProjectId` is a resolved, valid identifier. `d/dpr/page.tsx` already does this correctly and fires nothing when no project is selected: follow that pattern rather than inventing a new one.
+
+Do not add retries, do not swallow the 422, and do not change any endpoint to accept an empty id.
+
+**Verify by loading a console page cold with no project selected and reporting how many failing `/apis/v3` requests occur. It must be zero.**
+
+---
+
+## Confirmed working. Do not change these.
+
+Checked live in the browser during this sweep, so they need no attention:
+
+- All eleven Library registers render and load: Party, Party Balances, Asset Type, Cost Code, Deduction, Progress, Workforce, Material, Rate, Retention, Material Category and To Do.
+- `d/dpr` correctly fires no project-scoped requests when no project is selected.
+- The statutory generators are live: GSTR-1 and TDS-26Q both return 200, and PF-ECR correctly returns 409 with `No finalized payroll run exists for 2026-08. Finalize payroll before generating`, which is the right behaviour and a good message.
+- The Project Hub empty state is correct: `No active projects. Click "+ New Project" to create one.`
+
+---
+
 # Rules
 
-- **No authoring scripts.** Three small changes.
+- **No authoring scripts.** Five small changes.
 - Every write branches on `res.ok` and surfaces `readErrorDetail`.
 - New endpoints carry the same permission and tenant checks as their sibling.
 - `Badge`, `Icon` from the closed 120-name union, semantic tokens only. No raw palette, gradients, hex, `hover:bg-white/N`, control glyphs, emoji, inline shadows.
@@ -111,7 +156,9 @@ Command, exit code, one sentence.
 - [ ] The new test was run before the endpoint existed and failed, then passes. Say what the failure was.
 - [ ] The Freeze New Baseline button succeeds and reports how many tasks were baselined.
 - [ ] `deleteTallyConnection` surfaces the API error on failure.
-- [ ] The project picker distinguishes loading, empty and failed.
+- [ ] The project picker distinguishes loading, empty and failed. Note: the test company genuinely has zero projects, so the empty case is reproducible today.
+- [ ] Both developer-note strings replaced with plain user copy.
+- [ ] A cold console page load with no project selected produces **zero** failing `/apis/v3` requests. Report the count you measured.
 - [ ] `python scripts/verification/check_route_reachability.py` reports **0 unreachable**, exemption file still 30 entries.
 - [ ] `cd backend && PYTHONPATH=. pytest tests/coverage -n 4` passes. It is **1148 passed, 4 skipped** today and must only go up.
 - [ ] `cd frontend && npx tsc --noEmit` and `cd frontend && npm run build` both run and both clean.
