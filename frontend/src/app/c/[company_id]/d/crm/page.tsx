@@ -663,6 +663,25 @@ export default function CRMPage() {
       <PageHeader
         title="CRM & Quotations"
         subtitle="Lead tracking, client pipeline and quotation register"
+        action={
+          tab === "leads" ? (
+            <button className={btnPrimary} onClick={openNew}>
+              New Lead +
+            </button>
+          ) : (
+            <button
+              className={btnPrimary}
+              disabled={!selLeadId}
+              onClick={() => {
+                setQForm({ ...emptyQ });
+                setQError("");
+                setQDrawer(true);
+              }}
+            >
+              New Quotation +
+            </button>
+          )
+        }
       />
       <div className="flex-1 overflow-y-auto">
         <PageShell width="wide">
@@ -723,8 +742,8 @@ export default function CRMPage() {
               ))}
             </select>
             <div className="ml-auto relative">
-              <button className={btnGhost} onClick={() => setShowColMenu((v) => !v)} title="Columns">
-                +
+              <button className={`${btnGhost} flex items-center gap-1 cursor-pointer`} onClick={() => setShowColMenu((v) => !v)} title="Columns">
+                <Icon name="table_chart" className="w-3.5 h-3.5" /> Columns
               </button>
               {showColMenu && (
                 <div
@@ -744,9 +763,6 @@ export default function CRMPage() {
                 </div>
               )}
             </div>
-            <button className={btnPrimary} onClick={openNew}>
-              New Lead +
-            </button>
           </div>
 
           <div className="mb-2 text-xs text-muted">
@@ -975,17 +991,6 @@ export default function CRMPage() {
                 </option>
               ))}
             </select>
-            <button
-              className={btnPrimary}
-              disabled={!selLeadId}
-              onClick={() => {
-                setQForm({ ...emptyQ });
-                setQError("");
-                setQDrawer(true);
-              }}
-            >
-              New Quotation +
-            </button>
           </div>
 
           {/* Quotations list */}

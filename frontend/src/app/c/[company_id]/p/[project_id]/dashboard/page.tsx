@@ -337,6 +337,14 @@ export default function ProjectDashboardPage() {
       <PageHeader
         title={project.name}
         subtitle={[project.code, project.category, project.stage].filter(Boolean).join(" · ") || "Project Overview"}
+        action={
+          <button
+            onClick={() => setShowAddCC(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary/95 text-white rounded-md text-xs font-semibold shadow-sm transition-all cursor-pointer"
+          >
+            + Add Cost Code
+          </button>
+        }
       />
       <div className="flex-1 overflow-y-auto">
         <PageShell width="wide">

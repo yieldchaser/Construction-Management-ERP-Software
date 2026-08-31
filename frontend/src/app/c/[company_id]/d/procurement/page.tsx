@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
-import { getApiHost } from "@/lib/api";
+import {  getApiHost , readErrorDetail } from "@/lib/api";
 import { authHeaders, downloadWithAuth } from "@/lib/siteflow";
 import Icon, { type IconName } from "@/components/marketing/Icon";
 import PageShell from "@/components/layout/PageShell";
@@ -301,6 +301,9 @@ export default function ProcurementPage() {
       if (res.ok) {
         const saved = await res.json();
         newIndent.id = saved.id;
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || 'Action failed');
       }
     } catch (err) {
       console.error("Indent create error, using local only:", err);
@@ -424,6 +427,9 @@ export default function ProcurementPage() {
       if (res.ok) {
         const saved = await res.json();
         newPO.id = saved.id;
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || 'Action failed');
       }
     } catch (err) {
       console.error("PO create error, using local only:", err);

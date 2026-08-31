@@ -133,6 +133,9 @@ export default function ProjectSettingsModal({
     if (res.ok) {
       setNewLoc("");
       loadLocations();
+    } else {
+      const err = await readErrorDetail(res);
+      alert(`Failed to add location: ${err}`);
     }
   };
 

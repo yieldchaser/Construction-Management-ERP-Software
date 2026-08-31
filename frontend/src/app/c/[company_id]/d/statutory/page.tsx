@@ -253,7 +253,7 @@ export default function StatutoryPage() {
                 </tr>
               ) : (
                 reports.map((r) => (
-                  <tr key={r.id} className="hover:bg-white/5 transition-colors">
+                  <tr key={r.id} className="hover:bg-elevated transition-colors">
                     <td className="px-6 py-4 font-medium">{typeLabels[r.report_type] || r.report_type}</td>
                     <td className="px-6 py-4">{r.return_period}</td>
                     <td className="px-6 py-4">{r.total_employees}</td>
@@ -292,7 +292,7 @@ export default function StatutoryPage() {
               <div><span className="text-muted">Due Date:</span> <span className="text-foreground">{penaltyData.due_date ? new Date(penaltyData.due_date as string).toLocaleDateString() : "-"}</span></div>
               <div><span className="text-muted">Estimated Penalty:</span> <span className="text-danger font-medium">₹{Number(penaltyData.estimated_penalty).toLocaleString()}</span></div>
             </div>
-            <button onClick={() => setShowPenalty(false)} className="mt-4 px-4 py-2 bg-white/10 hover:bg-white/15 text-foreground rounded-md text-sm font-semibold">Close</button>
+            <button onClick={() => setShowPenalty(false)} className="mt-4 px-4 py-2 bg-white/10 hover:bg-elevated text-foreground rounded-md text-sm font-semibold">Close</button>
           </div>
         )}
 
@@ -364,7 +364,7 @@ export default function StatutoryPage() {
                 </div>
                 <div className="flex gap-3 pt-2">
                   <button type="submit" className="flex-1 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-md text-sm font-semibold">Create Report</button>
-                  <button type="button" onClick={() => { setShowModal(false); setMessage(""); }} className="px-4 py-2 bg-white/10 hover:bg-white/15 text-foreground rounded-md text-sm font-semibold">Cancel</button>
+                  <button type="button" onClick={() => { setShowModal(false); setMessage(""); }} className="px-4 py-2 bg-white/10 hover:bg-elevated text-foreground rounded-md text-sm font-semibold">Cancel</button>
                 </div>
               </form>
             </div>

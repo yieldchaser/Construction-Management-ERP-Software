@@ -1,5 +1,5 @@
 "use client";
-import { getApiHost } from "@/lib/api";
+import {  getApiHost , readErrorDetail } from "@/lib/api";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
@@ -377,6 +377,9 @@ export default function SubcontractorBillingPage() {
         setShowWOModal(false);
         setNewWOItem("");
         setNewWONum(`WO-2026-${Math.floor(1000 + Math.random() * 9000)}`);
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || 'Action failed');
       }
     } catch (e) {
       console.error("Failed to create work order", e);
@@ -420,6 +423,9 @@ export default function SubcontractorBillingPage() {
         fetchBills(subconNameMap);
         setShowBillModal(false);
         setNewBillNum(`RA-BILL-${Math.floor(1000 + Math.random() * 9000)}`);
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || 'Action failed');
       }
     } catch (e) {
       console.error("Failed to create bill", e);

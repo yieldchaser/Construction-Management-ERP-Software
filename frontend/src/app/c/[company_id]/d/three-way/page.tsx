@@ -227,7 +227,7 @@ export default function ThreeWayPage() {
                 </tr>
               ) : (
                 matches.map((m) => (
-                  <tr key={m.id} className="hover:bg-white/5 transition-colors">
+                  <tr key={m.id} className="hover:bg-elevated transition-colors">
                     <td className="px-6 py-4">{m.po_number || m.po_id.slice(0, 8)}</td>
                     <td className="px-6 py-4">{m.grn_number || m.grn_id.slice(0, 8)}</td>
                     <td className="px-6 py-4">{fmtINR(m.po_amount)}</td>
@@ -290,7 +290,7 @@ export default function ThreeWayPage() {
                 </div>
                 <div className="flex gap-3 pt-2">
                   <button type="submit" className="flex-1 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-md text-sm font-semibold">Create Match</button>
-                  <button type="button" onClick={() => { setShowModal(false); setMessage(""); }} className="px-4 py-2 bg-white/10 hover:bg-white/15 text-foreground rounded-md text-sm font-semibold">Cancel</button>
+                  <button type="button" onClick={() => { setShowModal(false); setMessage(""); }} className="px-4 py-2 bg-white/10 hover:bg-elevated text-foreground rounded-md text-sm font-semibold">Cancel</button>
                 </div>
               </form>
             </div>

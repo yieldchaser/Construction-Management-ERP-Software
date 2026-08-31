@@ -125,7 +125,7 @@ export default function SubconScorecardsPage() {
                 </thead>
                 <tbody>
                   {comparative.map((row) => (
-                    <tr key={row.subcontractor_id} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-all">
+                    <tr key={row.subcontractor_id} className="border-b border-white/[0.02] hover:bg-elevated transition-all">
                       <td className="px-5 py-3.5 text-white font-semibold">{row.subcontractor_name}</td>
                       <td className="px-5 py-3.5 text-muted">{row.scorecard_count}</td>
                       <td className="px-5 py-3.5 text-right font-sans font-bold text-success">{fmt(row.avg_on_time_pct)}</td>
@@ -173,7 +173,7 @@ export default function SubconScorecardsPage() {
                 <tbody>
                   {scorecards.map((sc) => {
                     return (
-                      <tr key={sc.id} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-all">
+                      <tr key={sc.id} className="border-b border-white/[0.02] hover:bg-elevated transition-all">
                         <td className="px-5 py-3.5 text-white font-semibold">{sc.subcontractor_name}</td>
                         <td className="px-5 py-3.5 text-muted">{sc.period_start?.split("T")[0]} – {sc.period_end?.split("T")[0]}</td>
                         <td className="px-5 py-3.5 text-right font-sans font-bold text-success">{fmt(sc.on_time_pct)}</td>

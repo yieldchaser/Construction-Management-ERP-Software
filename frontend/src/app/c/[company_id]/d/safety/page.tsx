@@ -267,6 +267,25 @@ export default function SafetyPage() {
       <PageHeader
         title="HSE / Safety Management"
         subtitle="Incident tracking, toolbox talks & PPE compliance"
+        action={
+          tab === 0 ? (
+            <button
+              onClick={() => setShowIncidentModal(true)}
+              className="py-2 px-4 rounded-lg bg-danger text-white text-xs font-semibold hover:opacity-90 transition-opacity cursor-pointer flex items-center gap-1.5"
+            >
+              <Icon name="siren" className="w-3.5 h-3.5" />
+              + Report Incident
+            </button>
+          ) : tab === 2 ? (
+            <button
+              onClick={() => setShowTalkModal(true)}
+              className="py-2 px-4 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary/90 transition-colors cursor-pointer flex items-center gap-1.5"
+            >
+              <Icon name="toolbox_talk" className="w-3.5 h-3.5" />
+              + Add Talk
+            </button>
+          ) : null
+        }
       />
       <div className="flex-1 overflow-y-auto">
         <PageShell width="wide">
@@ -297,12 +316,6 @@ export default function SafetyPage() {
           <div>
             <div className="flex justify-between items-center mb-5">
               <h2 className="text-base font-semibold text-foreground">Incident Board</h2>
-              <button
-                onClick={() => setShowIncidentModal(true)}
-                className="py-2 px-4 rounded-lg bg-danger text-white text-xs font-semibold hover:opacity-90 transition-opacity cursor-pointer"
-              >
-                + Report Incident
-              </button>
             </div>
 
             {loading ? (
@@ -480,12 +493,6 @@ export default function SafetyPage() {
         <div>
           <div className="flex justify-between items-center mb-5">
             <h2 className="text-base font-semibold text-foreground">Toolbox Talks & Briefings</h2>
-            <button
-              onClick={() => setShowTalkModal(true)}
-              className="py-2 px-4 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary/90 transition-colors"
-            >
-              + Add Talk
-            </button>
           </div>
           {talks.length === 0 ? (
             loading ? (

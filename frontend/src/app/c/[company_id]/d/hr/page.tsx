@@ -1,5 +1,5 @@
 "use client";
-import { getApiHost } from "@/lib/api";
+import {  getApiHost , readErrorDetail } from "@/lib/api";
 import { getApi, authHeaders, resolveCompanyId } from "@/lib/siteflow";
 
 import React, { useState, useEffect } from "react";
@@ -438,6 +438,9 @@ export default function HRPayrollPage() {
       });
       if (res.ok) {
         fetchLeaves();
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || 'Action failed');
       }
     } catch (e) {
       console.error(e);
@@ -525,6 +528,9 @@ export default function HRPayrollPage() {
           tds: "0",
           joined: new Date().toISOString().split("T")[0]
         });
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || 'Action failed');
       }
     } catch (e) {
       console.error("Failed to save employee", e);
@@ -1132,7 +1138,6 @@ export default function HRPayrollPage() {
                                 Approve
                               </button>
                             )}
-                            <button className="text-[10px] px-2 py-1 rounded bg-elevated text-muted border border-border-custom hover:bg-elevated">View</button>
                           </div>
                         </td>
                       </tr>
@@ -1433,7 +1438,12 @@ export default function HRPayrollPage() {
                             <td className="px-3 py-3 text-danger font-bold">{fmt(p.totalDeductions)}</td>
                             <td className="px-3 py-3 font-bold text-primary text-sm">{fmt(p.netPayable)}</td>
                             <td className="px-3 py-3">
-                              <button className="text-[10px] px-2 py-1 rounded bg-elevated text-muted border border-border-custom hover:bg-elevated">Payslip</button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setSelectedPayslip(p); }}
+                                className="text-[10px] px-2 py-1 rounded bg-elevated text-foreground border border-border-custom hover:bg-elevated cursor-pointer"
+                              >
+                                Payslip
+                              </button>
                             </td>
                           </tr>
                         ))}
@@ -1850,7 +1860,10 @@ export default function HRPayrollPage() {
                       fetchLeaves();
                       setShowApplyLeaveModal(false);
                       setLeaveForm({ employeeId: "", leaveType: "Casual", startDate: "", endDate: "", reason: "" });
-                    }
+                    } else {
+        const err = await readErrorDetail(res);
+        alert(err || 'Action failed');
+      }
                   } catch (e) {
                     console.error("Failed to apply leave", e);
                   }

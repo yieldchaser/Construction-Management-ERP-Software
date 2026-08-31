@@ -1,5 +1,5 @@
 "use client";
-import { getApiHost } from "@/lib/api";
+import {  getApiHost , readErrorDetail } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 
 import React, { useState, useEffect, useMemo } from "react";
@@ -272,6 +272,7 @@ export default function FinancePage() {
   const [txnLoad, setTxnLoad] = useState<"loading" | "ready" | "error">("loading");
   const [txnDateFilter, setTxnDateFilter] = useState("");
   const [showUnbilledOnly, setShowUnbilledOnly] = useState(false);
+  const [showPendingOnly, setShowPendingOnly] = useState(false);
 
   // Tally Sync States
   const [tallyPending, setTallyPending] = useState<{ count: number; bill_ids: string[]; payment_ids: string[]; vouchers: TallyPendingVoucher[] }>({ count: 0, bill_ids: [], payment_ids: [], vouchers: [] });
@@ -665,6 +666,9 @@ export default function FinancePage() {
         setBankAccounts([...bankAccounts, added]);
         setNewBank({ name: "", holder: "", number: "", ifsc: "", upi: "", balance: "" });
         setShowAddBankModal(false);
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || 'Action failed');
       }
     } catch (err) {
       console.error(err);
@@ -688,6 +692,9 @@ export default function FinancePage() {
         setCashRunning(ca.running_balance);
         setNewCash({ name: "Cash Account", opening: "" });
         setShowAddCashModal(false);
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || 'Action failed');
       }
     } catch (err) {
       console.error(err);
@@ -716,6 +723,9 @@ export default function FinancePage() {
         setPrStep("type");
         setPrType(null);
         setShowAddRequestModal(false);
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || 'Action failed');
       }
     } catch (err) {
       console.error(err);
@@ -1189,7 +1199,8 @@ export default function FinancePage() {
               const matchQ = !q || (t.party || "").toLowerCase().includes(q) || (t.details || "").toLowerCase().includes(q) || (t.ref || "").toLowerCase().includes(q);
               const matchD = !txnDateFilter || (t.date || "").startsWith(txnDateFilter);
               const matchM = !showUnbilledOnly || (/material/i.test(t.type || "") && t.status && t.status !== "Paid");
-              return matchQ && matchD && matchM;
+              const matchP = !showPendingOnly || (t.status && t.status !== "Paid" && t.status !== "Approved");
+              return matchQ && matchD && matchM && matchP;
             });
             const statusClass = (s: string) => {
               if (s === "Paid" || s === "Approved") return "bg-success/10 text-success border border-success/20";
@@ -1234,10 +1245,10 @@ export default function FinancePage() {
               {/* Toolbar */}
               <div className="flex flex-wrap items-center gap-2">
                 <input type="date" value={txnDateFilter} onChange={(e) => setTxnDateFilter(e.target.value)} className="py-1 px-2 border border-border-custom bg-card hover:bg-elevated rounded text-[11px] text-foreground focus:outline-none" />
-                <button onClick={() => setShowUnbilledOnly(!showUnbilledOnly)} className={`py-1 px-3 border border-border-custom hover:bg-elevated rounded text-[11px] font-medium transition-all flex items-center gap-1 ${showUnbilledOnly ? "text-primary border-primary/60" : "text-foreground"}`}>
+                <button onClick={() => setShowUnbilledOnly(!showUnbilledOnly)} className={`py-1 px-3 border border-border-custom hover:bg-elevated rounded text-[11px] font-medium transition-all flex items-center gap-1 cursor-pointer ${showUnbilledOnly ? "text-primary border-primary/60" : "text-foreground"}`}>
                   <Icon name="trolley" className="w-3.5 h-3.5" /> Unbilled Materials <span className="bg-primary/20 text-primary text-[9px] font-bold px-1.5 py-0.5 rounded-full">New {unbilledCount}</span>
                 </button>
-                <button className="py-1 px-3 border border-border-custom hover:bg-elevated rounded text-[11px] font-medium text-foreground transition-all flex items-center gap-1">
+                <button onClick={() => setShowPendingOnly(!showPendingOnly)} className={`py-1 px-3 border border-border-custom hover:bg-elevated rounded text-[11px] font-medium transition-all flex items-center gap-1 cursor-pointer ${showPendingOnly ? "text-warning border-warning/60" : "text-foreground"}`}>
                   <Icon name="schedule" className="w-3.5 h-3.5" /> Pending Entries <span className="bg-warning/10 text-warning text-[9px] font-bold px-1.5 py-0.5 rounded-full">{pendingCount}</span>
                 </button>
                 <div className="flex-1" />
@@ -2202,7 +2213,7 @@ export default function FinancePage() {
                         const statusLabel = isOver ? "OVERSPENT" : isWarn ? "AT RISK" : "ON TRACK";
                         const statusColor = isOver ? "bg-danger/10 border-danger/20 text-danger" : isWarn ? "bg-warning/10 border-warning/20 text-warning" : "bg-success/10 border-success/20 text-success";
                         return (
-                          <tr key={row.code} className={`border-b border-white/[0.03] hover:bg-white/[0.015] transition-all ${isOver ? "bg-danger/[0.02]" : ""}`}>
+                          <tr key={row.code} className={`border-b border-white/[0.03] hover:bg-elevated transition-all ${isOver ? "bg-danger/[0.02]" : ""}`}>
                             <td className="px-5 py-3 font-sans text-muted">{row.code}</td>
                             <td className="px-5 py-3 font-semibold text-foreground">{row.head}</td>
                             <td className="px-5 py-3 text-right font-sans text-muted">₹{row.budget.toLocaleString()}</td>
@@ -4264,7 +4275,10 @@ export default function FinancePage() {
                         setSelectedPR(u);
                         setPaymentRequests(paymentRequests.map(p => p.id === u.id ? u : p));
                         setShowRecordPaymentModal(false);
-                      }
+                      } else {
+        const err = await readErrorDetail(res);
+        alert(err || 'Action failed');
+      }
                     } catch (err) { console.error(err); }
                   }}
                   className="flex-1 py-2.5 bg-primary text-white font-bold rounded-lg hover:bg-primary/95 text-xs transition-all"

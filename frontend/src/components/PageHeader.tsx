@@ -13,9 +13,10 @@ interface PageHeaderProps {
   subtitle?: React.ReactNode;
   breadcrumbs?: { label: string; href?: string }[];
   children?: React.ReactNode;
+  action?: React.ReactNode;
 }
 
-export default function PageHeader({ title, subtitle, breadcrumbs, children }: PageHeaderProps) {
+export default function PageHeader({ title, subtitle, breadcrumbs, children, action }: PageHeaderProps) {
   const router = useRouter();
   const params = useParams();
   const { toggleMobile } = useSidebar();
@@ -98,6 +99,9 @@ export default function PageHeader({ title, subtitle, breadcrumbs, children }: P
       </div>
 
       <div className="flex items-center gap-4">
+        {/* Primary Action Slot */}
+        {action && <div className="flex items-center gap-2">{action}</div>}
+
         {/* Children slots for filters or buttons specific to page */}
         {children && <div className="flex items-center gap-3">{children}</div>}
 

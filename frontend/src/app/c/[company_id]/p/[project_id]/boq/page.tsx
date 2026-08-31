@@ -1,4 +1,5 @@
 "use client";
+import { readErrorDetail } from "@/lib/api";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
@@ -273,6 +274,9 @@ export default function BoqTab() {
         setClientId(p.id);
         setPartyName("");
         setShowParty(false);
+      } else {
+        const err = await readErrorDetail(res);
+        setError(err || 'Action failed');
       }
     } finally {
       setSavingParty(false);
@@ -305,6 +309,9 @@ export default function BoqTab() {
         setTerms("");
         setShowAdd(false);
         await loadDocs();
+      } else {
+        const err = await readErrorDetail(res);
+        setError(err || 'Action failed');
       }
     } finally {
       setSavingDoc(false);

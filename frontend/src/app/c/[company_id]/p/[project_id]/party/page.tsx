@@ -131,6 +131,14 @@ export default function PartyPage() {
       <PageHeader
         title="Project Parties"
         subtitle="Vendor, client, subcontractor balances and party profiles for this project"
+        action={
+          <button
+            onClick={() => setAddOpen(true)}
+            className="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary/95 text-white rounded-md text-xs font-semibold shadow-sm transition-all cursor-pointer"
+          >
+            + Add Party
+          </button>
+        }
       />
       <div className="flex-1 overflow-y-auto">
         <PageShell width="wide">
@@ -170,9 +178,6 @@ export default function PartyPage() {
           placeholder="Search Parties"
           className="flex-1 min-w-[180px] rounded-md border border-border-custom bg-card px-3 py-2 text-sm text-foreground"
         />
-        <button onClick={() => setAddOpen(true)} className="rounded-md border border-border-custom bg-card px-4 py-2 text-sm text-foreground hover:border-primary">
-          + Add Party
-        </button>
         <button onClick={() => setNewOpen(true)} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90">
           + New Party
         </button>

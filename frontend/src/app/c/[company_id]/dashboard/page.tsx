@@ -176,6 +176,7 @@ export default function DashboardPage() {
 
   // ── Chart type switcher ────────────────────────────────────────────────────
   const [openPicker, setOpenPicker] = useState<string | null>(null);
+  const [copiedKey, setCopiedKey] = useState(false);
   const [ctHealth, setCtHealth] = useState("bar");
   const [ctAttendance, setCtAttendance] = useState("bar");
   const [ctMaterial, setCtMaterial] = useState("bar");
@@ -238,7 +239,7 @@ export default function DashboardPage() {
               key={ct}
               onMouseDown={e => { e.stopPropagation(); e.preventDefault(); setType(ct); setOpenPicker(null); }}
               title={ct.replace(/_/g," ")}
-              className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all hover:bg-white/10 border ${
+              className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all hover:bg-elevated border ${
                 activeType === ct ? "bg-primary/20 border-primary/40" : "border-transparent hover:border-border-custom"
               }`}
             >
@@ -258,14 +259,11 @@ export default function DashboardPage() {
       <span className="text-xs font-semibold text-foreground uppercase tracking-wider">{title}</span>
       {/* relative here is the positioning context for the picker popup */}
       <div className="flex items-center gap-0.5 relative">
-        <button className="p-1.5 rounded text-muted hover:text-muted hover:bg-white/5 transition-all" title="Sort">
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1 3h11M3 6.5h7M5 10h3"/></svg>
-        </button>
-        {/* Chart type toggle button — no inner relative wrapper needed any more */}
+        {/* Chart type toggle button */}
         <button
           onMouseDown={e => { e.stopPropagation(); e.preventDefault(); setOpenPicker(openPicker === pickerId ? null : pickerId); }}
           className={`p-1.5 rounded transition-all ${
-            openPicker === pickerId ? "bg-primary/20 text-primary" : "text-muted hover:text-muted hover:bg-white/5"
+            openPicker === pickerId ? "bg-primary/20 text-primary" : "text-muted hover:text-foreground hover:bg-elevated"
           }`}
           title="Change chart type"
         >
@@ -273,10 +271,6 @@ export default function DashboardPage() {
             <rect x="1" y="8" width="3" height="4" rx="0.5"/><rect x="5" y="5" width="3" height="7" rx="0.5"/><rect x="9" y="2" width="3" height="10" rx="0.5"/>
           </svg>
         </button>
-        <button className="p-1.5 rounded text-muted hover:text-muted hover:bg-white/5 transition-all" title="Fullscreen">
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 4.5V2h2.5M8.5 2H11v2.5M11 8.5V11H8.5M4.5 11H2V8.5"/></svg>
-        </button>
-        <button className="p-1.5 rounded text-muted hover:text-muted hover:bg-white/5 transition-all font-bold leading-none" title="More options">⋮</button>
         {/* Picker popup — anchored here, wide enough for 5 columns */}
         {renderChartPicker(pickerId, activeType, setType)}
       </div>
@@ -1684,7 +1678,18 @@ export default function DashboardPage() {
                   <div className="text-xs font-bold text-muted uppercase tracking-wider">XML Agent Authentication</div>
                   <div className="p-3 bg-input rounded-lg border border-border-custom flex items-center justify-between text-xs">
                     <code className="text-secondary font-sans font-bold">SF-TALLY-1082-MUM</code>
-                    <button className="text-[10px] text-muted hover:text-foreground uppercase font-bold">Copy Key</button>
+                    <button
+                      onClick={() => {
+                        if (typeof navigator !== "undefined" && navigator.clipboard) {
+                          navigator.clipboard.writeText("SF-TALLY-1082-MUM");
+                          setCopiedKey(true);
+                          setTimeout(() => setCopiedKey(false), 2000);
+                        }
+                      }}
+                      className="text-[10px] text-muted hover:text-foreground uppercase font-bold cursor-pointer"
+                    >
+                      {copiedKey ? "Copied!" : "Copy Key"}
+                    </button>
                   </div>
                   <p className="text-[10px] text-muted">Enter this key into your desktop Tally.ERP agent configuration panel.</p>
                 </div>

@@ -1,6 +1,6 @@
 from uuid import UUID
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import Dict, List, Optional
 from urllib.parse import urlparse
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -122,14 +122,42 @@ class PinResolveRequest(BaseModel):
 @router.get("", response_model=List[DrawingResponse])
 def get_drawings(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     drawings = db.query(Drawing).filter(Drawing.project_id == project_id).all()
+    if not drawings:
+        return []
+
+    drawing_ids = [d.id for d in drawings]
+    all_revisions = (
+        db.query(DrawingRevision)
+        .filter(DrawingRevision.drawing_id.in_(drawing_ids))
+        .order_by(DrawingRevision.created_at.desc())
+        .all()
+    )
+
+    rev_ids = [r.id for r in all_revisions]
+    all_pins = (
+        db.query(DrawingPin)
+        .filter(DrawingPin.revision_id.in_(rev_ids))
+        .order_by(DrawingPin.created_at.asc())
+        .all()
+        if rev_ids else []
+    )
+
+    pins_by_rev: Dict[UUID, List[DrawingPin]] = {rid: [] for rid in rev_ids}
+    for p in all_pins:
+        if p.revision_id in pins_by_rev:
+            pins_by_rev[p.revision_id].append(p)
+
+    revs_by_drawing: Dict[UUID, List[DrawingRevision]] = {did: [] for did in drawing_ids}
+    for r in all_revisions:
+        if r.drawing_id in revs_by_drawing:
+            revs_by_drawing[r.drawing_id].append(r)
+
     res = []
     for d in drawings:
-        # R2-365: newest first by a defined order; without ORDER BY the sequence
-        # depended on physical row order, which shifts after updates and vacuum.
-        revisions = db.query(DrawingRevision).filter(DrawingRevision.drawing_id == d.id).order_by(DrawingRevision.created_at.desc()).all()
+        revisions = revs_by_drawing.get(d.id, [])
         rev_responses = []
         for r in revisions:
-            pins = db.query(DrawingPin).filter(DrawingPin.revision_id == r.id).order_by(DrawingPin.created_at.asc()).all()
+            pins = pins_by_rev.get(r.id, [])
             pin_responses = [
                 DrawingPinResponse(
                     id=p.id,

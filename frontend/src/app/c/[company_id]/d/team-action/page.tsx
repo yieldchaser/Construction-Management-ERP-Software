@@ -1,4 +1,5 @@
 "use client";
+import { readErrorDetail } from "@/lib/api";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
@@ -575,6 +576,9 @@ ${tasksXml}
         setTsPartyName(created.name);
         setTsPartyQuery(created.name);
         setTsPartyDropdown(false);
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || 'Action failed');
       }
     } catch {
       /* ignore */
@@ -598,6 +602,9 @@ ${tasksXml}
         const fid = data.id || data.file_id;
         setTsFileUrl(fid ? `/files/file/${fid}` : null);
         setTsFileName(file.name);
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || 'Action failed');
       }
     } catch {
       /* ignore */

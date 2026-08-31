@@ -1,5 +1,5 @@
 "use client";
-import { getApiHost } from "@/lib/api";
+import {  getApiHost , readErrorDetail } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 
 import { useParams } from "next/navigation";
@@ -799,6 +799,9 @@ export default function CompanySettingsPage() {
           stamp_url: type === "stamp" ? `${apiHost}/apis/v3/settings/company-file/${company_id}/stamp` : prev.stamp_url,
           watermark_url: type === "watermark" ? `${apiHost}/apis/v3/settings/company-file/${company_id}/watermark` : prev.watermark_url,
         } : prev);
+      } else {
+        const err = await readErrorDetail(res);
+        setError(err || 'Action failed');
       }
     } finally { setUploading(null); }
   };
@@ -815,12 +818,18 @@ export default function CompanySettingsPage() {
         headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({ ...nb, billing_address: billing }),
       });
-      if (res.ok) { const added = await res.json(); setBranches([...branches, added]); setNb({ branch_name: "", gstin: "", geo_location: "", address_line1: "", city: "", state: "", zip: "", country: "India" }); setShowAddBranch(false); }
+      if (res.ok) { const added = await res.json(); setBranches([...branches, added]); setNb({ branch_name: "", gstin: "", geo_location: "", address_line1: "", city: "", state: "", zip: "", country: "India" }); setShowAddBranch(false); } else {
+        const err = await readErrorDetail(res);
+        setError(err || 'Action failed');
+      }
     } catch (err) { console.error(err); }
   };
   const setPrimary = async (id: string) => {
     const res = await fetch(`${apiHost}/apis/v3/settings/branches/${id}/primary`, { method: "PATCH", headers: authHeaders() });
-    if (res.ok) { const updated = await res.json(); setBranches(branches.map((b) => ({ ...b, is_primary: b.id === id }))); void updated; }
+    if (res.ok) { const updated = await res.json(); setBranches(branches.map((b) => ({ ...b, is_primary: b.id === id }))); void updated; } else {
+        const err = await readErrorDetail(res);
+        setError(err || 'Action failed');
+      }
   };
 
   // ─── Roles & Access (flat list of roles) ──────────────────────────────────
@@ -992,7 +1001,10 @@ export default function CompanySettingsPage() {
         method: "POST", headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({ name: hName.trim(), date: hDate }),
       });
-      if (res.ok) { const h = await res.json(); setHolidays([...holidays, h]); setHName(""); setHDate(""); setShowAddHoliday(false); }
+      if (res.ok) { const h = await res.json(); setHolidays([...holidays, h]); setHName(""); setHDate(""); setShowAddHoliday(false); } else {
+        const err = await readErrorDetail(res);
+        setError(err || 'Action failed');
+      }
     } catch { /* ignore */ }
   };
   const deleteHoliday = async (id: string) => {
@@ -1030,7 +1042,10 @@ export default function CompanySettingsPage() {
             allowances: stAllowances, gross: stGross, deductions: stDeductions, net: stNet },
         }),
       });
-      if (res.ok) { const t = await res.json(); setSalaryTemplates([...salaryTemplates, t]); resetSt(); setShowAddSalary(false); }
+      if (res.ok) { const t = await res.json(); setSalaryTemplates([...salaryTemplates, t]); resetSt(); setShowAddSalary(false); } else {
+        const err = await readErrorDetail(res);
+        setError(err || 'Action failed');
+      }
     } catch { /* ignore */ }
   };
   const deleteSalaryTemplate = async (id: string) => {

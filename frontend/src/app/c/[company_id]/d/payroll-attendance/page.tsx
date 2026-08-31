@@ -926,6 +926,8 @@ function PeopleTab({
   costCodes,
   reload,
   toast,
+  newOpen,
+  setNewOpen,
 }: {
   companyId: string;
   projectId: string;
@@ -935,12 +937,13 @@ function PeopleTab({
   costCodes: CostCode[];
   reload: () => void;
   toast: (m: string) => void;
+  newOpen: null | "office" | "site";
+  setNewOpen: (v: null | "office" | "site") => void;
 }) {
   const { currencyDecimalPlaces } = useCompanySettings();
   const [staffType, setStaffType] = useState<"office" | "site">("office");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("Active");
-  const [newOpen, setNewOpen] = useState<null | "office" | "site">(null);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [drawerEmp, setDrawerEmp] = useState<Emp | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -1662,6 +1665,8 @@ export default function PayrollPage() {
     setLoading(false);
   }, [companyId]);
 
+  const [newOpen, setNewOpen] = useState<null | "office" | "site">(null);
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       (window as any).__projectsMap = Object.fromEntries(projects.map((p) => [p.id, p.name || p.project_name]));
@@ -1674,6 +1679,14 @@ export default function PayrollPage() {
       <PageHeader
         title="Payroll & Attendance"
         subtitle="Staff management, daily logs, leaves and holiday calendar"
+        action={
+          <button
+            onClick={() => setNewOpen("site")}
+            className="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary/95 text-white rounded-md text-xs font-semibold shadow-sm transition-all cursor-pointer"
+          >
+            + New Allowance / Staff
+          </button>
+        }
       />
       <div className="flex-1 overflow-y-auto">
         <PageShell width="wide">
@@ -1696,6 +1709,8 @@ export default function PayrollPage() {
             costCodes={costCodes}
             reload={reloadAll}
             toast={toast}
+            newOpen={newOpen}
+            setNewOpen={setNewOpen}
           />
         )}
         {tab === "Attendance" && <AttendanceTab companyId={cid} employees={employees} holidays={holidays} />}

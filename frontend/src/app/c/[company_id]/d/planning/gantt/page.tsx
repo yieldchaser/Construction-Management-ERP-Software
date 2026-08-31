@@ -1,5 +1,5 @@
 "use client";
-import { getApiHost } from "@/lib/api";
+import {  getApiHost , readErrorDetail } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 
 import React, { useState, useEffect } from "react";
@@ -162,6 +162,9 @@ export default function GanttSchedulerPage() {
       if (res.ok) {
         setSuccess("Baseline saved successfully");
         fetchTasks();
+      } else {
+        const err = await readErrorDetail(res);
+        setError(err || 'Action failed');
       }
     } catch (err) {
       console.error(err);
@@ -411,6 +414,9 @@ export default function GanttSchedulerPage() {
         const added = await res.json();
         setTodos([...todos, added]);
         setNewTodoTitle("");
+      } else {
+        const err = await readErrorDetail(res);
+        setError(err || 'Action failed');
       }
     } catch (e) {
       console.error(e);
@@ -427,6 +433,9 @@ export default function GanttSchedulerPage() {
       if (res.ok) {
         const updated = await res.json();
         setTodos(todos.map(t => t.id === todoId ? updated : t));
+      } else {
+        const err = await readErrorDetail(res);
+        setError(err || 'Action failed');
       }
     } catch (e) {
       console.error(e);
@@ -442,6 +451,9 @@ export default function GanttSchedulerPage() {
       });
       if (res.ok) {
         setTodos(todos.filter(t => t.id !== todoId));
+      } else {
+        const err = await readErrorDetail(res);
+        setError(err || 'Action failed');
       }
     } catch (e) {
       console.error(e);
@@ -475,6 +487,9 @@ export default function GanttSchedulerPage() {
         setNewCommentText("");
         setProgressQty("");
         setUseTakeoff(false);
+      } else {
+        const err = await readErrorDetail(res);
+        setError(err || 'Action failed');
       }
     } catch (e) {
       console.error(e);
@@ -512,6 +527,31 @@ export default function GanttSchedulerPage() {
       <PageHeader
         title="Project Scheduler & WBS"
         subtitle="Work breakdown structure, milestone baselines and 14-day lookahead"
+        action={
+          mainTab === "milestones" ? (
+            <button
+              onClick={() => {
+                document.getElementById("milestone-form")?.scrollIntoView({ behavior: "smooth" });
+                document.getElementById("ms-name-input")?.focus();
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary/95 text-white rounded-md text-xs font-semibold shadow-sm transition-all cursor-pointer"
+            >
+              <Icon name="flag_checkered" className="w-3.5 h-3.5" />
+              Add Milestone
+            </button>
+          ) : mainTab === "wbs" ? (
+            <button
+              onClick={() => {
+                document.getElementById("task-form")?.scrollIntoView({ behavior: "smooth" });
+                document.getElementById("task-title-input")?.focus();
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary/95 text-white rounded-md text-xs font-semibold shadow-sm transition-all cursor-pointer"
+            >
+              <Icon name="clipboard" className="w-3.5 h-3.5" />
+              Create WBS Task
+            </button>
+          ) : null
+        }
       />
 
       {/* Top bar with Navigation */}
@@ -575,12 +615,13 @@ export default function GanttSchedulerPage() {
               )}
 
               {/* Create Milestone */}
-              <form onSubmit={handleCreateMilestone} className="mt-4 bg-card border border-border-custom rounded-lg p-4 space-y-3">
+              <form id="milestone-form" onSubmit={handleCreateMilestone} className="mt-4 bg-card border border-border-custom rounded-lg p-4 space-y-3">
                 <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Add Milestone</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                   <div className="col-span-2 space-y-1">
                     <label className="text-muted font-semibold">Milestone Name</label>
                     <input
+                      id="ms-name-input"
                       type="text"
                       value={msName}
                       onChange={(e) => setMsName(e.target.value)}
@@ -749,7 +790,7 @@ export default function GanttSchedulerPage() {
           {/* Quick Creator Forms */}
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             {/* Create Task Form */}
-            <div className="bg-card border border-border-custom rounded-lg p-6 rounded-lg border border-border-custom bg-input space-y-4">
+            <div id="task-form" className="bg-card border border-border-custom rounded-lg p-6 rounded-lg border border-border-custom bg-input space-y-4">
               <h2 className="text-xs font-bold text-foreground uppercase tracking-wider">
                 Create WBS Task
               </h2>
@@ -757,6 +798,7 @@ export default function GanttSchedulerPage() {
                 <div className="col-span-2 space-y-1">
                   <label className="text-muted font-semibold">Task Name</label>
                   <input
+                    id="task-title-input"
                     type="text"
                     value={taskName}
                     onChange={(e) => setTaskName(e.target.value)}

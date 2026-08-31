@@ -145,7 +145,7 @@ export default function FaceRecognitionPage() {
                   </tr>
                 ) : (
                   logs.map((log) => (
-                    <tr key={log.id} className="hover:bg-white/5 transition-colors">
+                    <tr key={log.id} className="hover:bg-elevated transition-colors">
                       <td className="px-6 py-4">{new Date(log.created_at).toLocaleString()}</td>
                       <td className="px-6 py-4">{log.employee_id.slice(0, 8)}...</td>
                       <td className="px-6 py-4 capitalize">{log.punch_type}</td>
@@ -203,7 +203,7 @@ export default function FaceRecognitionPage() {
                   </tr>
                 ) : (
                   summary.map((s) => (
-                    <tr key={s.employee_id} className="hover:bg-white/5 transition-colors">
+                    <tr key={s.employee_id} className="hover:bg-elevated transition-colors">
                       <td className="px-6 py-4 font-medium">{s.employee_name}</td>
                       <td className="px-6 py-4">{s.punch_in || "-"}</td>
                       <td className="px-6 py-4">{s.punch_out || "-"}</td>

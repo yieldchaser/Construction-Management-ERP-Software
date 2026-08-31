@@ -1,5 +1,5 @@
 "use client";
-import { getApiHost } from "@/lib/api";
+import {  getApiHost , readErrorDetail } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
@@ -178,6 +178,9 @@ export default function MoMPage() {
         setShowForm(false);
         setSelectedMom(null);
         loadMoms();
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || 'Action failed');
       }
     } catch (e) {
       console.error("Failed to save MOM", e);

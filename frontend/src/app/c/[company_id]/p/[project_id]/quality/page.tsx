@@ -1,5 +1,5 @@
 "use client";
-import { getApiHost } from "@/lib/api";
+import {  getApiHost , readErrorDetail } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
@@ -302,6 +302,9 @@ isCode: cl.is_code_reference || "—",
       });
       if (res.ok) {
         fetchNcrs();
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || 'Action failed');
       }
     } catch (e) {
       console.error("Failed to transition NCR status", e);
@@ -332,6 +335,9 @@ isCode: cl.is_code_reference || "—",
           zone: "",
           dueDate: new Date(Date.now() + 86400000).toISOString().split("T")[0]
         });
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || 'Action failed');
       }
     } catch (e) {
       console.error("Failed to create NCR", e);
@@ -369,6 +375,9 @@ isCode: cl.is_code_reference || "—",
           max: "50.0",
           zone: ""
         });
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || 'Action failed');
       }
     } catch (e) {
       console.error("Failed to log material test", e);
@@ -397,6 +406,9 @@ isCode: cl.is_code_reference || "—",
           zone: "",
           overallRemarks: ""
         });
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || 'Action failed');
       }
     } catch (e) {
       console.error("Failed to start site inspection", e);
@@ -420,6 +432,9 @@ isCode: cl.is_code_reference || "—",
       if (res.ok) {
         loadAll();
         setSelectedInspection(null);
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || 'Action failed');
       }
     } catch (e) {
       console.error("Failed to submit audit responses", e);

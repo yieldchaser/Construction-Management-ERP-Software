@@ -1,5 +1,5 @@
 "use client";
-import { getApiHost } from "@/lib/api";
+import {  getApiHost , readErrorDetail } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 
 import React, { useState, useEffect } from "react";
@@ -123,6 +123,9 @@ export default function ClientReportsPage() {
         if (selectedReport?.id === reportId) {
           setSelectedReport(updated);
         }
+      } else {
+        const err = await readErrorDetail(res);
+        setError(err || 'Action failed');
       }
     } catch (err) {
       console.error("Error approving report:", err);

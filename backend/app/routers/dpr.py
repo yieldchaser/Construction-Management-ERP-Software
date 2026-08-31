@@ -302,24 +302,34 @@ def export_dpr_csv(
     buf = io.StringIO()
     writer = csv.writer(buf)
     writer.writerow(columns)
+
+    p_ids = list({d.project_id for d in reports if d.project_id})
+    projs_by_id = {p.id: p for p in db.query(Project).filter(Project.id.in_(p_ids)).all()} if p_ids else {}
+
+    author_uuids = []
     for d in reports:
-        project = db.query(Project).filter(Project.id == d.project_id).first()
+        if d.reported_by:
+            try:
+                author_uuids.append(uuid.UUID(d.reported_by))
+            except ValueError:
+                pass
+    users_by_id = {u.id: u.name for u in db.query(User).filter(User.id.in_(set(author_uuids))).all()} if author_uuids else {}
+
+    for d in reports:
+        project = projs_by_id.get(d.project_id)
         mats = d.materials_consumed or []
         mat_str = "; ".join(
             f"{m.get('material_name')} {m.get('quantity')} {m.get('unit') or ''}".strip()
             for m in mats
         )
-        author = d.reported_by or ""
-        if author:
+        author = "Unknown"
+        if d.reported_by:
             try:
-                author_uuid = uuid.UUID(author)
+                auid = uuid.UUID(d.reported_by)
+                author = users_by_id.get(auid, "Unknown")
             except ValueError:
-                pass
-            else:
-                user = db.query(User).filter(User.id == author_uuid).first()
-                author = user.name if user else "Unknown"
-        else:
-            author = "Unknown"
+                author = d.reported_by or "Unknown"
+
         writer.writerow([
             _csv_safe_cell(d.dpr_date.strftime("%Y-%m-%d") if d.dpr_date else ""),
             _csv_safe_cell(project.name if project else ""),

@@ -1,5 +1,5 @@
 "use client";
-import { getApiHost } from "@/lib/api";
+import {  getApiHost , readErrorDetail } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 
 import React, { useState, useEffect } from "react";
@@ -206,6 +206,9 @@ export default function EquipmentTrackingPage() {
         setStartMeterVal("");
         setIsStartPhotoCaptured(false);
         loadData();
+      } else {
+        const err = await readErrorDetail(res);
+        setError(err || 'Action failed');
       }
     } catch (err) {
       console.error(err);
@@ -238,6 +241,9 @@ export default function EquipmentTrackingPage() {
           setFuelOdo(stopMeterVal);
           setActiveFuelingEq(targetEq);
         }
+      } else {
+        const err = await readErrorDetail(res);
+        setError(err || 'Action failed');
       }
     } catch (err) {
       console.error(err);
@@ -274,6 +280,9 @@ export default function EquipmentTrackingPage() {
         setFuelOdo("");
         setFuelRemarks("");
         loadData();
+      } else {
+        const err = await readErrorDetail(res);
+        setError(err || 'Action failed');
       }
     } catch (err) {
       console.error(err);

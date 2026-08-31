@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
-import { getApiHost } from "@/lib/api";
+import {  getApiHost , readErrorDetail } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
@@ -93,7 +93,10 @@ export default function RFQPage() {
           valid_until: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
         }),
       });
-      if (res.ok) { fetchRFQs(); setShowCreate(false); }
+      if (res.ok) { fetchRFQs(); setShowCreate(false); } else {
+        const err = await readErrorDetail(res);
+        alert(err || 'Action failed');
+      }
     } catch (e) { console.error(e); }
   };
 
@@ -194,7 +197,7 @@ export default function RFQPage() {
               </div>
             </div>
             <div className="flex gap-3 justify-end pt-2">
-              <button onClick={() => setShowCreate(false)} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-white/[0.05] cursor-pointer">Cancel</button>
+              <button onClick={() => setShowCreate(false)} className="px-4 py-2 rounded-md border border-border-custom text-xs font-bold hover:bg-elevated cursor-pointer">Cancel</button>
               <button onClick={handleCreateRFQ} className="bg-primary hover:opacity-90 text-white px-5 py-2 rounded-md text-xs font-bold cursor-pointer">Create RFQ</button>
             </div>
           </div>

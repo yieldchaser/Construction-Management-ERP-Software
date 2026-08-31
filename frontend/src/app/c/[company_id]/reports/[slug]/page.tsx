@@ -1124,7 +1124,7 @@ export default function DynamicReportViewPage() {
                         const dotColor = colors[idx % colors.length];
                         const txtColor = textColors[idx % textColors.length];
                         return (
-                          <div key={ccName} className="p-3 bg-white/[0.01] border border-border-custom rounded-lg flex items-center justify-between hover:bg-white/[0.02] transition-colors">
+                          <div key={ccName} className="p-3 bg-white/[0.01] border border-border-custom rounded-lg flex items-center justify-between hover:bg-elevated transition-colors">
                             <div className="flex items-center gap-3">
                               <span className={`h-3 w-3 rounded-full ${dotColor} shrink-0`} />
                               <div className="flex flex-col">

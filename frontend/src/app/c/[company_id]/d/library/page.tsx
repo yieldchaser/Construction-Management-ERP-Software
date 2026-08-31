@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useSearchParams } from "next/navigation";
-import { getApiHost } from "@/lib/api";
+import {  getApiHost , readErrorDetail } from "@/lib/api";
 import { UNITS } from "@/lib/units";
 import Icon, { type IconName } from "@/components/marketing/Icon";
 import SegmentedTabs from "@/components/ui/Tabs";
@@ -192,6 +192,9 @@ export default function LibraryHubPage() {
         setToastMessage("Library item deleted successfully.");
         setTimeout(() => setToastMessage(""), 3000);
         fetchLibraryData();
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || 'Action failed');
       }
     } catch (err) {
       console.error(err);
@@ -240,6 +243,9 @@ export default function LibraryHubPage() {
         setToastMessage("Party added to library!");
         setTimeout(() => setToastMessage(""), 3000);
         fetchLibraryData();
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || 'Action failed');
       }
     } catch (err) {
       console.error(err);
@@ -282,6 +288,9 @@ export default function LibraryHubPage() {
         setToastMessage("Material item saved to library!");
         setTimeout(() => setToastMessage(""), 3000);
         fetchLibraryData();
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || 'Action failed');
       }
     } catch (err) {
       console.error(err);
@@ -326,6 +335,9 @@ export default function LibraryHubPage() {
         setToastMessage("Rate card item saved to library!");
         setTimeout(() => setToastMessage(""), 3000);
         fetchLibraryData();
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || 'Action failed');
       }
     } catch (err) {
       console.error(err);
@@ -364,6 +376,9 @@ export default function LibraryHubPage() {
         setToastMessage("Library item created!");
         setTimeout(() => setToastMessage(""), 3000);
         fetchLibraryData();
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || 'Action failed');
       }
     } catch (err) {
       console.error(err);

@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
-import { getApiHost } from "@/lib/api";
+import {  getApiHost , readErrorDetail } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 import SegmentedTabs from "@/components/ui/Tabs";
 import PageShell from "@/components/layout/PageShell";
@@ -113,7 +113,10 @@ export default function LabourPage() {
           notes: musterNotes || null,
         }),
       });
-      if (res.ok) { fetchData(); setShowMusterModal(false); }
+      if (res.ok) { fetchData(); setShowMusterModal(false); } else {
+        const err = await readErrorDetail(res);
+        alert(err || 'Action failed');
+      }
     } catch (e) { console.error(e); }
   };
 
@@ -137,7 +140,10 @@ export default function LabourPage() {
           acknowledgement_number: bocwAck || null,
         }),
       });
-      if (res.ok) { fetchData(); setShowBocwModal(false); }
+      if (res.ok) { fetchData(); setShowBocwModal(false); } else {
+        const err = await readErrorDetail(res);
+        alert(err || 'Action failed');
+      }
     } catch (e) { console.error(e); }
   };
 

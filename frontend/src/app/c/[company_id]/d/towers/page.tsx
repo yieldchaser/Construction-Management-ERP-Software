@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
-import { getApiHost } from "@/lib/api";
+import {  getApiHost , readErrorDetail } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
@@ -89,7 +89,10 @@ export default function TowersPage() {
         headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify(body),
       });
-      if (res.ok) { fetchData(); resetForm(); }
+      if (res.ok) { fetchData(); resetForm(); } else {
+        const err = await readErrorDetail(res);
+        alert(err || 'Action failed');
+      }
     } catch (e) { console.error(e); }
   };
 
@@ -108,7 +111,10 @@ export default function TowersPage() {
         headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify(body),
       });
-      if (res.ok) { fetchData(); resetForm(); }
+      if (res.ok) { fetchData(); resetForm(); } else {
+        const err = await readErrorDetail(res);
+        alert(err || 'Action failed');
+      }
     } catch (e) { console.error(e); }
   };
 
@@ -198,7 +204,7 @@ export default function TowersPage() {
                     </thead>
                     <tbody>
                       {pnl.map((p) => (
-                        <tr key={p.tower_id} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-all">
+                        <tr key={p.tower_id} className="border-b border-white/[0.02] hover:bg-elevated transition-all">
                           <td className="px-5 py-3.5 text-foreground font-semibold">{p.tower_name} <span className="text-muted">({p.tower_code})</span></td>
                           <td className="px-5 py-3.5 text-right font-sans text-muted">₹{fmt(p.total_po_value)}</td>
                           <td className="px-5 py-3.5 text-right font-sans text-muted">₹{fmt(p.total_wo_value)}</td>

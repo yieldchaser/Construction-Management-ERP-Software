@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 :root {
+  color-scheme: dark;
   --background: #111113;
   --foreground: #ECECEF;
   --sidebar: #0C0C0E;
@@ -32,6 +33,7 @@
 }
 
 :root.light-theme {
+  color-scheme: light;
   --background: #F3F4F6; /* Deeper neutral off-white to make white cards pop */
   --foreground: #111827; /* Rich charcoal for primary text */
   --sidebar: #FFFFFF;    /* Clean white sidebar */

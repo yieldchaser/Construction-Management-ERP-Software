@@ -306,6 +306,50 @@ export default function AttendancePage() {
       setTeamMembers([]);
     }
   }, [companyId]);
+
+  const [projectMembers, setProjectMembers] = useState<any[]>([]);
+  const [showAddMember, setShowAddMember] = useState(false);
+  const [selectedTeamMemberId, setSelectedTeamMemberId] = useState("");
+  const [addingMember, setAddingMember] = useState(false);
+
+  const fetchProjectMembers = useCallback(async () => {
+    if (!projectId) return;
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/projects/${projectId}/members`, { headers: authHeaders() || {} });
+      if (res.ok) {
+        const data = await res.json();
+        setProjectMembers(Array.isArray(data) ? data : []);
+      } else {
+        setProjectMembers([]);
+      }
+    } catch (e) {
+      console.error("Failed to load project members", e);
+      setProjectMembers([]);
+    }
+  }, [projectId]);
+
+  const handleAddMember = async () => {
+    if (!selectedTeamMemberId || !projectId) return;
+    setAddingMember(true);
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/projects/${projectId}/members?member_id=${encodeURIComponent(selectedTeamMemberId)}`, {
+        method: "POST",
+        headers: authHeaders() || {},
+      });
+      if (res.ok) {
+        setShowAddMember(false);
+        setSelectedTeamMemberId("");
+        fetchProjectMembers();
+      } else {
+        const err = await res.json().catch(() => ({ detail: "Failed to add member" }));
+        alert(err.detail || "Failed to add member");
+      }
+    } catch (e) {
+      alert("Failed to add member");
+    } finally {
+      setAddingMember(false);
+    }
+  };
   
   // Punch inputs
   const [selectedEmpId, setSelectedEmpId] = useState<string>("");
@@ -357,10 +401,11 @@ export default function AttendancePage() {
   }, [companyId, fetchSubcontractors, fetchPayrollCompilation]);
 
   useEffect(() => {
-    if (isSettingsModalOpen && settingsTab === "members" && companyId) {
-      fetchTeamMembers();
+    if (isSettingsModalOpen && settingsTab === "members") {
+      if (companyId) fetchTeamMembers();
+      if (projectId) fetchProjectMembers();
     }
-  }, [isSettingsModalOpen, settingsTab, companyId, fetchTeamMembers]);
+  }, [isSettingsModalOpen, settingsTab, companyId, projectId, fetchTeamMembers, fetchProjectMembers]);
 
   useEffect(() => {
     if (projectId) {
@@ -1372,24 +1417,52 @@ export default function AttendancePage() {
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <span className="text-[10px] text-muted font-bold uppercase tracking-wider">Authorized Team Members</span>
-                    <button className="bg-primary hover:bg-primary/95 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg transition-all">+ Add Member</button>
+                    <button
+                      onClick={() => setShowAddMember(!showAddMember)}
+                      className="bg-primary hover:bg-primary/95 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg transition-all cursor-pointer"
+                    >
+                      {showAddMember ? "Cancel" : "+ Add Member"}
+                    </button>
                   </div>
-                   <div className="divide-y divide-border-custom/50 bg-elevated/20 border border-border-custom rounded-xl p-3 text-xs">
-                     {teamMembers.length === 0 ? (
-                       <EmptyState
-                         title="No team members found"
-                         description="No team members assigned to this company yet."
-                         className="py-4"
-                       />
-                     ) : (
-                       teamMembers.map((m) => (
-                         <div key={m.id} className="py-2 flex justify-between">
-                           <span className="font-semibold text-foreground">{m.name}</span>
-                           <span className="text-muted">{m.role_name || m.priority_type || "—"}</span>
-                         </div>
-                       ))
-                     )}
-                   </div>
+                  {showAddMember && (
+                    <div className="p-3 bg-elevated/40 border border-border-custom rounded-lg flex items-center gap-2">
+                      <select
+                        value={selectedTeamMemberId}
+                        onChange={(e) => setSelectedTeamMemberId(e.target.value)}
+                        className="flex-1 bg-input border border-border-custom rounded-md px-2 py-1.5 text-xs text-foreground"
+                      >
+                        <option value="">Select team member to assign…</option>
+                        {teamMembers.map((tm) => (
+                          <option key={tm.id} value={tm.id}>
+                            {tm.name} ({tm.role_name || tm.priority_type || "Member"})
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={handleAddMember}
+                        disabled={!selectedTeamMemberId || addingMember}
+                        className="bg-primary text-white text-xs px-3 py-1.5 rounded-md font-semibold disabled:opacity-50 cursor-pointer"
+                      >
+                        {addingMember ? "Adding…" : "Add"}
+                      </button>
+                    </div>
+                  )}
+                  <div className="divide-y divide-border-custom/50 bg-elevated/20 border border-border-custom rounded-xl p-3 text-xs">
+                    {(projectMembers.length > 0 ? projectMembers : teamMembers).length === 0 ? (
+                      <EmptyState
+                        title="No team members found"
+                        description="No team members assigned to this project yet."
+                        className="py-4"
+                      />
+                    ) : (
+                      (projectMembers.length > 0 ? projectMembers : teamMembers).map((m) => (
+                        <div key={m.company_team_id || m.id} className="py-2 flex justify-between">
+                          <span className="font-semibold text-foreground">{m.name}</span>
+                          <span className="text-muted">{m.role || m.role_name || m.priority_type || "—"}</span>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
               )}
 

@@ -2,7 +2,7 @@ import json
 import logging
 from uuid import UUID
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Response, status, Query
 
 logger = logging.getLogger(__name__)
@@ -16,7 +16,7 @@ from app.models import (
     PurchaseOrder,
 )
 from app import models
-from app.party_names import resolve_party_name
+from app.party_names import resolve_party_name, resolve_party_names_batch
 from app.routers.custom_fields import CustomFieldValueInput, upsert_values_for_entity, enforce_required_custom_fields
 from app.routers.library import next_party_id_custom
 from app.routers.projects import ensure_project_party_link
@@ -299,15 +299,57 @@ def _compute_wo_billing(db: Session, wo_id: UUID, est_amount: float):
     return billed_amount, progress_pct
 
 
+def _compute_wo_billing_batch(db: Session, wo_ids: List[UUID], est_amounts: Dict[UUID, float]) -> Dict[UUID, tuple]:
+    if not wo_ids:
+        return {}
+    bills = db.query(Bill.wo_id, Bill.total_payable).filter(
+        Bill.wo_id.in_(wo_ids),
+        Bill.status != "Cancelled"
+    ).all()
+    totals_by_wo: Dict[UUID, float] = {wid: 0.0 for wid in wo_ids}
+    for b_wo_id, b_total_payable in bills:
+        if b_wo_id in totals_by_wo:
+            totals_by_wo[b_wo_id] += float(b_total_payable or 0.0)
+    result = {}
+    for wid in wo_ids:
+        billed_amt = round(totals_by_wo.get(wid, 0.0), 2)
+        est = est_amounts.get(wid, 0.0)
+        prog_pct = None
+        if float(est) > 0:
+            prog_pct = round((billed_amt / float(est)) * 100.0, 1)
+        result[wid] = (billed_amt, prog_pct)
+    return result
+
+
 # 1. Work Orders
 @router.get("/work-orders", response_model=List[WOResponse])
 def get_work_orders(project_id: UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access), current_user: User = Depends(get_current_user)):
     project = db.query(Project).filter(Project.id == project_id).first()
     require_module_view(db, current_user, project.company_id, "billing")
     orders = db.query(WorkOrder).filter(WorkOrder.project_id == project_id).all()
+    if not orders:
+        return []
+
+    wo_ids = [wo.id for wo in orders]
+
+    # 1. Batched items lookup
+    all_items = db.query(WorkOrderItem).filter(WorkOrderItem.wo_id.in_(wo_ids)).all()
+    items_by_wo: Dict[UUID, List[WorkOrderItem]] = {wid: [] for wid in wo_ids}
+    for item in all_items:
+        if item.wo_id in items_by_wo:
+            items_by_wo[item.wo_id].append(item)
+
+    # 2. Batched subcontractor name lookup
+    sub_ids = [wo.subcontractor_id for wo in orders if wo.subcontractor_id is not None]
+    party_names = resolve_party_names_batch(db, sub_ids)
+
+    # 3. Batched billing rollup
+    est_amounts = {wo.id: float(wo.estimated_work_amount) for wo in orders}
+    billing_by_wo = _compute_wo_billing_batch(db, wo_ids, est_amounts)
+
     res = []
     for wo in orders:
-        items = db.query(WorkOrderItem).filter(WorkOrderItem.wo_id == wo.id).all()
+        items = items_by_wo.get(wo.id, [])
         item_schemas = [
             WOResponseItem(
                 id=i.id,
@@ -318,8 +360,8 @@ def get_work_orders(project_id: UUID, db: Session = Depends(get_db), _: None = D
                 amount=float(i.amount) if i.amount else float(i.quantity * i.rate)
             ) for i in items
         ]
-        subcontractor_name = resolve_party_name(db, wo.subcontractor_id)
-        billed_amt, prog_pct = _compute_wo_billing(db, wo.id, float(wo.estimated_work_amount))
+        subcontractor_name = party_names.get(wo.subcontractor_id, "Unknown") if wo.subcontractor_id else "Unknown"
+        billed_amt, prog_pct = billing_by_wo.get(wo.id, (0.0, None))
         res.append(
             WOResponse(
                 id=wo.id,

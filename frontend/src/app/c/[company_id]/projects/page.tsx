@@ -958,6 +958,9 @@ function ProjectSettingsModal({
     if (res.ok) {
       setNewLoc("");
       loadLocations();
+    } else {
+      const err = await readErrorDetail(res);
+      setFormError(`Failed to add location: ${err}`);
     }
   };
 

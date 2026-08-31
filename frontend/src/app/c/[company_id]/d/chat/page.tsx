@@ -1,6 +1,6 @@
 "use client";
 
-import { getApiHost } from "@/lib/api";
+import {  getApiHost , readErrorDetail } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 import React, { useState, useEffect, useRef } from "react";
 import { useProject } from "@/context/ProjectContext";
@@ -210,6 +210,9 @@ export default function ChatPage() {
         setNewGroupName("");
         setShowGroupModal(false);
         fetchGroups();
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || 'Action failed');
       }
     } catch (e) {
       console.error("Failed to create group", e);
@@ -234,6 +237,9 @@ export default function ChatPage() {
         setShowAddMemberModal(false);
         setMemberForm({ user_id: "", role: "member" });
         fetchMembers(activeGroup.id);
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || 'Action failed');
       }
     } catch (e) {
       console.error("Failed to add member", e);
@@ -251,6 +257,9 @@ export default function ChatPage() {
       );
       if (res.ok) {
         fetchMembers(activeGroup.id);
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || 'Action failed');
       }
     } catch (e) {
       console.error("Failed to remove member", e);
@@ -283,6 +292,9 @@ export default function ChatPage() {
         setIsMom(false);
         setMomDate("");
         fetchMessages(activeGroup.id);
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || 'Action failed');
       }
     } catch (e) {
       console.error("Failed to send message", e);
@@ -339,6 +351,15 @@ export default function ChatPage() {
       <PageHeader
         title="Team Chat"
         subtitle="Internal project discussions and channel messaging"
+        action={
+          <button
+            onClick={() => setShowGroupModal(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary/95 text-white rounded-md text-xs font-semibold shadow-sm transition-all cursor-pointer"
+          >
+            <Icon name="group" className="w-3.5 h-3.5" />
+            Create Group
+          </button>
+        }
       />
       <div className="flex flex-1 overflow-hidden h-full">
         

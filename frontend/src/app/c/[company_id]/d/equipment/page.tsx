@@ -1,5 +1,5 @@
 "use client";
-import { getApiHost } from "@/lib/api";
+import {  getApiHost , readErrorDetail } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 
 import React, { useState, useEffect } from "react";
@@ -209,6 +209,9 @@ export default function EquipmentTrackingPage() {
         setStartMeterVal("");
         setIsStartPhotoCaptured(false);
         loadData();
+      } else {
+        const err = await readErrorDetail(res);
+        setError(err || 'Action failed');
       }
     } catch (err) {
       console.error(err);
@@ -241,6 +244,9 @@ export default function EquipmentTrackingPage() {
           setFuelOdo(stopMeterVal);
           setActiveFuelingEq(targetEq);
         }
+      } else {
+        const err = await readErrorDetail(res);
+        setError(err || 'Action failed');
       }
     } catch (err) {
       console.error(err);
@@ -277,6 +283,9 @@ export default function EquipmentTrackingPage() {
         setFuelOdo("");
         setFuelRemarks("");
         loadData();
+      } else {
+        const err = await readErrorDetail(res);
+        setError(err || 'Action failed');
       }
     } catch (err) {
       console.error(err);
@@ -565,7 +574,7 @@ export default function EquipmentTrackingPage() {
                               </td>
                             </tr>
                           ) : completedRuns.map((run, idx) => (
-                            <tr key={idx} className="border-b border-white/[0.03] hover:bg-white/[0.015] transition-all">
+                            <tr key={idx} className="border-b border-white/[0.03] hover:bg-elevated transition-all">
                               <td className="px-5 py-3">
                                 <span className="font-bold text-foreground">{run.eq?.name ?? "Unknown"}</span>
                                 <span className="block text-[9px] text-muted">{run.eq?.code} · {run.eq?.category}</span>
@@ -637,7 +646,7 @@ export default function EquipmentTrackingPage() {
                           const eq = fleet.find(e => e.id === log.equipment_id);
                           const isOverdue = log.completed_date === null && new Date(log.scheduled_date) < new Date();
                           return (
-                            <tr key={log.id} className="border-b border-white/[0.03] hover:bg-white/[0.015] transition-all">
+                            <tr key={log.id} className="border-b border-white/[0.03] hover:bg-elevated transition-all">
                               <td className="px-5 py-3">
                                 <span className="font-bold text-foreground">{eq?.name ?? "Unknown"}</span>
                                 <span className="block text-[9px] text-muted">{eq?.code} · {eq?.category}</span>

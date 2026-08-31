@@ -94,7 +94,7 @@ export default function PwaControls() {
         </button>
         <button
           onClick={handleEnableNotifications}
-          className="rounded-lg border border-border-custom bg-white/[0.03] px-3 py-2 text-[11px] font-bold text-foreground transition-colors hover:bg-white/[0.05]"
+          className="rounded-lg border border-border-custom bg-white/[0.03] px-3 py-2 text-[11px] font-bold text-foreground transition-colors hover:bg-elevated"
         >
           Enable Notifications
         </button>

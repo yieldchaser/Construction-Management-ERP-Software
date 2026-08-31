@@ -393,7 +393,7 @@ export default function DPRPage() {
                   {mbRows.map((row, idx) => {
                     const rowQty = row.nos * row.l * row.w * row.h;
                     return (
-                      <tr key={idx} className="border-b border-white/[0.02] hover:bg-white/[0.01]">
+                      <tr key={idx} className="border-b border-white/[0.02] hover:bg-elevated">
                         <td className="px-4 py-2">
                           <input
                             type="text"

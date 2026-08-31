@@ -15,3 +15,15 @@ export const getApiHost = (): string => {
   }
   return "http://localhost:8000";
 };
+
+export async function readErrorDetail(res: Response): Promise<string> {
+  try {
+    const data = await res.json();
+    if (typeof data?.detail === "string") return data.detail;
+    if (Array.isArray(data?.detail) && data.detail[0]?.msg) return data.detail[0].msg;
+    return res.statusText || `HTTP ${res.status}`;
+  } catch {
+    return res.statusText || `HTTP ${res.status}`;
+  }
+}
+

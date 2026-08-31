@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { getApiHost } from "@/lib/api";
+import {  getApiHost , readErrorDetail } from "@/lib/api";
 import { useProject } from "@/context/ProjectContext";
 import Icon from "@/components/marketing/Icon";
 import PageShell from "@/components/layout/PageShell";
@@ -250,6 +250,9 @@ export default function ProjectsHomePage() {
       if (res.ok) {
         fetchData();
         showToast(`Leave request ${targetStatus.toLowerCase()}!`);
+      } else {
+        const err = await readErrorDetail(res);
+        showToast(err || 'Action failed');
       }
     } catch (err) {
       console.error(err);
@@ -325,6 +328,14 @@ export default function ProjectsHomePage() {
       <PageHeader
         title="Project Hub"
         subtitle="Central project status and navigation hub"
+        action={
+          <button
+            onClick={() => setIsNewProjectOpen(true)}
+            className="flex items-center gap-1 px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-md text-xs font-medium shadow-sm transition-all cursor-pointer"
+          >
+            + New Project
+          </button>
+        }
       />
       <div className="flex-1 overflow-y-auto">
         <PageShell width="wide">
@@ -441,13 +452,6 @@ export default function ProjectsHomePage() {
               className="px-3 py-2 bg-card border border-border-custom rounded-md text-xs font-medium hover:bg-elevated transition-all cursor-pointer"
             >
               Export Portfolio
-            </button>
-
-            <button
-              onClick={() => setIsNewProjectOpen(true)}
-              className="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-md text-xs font-medium shadow-sm transition-all cursor-pointer"
-            >
-              + New Project
             </button>
           </div>
         </div>
@@ -843,7 +847,10 @@ export default function ProjectsHomePage() {
                                         if (res.ok) {
                                           fetchData();
                                           showToast("Material indent approved!");
-                                        }
+                                        } else {
+        const err = await readErrorDetail(res);
+        showToast(err || 'Action failed');
+      }
                                       } catch (err) {
                                         console.error(err);
                                       }

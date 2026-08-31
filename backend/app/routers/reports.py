@@ -608,6 +608,25 @@ def _team_user_name(db: Session, company_user_id):
     return ""
 
 
+def _team_user_names_batch(db: Session, company_user_ids):
+    ids = [cid for cid in set(company_user_ids) if cid]
+    if not ids:
+        return {}
+    try:
+        tms = db.query(CompanyTeam).filter(CompanyTeam.id.in_(ids)).all()
+        user_ids = [tm.user_id for tm in tms if tm.user_id]
+        user_map = {}
+        if user_ids:
+            users = db.query(User).filter(User.id.in_(set(user_ids))).all()
+            user_map = {u.id: u.name for u in users if u.name}
+        result = {}
+        for tm in tms:
+            result[tm.id] = user_map.get(tm.user_id, "")
+        return result
+    except Exception:
+        return {}
+
+
 def _user_name(db: Session, user_id):
     if not user_id:
         return ""

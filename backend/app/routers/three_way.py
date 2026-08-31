@@ -213,7 +213,8 @@ def list_matches(company_id: uuid.UUID, project_id: Optional[uuid.UUID] = None, 
     matches = query.order_by(ThreeWayMatch.created_at.desc()).all()
     # R2-240: resolve every listed match's authorised quantity in one batched
     # query so the approver sees ordered vs received vs PO total per row.
-    po_ids = list({m.po_id for m in matches})
+    po_ids = list({m.po_id for m in matches if m.po_id})
+    grn_ids = list({m.grn_id for m in matches if m.grn_id})
     ordered_by_po = {}
     if po_ids:
         rows = (
@@ -223,10 +224,12 @@ def list_matches(company_id: uuid.UUID, project_id: Optional[uuid.UUID] = None, 
             .all()
         )
         ordered_by_po = {pid: float(q or 0) for pid, q in rows}
+    pos_by_id = {p.id: p for p in db.query(PurchaseOrder).filter(PurchaseOrder.id.in_(po_ids)).all()} if po_ids else {}
+    grns_by_id = {g.id: g for g in db.query(GoodsReceiptNote).filter(GoodsReceiptNote.id.in_(grn_ids)).all()} if grn_ids else {}
     result = []
     for m in matches:
-        po = db.query(PurchaseOrder).filter(PurchaseOrder.id == m.po_id).first()
-        grn = db.query(GoodsReceiptNote).filter(GoodsReceiptNote.id == m.grn_id).first()
+        po = pos_by_id.get(m.po_id)
+        grn = grns_by_id.get(m.grn_id)
         result.append(ThreeWayMatchResponse(
             **{**m.__dict__},
             po_number=po.po_number if po else None,
