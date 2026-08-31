@@ -91,6 +91,25 @@ export default function ProjectSettingsModal({
       .catch(() => setMembers([]));
   }, [project.id, loadLocations]);
 
+  const removeMember = async (memberId: string) => {
+    if (!confirm("Are you sure you want to remove this member from the project?")) return;
+    try {
+      const res = await fetch(api(`/projects/${project.id}/members/${memberId}`), {
+        method: "DELETE",
+        headers: auth(),
+      });
+      if (res.ok) {
+        setMembers((prev) => prev.filter((m) => m.company_team_id !== memberId));
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || "Failed to remove member");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Failed to remove member. Check your connection.");
+    }
+  };
+
   const saveDetails = async () => {
     setSaving(true);
     try {
@@ -233,7 +252,17 @@ export default function ProjectSettingsModal({
                       <div className="text-xs text-muted">{m.role || "Member"}</div>
                     </div>
                   </div>
-                  <span className="text-xs rounded-full bg-elevated px-2 py-0.5 text-muted">{m.mobile || ""}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs rounded-full bg-elevated px-2 py-0.5 text-muted">{m.mobile || ""}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeMember(m.company_team_id)}
+                      className="p-1.5 hover:bg-danger/10 text-muted hover:text-danger rounded cursor-pointer transition-all"
+                      title="Remove member from project"
+                    >
+                      <Icon name="trash" className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               ))}
               {members.length === 0 && <div className="text-sm text-muted">No members.</div>}

@@ -1,5 +1,5 @@
 "use client";
-import { getApiHost } from "@/lib/api";
+import { getApiHost, readErrorDetail } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 import Icon from "@/components/marketing/Icon";
 import SegmentedTabs from "@/components/ui/Tabs";
@@ -221,14 +221,34 @@ export default function ProductionPage() {
         setRecipeNotes("");
         void fetchSummary();
       } else {
-        const err = await res.json();
-        setSubmitError(err.detail || "Failed to create recipe");
+        const err = await readErrorDetail(res);
+        setSubmitError(err || "Failed to create recipe");
       }
     } catch (err) {
       console.error(err);
       setSubmitError("Network error creating recipe");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleDeleteRecipe = async (recipeId: string) => {
+    if (!confirm("Are you sure you want to delete this concrete mix recipe?")) return;
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/production/recipes/${recipeId}`, {
+        method: "DELETE",
+        headers: authHeaders(),
+      });
+      if (res.ok) {
+        alert("Recipe deleted successfully");
+        void fetchSummary();
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || "Failed to delete recipe");
+      }
+    } catch (err) {
+      console.error("Delete recipe error:", err);
+      alert("Failed to delete recipe. Check your connection.");
     }
   };
 
@@ -557,7 +577,17 @@ export default function ProductionPage() {
                       <h2 className="mt-1 text-xl font-bold text-foreground">{recipe.product_name}</h2>
                       <p className="mt-2 text-sm text-muted">{recipe.mix_type} · Output target {formatQty(recipe.target_output_qty)} {recipe.unit}</p>
                     </div>
-                    <Badge tone="primary" className="uppercase tracking-[0.18em] font-semibold">{recipe.wastage_pct}% wastage</Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge tone="primary" className="uppercase tracking-[0.18em] font-semibold">{recipe.wastage_pct}% wastage</Badge>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteRecipe(recipe.id)}
+                        className="px-2.5 py-1 bg-elevated hover:bg-danger/10 border border-border-custom text-muted hover:text-danger rounded text-xs font-semibold cursor-pointer inline-flex items-center gap-1"
+                        title="Delete recipe"
+                      >
+                        <Icon name="trash" className="w-3.5 h-3.5" /> Delete
+                      </button>
+                    </div>
                   </div>
 
                   <div className="mt-4 grid gap-2 md:grid-cols-2">

@@ -4,7 +4,7 @@ import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
-import { getApiHost } from "@/lib/api";
+import { getApiHost, readErrorDetail } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 import Icon from "@/components/marketing/Icon";
 import { isMissingOrDemoTenant, redirectToLogin } from "@/lib/company-guard";
@@ -13,6 +13,7 @@ import PageHeader from "@/components/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { TableSkeleton } from "@/components/ui/Skeleton";
 import FieldHint from "@/components/ui/FieldHint";
+import SegmentedTabs from "@/components/ui/Tabs";
 
 interface WorkOrder {
   id: string;
@@ -32,6 +33,38 @@ interface Subcontractor {
   phone?: string | null;
 }
 
+interface AttendanceLog {
+  id: string;
+  project_id: string;
+  subcontractor_id: string;
+  attendance_date: string;
+  labor_role: string;
+  worker_count: number;
+  shift_multiplier: number;
+  overtime_hours: number;
+  allowance: number;
+  deduction: number;
+  notes?: string | null;
+  created_at: string;
+}
+
+interface Scorecard {
+  id: string;
+  company_id: string;
+  project_id: string;
+  subcontractor_id: string;
+  subcontractor_name: string;
+  period_start: string;
+  period_end: string;
+  on_time_pct: number;
+  billing_accuracy_pct: number;
+  quality_score: number;
+  tasks_completed: number;
+  tasks_delayed: number;
+  total_billed: number;
+  disputes_count: number;
+}
+
 export default function SubconPage() {
   const params = useParams();
   const router = useRouter();
@@ -45,10 +78,32 @@ export default function SubconPage() {
   }, [companyId]);
   const projectId = activeProjectId;
 
+  const [activeTab, setActiveTab] = useState<"work_orders" | "attendance" | "performance">("work_orders");
+
   // Real backend-backed data
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
   const [subcontractors, setSubcontractors] = useState<Subcontractor[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // Attendance state
+  const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split("T")[0]);
+  const [attendanceLogs, setAttendanceLogs] = useState<AttendanceLog[]>([]);
+  const [attendanceLoading, setAttendanceLoading] = useState(false);
+  const [showAttendanceModal, setShowAttendanceModal] = useState(false);
+  const [attendanceForm, setAttendanceForm] = useState({
+    subcontractor_id: "",
+    labor_role: "Mason",
+    worker_count: 1,
+    shift_multiplier: 1.0,
+    overtime_hours: 0,
+    allowance: 0,
+    deduction: 0,
+    notes: "",
+  });
+
+  // Performance state
+  const [scorecards, setScorecards] = useState<Scorecard[]>([]);
+  const [scorecardsLoading, setScorecardsLoading] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [toastMessage, setToastMessage] = useState("");
@@ -115,9 +170,140 @@ export default function SubconPage() {
     }
   };
 
+  const fetchAttendance = async (dateStr?: string) => {
+    if (!projectId) return;
+    const d = dateStr || attendanceDate;
+    setAttendanceLoading(true);
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/subcon/attendance/${projectId}/${d}`, { headers: authHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        setAttendanceLogs(Array.isArray(data) ? data : []);
+      } else {
+        setAttendanceLogs([]);
+      }
+    } catch (e) {
+      console.error("Failed to load attendance", e);
+      setAttendanceLogs([]);
+    } finally {
+      setAttendanceLoading(false);
+    }
+  };
+
+  const handleDeleteAttendance = async (attId: string) => {
+    if (!confirm("Are you sure you want to delete this attendance log?")) return;
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/subcon/attendance/${attId}`, {
+        method: "DELETE",
+        headers: authHeaders(),
+      });
+      if (res.ok) {
+        showToast("Attendance log deleted successfully");
+        fetchAttendance(attendanceDate);
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || "Failed to delete attendance log");
+      }
+    } catch (e) {
+      console.error("Delete attendance error", e);
+      alert("Failed to delete attendance log. Check your connection.");
+    }
+  };
+
+  const handleCreateAttendance = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!projectId || !attendanceForm.subcontractor_id) {
+      alert("Please select a subcontractor!");
+      return;
+    }
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/subcon/attendance`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+        body: JSON.stringify({
+          project_id: projectId,
+          subcontractor_id: attendanceForm.subcontractor_id,
+          attendance_date: new Date(attendanceDate).toISOString(),
+          labor_role: attendanceForm.labor_role,
+          worker_count: Number(attendanceForm.worker_count) || 1,
+          shift_multiplier: Number(attendanceForm.shift_multiplier) || 1.0,
+          overtime_hours: Number(attendanceForm.overtime_hours) || 0,
+          allowance: Number(attendanceForm.allowance) || 0,
+          deduction: Number(attendanceForm.deduction) || 0,
+          notes: attendanceForm.notes || null,
+        }),
+      });
+      if (res.ok) {
+        setShowAttendanceModal(false);
+        setAttendanceForm({
+          subcontractor_id: "",
+          labor_role: "Mason",
+          worker_count: 1,
+          shift_multiplier: 1.0,
+          overtime_hours: 0,
+          allowance: 0,
+          deduction: 0,
+          notes: "",
+        });
+        showToast("Attendance recorded successfully");
+        fetchAttendance(attendanceDate);
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || "Failed to record attendance");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Network error recording attendance");
+    }
+  };
+
+  const fetchScorecards = async () => {
+    if (!projectId) return;
+    setScorecardsLoading(true);
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/subcon/scorecards/${projectId}`, { headers: authHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        setScorecards(Array.isArray(data) ? data : []);
+      } else {
+        setScorecards([]);
+      }
+    } catch (e) {
+      console.error("Failed to load scorecards", e);
+      setScorecards([]);
+    } finally {
+      setScorecardsLoading(false);
+    }
+  };
+
+  const handleDeletePerformance = async (recordId: string) => {
+    if (!confirm("Are you sure you want to delete this performance scorecard?")) return;
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/subcon/performance/${recordId}`, {
+        method: "DELETE",
+        headers: authHeaders(),
+      });
+      if (res.ok) {
+        showToast("Performance scorecard deleted successfully");
+        fetchScorecards();
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || "Failed to delete scorecard");
+      }
+    } catch (e) {
+      console.error("Delete scorecard error", e);
+      alert("Failed to delete scorecard. Check your connection.");
+    }
+  };
+
   useEffect(() => {
     fetchSubconData();
-  }, [projectId, companyId]);
+    if (activeTab === "attendance") {
+      fetchAttendance(attendanceDate);
+    } else if (activeTab === "performance") {
+      fetchScorecards();
+    }
+  }, [projectId, companyId, activeTab]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -212,122 +398,457 @@ export default function SubconPage() {
     <div className="flex-1 flex flex-col overflow-hidden font-sans">
       <PageHeader
         title="Subcontractor Management"
-        subtitle="Work orders, physical progress, and subcontractor billing register"
+        subtitle="Work orders, daily roll call attendance, and subcontractor performance scorecards"
       >
-        <button
-          onClick={() => setShowWOModal(true)}
-          className="flex items-center gap-1.5 px-3.5 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary/95 transition-all cursor-pointer"
-        >
-          + Sub Con Work Order
-        </button>
+        <div className="flex items-center gap-2">
+          {activeTab === "work_orders" && (
+            <button
+              onClick={() => setShowWOModal(true)}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary/95 transition-all cursor-pointer"
+            >
+              + Sub Con Work Order
+            </button>
+          )}
+          {activeTab === "attendance" && (
+            <button
+              onClick={() => setShowAttendanceModal(true)}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary/95 transition-all cursor-pointer"
+            >
+              + Record Attendance
+            </button>
+          )}
+        </div>
       </PageHeader>
+
+      <div className="px-6 py-2 border-b border-border-custom bg-card shrink-0 overflow-x-auto">
+        <SegmentedTabs
+          tabs={[
+            { id: "work_orders", label: "Work Orders", icon: <Icon name="briefcase" className="w-3.5 h-3.5" /> },
+            { id: "attendance", label: "Daily Attendance", icon: <Icon name="calendar" className="w-3.5 h-3.5" /> },
+            { id: "performance", label: "Performance Scorecards", icon: <Icon name="star" className="w-3.5 h-3.5" /> },
+          ]}
+          activeTab={activeTab}
+          onChange={(t) => setActiveTab(t as any)}
+        />
+      </div>
 
       <main className="flex-1 flex flex-col h-full overflow-hidden relative">
 
-        {/* Top actions bar */}
-        <div className="bg-sidebar border-b border-border-custom px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
-          <div className="relative w-full md:w-80">
-            <input
-              type="text"
-              placeholder="Search Sub Contractor..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="w-full bg-card border border-border-custom rounded-lg pl-9 pr-4 py-2 text-xs text-foreground placeholder:text-muted focus:outline-none focus:border-primary"
-            />
-            <span className="absolute left-3 top-2.5 text-muted text-sm inline-flex"><Icon name="search" className="w-3.5 h-3.5" /></span>
-          </div>
-        </div>
+        {/* ── WORK ORDERS TAB ── */}
+        {activeTab === "work_orders" && (
+          <div className="flex-1 flex flex-col h-full overflow-hidden">
+            {/* Top actions bar */}
+            <div className="bg-sidebar border-b border-border-custom px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
+              <div className="relative w-full md:w-80">
+                <input
+                  type="text"
+                  placeholder="Search Sub Contractor..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="w-full bg-card border border-border-custom rounded-lg pl-9 pr-4 py-2 text-xs text-foreground placeholder:text-muted focus:outline-none focus:border-primary"
+                />
+                <span className="absolute left-3 top-2.5 text-muted text-sm inline-flex"><Icon name="search" className="w-3.5 h-3.5" /></span>
+              </div>
+            </div>
 
-        {/* Main table view matching Screenshot 1/2 */}
-        <div className="flex-1 overflow-y-auto p-6 bg-elevated/10">
-          <div className="bg-card border border-border-custom rounded-xl overflow-hidden">
-            <table className="w-full text-xs text-left">
-              <thead className="bg-elevated border-b border-border-custom text-muted text-[10px] uppercase font-bold tracking-wider">
-                <tr>
-                  <th className="px-4 py-3">S.No.</th>
-                  <th className="px-4 py-3">Work Order</th>
-                  <th className="px-4 py-3">Sub Contractor</th>
-                  <th className="px-4 py-3">Physical Progress</th>
-                  <th className="px-4 py-3">Work Order Value</th>
-                  <th className="px-4 py-3">Billed Value</th>
-                  <th className="px-4 py-3">Approval Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border-custom/40">
+            {/* Main table view matching Screenshot 1/2 */}
+            <div className="flex-1 overflow-y-auto p-6 bg-elevated/10">
+              <div className="bg-card border border-border-custom rounded-xl overflow-hidden">
+                <table className="w-full text-xs text-left">
+                  <thead className="bg-elevated border-b border-border-custom text-muted text-[10px] uppercase font-bold tracking-wider">
+                    <tr>
+                      <th className="px-4 py-3">S.No.</th>
+                      <th className="px-4 py-3">Work Order</th>
+                      <th className="px-4 py-3">Sub Contractor</th>
+                      <th className="px-4 py-3">Physical Progress</th>
+                      <th className="px-4 py-3">Work Order Value</th>
+                      <th className="px-4 py-3">Billed Value</th>
+                      <th className="px-4 py-3">Approval Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border-custom/40">
+                    {loading ? (
+                      <tr>
+                        <td colSpan={7} className="p-4">
+                          <TableSkeleton rows={5} cols={7} />
+                        </td>
+                      </tr>
+                    ) : filteredWO.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="p-8">
+                          <EmptyState
+                            title="No subcontractor work orders found"
+                            description={searchQuery ? "No work orders match your search query." : "Create subcontractor work orders to track billed value and approvals."}
+                            action={!searchQuery ? { label: "Add Subcontractor", onClick: () => setShowAddPartyDrawer(true) } : undefined}
+                          />
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredWO.map(wo => (
+                        <tr key={wo.id} className="hover:bg-elevated/40 transition-colors">
+                          <td className="px-4 py-3 text-muted">{wo.sNo}</td>
+                          <td className="px-4 py-3 font-sans text-muted">{wo.id}</td>
+                          <td className="px-4 py-3 font-semibold text-foreground">{wo.subContractor}</td>
+                          <td className="px-4 py-3 text-muted">
+                            {wo.progressPct !== null && wo.progressPct !== undefined ? (
+                              <div className="flex items-center gap-2">
+                                <div className="w-20 bg-background h-1.5 rounded-full overflow-hidden border border-border-custom">
+                                  <div className="bg-primary h-full" style={{ width: `${Math.min(100, Math.max(0, wo.progressPct))}%` }}></div>
+                                </div>
+                                <span>{wo.progress}</span>
+                              </div>
+                            ) : (
+                              <span>—</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 font-bold text-foreground">{fmt(wo.woValue)}</td>
+                          <td className="px-4 py-3 text-muted">{fmt(wo.billedValue)}</td>
+                          <td className="px-4 py-3">
+                            <Badge tone={wo.status === "Approved" ? "success" : wo.status === "Pending Approval" ? "warning" : "neutral"} className="font-bold">{wo.status}</Badge>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Subcontractor Directory — company subcontractors (userless team + party) */}
+              <div className="mt-6 bg-card border border-border-custom rounded-xl overflow-hidden">
+                <div className="px-4 py-3 border-b border-border-custom text-[10px] uppercase font-bold tracking-wider text-muted">Subcontractor Directory</div>
                 {loading ? (
-                  <tr>
-                    <td colSpan={7} className="p-4">
-                      <TableSkeleton rows={5} cols={7} />
-                    </td>
-                  </tr>
-                ) : filteredWO.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="p-8">
-                      <EmptyState
-                        title="No subcontractor work orders found"
-                        description={searchQuery ? "No work orders match your search query." : "Create subcontractor work orders to track billed value and approvals."}
-                        action={!searchQuery ? { label: "Add Subcontractor", onClick: () => setShowAddPartyDrawer(true) } : undefined}
-                      />
-                    </td>
-                  </tr>
+                  <div className="px-4 py-8 text-center text-muted text-xs">Loading subcontractors...</div>
+                ) : subcontractors.length === 0 ? (
+                  <div className="p-6">
+                    <EmptyState
+                      title="No subcontractors yet"
+                      description="Subcontractors added during work order creation will appear in this company directory."
+                      action={{
+                        label: "+ New Work Order",
+                        onClick: () => setShowWOModal(true),
+                      }}
+                    />
+                  </div>
                 ) : (
-                  filteredWO.map(wo => (
-                    <tr key={wo.id} className="hover:bg-elevated/40 transition-colors">
-                      <td className="px-4 py-3 text-muted">{wo.sNo}</td>
-                      <td className="px-4 py-3 font-sans text-muted">{wo.id}</td>
-                      <td className="px-4 py-3 font-semibold text-foreground">{wo.subContractor}</td>
-                      <td className="px-4 py-3 text-muted">
-                        {wo.progressPct !== null && wo.progressPct !== undefined ? (
-                          <div className="flex items-center gap-2">
-                            <div className="w-20 bg-background h-1.5 rounded-full overflow-hidden border border-border-custom">
-                              <div className="bg-primary h-full" style={{ width: `${Math.min(100, Math.max(0, wo.progressPct))}%` }}></div>
-                            </div>
-                            <span>{wo.progress}</span>
-                          </div>
-                        ) : (
-                          <span>—</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 font-bold text-foreground">{fmt(wo.woValue)}</td>
-                      <td className="px-4 py-3 text-muted">{fmt(wo.billedValue)}</td>
-                      <td className="px-4 py-3">
-                        <Badge tone={wo.status === "Approved" ? "success" : wo.status === "Pending Approval" ? "warning" : "neutral"} className="font-bold">{wo.status}</Badge>
+                  <ul className="divide-y divide-border-custom/40">
+                    {subcontractors.map(p => (
+                      <li key={p.id} className="px-4 py-3 flex items-center justify-between text-xs">
+                        <span className="font-semibold text-foreground">{p.name}</span>
+                        <span className="text-muted">{p.gstin ? `GSTIN ${p.gstin}` : (p.phone || "—")}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── DAILY ATTENDANCE TAB ── */}
+        {activeTab === "attendance" && (
+          <div className="flex-1 flex flex-col h-full overflow-hidden p-6 space-y-4">
+            <div className="flex items-center justify-between flex-wrap gap-3 bg-card border border-border-custom rounded-xl p-4">
+              <div className="flex items-center gap-3">
+                <label className="text-xs font-bold text-foreground uppercase tracking-wider">Attendance Date:</label>
+                <input
+                  type="date"
+                  value={attendanceDate}
+                  onChange={(e) => {
+                    const newD = e.target.value;
+                    setAttendanceDate(newD);
+                    fetchAttendance(newD);
+                  }}
+                  className="bg-background border border-border-custom rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
+                />
+                <button
+                  type="button"
+                  onClick={() => fetchAttendance(attendanceDate)}
+                  className="px-3 py-1.5 bg-elevated hover:bg-card border border-border-custom text-foreground rounded text-xs font-semibold cursor-pointer inline-flex items-center gap-1"
+                >
+                  <Icon name="refresh" className="w-3.5 h-3.5" /> Refresh
+                </button>
+              </div>
+              <div className="text-xs text-muted">
+                Showing logs for: <strong className="text-foreground">{attendanceDate}</strong> ({attendanceLogs.length} entries)
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto bg-card border border-border-custom rounded-xl overflow-hidden">
+              <table className="w-full text-xs text-left">
+                <thead className="bg-elevated border-b border-border-custom text-muted text-[10px] uppercase font-bold tracking-wider">
+                  <tr>
+                    <th className="px-4 py-3">S.No.</th>
+                    <th className="px-4 py-3">Subcontractor</th>
+                    <th className="px-4 py-3">Labor Role</th>
+                    <th className="px-4 py-3 text-right">Workers</th>
+                    <th className="px-4 py-3 text-right">OT Hours</th>
+                    <th className="px-4 py-3 text-right">Allowance</th>
+                    <th className="px-4 py-3">Notes</th>
+                    <th className="px-4 py-3 text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-custom/40">
+                  {attendanceLoading ? (
+                    <tr>
+                      <td colSpan={8} className="p-6 text-center text-muted">
+                        Loading daily attendance logs...
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : attendanceLogs.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="p-8">
+                        <EmptyState
+                          title={`No attendance logged for ${attendanceDate}`}
+                          description="Use the '+ Record Attendance' button to log crew counts and overtime."
+                          action={{
+                            label: "+ Record Attendance",
+                            onClick: () => setShowAttendanceModal(true),
+                          }}
+                        />
+                      </td>
+                    </tr>
+                  ) : (
+                    attendanceLogs.map((log, idx) => {
+                      const subName = subcontractors.find(s => s.id === log.subcontractor_id)?.name || "Subcontractor";
+                      return (
+                        <tr key={log.id} className="hover:bg-elevated/40 transition-colors">
+                          <td className="px-4 py-3 text-muted">{idx + 1}</td>
+                          <td className="px-4 py-3 font-semibold text-foreground">{subName}</td>
+                          <td className="px-4 py-3">
+                            <span className="bg-elevated px-2 py-0.5 rounded text-[10px] font-bold text-foreground">{log.labor_role}</span>
+                          </td>
+                          <td className="px-4 py-3 text-right font-bold text-foreground font-sans">{log.worker_count}</td>
+                          <td className="px-4 py-3 text-right font-sans text-muted">{log.overtime_hours > 0 ? `${log.overtime_hours} hrs` : "—"}</td>
+                          <td className="px-4 py-3 text-right font-sans text-muted">{log.allowance > 0 ? `₹${log.allowance}` : "—"}</td>
+                          <td className="px-4 py-3 text-muted">{log.notes || "—"}</td>
+                          <td className="px-4 py-3 text-center">
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteAttendance(log.id)}
+                              className="px-2 py-1 bg-elevated hover:bg-danger/10 border border-border-custom text-muted hover:text-danger rounded text-[10px] font-semibold cursor-pointer"
+                              title="Delete attendance entry"
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
+        )}
 
-          {/* Subcontractor Directory — company subcontractors (userless team + party) */}
-          <div className="mt-6 bg-card border border-border-custom rounded-xl overflow-hidden">
-            <div className="px-4 py-3 border-b border-border-custom text-[10px] uppercase font-bold tracking-wider text-muted">Subcontractor Directory</div>
-            {loading ? (
-              <div className="px-4 py-8 text-center text-muted text-xs">Loading subcontractors...</div>
-            ) : subcontractors.length === 0 ? (
-              <div className="p-6">
-                <EmptyState
-                  title="No subcontractors yet"
-                  description="Subcontractors added during work order creation will appear in this company directory."
-                  action={{
-                    label: "+ New Work Order",
-                    onClick: () => setShowWOModal(true),
-                  }}
-                />
+        {/* ── PERFORMANCE SCORECARDS TAB ── */}
+        {activeTab === "performance" && (
+          <div className="flex-1 flex flex-col h-full overflow-hidden p-6 space-y-4">
+            <div className="flex items-center justify-between flex-wrap gap-3 bg-card border border-border-custom rounded-xl p-4">
+              <div>
+                <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Subcontractor Performance Evaluations</h3>
+                <p className="text-[10px] text-muted">Quality scores, on-time task delivery ratios, and billing accuracy evaluations</p>
               </div>
-            ) : (
-              <ul className="divide-y divide-border-custom/40">
-                {subcontractors.map(p => (
-                  <li key={p.id} className="px-4 py-3 flex items-center justify-between text-xs">
-                    <span className="font-semibold text-foreground">{p.name}</span>
-                    <span className="text-muted">{p.gstin ? `GSTIN ${p.gstin}` : (p.phone || "—")}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
+              <button
+                type="button"
+                onClick={fetchScorecards}
+                className="px-3 py-1.5 bg-elevated hover:bg-card border border-border-custom text-foreground rounded text-xs font-semibold cursor-pointer inline-flex items-center gap-1"
+              >
+                <Icon name="refresh" className="w-3.5 h-3.5" /> Refresh
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto bg-card border border-border-custom rounded-xl overflow-hidden">
+              <table className="w-full text-xs text-left">
+                <thead className="bg-elevated border-b border-border-custom text-muted text-[10px] uppercase font-bold tracking-wider">
+                  <tr>
+                    <th className="px-4 py-3">Subcontractor</th>
+                    <th className="px-4 py-3">Evaluation Period</th>
+                    <th className="px-4 py-3 text-right">Quality Score</th>
+                    <th className="px-4 py-3 text-right">On-Time %</th>
+                    <th className="px-4 py-3 text-right">Billing Accuracy</th>
+                    <th className="px-4 py-3 text-right">Tasks (Done/Delayed)</th>
+                    <th className="px-4 py-3 text-right">Total Billed</th>
+                    <th className="px-4 py-3 text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-custom/40">
+                  {scorecardsLoading ? (
+                    <tr>
+                      <td colSpan={8} className="p-6 text-center text-muted">
+                        Loading performance scorecards...
+                      </td>
+                    </tr>
+                  ) : scorecards.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="p-8">
+                        <EmptyState
+                          title="No performance scorecards generated"
+                          description="Scorecards will be automatically computed and evaluated against project task delivery."
+                        />
+                      </td>
+                    </tr>
+                  ) : (
+                    scorecards.map((sc) => (
+                      <tr key={sc.id} className="hover:bg-elevated/40 transition-colors">
+                        <td className="px-4 py-3 font-semibold text-foreground">{sc.subcontractor_name || "Subcontractor"}</td>
+                        <td className="px-4 py-3 text-muted">
+                          {sc.period_start ? sc.period_start.split("T")[0] : ""} → {sc.period_end ? sc.period_end.split("T")[0] : ""}
+                        </td>
+                        <td className="px-4 py-3 text-right font-sans font-bold text-foreground">
+                          <span className="bg-primary/10 border border-primary/20 text-primary px-2 py-0.5 rounded">
+                            {sc.quality_score.toFixed(1)} / 5.0
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-right font-sans font-bold text-success">
+                          {Math.round(sc.on_time_pct)}%
+                        </td>
+                        <td className="px-4 py-3 text-right font-sans font-bold text-foreground">
+                          {Math.round(sc.billing_accuracy_pct)}%
+                        </td>
+                        <td className="px-4 py-3 text-right font-sans text-muted">
+                          {sc.tasks_completed} done / {sc.tasks_delayed} delayed
+                        </td>
+                        <td className="px-4 py-3 text-right font-sans font-bold text-foreground">
+                          {fmt(sc.total_billed)}
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <button
+                            type="button"
+                            onClick={() => handleDeletePerformance(sc.id)}
+                            className="px-2 py-1 bg-elevated hover:bg-danger/10 border border-border-custom text-muted hover:text-danger rounded text-[10px] font-semibold cursor-pointer"
+                            title="Delete scorecard"
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* ── Record Attendance Modal ── */}
+        {showAttendanceModal && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowAttendanceModal(false)}>
+            <div className="bg-card border border-border-custom rounded-xl w-full max-w-md p-6 relative overflow-hidden" onClick={e => e.stopPropagation()}>
+              <div className="flex justify-between items-start pb-3 border-b border-border-custom">
+                <div>
+                  <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Record Subcontractor Attendance</h3>
+                  <p className="text-[10px] text-muted mt-0.5">Date: {attendanceDate}</p>
+                </div>
+                <button onClick={() => setShowAttendanceModal(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
+              </div>
+
+              <form onSubmit={handleCreateAttendance} className="space-y-3 my-4 text-xs">
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Subcontractor*</label>
+                  <select
+                    value={attendanceForm.subcontractor_id}
+                    onChange={(e) => setAttendanceForm({ ...attendanceForm, subcontractor_id: e.target.value })}
+                    required
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
+                  >
+                    <option value="">Select subcontractor...</option>
+                    {subcontractors.map(s => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Labor Role*</label>
+                    <input
+                      type="text"
+                      value={attendanceForm.labor_role}
+                      onChange={(e) => setAttendanceForm({ ...attendanceForm, labor_role: e.target.value })}
+                      required
+                      placeholder="e.g. Mason, Helper, Carpenter"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground text-xs focus:outline-none focus:border-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Worker Count*</label>
+                    <input
+                      type="number"
+                      min={1}
+                      value={attendanceForm.worker_count}
+                      onChange={(e) => setAttendanceForm({ ...attendanceForm, worker_count: parseInt(e.target.value) || 1 })}
+                      required
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground text-xs focus:outline-none focus:border-primary font-sans"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Shift Multiplier</label>
+                    <input
+                      type="number"
+                      step="0.5"
+                      min="0.5"
+                      max="3.0"
+                      value={attendanceForm.shift_multiplier}
+                      onChange={(e) => setAttendanceForm({ ...attendanceForm, shift_multiplier: parseFloat(e.target.value) || 1.0 })}
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground text-xs focus:outline-none focus:border-primary font-sans"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">OT Hours</label>
+                    <input
+                      type="number"
+                      step="0.5"
+                      min="0"
+                      value={attendanceForm.overtime_hours}
+                      onChange={(e) => setAttendanceForm({ ...attendanceForm, overtime_hours: parseFloat(e.target.value) || 0 })}
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground text-xs focus:outline-none focus:border-primary font-sans"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Allowance (₹)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={attendanceForm.allowance}
+                      onChange={(e) => setAttendanceForm({ ...attendanceForm, allowance: parseFloat(e.target.value) || 0 })}
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground text-xs focus:outline-none focus:border-primary font-sans"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Notes</label>
+                  <textarea
+                    value={attendanceForm.notes}
+                    onChange={(e) => setAttendanceForm({ ...attendanceForm, notes: e.target.value })}
+                    placeholder="Work location, section, or notes..."
+                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground text-xs focus:outline-none focus:border-primary resize-none h-16"
+                  />
+                </div>
+
+                <div className="pt-2 flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowAttendanceModal(false)}
+                    className="px-4 py-2 rounded-lg border border-border-custom text-muted hover:text-foreground text-xs font-semibold"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-primary text-white font-bold rounded-lg text-xs hover:bg-primary/95 transition-all"
+                  >
+                    Save Attendance
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
 
         {/* Sub-Con Workorder Modal (Screenshot 3) */}
         {showWOModal && (
