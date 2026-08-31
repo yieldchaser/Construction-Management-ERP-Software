@@ -1,6 +1,6 @@
-# AGENT PROMPT: five defects from a fresh sweep
+# AGENT PROMPT: seven defects from a fresh sweep
 
-Five items against `f257a64`. Three came from re-running the static sweeps, two from driving the live app in a browser, which is the only way the last two could have been found.
+Seven items against `f257a64`. Three came from re-running the static sweeps. Four came from driving the live app in a browser against production, and none of those four could have been found any other way.
 
 Report as before: for each item, the command, its exit code, and one sentence. No pasted output. "Not run" is an acceptable answer.
 
@@ -115,7 +115,14 @@ A sweep for this phrasing across the console finds exactly these two, so do not 
 
 Loading a console page from cold, on a company that has no project selected, produces **twelve 422s and two 404s** before the page settles. Confirmed in the browser against production.
 
-The cause is not a stale value in storage; there is none. Components mount and fire project-scoped requests while `activeProjectId` from `ProjectContext` is still empty, so the id reaches the API as an empty string or `undefined` and the server rejects it as an unparseable UUID.
+The cause is pinned to one line. `ProjectContext.tsx:153` calls `/planning/projects/${nextProjectId}` before that id resolves. Probing production directly:
+
+```
+422  /planning/projects/undefined
+404  /planning/projects/
+```
+
+Those are the twelve and the two. There is no stale value in storage; the id is simply not resolved yet when the call goes out.
 
 It is not user visible, and the app recovers. It matters for two reasons: it makes a genuine error impossible to spot in the console, and every one of those wasted calls hits a backend that may be cold starting, which is the slowest moment in the product.
 
@@ -124,6 +131,63 @@ It is not user visible, and the app recovers. It matters for two reasons: it mak
 Do not add retries, do not swallow the 422, and do not change any endpoint to accept an empty id.
 
 **Verify by loading a console page cold with no project selected and reporting how many failing `/apis/v3` requests occur. It must be zero.**
+
+---
+
+# PART 6: six pages render nothing at all for a company with no project
+
+This is the most serious item in this file and it is the first thing a new customer sees.
+
+`d/equipment/page.tsx` is the clearest case:
+
+```js
+const [loading, setLoading] = useState(true);   // line 85
+...
+useEffect(() => {
+  if (companyId && projectId) {                 // line 174
+    fetchData();
+  }
+}, [companyId, projectId]);
+```
+
+`setLoading(false)` only runs inside `fetchData`. When no project is selected the effect never calls it, so **`loading` stays `true` forever** and the page renders its skeleton permanently. A skeleton has no text, which is why the screen looks simply empty.
+
+**Confirmed blank in the browser against production, on a company that has no projects:**
+
+```
+d/equipment                        header and tabs, nothing below, after 8 seconds
+d/towers                           header only
+d/budget                           header only
+d/procurement/rfq                  header and "RFQ REGISTER 0 Total", no table, no empty state
+d/procurement/vendor-performance   header only
+d/subcon/scorecards                renders no main content region at all
+```
+
+A seventh, `p/[project_id]/equipment`, has the same shape but could not be loaded because no project exists to put in the URL. Check it and fix it with the others.
+
+**Two pages my static sweep flagged are false positives and must not be touched:** `d/reports` renders "No Report Selected" correctly, and `d/labour` renders a proper empty state. I verified both live.
+
+## The fix
+
+For each affected page, when there is no project selected: **stop loading and render an `EmptyState`** saying a project needs to be selected or created, with a CTA to create one. Do not simply call `setLoading(false)` and leave an empty table, and do not remove the `projectId` guard on the fetch.
+
+The company has no projects at all today, so "select a project" alone would be a dead end. Follow the Project Hub's wording, which already gets this right: `No active projects. Click "+ New Project" to create one.`
+
+**Verify each of the seven in a browser and say what each renders now.** This is the one part of this prompt that cannot be proved by a grep.
+
+---
+
+# PART 7: an empty register claims your filter is at fault
+
+`d/quality` with zero inspections renders:
+
+> No inspections match the filter.
+
+There is no filter applied and nothing to match. The user is sent to adjust filters that are not the problem.
+
+Separate the two states wherever a list is both filterable and empty: when the underlying list is empty say there is nothing yet and offer the create action; only say nothing matches when a filter or search is actually active. Fix it on `d/quality` and check its project-scoped twin `p/[project_id]/quality`, which is a near-duplicate and has drifted before.
+
+Do not sweep the whole console for this in the same run. Fix the two quality pages and note in your report if you noticed others.
 
 ---
 
@@ -140,7 +204,7 @@ Checked live in the browser during this sweep, so they need no attention:
 
 # Rules
 
-- **No authoring scripts.** Five small changes.
+- **No authoring scripts.**
 - Every write branches on `res.ok` and surfaces `readErrorDetail`.
 - New endpoints carry the same permission and tenant checks as their sibling.
 - `Badge`, `Icon` from the closed 120-name union, semantic tokens only. No raw palette, gradients, hex, `hover:bg-white/N`, control glyphs, emoji, inline shadows.
@@ -159,6 +223,8 @@ Command, exit code, one sentence.
 - [ ] The project picker distinguishes loading, empty and failed. Note: the test company genuinely has zero projects, so the empty case is reproducible today.
 - [ ] Both developer-note strings replaced with plain user copy.
 - [ ] A cold console page load with no project selected produces **zero** failing `/apis/v3` requests. Report the count you measured.
+- [ ] All seven pages in Part 6 render a real empty state instead of a permanent skeleton. **Say what each of the seven shows now, checked in a browser.** `d/reports` and `d/labour` untouched.
+- [ ] `d/quality` and `p/[project_id]/quality` distinguish an empty register from a filtered one.
 - [ ] `python scripts/verification/check_route_reachability.py` reports **0 unreachable**, exemption file still 30 entries.
 - [ ] `cd backend && PYTHONPATH=. pytest tests/coverage -n 4` passes. It is **1148 passed, 4 skipped** today and must only go up.
 - [ ] `cd frontend && npx tsc --noEmit` and `cd frontend && npm run build` both run and both clean.
