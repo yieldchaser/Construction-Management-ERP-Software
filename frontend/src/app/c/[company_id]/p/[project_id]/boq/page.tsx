@@ -325,9 +325,15 @@ export default function BoqTab() {
         headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({ milestone_done: done, milestone_total: total }),
       });
-      if (res.ok) await loadDocs();
+      if (res.ok) {
+        await loadDocs();
+      } else {
+        const err = await readErrorDetail(res);
+        setError(err || "Failed to update milestone");
+      }
     } catch (e) {
       console.error(e);
+      setError("Network error updating milestone");
     }
   };
 

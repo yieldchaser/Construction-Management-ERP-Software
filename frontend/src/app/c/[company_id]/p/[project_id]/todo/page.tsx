@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { getApi, authHeaders, resolveCompanyId, initials } from "@/lib/siteflow";
+import { readErrorDetail } from "@/lib/api";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import { TableSkeleton } from "@/components/ui/Skeleton";
@@ -66,17 +67,37 @@ export default function TodoPage() {
 
   const toggle = async (t: Todo) => {
     const next = t.status === "done" ? "pending" : "done";
-    await fetch(getApi(`/todos/${t.id}`), {
-      method: "PUT",
-      headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
-      body: JSON.stringify({ status: next }),
-    });
-    load();
+    try {
+      const res = await fetch(getApi(`/todos/${t.id}`), {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+        body: JSON.stringify({ status: next }),
+      });
+      if (res.ok) {
+        load();
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || "Failed to update todo");
+      }
+    } catch (e) {
+      console.error("Failed to update todo", e);
+      alert("Failed to update todo. Check your connection.");
+    }
   };
 
   const remove = async (id: string) => {
-    await fetch(getApi(`/todos/${id}`), { method: "DELETE", headers: authHeaders() });
-    load();
+    try {
+      const res = await fetch(getApi(`/todos/${id}`), { method: "DELETE", headers: authHeaders() });
+      if (res.ok) {
+        load();
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || "Failed to delete todo");
+      }
+    } catch (e) {
+      console.error("Failed to delete todo", e);
+      alert("Failed to delete todo. Check your connection.");
+    }
   };
 
   return (

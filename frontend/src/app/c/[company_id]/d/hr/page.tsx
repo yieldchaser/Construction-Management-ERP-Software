@@ -803,6 +803,9 @@ export default function HRPayrollPage() {
           totalNet: data.total_net,
           payslips: mappedPayslips
         });
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || "Failed to run payroll");
       }
     } catch (e) {
       console.error("Failed to run payroll", e);

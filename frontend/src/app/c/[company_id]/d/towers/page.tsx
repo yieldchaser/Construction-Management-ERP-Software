@@ -122,7 +122,12 @@ export default function TowersPage() {
     if (!confirm("Delete this tower? This will not affect underlying POs or bills.")) return;
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/towers/${id}`, { method: "DELETE", headers: authHeaders() });
-      if (res.ok) fetchData();
+      if (res.ok) {
+        fetchData();
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || "Failed to delete tower");
+      }
     } catch (e) { console.error(e); }
   };
 

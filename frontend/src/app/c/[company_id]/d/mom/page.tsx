@@ -199,7 +199,12 @@ export default function MoMPage() {
         method: "DELETE",
         headers: authHeaders(),
       });
-      if (res.ok) loadMoms();
+      if (res.ok) {
+        loadMoms();
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || "Failed to delete MOM");
+      }
     } catch (e) {
       console.error("Failed to delete MOM", e);
     }

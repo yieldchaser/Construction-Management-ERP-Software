@@ -734,8 +734,15 @@ export default function CompanySettingsPage() {
   const revokeBiKey = async (id: string) => {
     try {
       const res = await fetch(`${apiHost}/apis/v3/integrations/bi/companies/${company_id}/keys/${id}`, { method: "DELETE", headers: authHeaders() });
-      if (res.ok) await loadBiKeys();
-    } catch { /* leave as-is */ }
+      if (res.ok) {
+        await loadBiKeys();
+      } else {
+        const err = await readErrorDetail(res);
+        setBiMsg({ type: "err", text: err || "Failed to revoke API key" });
+      }
+    } catch {
+      setBiMsg({ type: "err", text: "Failed to revoke API key" });
+    }
   };
 
   // ─── Subscription (display-only; no billing UI) ──────────────────────────────
@@ -1009,8 +1016,17 @@ export default function CompanySettingsPage() {
     } catch { /* ignore */ }
   };
   const deleteHoliday = async (id: string) => {
-    const res = await fetch(`${apiHost}/apis/v3/hr/holidays/${id}`, { method: "DELETE", headers: authHeaders() });
-    if (res.ok) setHolidays(holidays.filter((h) => h.id !== id));
+    try {
+      const res = await fetch(`${apiHost}/apis/v3/hr/holidays/${id}`, { method: "DELETE", headers: authHeaders() });
+      if (res.ok) {
+        setHolidays(holidays.filter((h) => h.id !== id));
+      } else {
+        const err = await readErrorDetail(res);
+        setError(err || "Failed to delete holiday");
+      }
+    } catch {
+      setError("Failed to delete holiday");
+    }
   };
 
   // Salary Template (reusable named salary breakup cascade)
@@ -1050,8 +1066,17 @@ export default function CompanySettingsPage() {
     } catch { /* ignore */ }
   };
   const deleteSalaryTemplate = async (id: string) => {
-    const res = await fetch(`${apiHost}/apis/v3/settings/salary-templates/${id}`, { method: "DELETE", headers: authHeaders() });
-    if (res.ok) setSalaryTemplates(salaryTemplates.filter((t) => t.id !== id));
+    try {
+      const res = await fetch(`${apiHost}/apis/v3/settings/salary-templates/${id}`, { method: "DELETE", headers: authHeaders() });
+      if (res.ok) {
+        setSalaryTemplates(salaryTemplates.filter((t) => t.id !== id));
+      } else {
+        const err = await readErrorDetail(res);
+        setError(err || "Failed to delete salary template");
+      }
+    } catch {
+      setError("Failed to delete salary template");
+    }
   };
 
   const loadPayrollSubs = useCallback(() => {
