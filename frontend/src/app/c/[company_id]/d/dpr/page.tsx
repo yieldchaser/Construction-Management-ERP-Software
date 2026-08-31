@@ -1,5 +1,5 @@
 "use client";
-import { getApiHost } from "@/lib/api";
+import { getApiHost, readErrorDetail } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 
 import React, { useState, useEffect } from "react";
@@ -10,12 +10,33 @@ import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
+import FieldHint from "@/components/ui/FieldHint";
 
 interface Task {
   id: string;
   name: string;
   status: string;
   priority: string;
+}
+
+interface MaterialOption {
+  id: string;
+  name: string;
+  unit?: string;
+}
+
+interface InventoryItem {
+  id: string;
+  material_name: string;
+  on_hand_qty: number;
+  reserved_qty: number;
+  unit: string;
+}
+
+interface ConsumedMaterialItem {
+  material_name: string;
+  quantity: string;
+  unit: string;
 }
 
 interface DPRSummary {
@@ -36,6 +57,7 @@ interface DPRLog {
   weather: string;
   executed_qty: number;
   workers_deployed: number;
+  materials_consumed?: { material_name: string; quantity: number; unit: string }[];
   notes: string;
   issues: string;
 }
@@ -54,6 +76,8 @@ export default function DPRPage() {
   const projectId = activeProjectId;
 
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [materials, setMaterials] = useState<MaterialOption[]>([]);
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [summary, setSummary] = useState<DPRSummary>({
     activities_tracked: 0,
     total_workers_deployed: 0,
@@ -76,7 +100,7 @@ export default function DPRPage() {
   const [notes, setNotes] = useState("");
   const [issues, setIssues] = useState("");
   const [reportedBy, setReportedBy] = useState("");
-  const [cementConsumed, setCementConsumed] = useState("");
+  const [materialsConsumed, setMaterialsConsumed] = useState<ConsumedMaterialItem[]>([]);
   
   // Measurement Book (M.B.) takeoff items state
   const [mbRows, setMbRows] = useState<any[]>([
@@ -95,6 +119,26 @@ export default function DPRPage() {
         if (data.length > 0) {
           setSelectedTaskId(data[0].id);
         }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const fetchMaterialsAndInventory = async () => {
+    if (!projectId || !companyId) return;
+    try {
+      const [matRes, invRes] = await Promise.all([
+        fetch(`${getApiHost()}/apis/v3/library/materials?company_id=${companyId}`, { headers: authHeaders() }),
+        fetch(`${getApiHost()}/apis/v3/procurement/inventory?project_id=${projectId}`, { headers: authHeaders() }),
+      ]);
+      if (matRes.ok) {
+        const matData = await matRes.json();
+        setMaterials(Array.isArray(matData) ? matData : []);
+      }
+      if (invRes.ok) {
+        const invData = await invRes.json();
+        setInventory(Array.isArray(invData) ? invData : []);
       }
     } catch (e) {
       console.error(e);
@@ -130,13 +174,22 @@ export default function DPRPage() {
       fetchTasks();
       fetchDPRSummary();
       fetchDPRLogs();
+      fetchMaterialsAndInventory();
     }
-  }, [projectId]);
+  }, [projectId, companyId]);
 
   const handleSubmitDPR = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     setMessage("");
+
+    const formattedMaterials = materialsConsumed
+      .filter(m => m.material_name.trim() && parseFloat(m.quantity) > 0)
+      .map(m => ({
+        material_name: m.material_name.trim(),
+        quantity: parseFloat(m.quantity),
+        unit: m.unit || "unit",
+      }));
 
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/dpr`, {
@@ -152,7 +205,7 @@ export default function DPRPage() {
           weather: weather,
           notes: notes,
           issues: issues,
-          cement_consumed: parseFloat(cementConsumed) || 0.0
+          materials_consumed: formattedMaterials,
         })
       });
 
@@ -160,18 +213,19 @@ export default function DPRPage() {
         setMessage("DPR submitted successfully!");
         setExecutedQty("");
         setWorkersDeployed("");
-        setCementConsumed("");
+        setMaterialsConsumed([]);
         setNotes("");
         setIssues("");
         setIsCreateDPROpen(false);
         fetchDPRSummary();
         fetchDPRLogs();
+        fetchMaterialsAndInventory();
       } else {
-        const detail = await res.json().catch(() => null);
-        setMessage(detail?.detail || "Failed to submit DPR.");
+        const detail = await readErrorDetail(res);
+        setMessage(detail || "Failed to submit DPR.");
       }
-    } catch (err) {
-      setMessage("Server connection failed.");
+    } catch (err: any) {
+      setMessage(err?.message || "Server connection failed.");
     } finally {
       setSubmitting(false);
     }
@@ -238,8 +292,17 @@ export default function DPRPage() {
                       <span className="font-bold text-foreground">Reported By: {log.reported_by}</span>
                       <span>Weather: <strong className="text-muted">{log.weather}</strong> · {new Date(log.dpr_date).toLocaleDateString()}</span>
                     </div>
-                    <div className="border-l-2 border-border-custom pl-3 my-2">
+                    <div className="border-l-2 border-border-custom pl-3 my-2 space-y-1">
                       <p className="text-foreground text-xs font-semibold">Qty Executed: {log.executed_qty}</p>
+                      {log.materials_consumed && log.materials_consumed.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 pt-1">
+                          {log.materials_consumed.map((m, mi) => (
+                            <span key={mi} className="px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 text-[10px] font-bold">
+                              {m.quantity} {m.unit} {m.material_name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                       {log.notes && <p className="text-muted mt-1">{log.notes}</p>}
                     </div>
                     {log.issues && (
@@ -259,11 +322,11 @@ export default function DPRPage() {
       {/* Create DPR Modal Drawer */}
       {isCreateDPROpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-background border border-border-custom rounded-lg w-full max-w-lg shadow-2xl overflow-hidden flex flex-col">
+          <div className="bg-background border border-border-custom rounded-lg w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <div className="px-6 py-4 border-b border-border-custom flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-extrabold text-foreground">Create Daily Progress Report (DPR)</h3>
-                <p className="text-[10px] text-muted">Log task physical status, workers, and consumption</p>
+                <p className="text-[10px] text-muted">Log task physical status, workers, and material consumption</p>
               </div>
               <button onClick={() => { setIsCreateDPROpen(false); setMessage(""); }} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
@@ -313,19 +376,132 @@ export default function DPRPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-muted">Weather Condition</label>
-                  <select value={weather} onChange={(e) => setWeather(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground">
-                    <option value="Clear">Clear</option>
-                    <option value="Rainy">Rainy</option>
-                    <option value="Overcast">Overcast</option>
-                  </select>
+              <div className="space-y-1">
+                <label className="text-muted">Weather Condition</label>
+                <select value={weather} onChange={(e) => setWeather(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground">
+                  <option value="Clear">Clear</option>
+                  <option value="Rainy">Rainy</option>
+                  <option value="Overcast">Overcast</option>
+                </select>
+              </div>
+
+              {/* Materials Consumed Section */}
+              <div className="space-y-2 pt-2 border-t border-border-custom">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <label className="text-muted font-bold block text-[11px]">Material Consumed Today</label>
+                    <p className="text-[10px] text-muted">Decrements warehouse stock and releases indent reservations</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setMaterialsConsumed([...materialsConsumed, { material_name: "", quantity: "", unit: "" }])}
+                    className="px-2 py-1 bg-primary/10 hover:bg-primary/20 text-primary font-bold rounded text-[10px] inline-flex items-center gap-1 transition-all cursor-pointer"
+                  >
+                    <Icon name="add" className="w-3 h-3" /> + Add Material
+                  </button>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-muted">Cement Consumed (Bags)</label>
-                  <input type="number" value={cementConsumed} onChange={(e) => setCementConsumed(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" placeholder="e.g. 45" />
-                </div>
+
+                {materials.length === 0 && inventory.length === 0 && (
+                  <FieldHint text="No materials yet. Add one in Library." href={`/c/${companyId}/d/library`} linkLabel="Go to Library" />
+                )}
+
+                {materialsConsumed.length > 0 && (
+                  <div className="space-y-2">
+                    {materialsConsumed.map((matRow, idx) => {
+                      const invItem = inventory.find(inv => inv.material_name.toLowerCase() === matRow.material_name.toLowerCase());
+                      const avail = invItem ? invItem.on_hand_qty - invItem.reserved_qty : null;
+                      return (
+                        <div key={idx} className="p-2.5 bg-input border border-border-custom rounded-md space-y-1.5 relative">
+                          <button
+                            type="button"
+                            onClick={() => setMaterialsConsumed(materialsConsumed.filter((_, i) => i !== idx))}
+                            className="absolute top-2 right-2 text-muted hover:text-danger cursor-pointer"
+                            title="Remove row"
+                          >
+                            <Icon name="close" className="w-3.5 h-3.5" />
+                          </button>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center pr-6">
+                            <div className="sm:col-span-6">
+                              <label className="text-[9px] text-muted block mb-0.5">Material*</label>
+                              <select
+                                value={matRow.material_name}
+                                onChange={(e) => {
+                                  const selectedName = e.target.value;
+                                  const next = [...materialsConsumed];
+                                  const foundLib = materials.find(m => m.name === selectedName);
+                                  const foundInv = inventory.find(i => i.material_name === selectedName);
+                                  next[idx].material_name = selectedName;
+                                  next[idx].unit = foundLib?.unit || foundInv?.unit || (selectedName.toLowerCase().includes("cement") ? "bags" : selectedName.toLowerCase().includes("steel") ? "tons" : "units");
+                                  setMaterialsConsumed(next);
+                                }}
+                                className="w-full bg-background border border-border-custom rounded px-2 py-1 text-foreground text-xs"
+                              >
+                                <option value="">Select Material...</option>
+                                {materials.map(m => (
+                                  <option key={m.id} value={m.name}>{m.name}</option>
+                                ))}
+                                {inventory
+                                  .filter(inv => !materials.some(m => m.name.toLowerCase() === inv.material_name.toLowerCase()))
+                                  .map(inv => (
+                                    <option key={inv.id} value={inv.material_name}>{inv.material_name}</option>
+                                  ))}
+                              </select>
+                            </div>
+
+                            <div className="sm:col-span-3">
+                              <label className="text-[9px] text-muted block mb-0.5">Qty Consumed*</label>
+                              <input
+                                type="number"
+                                step="any"
+                                min="0.01"
+                                placeholder="0.0"
+                                value={matRow.quantity}
+                                onChange={(e) => {
+                                  const next = [...materialsConsumed];
+                                  next[idx].quantity = e.target.value;
+                                  setMaterialsConsumed(next);
+                                }}
+                                className="w-full bg-background border border-border-custom rounded px-2 py-1 text-foreground text-xs"
+                              />
+                            </div>
+
+                            <div className="sm:col-span-3">
+                              <label className="text-[9px] text-muted block mb-0.5">Unit</label>
+                              <input
+                                type="text"
+                                placeholder="e.g. bags"
+                                value={matRow.unit}
+                                onChange={(e) => {
+                                  const next = [...materialsConsumed];
+                                  next[idx].unit = e.target.value;
+                                  setMaterialsConsumed(next);
+                                }}
+                                className="w-full bg-background border border-border-custom rounded px-2 py-1 text-foreground text-xs"
+                              />
+                            </div>
+                          </div>
+
+                          {matRow.material_name && (
+                            <div className="text-[10px] text-muted flex items-center gap-2 pt-0.5">
+                              <span>
+                                Available Stock:{" "}
+                                <strong className={avail !== null && avail <= 0 ? "text-danger" : "text-success"}>
+                                  {avail !== null ? `${avail.toLocaleString()} ${invItem?.unit || matRow.unit}` : "0 (No stock recorded)"}
+                                </strong>
+                              </span>
+                              {invItem && (
+                                <span className="text-[9px] opacity-75">
+                                  (On-hand: {invItem.on_hand_qty}, Reserved: {invItem.reserved_qty})
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               <div className="space-y-1">
