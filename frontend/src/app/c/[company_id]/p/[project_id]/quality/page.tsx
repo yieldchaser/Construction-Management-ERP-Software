@@ -127,6 +127,8 @@ export default function QualityPage() {
   const [selectedInspection, setSelectedInspection] = useState<Inspection | null>(null);
   const [activeInspectionItems, setActiveInspectionItems] = useState<ChecklistItem[]>([]);
   const [inspectionResponses, setInspectionResponses] = useState<Record<string, "Pass" | "Fail" | "NA">>({});
+  const [existingResponses, setExistingResponses] = useState<{ id: string; checklist_item_id: string; result: string; remarks?: string | null; photo_url?: string | null }[]>([]);
+  const [loadingResponses, setLoadingResponses] = useState(false);
   const [inspectionSearch, setInspectionSearch] = useState("");
   const [inspectionInspectorFilter, setInspectionInspectorFilter] = useState("all");
   const [inspectionStatusFilter, setInspectionStatusFilter] = useState("all");
@@ -282,6 +284,25 @@ isCode: cl.is_code_reference || "—",
 
   useEffect(() => {
     if (selectedInspection) {
+      const fetchResponses = async () => {
+        setLoadingResponses(true);
+        try {
+          const res = await fetch(`${getApiHost()}/apis/v3/quality/inspections/${selectedInspection.id}/responses`, { headers: authHeaders() });
+          if (res.ok) {
+            const data = await res.json();
+            setExistingResponses(Array.isArray(data) ? data : []);
+          } else {
+            setExistingResponses([]);
+          }
+        } catch (e) {
+          console.error("Failed to fetch inspection responses", e);
+          setExistingResponses([]);
+        } finally {
+          setLoadingResponses(false);
+        }
+      };
+      fetchResponses();
+
       const cl = checklists.find(c => c.id === (selectedInspection as any).checklistId);
       if (cl) {
         setActiveInspectionItems(cl.items);
@@ -858,6 +879,48 @@ isCode: cl.is_code_reference || "—",
 
             <div className="mb-4">
               {badge(selectedInspection.status, statusTones[selectedInspection.status])}
+            </div>
+
+            {/* Recorded Inspection Responses */}
+            <div className="space-y-3 border-t border-border-custom pt-4 mt-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-muted">Inspection Checkpoint Records</h3>
+                <span className="text-[10px] text-muted">{existingResponses.length} logged responses</span>
+              </div>
+              {loadingResponses ? (
+                <div className="text-xs text-muted text-center py-4">Loading inspection responses...</div>
+              ) : existingResponses.length === 0 ? (
+                <div className="text-xs text-muted text-center py-3 bg-elevated/50 rounded-lg">
+                  No individual checkpoint responses logged yet.
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {existingResponses.map((resp, idx) => (
+                    <div key={resp.id || idx} className="p-2.5 rounded-lg bg-elevated border border-border-custom flex items-center justify-between gap-3 text-xs">
+                      <div>
+                        <span className="font-semibold text-foreground">Checkpoint #{idx + 1}</span>
+                        {resp.remarks && <p className="text-[10px] text-muted mt-0.5">{resp.remarks}</p>}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {resp.photo_url && (
+                          <a href={resp.photo_url} target="_blank" rel="noreferrer" className="text-[10px] text-primary underline font-medium">
+                            Photo
+                          </a>
+                        )}
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                          resp.result?.toLowerCase() === "pass"
+                            ? "bg-success/10 text-success border border-success/20"
+                            : resp.result?.toLowerCase() === "fail"
+                            ? "bg-danger/10 text-danger border border-danger/20"
+                            : "bg-elevated text-muted border border-border-custom"
+                        }`}>
+                          {resp.result}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Checklist Checkpoints Audit Form */}
