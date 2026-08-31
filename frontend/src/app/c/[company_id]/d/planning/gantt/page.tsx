@@ -29,6 +29,10 @@ interface Task {
   progress?: number;
 }
 
+interface TaskTreeNode extends Task {
+  children?: TaskTreeNode[];
+}
+
 interface Milestone {
   id: string;
   name: string;
@@ -143,13 +147,18 @@ export default function GanttSchedulerPage() {
   const [lookahead, setLookahead] = useState<LookaheadTask[]>([]);
   const [listLoading, setListLoading] = useState(false);
 
-  // Milestone create form state
+  // Milestone create and edit state
   const [msName, setMsName] = useState("");
   const [msDate, setMsDate] = useState("");
   const [msType, setMsType] = useState<Milestone["type"]>("start");
   const [msStatus, setMsStatus] = useState<Milestone["status"]>("upcoming");
   const [msDesc, setMsDesc] = useState("");
+  const [editingMilestone, setEditingMilestone] = useState<Milestone | null>(null);
   const [baselineSaving, setBaselineSaving] = useState(false);
+
+  // Hierarchy and view mode
+  const [taskViewMode, setTaskViewMode] = useState<"flat" | "tree">("flat");
+  const [hierarchy, setHierarchy] = useState<TaskTreeNode[]>([]);
 
   const handleSetBaseline = async () => {
     if (!projectId) return;
@@ -163,6 +172,7 @@ export default function GanttSchedulerPage() {
       if (res.ok) {
         setSuccess("Baseline saved successfully");
         fetchTasks();
+        fetchHierarchy();
       } else {
         const err = await readErrorDetail(res);
         setError(err || 'Action failed');
@@ -171,6 +181,25 @@ export default function GanttSchedulerPage() {
       console.error(err);
     } finally {
       setBaselineSaving(false);
+    }
+  };
+
+  const handleSetTaskBaseline = async (taskId: string) => {
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/planning/tasks/${taskId}/set-baseline`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+      });
+      if (res.ok) {
+        setSuccess("Task baseline frozen successfully!");
+        fetchTasks();
+        fetchHierarchy();
+      } else {
+        const err = await readErrorDetail(res);
+        setError(err || "Failed to freeze task baseline.");
+      }
+    } catch {
+      setError("Connection error.");
     }
   };
 
@@ -231,11 +260,27 @@ export default function GanttSchedulerPage() {
     }
   };
 
+  const fetchHierarchy = async () => {
+    if (!projectId) return;
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/planning/tasks/hierarchy/${projectId}`, { headers: authHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        setHierarchy(Array.isArray(data) ? data : []);
+      } else {
+        setHierarchy([]);
+      }
+    } catch {
+      setHierarchy([]);
+    }
+  };
+
   useEffect(() => {
     if (projectId) {
       fetchTasks();
       fetchMilestones();
       fetchLookahead();
+      fetchHierarchy();
     }
   }, [projectId]);
 
@@ -301,6 +346,53 @@ export default function GanttSchedulerPage() {
         fetchMilestones();
       } else {
         setError("Failed to create milestone.");
+      }
+    } catch {
+      setError("Connection error.");
+    }
+  };
+
+  const handleUpdateMilestone = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingMilestone) return;
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/planning/milestones/${editingMilestone.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+        body: JSON.stringify({
+          name: editingMilestone.name,
+          milestone_date: editingMilestone.milestone_date,
+          type: editingMilestone.type,
+          status: editingMilestone.status,
+          description: editingMilestone.description,
+        }),
+      });
+      if (res.ok) {
+        setEditingMilestone(null);
+        setSuccess("Milestone updated successfully!");
+        fetchMilestones();
+      } else {
+        const err = await readErrorDetail(res);
+        setError(err || "Failed to update milestone.");
+      }
+    } catch {
+      setError("Connection error.");
+    }
+  };
+
+  const handleDeleteMilestone = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this milestone?")) return;
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/planning/milestones/${id}`, {
+        method: "DELETE",
+        headers: authHeaders(),
+      });
+      if (res.ok) {
+        setSuccess("Milestone deleted successfully!");
+        fetchMilestones();
+      } else {
+        const err = await readErrorDetail(res);
+        setError(err || "Failed to delete milestone.");
       }
     } catch {
       setError("Connection error.");
@@ -604,6 +696,22 @@ export default function GanttSchedulerPage() {
                       </div>
                       <p className="text-[11px] text-muted">{m.description}</p>
                     </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setEditingMilestone(m)}
+                        className="px-2.5 py-1 bg-elevated hover:bg-card border border-border-custom text-foreground rounded text-[10px] font-semibold cursor-pointer"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteMilestone(m.id)}
+                        className="px-2.5 py-1 bg-elevated hover:bg-danger/10 border border-border-custom text-muted hover:text-danger rounded text-[10px] font-semibold cursor-pointer"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 );
               })}
@@ -682,6 +790,92 @@ export default function GanttSchedulerPage() {
                   </button>
                 </div>
               </form>
+
+              {/* Edit Milestone Modal */}
+              {editingMilestone && (
+                <div className="fixed inset-0 bg-background/80 flex items-center justify-center z-50 p-4">
+                  <div className="w-full max-w-md bg-card border border-border-custom rounded-lg overflow-hidden shadow-lg animate-in fade-in zoom-in-95 duration-150">
+                    <div className="p-4 border-b border-border-custom flex justify-between items-center">
+                      <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider">Edit Milestone</h3>
+                      <button onClick={() => setEditingMilestone(null)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-4 h-4" /></button>
+                    </div>
+                    <form onSubmit={handleUpdateMilestone} className="p-4 space-y-3 text-xs">
+                      <div className="space-y-1">
+                        <label className="text-muted font-semibold">Milestone Name *</label>
+                        <input
+                          type="text"
+                          required
+                          value={editingMilestone.name}
+                          onChange={(e) => setEditingMilestone({ ...editingMilestone, name: e.target.value })}
+                          className="w-full bg-elevated border border-border-custom rounded-lg p-2 text-foreground focus:outline-none"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-muted font-semibold">Date *</label>
+                        <input
+                          type="date"
+                          required
+                          value={editingMilestone.milestone_date ? new Date(editingMilestone.milestone_date).toISOString().split("T")[0] : ""}
+                          onChange={(e) => setEditingMilestone({ ...editingMilestone, milestone_date: e.target.value })}
+                          className="w-full bg-elevated border border-border-custom rounded-lg p-2 text-foreground focus:outline-none"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <label className="text-muted font-semibold">Type</label>
+                          <select
+                            value={editingMilestone.type}
+                            onChange={(e) => setEditingMilestone({ ...editingMilestone, type: e.target.value as Milestone["type"] })}
+                            className="w-full bg-elevated border border-border-custom rounded-lg p-2 text-foreground"
+                          >
+                            <option value="start">Start</option>
+                            <option value="inspection">Inspection</option>
+                            <option value="payment">Payment</option>
+                            <option value="handover">Handover</option>
+                            <option value="critical">Critical</option>
+                          </select>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-muted font-semibold">Status</label>
+                          <select
+                            value={editingMilestone.status}
+                            onChange={(e) => setEditingMilestone({ ...editingMilestone, status: e.target.value as Milestone["status"] })}
+                            className="w-full bg-elevated border border-border-custom rounded-lg p-2 text-foreground"
+                          >
+                            <option value="upcoming">Upcoming</option>
+                            <option value="achieved">Achieved</option>
+                            <option value="delayed">Delayed</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-muted font-semibold">Description</label>
+                        <textarea
+                          value={editingMilestone.description || ""}
+                          onChange={(e) => setEditingMilestone({ ...editingMilestone, description: e.target.value })}
+                          className="w-full bg-elevated border border-border-custom rounded-lg p-2 text-foreground text-xs focus:outline-none"
+                          rows={2}
+                        />
+                      </div>
+                      <div className="flex gap-2 justify-end pt-2">
+                        <button
+                          type="button"
+                          onClick={() => setEditingMilestone(null)}
+                          className="px-3 py-1.5 bg-elevated hover:bg-elevated/80 border border-border-custom text-muted rounded-md font-semibold cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          className="px-4 py-1.5 bg-primary hover:bg-primary/90 text-white rounded-md font-semibold cursor-pointer"
+                        >
+                          Save Changes
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -721,18 +915,28 @@ export default function GanttSchedulerPage() {
                         )}
                       </div>
                     </div>
-                    <div>
-                      {bStart ? (
-                        diffDays === 0 ? (
-                          <span className="text-[10px] text-success font-bold font-sans">ON TARGET</span>
-                        ) : diffDays > 0 ? (
-                          <span className="text-[10px] text-danger font-bold font-sans">+{diffDays}d DELAY</span>
+                    <div className="flex items-center gap-3">
+                      <div>
+                        {bStart ? (
+                          diffDays === 0 ? (
+                            <span className="text-[10px] text-success font-bold font-sans">ON TARGET</span>
+                          ) : diffDays > 0 ? (
+                            <span className="text-[10px] text-danger font-bold font-sans">+{diffDays}d DELAY</span>
+                          ) : (
+                            <span className="text-[10px] text-info font-bold font-sans">{diffDays}d AHEAD</span>
+                          )
                         ) : (
-                          <span className="text-[10px] text-info font-bold font-sans">{diffDays}d AHEAD</span>
-                        )
-                      ) : (
-                        <span className="text-[9px] text-muted italic">No baseline set</span>
-                      )}
+                          <span className="text-[9px] text-muted italic">No baseline set</span>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleSetTaskBaseline(t.id)}
+                        className="px-2.5 py-1 bg-elevated hover:bg-card border border-border-custom text-foreground rounded text-[10px] font-semibold cursor-pointer whitespace-nowrap"
+                        title="Snapshot baseline for this task"
+                      >
+                        Set Baseline
+                      </button>
                     </div>
                   </div>
                 );
@@ -897,14 +1101,113 @@ export default function GanttSchedulerPage() {
 
           {/* WBS Task Gantt List */}
           <div className="bg-card border border-border-custom rounded-lg p-6 space-y-4">
-            <div>
-              <h2 className="text-xs font-bold text-foreground uppercase tracking-wider">WBS Execution Nodes</h2>
-              <p className="text-[10px] text-muted">Click a task card below to open its real-time collaboration feed, subtasks and progress takeoff book.</p>
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <h2 className="text-xs font-bold text-foreground uppercase tracking-wider">WBS Execution Nodes</h2>
+                <p className="text-[10px] text-muted">Click a task card below to open its real-time collaboration feed, subtasks and progress takeoff book.</p>
+              </div>
+              <div className="flex items-center gap-1.5 bg-input border border-border-custom rounded-lg p-1">
+                <button
+                  type="button"
+                  onClick={() => setTaskViewMode("flat")}
+                  className={`px-2.5 py-1 rounded text-[10px] font-bold cursor-pointer transition-all ${
+                    taskViewMode === "flat" ? "bg-primary text-white" : "text-muted hover:text-foreground"
+                  }`}
+                >
+                  Flat View
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTaskViewMode("tree");
+                    fetchHierarchy();
+                  }}
+                  className={`px-2.5 py-1 rounded text-[10px] font-bold cursor-pointer transition-all ${
+                    taskViewMode === "tree" ? "bg-primary text-white" : "text-muted hover:text-foreground"
+                  }`}
+                >
+                  Tree Hierarchy
+                </button>
+              </div>
             </div>
 
             <div className="space-y-3">
               {loading ? (
                 <div className="text-center py-10 text-xs text-muted">Loading WBS Node levels...</div>
+              ) : taskViewMode === "tree" ? (
+                hierarchy.length === 0 ? (
+                  <div className="text-center py-8 text-xs text-muted">No hierarchy data available.</div>
+                ) : (
+                  (function renderTree(nodes: TaskTreeNode[], depth = 0): React.ReactNode {
+                    return nodes.map((node) => {
+                      const pct = Math.min(100, Math.max(0, node.progress ?? 0));
+                      const overdue =
+                        node.status !== "completed" && !!node.end_date && new Date(node.end_date) < new Date();
+                      return (
+                        <div key={node.id} className="space-y-2">
+                          <div
+                            onClick={() => handleOpenDrawer(node)}
+                            style={{ marginLeft: `${depth * 20}px` }}
+                            className="p-4 rounded-md border border-border-custom bg-input hover:border-primary/20 transition-all flex items-center justify-between cursor-pointer group"
+                          >
+                            <div className="space-y-1.5 w-full">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                {depth > 0 && <span className="text-muted text-xs font-bold">↳</span>}
+                                <strong className="text-foreground text-xs group-hover:text-primary transition-all">
+                                  {node.name}
+                                </strong>
+                                {node.is_critical && (
+                                  <span className="text-[8px] bg-danger/10 border border-danger/20 text-danger px-1.5 py-0.5 rounded font-bold">CRITICAL</span>
+                                )}
+                                {overdue && (
+                                  <span className="text-[8px] bg-warning/10 border border-warning/20 text-warning px-1.5 py-0.5 rounded font-bold">OVERDUE</span>
+                                )}
+                                <span className={`text-[9px] px-2 py-0.5 rounded font-bold uppercase ${
+                                  node.priority === "high" ? "bg-danger/10 text-danger" : "bg-elevated text-muted"
+                                }`}>{node.priority}</span>
+                                <span className={`text-[8px] px-1.5 py-0.5 rounded border font-bold uppercase ${
+                                  node.status === "completed"
+                                    ? "bg-success/10 border-success/20 text-success"
+                                    : node.status === "not_started"
+                                      ? "bg-elevated/20 border-border-custom/20 text-muted"
+                                      : "bg-info/10 border-info/20 text-info"
+                                }`}>{(node.status || "").replace("_", " ")}</span>
+                              </div>
+                              <div className="text-[10px] text-muted">
+                                Start: {fmtDate(node.start_date)} · End: {fmtDate(node.end_date)} · Duration: {node.duration_days} Days
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <div className="h-1.5 flex-1 max-w-[240px] bg-elevated rounded-full overflow-hidden">
+                                  <div
+                                    className={`h-full rounded-full ${overdue ? "bg-warning/10" : "bg-success/10"}`}
+                                    style={{ width: `${pct}%` }}
+                                  />
+                                </div>
+                                <span className="text-[9px] font-bold text-muted">{Math.round(pct)}%</span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 ml-3">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSetTaskBaseline(node.id);
+                                }}
+                                className="px-2 py-1 bg-elevated hover:bg-card border border-border-custom text-foreground rounded text-[10px] font-semibold cursor-pointer whitespace-nowrap"
+                                title="Snapshot baseline for this task"
+                              >
+                                Set Baseline
+                              </button>
+                              <Icon name="arrow_forward" className="w-3.5 h-3.5 text-muted group-hover:text-foreground transition-all" />
+                            </div>
+                          </div>
+                          {node.children && node.children.length > 0 && renderTree(node.children, depth + 1)}
+                        </div>
+                      );
+                    });
+                  })(hierarchy)
+                )
               ) : (
                 tasks.map((task) => {
                   const pct = Math.min(100, Math.max(0, task.progress ?? 0));
@@ -952,7 +1255,20 @@ export default function GanttSchedulerPage() {
                       </div>
                     </div>
 
-                    <Icon name="arrow_forward" className="w-3.5 h-3.5 text-muted group-hover:text-foreground transition-all ml-3" />
+                    <div className="flex items-center gap-2 ml-3">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSetTaskBaseline(task.id);
+                        }}
+                        className="px-2 py-1 bg-elevated hover:bg-card border border-border-custom text-foreground rounded text-[10px] font-semibold cursor-pointer whitespace-nowrap"
+                        title="Snapshot baseline for this task"
+                      >
+                        Set Baseline
+                      </button>
+                      <Icon name="arrow_forward" className="w-3.5 h-3.5 text-muted group-hover:text-foreground transition-all" />
+                    </div>
                   </div>
                   );
                 })
