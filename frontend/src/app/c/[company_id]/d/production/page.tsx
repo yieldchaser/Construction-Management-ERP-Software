@@ -3,6 +3,7 @@ import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 import Icon from "@/components/marketing/Icon";
 import SegmentedTabs from "@/components/ui/Tabs";
+import { Badge } from "@/components/ui/Badge";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 
@@ -372,7 +373,7 @@ export default function ProductionPage() {
                       <span className="font-semibold text-success">{formatQty(totals.outputProgress, 1)}%</span>
                     </div>
                     <div className="h-2 rounded-full bg-elevated">
-                      <div className="h-2 rounded-full bg-gradient-to-r from-primary to-emerald-400" style={{ width: `${Math.min(totals.outputProgress, 100)}%` }} />
+                      <div className="h-2 rounded-full bg-success" style={{ width: `${Math.min(totals.outputProgress, 100)}%` }} />
                     </div>
                   </div>
 
@@ -385,7 +386,7 @@ export default function ProductionPage() {
                     </div>
                     <div className="h-2 rounded-full bg-elevated">
                       <div
-                        className={`h-2 rounded-full ${totals.materialVariancePct > 0 ? "bg-warning" : "bg-gradient-to-r from-primary to-primary"}`}
+                        className={`h-2 rounded-full ${totals.materialVariancePct > 0 ? "bg-warning" : "bg-primary"}`}
                         style={{ width: `${Math.min(Math.abs(totals.materialVariancePct), 100)}%` }}
                       />
                     </div>
@@ -394,22 +395,22 @@ export default function ProductionPage() {
 
                 <div className="mt-6 grid gap-4 md:grid-cols-2">
                   {(data?.batches ?? []).slice(0, 4).map((batch) => (
-                    <div key={batch.id} className="rounded-lg border border-border-custom bg-card p-4">
+                    <div key={batch.id} className="rounded-xl border border-border-custom bg-elevated p-4">
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-bold text-foreground">{batch.batch_number}</span>
                             {getLowStockMaterialsForBatch(batch).length > 0 && (
-                              <span className="inline-flex items-center gap-1 rounded bg-warning/10 px-2 py-0.5 text-[9px] font-medium text-warning border border-warning/25 shadow-sm">
-                                <Icon name="warning" className="w-3 h-3" /> Low Stock
-                              </span>
+                              <Badge tone="warning" icon="warning">
+                                Low Stock
+                              </Badge>
                             )}
                           </div>
                           <div className="mt-1 text-xs text-muted">{batch.product_name}</div>
                         </div>
-                        <span className="rounded-full bg-elevated px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
+                        <Badge tone="neutral">
                           {batch.status}
-                        </span>
+                        </Badge>
                       </div>
                       <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 text-center text-xs">
                         <div className="rounded-md bg-elevated p-2">
@@ -512,9 +513,9 @@ export default function ProductionPage() {
                           <div className="flex items-center gap-2">
                             <span className="font-semibold">{batch.batch_number}</span>
                             {getLowStockMaterialsForBatch(batch).length > 0 && (
-                              <span className="inline-flex items-center gap-1 rounded bg-warning/10 px-2 py-0.5 text-[9px] font-medium text-warning border border-warning/25 shadow-sm">
-                                <Icon name="warning" className="w-3 h-3" /> Low Stock
-                              </span>
+                              <Badge tone="warning" icon="warning">
+                                Low Stock
+                              </Badge>
                             )}
                           </div>
                           <div className="mt-1 text-[10px] text-muted">{batch.started_at ? new Date(batch.started_at).toLocaleString() : "No start time"}</div>
@@ -525,9 +526,9 @@ export default function ProductionPage() {
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
-                            <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${batch.status === 'completed' ? 'bg-success/10 text-success' : 'bg-white/5 text-muted'}`}>
+                            <Badge tone={batch.status === "completed" ? "success" : batch.status === "running" ? "primary" : "neutral"}>
                               {batch.status}
-                            </span>
+                            </Badge>
                             {batch.status === "running" && (
                               <button
                                 onClick={() => handleCompleteBatch(batch.id)}
@@ -610,13 +611,13 @@ export default function ProductionPage() {
                           {formatQty(item.on_hand_qty)} on hand · {formatQty(item.reserved_qty)} reserved
                         </div>
                       </div>
-                      <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${item.needs_reorder ? "bg-danger/10 text-danger" : "bg-success/10 text-success"}`}>
+                      <Badge tone={item.needs_reorder ? "danger" : "success"}>
                         {item.needs_reorder ? "Reorder" : "Healthy"}
-                      </span>
+                      </Badge>
                     </div>
                     <div className="mt-3 h-2 rounded-full bg-elevated">
                       <div
-                        className={`h-2 rounded-full ${item.needs_reorder ? "bg-danger" : "bg-gradient-to-r from-primary to-emerald-400"}`}
+                        className={`h-2 rounded-full ${item.needs_reorder ? "bg-danger" : "bg-success"}`}
                         style={{ width: `${Math.max(Math.min((item.available_qty / Math.max(item.on_hand_qty + item.reserved_qty, 1)) * 100, 100), 4)}%` }}
                       />
                     </div>

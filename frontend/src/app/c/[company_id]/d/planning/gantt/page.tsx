@@ -545,7 +545,7 @@ export default function GanttSchedulerPage() {
                   start: "border-info/20 bg-info/5",
                   handover: "border-success/20 bg-success/5",
                   inspection: "border-warning/20 bg-warning/5",
-                  payment: "border-sky-500/30 bg-sky-500/5",
+                  payment: "border-primary/30 bg-primary/5",
                   critical: "border-danger/20 bg-danger/5",
                 };
                 const statusCls = m.status === "achieved" ? "bg-success/10 border-success/20 text-success" : m.status === "delayed" ? "bg-danger/10 border-danger/20 text-danger" : "bg-elevated/30 border-border-custom/20 text-muted";
@@ -796,7 +796,7 @@ export default function GanttSchedulerPage() {
                 </div>
                 <button
                   type="submit"
-                  className="col-span-2 mt-2 bg-primary rounded-md py-2.5 font-bold text-white hover:opacity-90 transition-all shadow-lg shadow-primary/20 text-xs"
+                  className="col-span-2 mt-2 bg-primary rounded-md py-2.5 font-bold text-white hover:opacity-90 transition-all text-xs"
                 >
                   Save WBS Task
                 </button>
@@ -905,7 +905,7 @@ export default function GanttSchedulerPage() {
                       </div>
                     </div>
 
-                    <span className="text-muted font-bold group-hover:text-foreground transition-all ml-3">→</span>
+                    <Icon name="arrow_forward" className="w-3.5 h-3.5 text-muted group-hover:text-foreground transition-all ml-3" />
                   </div>
                   );
                 })
@@ -928,7 +928,7 @@ export default function GanttSchedulerPage() {
                 <span className="text-[9px] uppercase tracking-wider font-extrabold text-primary">WBS Task details</span>
                 <h2 className="text-base font-extrabold text-foreground mt-1">{selectedTask.name}</h2>
               </div>
-              <button onClick={() => setSelectedTask(null)} className="text-muted hover:text-foreground">✕ Close</button>
+              <button onClick={() => setSelectedTask(null)} className="text-muted hover:text-foreground cursor-pointer inline-flex items-center gap-1"><Icon name="close" className="w-3.5 h-3.5" /> Close</button>
             </div>
 
             {/* Content body */}
@@ -940,18 +940,21 @@ export default function GanttSchedulerPage() {
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    placeholder="Add new subtask item..."
+                    placeholder="e.g. Verify rebar cover blocks..."
                     value={newTodoTitle}
                     onChange={(e) => setNewTodoTitle(e.target.value)}
-                    className="flex-1 bg-input border border-border-custom rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none"
+                    onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddTodo())}
+                    className="flex-1 bg-input border border-border-custom rounded px-3 py-1.5 text-xs text-foreground placeholder:text-muted"
                   />
-                  <button onClick={handleAddTodo} className="px-4 py-2 bg-elevated border border-border-custom hover:bg-elevated text-foreground rounded-lg text-xs font-bold">
-                    + Todo
+                  <button
+                    onClick={handleAddTodo}
+                    className="px-3 py-1.5 bg-primary text-white rounded font-bold text-xs hover:opacity-90"
+                  >
+                    Add
                   </button>
                 </div>
-
-                <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
-                  {todos.map(todo => (
+                <div className="space-y-1.5 mt-2">
+                  {todos.map((todo) => (
                     <div key={todo.id} className="flex items-center justify-between p-2 rounded bg-elevated border border-border-custom">
                       <div className="flex items-center gap-2">
                         <input
@@ -964,7 +967,7 @@ export default function GanttSchedulerPage() {
                           {todo.title}
                         </span>
                       </div>
-                      <button onClick={() => handleDeleteTodo(todo.id)} className="text-muted hover:text-danger">✕</button>
+                      <button onClick={() => handleDeleteTodo(todo.id)} className="text-muted hover:text-danger cursor-pointer"><Icon name="close" className="w-3.5 h-3.5" /></button>
                     </div>
                   ))}
                   {todos.length === 0 && (

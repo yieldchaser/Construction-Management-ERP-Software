@@ -9,6 +9,7 @@ import PageHeader from "@/components/PageHeader";
 import SegmentedTabs from "@/components/ui/Tabs";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { TableSkeleton } from "@/components/ui/Skeleton";
+import Icon from "@/components/marketing/Icon";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -164,8 +165,8 @@ function Drawer({
       >
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-base font-semibold text-foreground">{title}</h3>
-          <button className="text-muted hover:text-foreground" onClick={onClose}>
-            ✕
+          <button className="text-muted hover:text-foreground cursor-pointer" onClick={onClose}>
+            <Icon name="close" className="w-5 h-5" />
           </button>
         </div>
         {children}
@@ -688,7 +689,7 @@ export default function CRMPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
-              <span className="pointer-events-none absolute left-2 top-2.5 text-muted">⌕</span>
+              <span className="pointer-events-none absolute left-2.5 top-2.5 text-muted"><Icon name="search" className="w-3.5 h-3.5" /></span>
             </div>
             <select className={filterCls} value={fAssignee} onChange={(e) => setFAssignee(e.target.value)}>
               <option value="">Assignee</option>
@@ -1110,7 +1111,7 @@ export default function CRMPage() {
                         <td className="p-1"><input type="number" className={inputCls + " px-1 py-1 w-20"} value={it.installation_rate} onChange={(e) => qSetItem(idx, { installation_rate: Number(e.target.value) })} /></td>
                         <td className="p-1"><input type="number" className={inputCls + " px-1 py-1 w-16"} value={it.markup} onChange={(e) => qSetItem(idx, { markup: Number(e.target.value) })} /></td>
                         <td className="p-1 whitespace-nowrap text-foreground">{fmtINR(itemBase(it), currencyDecimalPlaces)}</td>
-                        <td className="p-1"><button className={btnGhost} onClick={() => qDelItem(idx)}>✕</button></td>
+                        <td className="p-1"><button className={btnGhost} onClick={() => qDelItem(idx)}><Icon name="close" className="w-3.5 h-3.5" /></button></td>
                       </tr>
                     ))}
                   </tbody>

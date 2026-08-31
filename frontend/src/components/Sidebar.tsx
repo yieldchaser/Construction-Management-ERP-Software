@@ -571,7 +571,7 @@ export default function Sidebar() {
         <div className="flex flex-col overflow-y-auto flex-1 min-h-0">
           {/* Header */}
           <div className="p-3.5 flex items-center gap-3 border-b border-border-custom shrink-0">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary font-bold text-white text-sm shadow-sm">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary font-bold text-white text-sm">
               S
             </div>
             {(!desktopCollapsed || mobileOpen) && (

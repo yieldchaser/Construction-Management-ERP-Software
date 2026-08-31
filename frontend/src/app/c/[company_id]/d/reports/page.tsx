@@ -11,6 +11,7 @@ import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import { CardSkeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
+import Badge from "@/components/ui/Badge";
 
 interface ClientReport {
   id: string;
@@ -141,7 +142,7 @@ export default function ClientReportsPage() {
         >
           <button
             onClick={() => setIsOpen(true)}
-            className="flex items-center gap-2 rounded-md bg-primary px-3.5 py-1.5 text-xs font-bold text-white hover:opacity-90 transition-all shadow-md shadow-primary/20 cursor-pointer"
+            className="flex items-center gap-2 rounded-md bg-primary px-3.5 py-1.5 text-xs font-bold text-white hover:opacity-90 transition-all cursor-pointer"
           >
             + Generate Progress Report
           </button>
@@ -177,7 +178,7 @@ export default function ClientReportsPage() {
                   onClick={() => setSelectedReport(report)}
                   className={`p-3.5 rounded-md border transition-all cursor-pointer ${
                     selectedReport?.id === report.id
-                      ? "bg-primary/5 border-border-custom shadow-md shadow-primary/5"
+                      ? "bg-primary/5 border-border-custom"
                       : "bg-elevated/40 border-border-custom hover:bg-elevated"
                   }`}
                 >
@@ -185,15 +186,9 @@ export default function ClientReportsPage() {
                     <span className="text-xs font-semibold text-foreground line-clamp-2">
                       {report.report_name}
                     </span>
-                    <span
-                      className={`text-[9px] px-2 py-0.5 rounded-full shrink-0 font-bold ${
-                        report.is_approved
-                          ? "bg-success/10 text-success border border-success/20"
-                          : "bg-warning/10 text-warning border border-warning/20"
-                      }`}
-                    >
+                    <Badge tone={report.is_approved ? "success" : "warning"}>
                       {report.is_approved ? "Approved" : "Draft"}
-                    </span>
+                    </Badge>
                   </div>
                   <div className="text-[10px] text-muted mt-2">
                     {new Date(report.report_date).toLocaleDateString(undefined, {
@@ -221,9 +216,9 @@ export default function ClientReportsPage() {
                     {!selectedReport.is_approved && (
                       <button
                         onClick={() => handleApproveReport(selectedReport.id)}
-                        className="rounded-md bg-success/10 hover:bg-success/10 text-success border border-success/20 px-4 py-2 text-xs font-bold transition-all"
+                        className="rounded-md bg-success/10 hover:bg-success/20 text-success border border-success/20 px-4 py-2 text-xs font-bold transition-all inline-flex items-center gap-1.5 cursor-pointer"
                       >
-                        ✓ Approve for Client Portal
+                        <Icon name="check" className="w-3.5 h-3.5" /> Approve for Client Portal
                       </button>
                     )}
                     {selectedReport.pdf_url && selectedReport.pdf_url !== "#" && (
@@ -283,9 +278,9 @@ export default function ClientReportsPage() {
               </h3>
               <button
                 onClick={() => setIsOpen(false)}
-                className="text-muted hover:text-foreground text-sm"
+                className="text-muted hover:text-foreground cursor-pointer"
               >
-                ✕
+                <Icon name="close" className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={handleGenerateReport} className="p-5 space-y-4">

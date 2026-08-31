@@ -150,7 +150,7 @@ export default function DPRReportPage() {
           <button onClick={() => fetchReport()} className="p-2 bg-card hover:bg-elevated border border-border-custom rounded-lg text-xs cursor-pointer" title="Refresh">
             <Icon name="refresh" className="w-3.5 h-3.5" />
           </button>
-          <button onClick={handleExportDpr} className="px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg flex items-center gap-1.5 hover:bg-primary/90 transition-all cursor-pointer shadow-md">
+          <button onClick={handleExportDpr} className="px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg flex items-center gap-1.5 hover:bg-primary/90 transition-all cursor-pointer">
             <Icon name="outbox" className="w-3.5 h-3.5" /> Export CSV
           </button>
         </div>

@@ -421,7 +421,7 @@ export default function ReportsDashboard() {
               if (filteredReports.length === 0) return null;
 
               return (
-                <div key={category.title} className="bg-card border border-border-custom rounded-xl p-5 flex flex-col justify-between transition-all hover:border-border-custom/80 hover:shadow-md">
+                <div key={category.title} className="bg-card border border-border-custom rounded-xl p-5 flex flex-col justify-between transition-all hover:border-border-custom/80">
                   <div>
                     <div className="flex items-center gap-2 mb-4">
                       <Icon name={category.icon} className="w-4 h-4 text-muted" />
@@ -479,9 +479,9 @@ export default function ReportsDashboard() {
         {/* Dynamic Download Modal */}
         {showModal && selectedReport && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowModal(false)}>
-            <div className="bg-card border border-border-custom rounded-xl w-full max-w-md p-6 relative overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="bg-card border border-border-custom rounded-xl w-full max-w-md p-6 relative overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
               
-              <button onClick={() => setShowModal(false)} className="absolute top-4 right-4 text-muted hover:text-foreground text-lg">✕</button>
+              <button onClick={() => setShowModal(false)} className="absolute top-4 right-4 text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
 
               <div className="flex flex-col items-center text-center mt-2">
                 <span className="text-muted text-[10px] font-bold uppercase tracking-wider mb-1">Company Level Report</span>
@@ -553,9 +553,6 @@ export default function ReportsDashboard() {
                 </button>
                 <button onClick={() => setShowModal(false)} className="w-full py-2 text-xs text-muted hover:text-foreground transition-all">Cancel</button>
               </div>
-
-              {/* Decorative background blur */}
-              <div className="absolute -bottom-8 -right-8 w-24 h-24 bg-gradient-to-tr from-primary/10 to-transparent rounded-full blur-xl pointer-events-none"></div>
             </div>
           </div>
         )}

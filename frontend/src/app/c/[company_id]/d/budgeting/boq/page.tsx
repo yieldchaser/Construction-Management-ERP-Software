@@ -10,6 +10,7 @@ import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import SegmentedTabs from "@/components/ui/Tabs";
 import { EmptyState } from "@/components/ui/EmptyState";
+import Icon from "@/components/marketing/Icon";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface BOQItem {
@@ -48,12 +49,12 @@ interface BOQRevision {
 }
 
 const SECTION_COLORS: Record<string, string> = {
-  "1 — Civil Works": "bg-info/10 text-info border-info/20",
-  "2 — Structural": "bg-sky-500/10 text-sky-400 border-sky-500/20",
-  "3 — Masonry": "bg-warning/10 text-warning border-warning/20",
-  "4 — Finishes": "bg-success/10 text-success border-success/20",
-  "5 — MEP": "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",
-  "6 — Provisional / Contingency": "bg-elevated text-muted border-border-custom",
+  "1 — Civil Works": "bg-chart-1/10 text-chart-1 border-chart-1/20",
+  "2 — Structural": "bg-chart-2/10 text-chart-2 border-chart-2/20",
+  "3 — Masonry": "bg-chart-3/10 text-chart-3 border-chart-3/20",
+  "4 — Finishes": "bg-chart-4/10 text-chart-4 border-chart-4/20",
+  "5 — MEP": "bg-chart-5/10 text-chart-5 border-chart-5/20",
+  "6 — Provisional / Contingency": "bg-chart-6/10 text-chart-6 border-chart-6/20",
 };
 
 function fmt(n: number) { return "₹" + n.toLocaleString("en-IN"); }
@@ -331,8 +332,8 @@ export default function BOQPage() {
             {overallPct > 0 ? "+" : ""}{overallPct.toFixed(1)}% overall variance
           </div>
           {/* Import trigger */}
-          <label className="px-3.5 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:opacity-90 cursor-pointer transition-all">
-            ↑ Import Excel
+          <label className="px-3.5 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:opacity-90 cursor-pointer transition-all inline-flex items-center gap-1.5">
+            <Icon name="arrow_up" className="w-3.5 h-3.5" /> Import Excel
             <input type="file" accept=".xlsx,.xlsm" className="hidden" onChange={e => { if (e.target.files?.[0]) { setFile(e.target.files[0]); handleImport(new Event("submit") as any); } }} />
           </label>
         </div>

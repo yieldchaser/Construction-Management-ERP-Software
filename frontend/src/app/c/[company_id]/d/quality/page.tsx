@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
 import Icon, { type IconName } from "@/components/marketing/Icon";
 import SegmentedTabs from "@/components/ui/Tabs";
+import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 
@@ -23,7 +24,8 @@ interface Checklist {
   id: string;
   title: string;
   category: string;
-  isCode: string;
+  stage?: string;
+  isCode?: string;
   items: ChecklistItem[];
 }
 
@@ -35,14 +37,17 @@ interface InspectionResponse {
 
 interface Inspection {
   id: string;
-  zone: string;
   checklist: string;
+  category: string;
+  stage: string;
+  zone: string;
   date: string;
-  status: "pending" | "pass" | "fail" | "partial";
+  inspector: string;
+  status: "pass" | "fail" | "partial" | "pending";
   passCount: number;
   failCount: number;
   naCount: number;
-  inspector: string;
+  remarks?: string;
 }
 
 interface NCR {
@@ -74,26 +79,26 @@ interface LabTest {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const severityColors: Record<string, string> = {
-  Critical: "bg-danger/10 text-danger border-danger/25",
-  Major: "bg-warning/10 text-warning border-warning/25",
-  Minor: "bg-warning/10 text-warning border-warning/25",
+const severityTones: Record<string, BadgeTone> = {
+  Critical: "danger",
+  Major: "warning",
+  Minor: "info",
 };
 
-const statusColors: Record<string, string> = {
-  open: "bg-danger/10 text-danger border-danger/20",
-  under_review: "bg-info/10 text-info border-info/20",
-  closed: "bg-success/10 text-success border-success/20",
-  pass: "bg-success/10 text-success border-success/20",
-  fail: "bg-danger/10 text-danger border-danger/20",
-  partial: "bg-warning/10 text-warning border-warning/20",
-  pending: "bg-elevated text-muted border-border-custom",
+const statusTones: Record<string, BadgeTone> = {
+  open: "danger",
+  under_review: "info",
+  closed: "success",
+  pass: "success",
+  fail: "danger",
+  partial: "warning",
+  pending: "neutral",
 };
 
-const badge = (label: string, cls: string) => (
-  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${cls}`}>
+const badge = (label: string, tone?: BadgeTone) => (
+  <Badge tone={tone || "neutral"}>
     {label}
-  </span>
+  </Badge>
 );
 
 const passRate = (p: number, f: number) => {
@@ -458,12 +463,12 @@ isCode: cl.is_code_reference || "—",
           <div>
             {tab === "ncr" && (
               <button onClick={() => setShowNCRForm(true)}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-all shadow-md cursor-pointer">
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-all cursor-pointer">
                 + Raise NCR
               </button>
             )}
             {tab === "inspections" && (
-              <button onClick={() => setShowInspForm(true)} className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-all shadow-md cursor-pointer">
+              <button onClick={() => setShowInspForm(true)} className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-all cursor-pointer">
                 + New Inspection
               </button>
             )}
@@ -553,70 +558,75 @@ isCode: cl.is_code_reference || "—",
                       className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs text-foreground"
                     >
                       <option value="all">All Statuses</option>
-                      {inspectionStatusOptions.map((status) => (
-                        <option key={status} value={status}>{status.replace("_", " ")}</option>
-                      ))}
+                      <option value="pass">Pass</option>
+                      <option value="fail">Fail</option>
+                      <option value="partial">Partial</option>
+                      <option value="pending">Pending</option>
                     </select>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-card border border-border-custom rounded-md overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs text-left">
-                    <thead className="bg-elevated border-b border-border-custom">
+              <div className="border border-border-custom rounded-lg overflow-hidden bg-card">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-border-custom bg-elevated/50 text-muted text-left">
+                      <th className="px-5 py-3 font-semibold">Zone / Location</th>
+                      <th className="px-5 py-3 font-semibold">Checklist</th>
+                      <th className="px-5 py-3 font-semibold">Date</th>
+                      <th className="px-5 py-3 font-semibold">Inspector</th>
+                      <th className="px-5 py-3 font-semibold">Pass Rate</th>
+                      <th className="px-5 py-3 font-semibold">Status</th>
+                      <th className="px-5 py-3 font-semibold text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredInspections.length === 0 ? (
                       <tr>
-                        <th className="px-5 py-3 font-semibold">Zone</th>
-                        <th className="px-5 py-3 font-semibold">Checklist</th>
-                        <th className="px-5 py-3 font-semibold">Date</th>
-                        <th className="px-5 py-3 font-semibold">Inspected By</th>
-                        <th className="px-5 py-3 font-semibold">Pass / Fail</th>
-                        <th className="px-5 py-3 font-semibold">Status</th>
-                        <th className="px-5 py-3 font-semibold text-right">Action</th>
+                        <td colSpan={7} className="px-5 py-8 text-center text-muted">
+                          No inspections match the filter.
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {filteredInspections.length === 0 ? (
-                        <tr>
-                          <td colSpan={7} className="px-5 py-10 text-center text-muted">No inspections match the current filters.</td>
-                        </tr>
-                      ) : (
-                        filteredInspections.map((insp) => {
-                          const rate = passRate(insp.passCount, insp.failCount);
-                          return (
-                            <tr key={insp.id} className="border-b border-border-custom hover:bg-elevated transition-all">
-                              <td className="px-5 py-3 font-bold text-foreground">{insp.zone}</td>
-                              <td className="px-5 py-3 text-foreground">{insp.checklist}</td>
-                              <td className="px-5 py-3 text-muted">{insp.date}</td>
-                              <td className="px-5 py-3 text-muted">{insp.inspector}</td>
-                              <td className="px-5 py-3">
-                                <div className="flex items-center gap-3">
-                                  <div className="flex-1 h-1.5 bg-elevated rounded-full overflow-hidden max-w-28">
-                                    <div className="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-full" style={{ width: `${rate}%` }} />
-                                  </div>
-                                  <div className="text-[10px] text-muted whitespace-nowrap">
-                                    <span className="text-success font-bold">✓ {insp.passCount}</span>
-                                    <span className="mx-1">/</span>
-                                    <span className="text-danger font-bold">✕ {insp.failCount}</span>
-                                  </div>
+                    ) : (
+                      filteredInspections.map((insp) => {
+                        const rate = passRate(insp.passCount, insp.failCount);
+                        return (
+                          <tr key={insp.id} className="border-b border-border-custom hover:bg-elevated transition-all">
+                            <td className="px-5 py-3 font-bold text-foreground">{insp.zone}</td>
+                            <td className="px-5 py-3 text-foreground">{insp.checklist}</td>
+                            <td className="px-5 py-3 text-muted">{insp.date}</td>
+                            <td className="px-5 py-3 text-muted">{insp.inspector}</td>
+                            <td className="px-5 py-3">
+                              <div className="flex items-center gap-3">
+                                <div className="flex-1 h-1.5 bg-elevated rounded-full overflow-hidden max-w-28">
+                                  <div className="h-full bg-success rounded-full" style={{ width: `${rate}%` }} />
                                 </div>
-                              </td>
-                              <td className="px-5 py-3">{badge(insp.status.replace("_", " "), statusColors[insp.status])}</td>
-                              <td className="px-5 py-3 text-right">
-                                <button
-                                  onClick={() => setSelectedInspection(insp)}
-                                  className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-[10px] font-bold border border-primary/20 hover:bg-primary/20 cursor-pointer"
-                                >
-                                  View
-                                </button>
-                              </td>
-                            </tr>
-                          );
-                        })
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                                <div className="text-[10px] text-muted whitespace-nowrap">
+                                  <span className="text-success font-bold inline-flex items-center gap-1">
+                                    <Icon name="check" className="w-3 h-3" /> {insp.passCount}
+                                  </span>
+                                  <span className="mx-1">/</span>
+                                  <span className="text-danger font-bold inline-flex items-center gap-1">
+                                    <Icon name="close" className="w-3 h-3" /> {insp.failCount}
+                                  </span>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-5 py-3">{badge(insp.status.replace("_", " "), statusTones[insp.status])}</td>
+                            <td className="px-5 py-3 text-right">
+                              <button
+                                onClick={() => setSelectedInspection(insp)}
+                                className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-[10px] font-bold border border-primary/20 hover:bg-primary/20 cursor-pointer"
+                              >
+                                View
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           )}
@@ -624,58 +634,52 @@ isCode: cl.is_code_reference || "—",
           {/* ── CHECKLISTS ──────────────────────────────────────────────────── */}
           {tab === "checklists" && (
             <div className="space-y-4">
-              {checklists.map(cl => (
-                <div key={cl.id} className="bg-card border border-border-custom rounded-md overflow-hidden">
-                  <div className="px-5 py-4 border-b border-border-custom flex items-center justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted font-mono">{checklists.length} standard checklist{checklists.length !== 1 ? "s" : ""} (IS compliant)</span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {checklists.map((cl) => (
+                  <div key={cl.id} className="bg-card border border-border-custom rounded-lg p-5 flex flex-col justify-between space-y-4">
                     <div>
-                      <p className="font-bold text-foreground">{cl.title}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[10px] bg-info/10 text-info border border-info/20 px-2 py-0.5 rounded-full font-bold">{cl.category}</span>
-                        <span className="text-[10px] bg-sky-500/10 text-sky-400 border border-sky-500/20 px-2 py-0.5 rounded-full font-bold">{cl.isCode}</span>
-                        <span className="text-[10px] text-muted">{cl.items.length} items</span>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[10px] uppercase font-bold text-muted tracking-wider">{cl.category}</span>
+                        <span className="text-[10px] text-primary font-mono font-bold bg-primary/10 px-2 py-0.5 rounded border border-primary/20">{cl.isCode}</span>
                       </div>
+                      <h3 className="font-bold text-foreground text-sm leading-snug">{cl.title}</h3>
+                      <p className="text-xs text-muted mt-1">{cl.items.length} mandatory IS check points</p>
                     </div>
+
+                    <div className="space-y-1.5 border-t border-border-custom pt-3">
+                      {cl.items.slice(0, 3).map((item) => (
+                        <div key={item.id} className="text-[10px] text-muted flex items-start gap-1.5">
+                          <span className="text-primary font-bold">{item.sequence}.</span>
+                          <span className="line-clamp-1">{item.description}</span>
+                        </div>
+                      ))}
+                      {cl.items.length > 3 && (
+                        <p className="text-[9px] text-muted italic">+{cl.items.length - 3} more checkpoints</p>
+                      )}
+                    </div>
+
                     <button
                       onClick={() => {
                         setInspForm(prev => ({ ...prev, checklistId: cl.id }));
                         setShowInspForm(true);
                       }}
-                      className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-bold border border-primary/20 hover:bg-primary/20 cursor-pointer"
+                      className="w-full py-2 rounded-lg bg-elevated hover:bg-elevated/80 border border-border-custom text-foreground text-xs font-bold transition-all cursor-pointer"
                     >
-                      Use Template
+                      Start Inspection
                     </button>
                   </div>
-                  <table className="w-full text-xs">
-                    <thead className="bg-elevated border-b border-border-custom">
-                      <tr>
-                        {["#", "Checkpoint", "Acceptable Criteria", "Mandatory"].map(h => (
-                          <th key={h} className="text-left px-4 py-2 text-[10px] font-bold text-muted uppercase tracking-wider">{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border-custom">
-                      {cl.items.map(item => (
-                        <tr key={item.id} className="hover:bg-elevated">
-                          <td className="px-4 py-2.5 text-muted font-sans">{item.sequence}</td>
-                          <td className="px-4 py-2.5 text-foreground">{item.description}</td>
-                          <td className="px-4 py-2.5 text-muted">{item.criteria}</td>
-                          <td className="px-4 py-2.5">
-                            {item.mandatory
-                              ? <span className="text-danger font-bold text-[10px]">MANDATORY</span>
-                              : <span className="text-muted text-[10px]">Optional</span>}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
 
-          {/* ── NCR KANBAN ──────────────────────────────────────────────────── */}
+          {/* ── NCR TRACKER ─────────────────────────────────────────────────── */}
           {tab === "ncr" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               {/* Open */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2 mb-3">
@@ -686,14 +690,14 @@ isCode: cl.is_code_reference || "—",
                 {openNCRs.map(ncr => (
                   <div key={ncr.id} className="bg-card border border-danger/10 rounded-md p-4 space-y-2">
                     <div className="flex items-center justify-between">
-                      {badge(ncr.severity, severityColors[ncr.severity])}
+                      {badge(ncr.severity, severityTones[ncr.severity])}
                       <span className="text-[10px] text-muted font-sans">{ncr.number}</span>
                     </div>
                     <p className="text-xs font-semibold text-foreground leading-snug">{ncr.title}</p>
                     <p className="text-[10px] text-muted">{ncr.zone} · Due {ncr.dueDate}</p>
                     <button onClick={() => moveNCR(ncr.id, "under_review")}
-                      className="w-full text-[10px] py-1 rounded bg-info/10 text-info border border-info/20 hover:bg-info/10 font-bold transition-all cursor-pointer">
-                      → Move to Review
+                      className="w-full text-[10px] py-1 rounded bg-info/10 text-info border border-info/20 hover:bg-info/20 font-bold transition-all cursor-pointer inline-flex items-center justify-center gap-1">
+                      <Icon name="arrow_forward" className="w-3 h-3" /> Move to Review
                     </button>
                   </div>
                 ))}
@@ -709,14 +713,14 @@ isCode: cl.is_code_reference || "—",
                 {reviewNCRs.map(ncr => (
                   <div key={ncr.id} className="bg-card border border-info/10 rounded-md p-4 space-y-2">
                     <div className="flex items-center justify-between">
-                      {badge(ncr.severity, severityColors[ncr.severity])}
+                      {badge(ncr.severity, severityTones[ncr.severity])}
                       <span className="text-[10px] text-muted font-sans">{ncr.number}</span>
                     </div>
                     <p className="text-xs font-semibold text-foreground leading-snug">{ncr.title}</p>
                     <p className="text-[10px] text-muted">{ncr.zone} · Due {ncr.dueDate}</p>
                     <button onClick={() => moveNCR(ncr.id, "closed")}
-                      className="w-full text-[10px] py-1 rounded bg-success/10 text-success border border-success/20 hover:bg-success/10 font-bold transition-all cursor-pointer">
-                      ✓ Close NCR
+                      className="w-full text-[10px] py-1 rounded bg-success/10 text-success border border-success/20 hover:bg-success/20 font-bold transition-all cursor-pointer inline-flex items-center justify-center gap-1">
+                      <Icon name="check" className="w-3 h-3" /> Close NCR
                     </button>
                   </div>
                 ))}
@@ -732,12 +736,12 @@ isCode: cl.is_code_reference || "—",
                 {closedNCRs.map(ncr => (
                   <div key={ncr.id} className="bg-card border border-success/10 rounded-md p-4 space-y-2 opacity-70">
                     <div className="flex items-center justify-between">
-                      {badge(ncr.severity, severityColors[ncr.severity])}
+                      {badge(ncr.severity, severityTones[ncr.severity])}
                       <span className="text-[10px] text-muted font-sans">{ncr.number}</span>
                     </div>
                     <p className="text-xs font-semibold text-foreground leading-snug">{ncr.title}</p>
                     <p className="text-[10px] text-muted italic">{ncr.resolution}</p>
-                    {badge("Closed", statusColors["closed"])}
+                    {badge("Closed", statusTones["closed"])}
                   </div>
                 ))}
               </div>
@@ -749,52 +753,61 @@ isCode: cl.is_code_reference || "—",
             <div className="space-y-4">
               {/* Summary row */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-2">
-                {[
-                  { label: "Total Tests", val: labTests.length, color: "text-foreground" },
-                  { label: "Passed", val: labTests.filter(t => t.pass === true).length, color: "text-success" },
-                  { label: "Failed", val: labTests.filter(t => t.pass === false).length, color: "text-danger" },
-                  { label: "Pass Rate", val: (() => { const ev = labTests.filter(t => t.pass != null); return ev.length ? `${Math.round(ev.filter(t => t.pass).length / ev.length * 100)}%` : "0%"; })(), color: "text-primary" },
-                ].map(({ label, val, color }) => (
-                  <div key={label} className="bg-card border border-border-custom rounded-md p-4">
-                    <p className="text-[10px] text-muted uppercase font-bold tracking-wider mb-1">{label}</p>
-                    <p className={`text-2xl font-bold ${color}`}>{val}</p>
-                  </div>
-                ))}
+                <div className="bg-card border border-border-custom rounded-lg p-4">
+                  <p className="text-[10px] text-muted uppercase font-bold tracking-wider">Total Tests</p>
+                  <p className="text-2xl font-bold text-foreground mt-1">{labTests.length}</p>
+                  <p className="text-[10px] text-muted mt-0.5">Logged to date</p>
+                </div>
+                <div className="bg-card border border-border-custom rounded-lg p-4">
+                  <p className="text-[10px] text-success uppercase font-bold tracking-wider">Passed</p>
+                  <p className="text-2xl font-bold text-success mt-1">{labTests.filter(t => t.pass === true).length}</p>
+                  <p className="text-[10px] text-muted mt-0.5">Compliant with IS code</p>
+                </div>
+                <div className="bg-card border border-border-custom rounded-lg p-4">
+                  <p className="text-[10px] text-danger uppercase font-bold tracking-wider">Failed</p>
+                  <p className="text-2xl font-bold text-danger mt-1">{labTests.filter(t => t.pass === false).length}</p>
+                  <p className="text-[10px] text-muted mt-0.5">NCR required</p>
+                </div>
+                <div className="bg-card border border-border-custom rounded-lg p-4">
+                  <p className="text-[10px] text-warning uppercase font-bold tracking-wider">Pending Results</p>
+                  <p className="text-2xl font-bold text-warning mt-1">{labTests.filter(t => t.pass === null).length}</p>
+                  <p className="text-[10px] text-muted mt-0.5">7 / 28-day curing in progress</p>
+                </div>
               </div>
 
-              <div className="bg-card border border-border-custom rounded-md overflow-hidden">
-                <div className="px-5 py-3 border-b border-border-custom flex items-center justify-between">
-                  <span className="text-xs font-bold text-foreground">Test Results Log</span>
-                  <button onClick={() => setShowTestForm(true)} className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-bold border border-primary/20 hover:bg-primary/20 cursor-pointer">+ Log Test</button>
-                </div>
+              {/* Lab tests table */}
+              <div className="border border-border-custom rounded-lg overflow-hidden bg-card">
                 <table className="w-full text-xs">
-                  <thead className="bg-elevated border-b border-border-custom">
-                    <tr>
-                      {["Test Type", "Material", "Sample Ref", "Date", "Result", "Range", "Zone", "Status"].map(h => (
-                        <th key={h} className="text-left px-4 py-2.5 text-[10px] font-bold text-muted uppercase tracking-wider">{h}</th>
-                      ))}
+                  <thead>
+                    <tr className="border-b border-border-custom bg-elevated/50 text-muted text-left">
+                      <th className="px-5 py-3 font-semibold">Test Type</th>
+                      <th className="px-5 py-3 font-semibold">Material</th>
+                      <th className="px-5 py-3 font-semibold">Sample Ref</th>
+                      <th className="px-5 py-3 font-semibold">Zone</th>
+                      <th className="px-5 py-3 font-semibold">Date</th>
+                      <th className="px-5 py-3 font-semibold">Result Value</th>
+                      <th className="px-5 py-3 font-semibold">IS Spec Range</th>
+                      <th className="px-5 py-3 font-semibold text-right">Status</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border-custom">
-                    {labTests.map(t => (
-                      <tr key={t.id} className="hover:bg-elevated transition-colors">
-                        <td className="px-4 py-3 font-semibold text-foreground">{t.type}</td>
-                        <td className="px-4 py-3 text-muted">{t.material}</td>
-                        <td className="px-4 py-3 font-sans text-muted text-[10px]">{t.sampleRef}</td>
-                        <td className="px-4 py-3 text-muted">{t.date}</td>
-                        <td className="px-4 py-3">
-                          <span className={`font-bold text-sm ${t.pass == null ? "text-muted" : t.pass ? "text-success" : "text-danger"}`}>
-                            {t.value} {t.unit}
-                          </span>
+                  <tbody>
+                    {labTests.map((t) => (
+                      <tr key={t.id} className="border-b border-border-custom hover:bg-elevated transition-all">
+                        <td className="px-5 py-3 font-bold text-foreground">{t.type}</td>
+                        <td className="px-5 py-3 text-muted">{t.material}</td>
+                        <td className="px-5 py-3 font-mono text-[10px] text-muted">{t.sampleRef}</td>
+                        <td className="px-5 py-3 text-muted">{t.zone}</td>
+                        <td className="px-5 py-3 text-muted">{t.date}</td>
+                        <td className="px-5 py-3 font-bold text-foreground">
+                          {t.value > 0 ? `${t.value} ${t.unit}` : "—"}
                         </td>
-                        <td className="px-4 py-3 text-muted">{t.min != null && t.max != null ? `${t.min}–${t.max} ${t.unit}` : "—"}</td>
-                        <td className="px-4 py-3 text-muted">{t.zone}</td>
-                        <td className="px-4 py-3">
-                          {t.pass == null
-                            ? <span className="flex items-center gap-1 text-muted font-bold text-[10px]"><span className="h-1.5 w-1.5 rounded-full bg-elevated" />Not evaluated</span>
-                            : t.pass
-                              ? <span className="flex items-center gap-1 text-success font-bold text-[10px]"><span className="h-1.5 w-1.5 rounded-full bg-success" />PASS</span>
-                              : <span className="flex items-center gap-1 text-danger font-bold text-[10px]"><span className="h-1.5 w-1.5 rounded-full bg-danger" />FAIL</span>}
+                        <td className="px-5 py-3 text-muted">
+                          {t.min !== null && t.max !== null
+                            ? `${t.min} – ${t.max} ${t.unit}`
+                            : "—"}
+                        </td>
+                        <td className="px-5 py-3 text-right">
+                          {t.pass === null ? badge("Pending", "warning") : t.pass ? badge("Pass", "success") : badge("Fail", "danger")}
                         </td>
                       </tr>
                     ))}
@@ -817,12 +830,12 @@ isCode: cl.is_code_reference || "—",
                 <h2 className="font-bold text-foreground">{selectedInspection.zone}</h2>
                 <p className="text-xs text-muted">{selectedInspection.checklist} · {selectedInspection.date}</p>
               </div>
-              <button onClick={() => setSelectedInspection(null)} className="text-muted hover:text-foreground text-xl cursor-pointer">✕</button>
+              <button onClick={() => setSelectedInspection(null)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
 
             <div className="flex items-center gap-4 mb-5">
               <div className="flex-1 h-2 bg-elevated rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full"
+                <div className="h-full bg-success rounded-full"
                   style={{ width: `${passRate(selectedInspection.passCount, selectedInspection.failCount)}%` }} />
               </div>
               <span className="text-sm font-bold text-foreground">{passRate(selectedInspection.passCount, selectedInspection.failCount)}%</span>
@@ -842,7 +855,7 @@ isCode: cl.is_code_reference || "—",
             </div>
 
             <div className="mb-4">
-              {badge(selectedInspection.status, statusColors[selectedInspection.status])}
+              {badge(selectedInspection.status, statusTones[selectedInspection.status])}
             </div>
 
             {/* Checklist Checkpoints Audit Form */}

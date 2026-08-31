@@ -920,7 +920,9 @@ export default function ProcurementPage() {
                   <p className="text-[10px] text-muted mt-1 max-w-lg">GRNs received from vendors but not yet linked to a Material Purchase invoice. Review and mark as billed to reconcile Accounts Payable. Unmatched GRNs inflate stock figures without a corresponding payable.</p>
                 </div>
                 {unbilledGRNs.length === 0 && (
-                  <span className="text-[10px] px-3 py-1.5 bg-success/10 border border-success/20 text-success rounded-full font-bold">✓ All GRNs Reconciled</span>
+                  <span className="inline-flex items-center gap-1 text-[10px] px-3 py-1.5 bg-success/10 border border-success/20 text-success rounded-full font-bold">
+                    <Icon name="check" className="w-3.5 h-3.5" /> All GRNs Reconciled
+                  </span>
                 )}
               </div>
 
@@ -993,16 +995,16 @@ export default function ProcurementPage() {
                               </td>
                               <td className="px-5 py-3 text-center">
                                 <span className={`inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full border ${threeWay.match ? "bg-success/10 border-success/20 text-success" : "bg-danger/10 border-danger/20 text-danger"}`}>
-                                  {threeWay.match ? "✓" : <Icon name="warning" className="w-3 h-3" />} {threeWay.text}
+                                  {threeWay.match ? <Icon name="check" className="w-3 h-3 text-success" /> : <Icon name="warning" className="w-3 h-3" />} {threeWay.text}
                                 </span>
                               </td>
                               <td className="px-5 py-3 text-right font-sans font-bold text-warning">₹{grnValue.toLocaleString("en-IN")}</td>
                               <td className="px-5 py-3 text-right">
                                 <button
                                   onClick={() => handleMarkAsBilled(grn.id)}
-                                  className="px-3 py-1.5 text-[10px] font-bold bg-success/10 hover:bg-success/10 border border-success/20 text-success rounded-lg transition-all"
+                                  className="px-3 py-1.5 text-[10px] font-bold bg-success/10 hover:bg-success/20 border border-success/20 text-success rounded-lg transition-all inline-flex items-center gap-1 cursor-pointer"
                                 >
-                                  ✓ Mark as Billed
+                                  <Icon name="check" className="w-3 h-3" /> Mark as Billed
                                 </button>
                               </td>
                             </tr>
@@ -1017,7 +1019,9 @@ export default function ProcurementPage() {
               {/* Already-billed GRNs reference section */}
               {grns.filter(g => g.isBilled).length > 0 && (
                 <div className="mt-6">
-                  <h3 className="text-[10px] uppercase font-bold text-muted tracking-wider mb-3">✓ Reconciled GRNs (Billed)</h3>
+                  <h3 className="text-[10px] uppercase font-bold text-muted tracking-wider mb-3 inline-flex items-center gap-1">
+                    <Icon name="check" className="w-3 h-3" /> Reconciled GRNs (Billed)
+                  </h3>
                   <div className="bg-background border border-border-custom rounded-lg overflow-hidden opacity-60">
                     <table className="w-full text-xs">
                       <tbody>
@@ -1048,7 +1052,7 @@ export default function ProcurementPage() {
           <div className="bg-background border border-border-custom rounded-lg w-full max-w-md shadow-2xl p-6 space-y-4 text-xs">
             <div className="flex justify-between items-center border-b border-border-custom pb-2">
               <h3 className="text-xs font-extrabold text-foreground">Create Material Indent (Requisition)</h3>
-              <button onClick={() => setShowIndentModal(false)} className="text-muted hover:text-foreground">✕</button>
+              <button onClick={() => setShowIndentModal(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
 
             <div className="space-y-3">
@@ -1102,7 +1106,7 @@ export default function ProcurementPage() {
                 <h3 className="text-xs font-extrabold text-foreground">Record Goods Receipt Note (GRN)</h3>
                 <p className="text-[10px] text-muted mt-0.5">PO: {selectedPOForGRN.poNumber} · Vendor: {selectedPOForGRN.vendor}</p>
               </div>
-              <button onClick={() => { setShowGRNModal(false); setSelectedPOForGRN(null); }} className="text-muted hover:text-foreground">✕</button>
+              <button onClick={() => { setShowGRNModal(false); setSelectedPOForGRN(null); }} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
 
             <div className="space-y-3">
@@ -1162,7 +1166,7 @@ export default function ProcurementPage() {
           <div className="bg-background border border-border-custom rounded-lg w-full max-w-md shadow-2xl p-6 space-y-4 text-xs">
             <div className="flex justify-between items-center border-b border-border-custom pb-2">
               <h3 className="text-xs font-extrabold text-foreground">Log Site Material Usage</h3>
-              <button onClick={() => setShowUseModal(false)} className="text-muted hover:text-foreground">✕</button>
+              <button onClick={() => setShowUseModal(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
 
             <div className="space-y-3">
@@ -1201,7 +1205,7 @@ export default function ProcurementPage() {
           <div className="bg-background border border-border-custom rounded-lg w-full max-w-md shadow-2xl p-6 space-y-4 text-xs font-sans max-h-[85vh] overflow-y-auto">
             <div className="flex justify-between items-center border-b border-border-custom pb-2">
               <h3 className="text-xs font-extrabold text-foreground">Create Purchase Order (PO)</h3>
-              <button onClick={() => setShowPOModal(false)} className="text-muted hover:text-foreground">✕</button>
+              <button onClick={() => setShowPOModal(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
 
             <div className="space-y-3">
@@ -1230,7 +1234,7 @@ export default function ProcurementPage() {
                 {poFormItems.map((item, idx) => (
                   <div key={idx} className="bg-elevated p-3 rounded-lg border border-border-custom space-y-2 relative">
                     <button type="button" onClick={() => setPoFormItems(poFormItems.filter((_, i) => i !== idx))}
-                      className="absolute top-2 right-2 text-muted hover:text-danger">✕</button>
+                      className="absolute top-2 right-2 text-muted hover:text-danger cursor-pointer"><Icon name="close" className="w-4 h-4" /></button>
                     <div className="space-y-1">
                       <label className="text-muted text-[9px]">Item Name</label>
                       <select value={item.name}
@@ -1290,7 +1294,7 @@ export default function ProcurementPage() {
                 <span className="text-[9px] uppercase tracking-wider font-extrabold text-primary">RFQ Analysis Center</span>
                 <h2 className="text-base font-extrabold text-foreground mt-1">Vendor Quote Comparisons</h2>
               </div>
-              <button onClick={() => setShowRFQDrawer(false)} className="text-muted hover:text-foreground">✕ Close</button>
+              <button onClick={() => setShowRFQDrawer(false)} className="text-muted hover:text-foreground cursor-pointer inline-flex items-center gap-1"><Icon name="close" className="w-4 h-4" /> Close</button>
             </div>
 
             <div className="flex-1 p-6 overflow-y-auto space-y-6">
@@ -1317,7 +1321,7 @@ export default function ProcurementPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-end mb-2">
-              <button onClick={() => setPreviewUrl(null)} className="text-muted hover:text-foreground font-bold text-lg leading-none">×</button>
+              <button onClick={() => setPreviewUrl(null)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
             <img src={previewUrl} className="max-h-[70vh] rounded-lg mx-auto" alt="Item photo proof" />
           </div>

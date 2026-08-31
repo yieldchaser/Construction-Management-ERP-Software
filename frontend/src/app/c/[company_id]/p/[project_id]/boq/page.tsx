@@ -8,6 +8,7 @@ import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import { TableSkeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
+import Icon from "@/components/marketing/Icon";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type BOQDocument = {
@@ -674,8 +675,8 @@ export default function BoqTab() {
           <div className="w-full max-w-md rounded-lg border border-border-custom bg-card p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-foreground">New BOQ Document</h3>
-              <button onClick={() => setShowAdd(false)} className="text-muted hover:text-foreground">
-                ✕
+              <button onClick={() => setShowAdd(false)} className="text-muted hover:text-foreground cursor-pointer">
+                <Icon name="close" className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={createDoc} className="space-y-4">

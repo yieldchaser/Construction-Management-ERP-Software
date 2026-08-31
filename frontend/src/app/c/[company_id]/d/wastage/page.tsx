@@ -118,7 +118,7 @@ export default function WastagePage() {
       >
         <button
           onClick={() => { setShowModal(true); setMessage(""); }}
-          className="px-3.5 py-1.5 bg-primary hover:bg-primary/90 text-white rounded-md text-xs font-semibold transition-all cursor-pointer shadow-md"
+          className="px-3.5 py-1.5 bg-primary hover:bg-primary/90 text-white rounded-md text-xs font-semibold transition-all cursor-pointer"
         >
           + Record Wastage
         </button>

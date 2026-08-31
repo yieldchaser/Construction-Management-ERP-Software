@@ -11,6 +11,7 @@ import PageHeader from '@/components/PageHeader';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Skeleton, CardSkeleton } from '@/components/ui/Skeleton';
 import SegmentedTabs from '@/components/ui/Tabs';
+import { Badge, type BadgeTone } from '@/components/ui/Badge';
 
 const API = `${getApiHost()}/apis/v3`;
 
@@ -64,24 +65,41 @@ interface PPECheck {
   non_compliant_items: string[];
 }
 
-const SEVERITY_COLOR: Record<string, string> = {
-  Critical: 'color-mix(in srgb, var(--danger) 15%, transparent)',
-  High:     'color-mix(in srgb, var(--warning) 15%, transparent)',
-  Medium:   'color-mix(in srgb, var(--chart-3) 15%, transparent)',
-  Low:      'color-mix(in srgb, var(--success) 15%, transparent)',
-};
-const SEVERITY_BORDER: Record<string, string> = {
-  Critical: 'var(--danger)',
-  High:     'var(--warning)',
-  Medium:   'var(--chart-3)',
-  Low:      'var(--success)',
-};
-const TYPE_COLOR: Record<string, string> = {
-  'Near Miss': 'var(--primary)',
-  'First Aid': 'var(--info)',
-  LTI:         'var(--warning)',
-  Fatal:       'var(--danger)',
-};
+function getIncidentTypeTone(type?: string): BadgeTone {
+  const norm = (type || "").trim().toLowerCase();
+  if (norm === "fatal" || norm === "fatality") return "danger";
+  if (norm === "lti" || norm === "lost time injury" || norm === "lost time") return "warning";
+  if (norm === "first aid" || norm === "firstaid") return "info";
+  if (norm === "near miss" || norm === "nearmiss") return "primary";
+  return "neutral";
+}
+
+function getSeverityTone(sev?: string): BadgeTone {
+  const norm = (sev || "").trim().toLowerCase();
+  if (norm === "critical") return "danger";
+  if (norm === "high") return "warning";
+  if (norm === "medium") return "info";
+  if (norm === "low") return "success";
+  return "neutral";
+}
+
+function getIncidentTypeColor(type?: string): string {
+  const norm = (type || "").trim().toLowerCase();
+  if (norm === "fatal" || norm === "fatality") return "var(--danger)";
+  if (norm === "lti" || norm === "lost time injury") return "var(--warning)";
+  if (norm === "first aid" || norm === "firstaid") return "var(--info)";
+  if (norm === "near miss" || norm === "nearmiss") return "var(--primary)";
+  return "var(--muted)";
+}
+
+function getSeverityColor(sev?: string): string {
+  const norm = (sev || "").trim().toLowerCase();
+  if (norm === "critical") return "var(--danger)";
+  if (norm === "high") return "var(--warning)";
+  if (norm === "medium") return "var(--chart-3)";
+  if (norm === "low") return "var(--success)";
+  return "var(--muted)";
+}
 
 function fmtDate(iso?: string) {
   if (!iso) return '—';
@@ -309,40 +327,20 @@ export default function SafetyPage() {
               {incidents.map((inc) => (
                 <div
                   key={inc.id}
-                  className="rounded-xl p-5 border border-border-custom bg-card relative shadow-sm"
-                  style={{
-                    borderLeftColor: SEVERITY_BORDER[inc.severity] || "var(--border)",
-                    borderLeftWidth: "4px",
-                  }}
+                  className="rounded-xl p-5 border border-border-custom bg-card"
                 >
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex gap-1.5 flex-wrap">
-                      <span
-                        className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white"
-                        style={{ background: TYPE_COLOR[inc.incident_type] || "var(--primary)" }}
-                      >
+                      <Badge tone={getIncidentTypeTone(inc.incident_type)}>
                         {inc.incident_type}
-                      </span>
-                      <span
-                        className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                        style={{
-                          background: SEVERITY_COLOR[inc.severity],
-                          color: SEVERITY_BORDER[inc.severity],
-                          border: `1px solid ${SEVERITY_BORDER[inc.severity]}`,
-                        }}
-                      >
+                      </Badge>
+                      <Badge tone={getSeverityTone(inc.severity)}>
                         {inc.severity}
-                      </span>
+                      </Badge>
                     </div>
-                    <span
-                      className={`text-[10px] px-2.5 py-0.5 rounded-full font-semibold ${
-                        inc.status === "closed"
-                          ? "bg-success/15 text-success border border-success/30"
-                          : "bg-warning/15 text-warning border border-warning/30"
-                      }`}
-                    >
+                    <Badge tone={inc.status === "closed" ? "success" : "warning"}>
                       {inc.status.toUpperCase()}
-                    </span>
+                    </Badge>
                   </div>
                   <p className="text-sm leading-relaxed text-foreground mb-3">{inc.description}</p>
                   <div className="text-xs text-muted space-y-1">
@@ -381,9 +379,10 @@ export default function SafetyPage() {
                         setShowCloseModal(inc.id);
                         setCloseForm({ root_cause: "", corrective_action: "" });
                       }}
-                      className="mt-3 py-1.5 px-3.5 rounded-lg border border-success/40 bg-success/10 text-success text-xs font-semibold hover:bg-success/20 transition-colors"
+                      className="mt-3 py-1.5 px-3.5 rounded-lg border border-success/40 bg-success/10 text-success text-xs font-semibold hover:bg-success/20 transition-colors inline-flex items-center gap-1.5"
                     >
-                      ✓ Close Incident
+                      <Icon name="check" className="w-3.5 h-3.5" />
+                      Close Incident
                     </button>
                   )}
                 </div>
@@ -413,7 +412,7 @@ export default function SafetyPage() {
                     { label: "LTIFR", value: stats.ltif, icon: "trending_up", color: "var(--info)" },
                   ] as { label: string; value: number; icon: IconName; color: string }[]
                 ).map((k, i) => (
-                  <div key={i} className="p-4 rounded-xl bg-card border border-border-custom shadow-sm">
+                  <div key={i} className="p-4 rounded-xl bg-card border border-border-custom">
                     <div className="mb-2" style={{ color: k.color }}>
                       <Icon name={k.icon} className="w-5 h-5" />
                     </div>
@@ -427,7 +426,7 @@ export default function SafetyPage() {
 
               {/* Type & Severity Breakdown */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="p-5 rounded-xl bg-card border border-border-custom shadow-sm">
+                <div className="p-5 rounded-xl bg-card border border-border-custom">
                   <h3 className="text-xs font-bold text-muted uppercase tracking-wider mb-4">BY INCIDENT TYPE</h3>
                   {Object.entries(stats.type_breakdown).map(([type, count]) => (
                     <MiniBar
@@ -435,14 +434,14 @@ export default function SafetyPage() {
                       label={type}
                       value={count}
                       max={stats.total_incidents}
-                      color={TYPE_COLOR[type] || "var(--primary)"}
+                      color={getIncidentTypeColor(type)}
                     />
                   ))}
                   {Object.keys(stats.type_breakdown).length === 0 && (
                     <EmptyState title="No incident breakdown data yet" description="Incident category statistics will appear as safety events are logged." />
                   )}
                 </div>
-                <div className="p-5 rounded-xl bg-card border border-border-custom shadow-sm">
+                <div className="p-5 rounded-xl bg-card border border-border-custom">
                   <h3 className="text-xs font-bold text-muted uppercase tracking-wider mb-4">BY SEVERITY</h3>
                   {Object.entries(stats.severity_breakdown).map(([sev, count]) => (
                     <MiniBar
@@ -450,11 +449,11 @@ export default function SafetyPage() {
                       label={sev}
                       value={count}
                       max={stats.total_incidents}
-                      color={SEVERITY_BORDER[sev] || "var(--primary)"}
+                      color={getSeverityColor(sev)}
                     />
                   ))}
                   {Object.keys(stats.severity_breakdown).length === 0 && (
-                    <EmptyState title="No severity breakdown data yet" description="Severity level statistics will appear as safety events are logged." />
+                    <EmptyState title="No severity breakdown data yet" description="Severity statistics will populate as safety events are logged." />
                   )}
                 </div>
               </div>
@@ -480,36 +479,35 @@ export default function SafetyPage() {
       {tab === 2 && (
         <div>
           <div className="flex justify-between items-center mb-5">
-            <div>
-              <h2 className="text-base font-semibold text-foreground">Toolbox Talks</h2>
-              <p className="text-xs text-muted mt-0.5">
-                {talks.length} session{talks.length !== 1 ? "s" : ""} conducted
-              </p>
-            </div>
+            <h2 className="text-base font-semibold text-foreground">Toolbox Talks & Briefings</h2>
             <button
               onClick={() => setShowTalkModal(true)}
-              className="py-2 px-4 rounded-lg bg-primary text-white text-xs font-semibold hover:opacity-90 transition-opacity"
+              className="py-2 px-4 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary/90 transition-colors"
             >
               + Add Talk
             </button>
           </div>
           {talks.length === 0 ? (
-            <EmptyState
-              icon="toolbox_talk"
-              title="No toolbox talks recorded"
-              description="Log daily safety briefings, hazard awareness sessions and attendee records."
-              action={{
-                label: "Add Talk",
-                onClick: () => setShowTalkModal(true),
-                icon: "add",
-              }}
-            />
+            loading ? (
+              <CardSkeleton />
+            ) : (
+              <EmptyState
+                icon="toolbox_talk"
+                title="No toolbox talks recorded"
+                description="Log daily safety briefings, hazard awareness sessions and attendee records."
+                action={{
+                  label: "Add Talk",
+                  onClick: () => setShowTalkModal(true),
+                  icon: "add",
+                }}
+              />
+            )
           ) : (
             <div className="flex flex-col gap-3">
               {talks.map((t) => (
                 <div
                   key={t.id}
-                  className="p-4 rounded-xl bg-card border border-border-custom flex items-center gap-4 shadow-sm"
+                  className="p-4 rounded-xl bg-card border border-border-custom flex items-center gap-4"
                 >
                   <div className="w-11 h-11 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center text-primary shrink-0">
                     <Icon name="toolbox_talk" className="w-5 h-5" />
@@ -546,7 +544,7 @@ export default function SafetyPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-6 items-start">
             {/* Donut */}
-            <div className="p-6 rounded-2xl bg-card border border-border-custom text-center shadow-sm">
+            <div className="p-6 rounded-2xl bg-card border border-border-custom text-center">
               {ppeChecks.length === 0 ? (
                 <>
                   <div className="w-[140px] h-[140px] mx-auto flex items-center justify-center text-3xl font-extrabold text-muted">
@@ -596,7 +594,7 @@ export default function SafetyPage() {
                     return (
                       <div
                         key={c.id}
-                        className="p-4 rounded-xl bg-card border border-border-custom shadow-sm"
+                        className="p-4 rounded-xl bg-card border border-border-custom"
                       >
                         <div className="flex justify-between items-center mb-2">
                           <div>
@@ -623,12 +621,9 @@ export default function SafetyPage() {
                         {c.non_compliant_items.length > 0 && (
                           <div className="flex flex-wrap gap-1.5 mt-2">
                             {c.non_compliant_items.map((item, i) => (
-                              <span
-                                key={i}
-                                className="text-[10px] px-2.5 py-0.5 rounded-full bg-danger/10 border border-danger/30 text-danger"
-                              >
+                              <Badge key={i} tone="danger">
                                 {item}
-                              </span>
+                              </Badge>
                             ))}
                           </div>
                         )}

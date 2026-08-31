@@ -242,7 +242,7 @@ export default function ProjectsPage() {
           {!isViewer && (
             <button
               onClick={() => setCreateOpen(true)}
-              className="rounded-md bg-primary px-3.5 py-1.5 text-xs font-bold text-white hover:opacity-90 shadow-md transition-all cursor-pointer"
+              className="rounded-md bg-primary px-3.5 py-1.5 text-xs font-bold text-white hover:opacity-90 transition-all cursor-pointer"
             >
               + Create Project
             </button>
@@ -398,11 +398,11 @@ export default function ProjectsPage() {
                   <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-end gap-2">
                       <button
-                        title="Pin"
+                        title={p.is_pinned ? "Unpin" : "Pin"}
                         onClick={() => togglePin(p)}
-                        className={p.is_pinned ? "text-primary" : "text-muted hover:text-foreground"}
+                        className={`cursor-pointer ${p.is_pinned ? "text-primary" : "text-muted hover:text-foreground"}`}
                       >
-                        {p.is_pinned ? "★" : "☆"}
+                        <Icon name="star" className="w-4 h-4" />
                       </button>
                       <button
                         title="Settings"
@@ -666,9 +666,9 @@ function CreateProjectModal({
               <button
                 onClick={onClose}
                 aria-label="Close"
-                className="flex h-8 w-8 items-center justify-center rounded-full border border-border-custom text-muted hover:bg-elevated hover:text-foreground"
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-border-custom text-muted hover:bg-elevated hover:text-foreground cursor-pointer"
               >
-                ✕
+                <Icon name="close" className="w-4 h-4" />
               </button>
             </div>
           </div>

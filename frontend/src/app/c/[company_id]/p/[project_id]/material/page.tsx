@@ -7,6 +7,7 @@ import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import { TableSkeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
+import Icon from "@/components/marketing/Icon";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type StockRow = {
@@ -307,8 +308,8 @@ export default function MaterialTab() {
               <h3 className="text-lg font-semibold text-foreground">
                 {modalType === "received" ? "Receive Material" : "Issue Material"}
               </h3>
-              <button onClick={closeModal} className="text-muted hover:text-foreground">
-                ✕
+              <button onClick={closeModal} className="text-muted hover:text-foreground cursor-pointer">
+                <Icon name="close" className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={submitMovement} className="space-y-4">

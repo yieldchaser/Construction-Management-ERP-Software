@@ -232,8 +232,8 @@ export default function FilesTab() {
           <div className="w-full max-w-sm rounded-lg border border-border-custom bg-card p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-foreground">New Folder</h3>
-              <button onClick={() => setShowNewFolder(false)} className="text-muted hover:text-foreground">
-                ✕
+              <button onClick={() => setShowNewFolder(false)} className="text-muted hover:text-foreground cursor-pointer">
+                <Icon name="close" className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={createFolder} className="space-y-4">
@@ -284,8 +284,8 @@ export default function FilesTab() {
                 >
                   Download
                 </a>
-                <button onClick={() => setPreview(null)} className="text-muted hover:text-foreground text-lg">
-                  ✕
+                <button onClick={() => setPreview(null)} className="text-muted hover:text-foreground cursor-pointer">
+                  <Icon name="close" className="w-5 h-5" />
                 </button>
               </div>
             </div>

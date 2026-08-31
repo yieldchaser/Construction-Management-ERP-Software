@@ -247,7 +247,7 @@ export default function ProjectSettingsModal({
                 {locations.map((l) => (
                   <div key={l.id} className="flex items-center justify-between px-3 py-2">
                     <span className="text-sm text-foreground">{l.name}</span>
-                    <button onClick={() => deleteLocation(l.id)} className="text-xs text-muted hover:text-rose-500">Delete</button>
+                    <button onClick={() => deleteLocation(l.id)} className="text-xs text-muted hover:text-danger">Delete</button>
                   </div>
                 ))}
                 {locations.length === 0 && (

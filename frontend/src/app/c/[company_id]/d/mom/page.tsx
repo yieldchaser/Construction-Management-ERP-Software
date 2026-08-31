@@ -215,7 +215,7 @@ export default function MoMPage() {
           subtitle="Corporate MOM register, action item logs and attendee records"
         >
           <button onClick={openCreate}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-all shadow-md cursor-pointer">
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-all cursor-pointer">
             + New MOM
           </button>
         </PageHeader>

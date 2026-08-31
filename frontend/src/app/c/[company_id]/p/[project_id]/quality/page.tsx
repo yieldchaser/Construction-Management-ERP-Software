@@ -5,6 +5,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Icon, { type IconName } from "@/components/marketing/Icon";
 import SegmentedTabs from "@/components/ui/Tabs";
+import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 
@@ -73,26 +74,26 @@ interface LabTest {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const severityColors: Record<string, string> = {
-  Critical: "bg-danger/10 text-danger border-danger/25",
-  Major: "bg-warning/10 text-warning border-warning/25",
-  Minor: "bg-warning/10 text-warning border-warning/25",
+const severityTones: Record<string, BadgeTone> = {
+  Critical: "danger",
+  Major: "warning",
+  Minor: "info",
 };
 
-const statusColors: Record<string, string> = {
-  open: "bg-danger/10 text-danger border-danger/20",
-  under_review: "bg-info/10 text-info border-info/20",
-  closed: "bg-success/10 text-success border-success/20",
-  pass: "bg-success/10 text-success border-success/20",
-  fail: "bg-danger/10 text-danger border-danger/20",
-  partial: "bg-warning/10 text-warning border-warning/20",
-  pending: "bg-elevated text-muted border-border-custom",
+const statusTones: Record<string, BadgeTone> = {
+  open: "danger",
+  under_review: "info",
+  closed: "success",
+  pass: "success",
+  fail: "danger",
+  partial: "warning",
+  pending: "neutral",
 };
 
-const badge = (label: string, cls: string) => (
-  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${cls}`}>
+const badge = (label: string, tone?: BadgeTone) => (
+  <Badge tone={tone || "neutral"}>
     {label}
-  </span>
+  </Badge>
 );
 
 const passRate = (p: number, f: number) => {
@@ -456,12 +457,12 @@ isCode: cl.is_code_reference || "—",
           <div>
             {tab === "ncr" && (
               <button onClick={() => setShowNCRForm(true)}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-all shadow-md cursor-pointer">
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-all cursor-pointer">
                 + Raise NCR
               </button>
             )}
             {tab === "inspections" && (
-              <button onClick={() => setShowInspForm(true)} className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-all shadow-md cursor-pointer">
+              <button onClick={() => setShowInspForm(true)} className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-all cursor-pointer">
                 + New Inspection
               </button>
             )}
@@ -507,7 +508,6 @@ isCode: cl.is_code_reference || "—",
                   </div>
                 ))}
               </div>
-
               {/* Inspection Filters */}
               <div className="rounded-md border border-border-custom bg-card p-4 space-y-4">
                 <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
@@ -551,9 +551,10 @@ isCode: cl.is_code_reference || "—",
                       className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs text-foreground"
                     >
                       <option value="all">All Statuses</option>
-                      {inspectionStatusOptions.map((status) => (
-                        <option key={status} value={status}>{status.replace("_", " ")}</option>
-                      ))}
+                      <option value="pass">Pass</option>
+                      <option value="fail">Fail</option>
+                      <option value="partial">Partial</option>
+                      <option value="pending">Pending</option>
                     </select>
                   </div>
                 </div>
@@ -590,16 +591,16 @@ isCode: cl.is_code_reference || "—",
                               <td className="px-5 py-3">
                                 <div className="flex items-center gap-3">
                                   <div className="flex-1 h-1.5 bg-elevated rounded-full overflow-hidden max-w-28">
-                                    <div className="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-full" style={{ width: `${rate}%` }} />
+                                    <div className="h-full bg-success rounded-full" style={{ width: `${rate}%` }} />
                                   </div>
                                   <div className="text-[10px] text-muted whitespace-nowrap">
-                                    <span className="text-success font-bold">✓ {insp.passCount}</span>
+                                    <span className="text-success font-bold inline-flex items-center gap-0.5"><Icon name="check" className="w-3 h-3" /> {insp.passCount}</span>
                                     <span className="mx-1">/</span>
-                                    <span className="text-danger font-bold">✕ {insp.failCount}</span>
+                                    <span className="text-danger font-bold inline-flex items-center gap-0.5"><Icon name="close" className="w-3 h-3" /> {insp.failCount}</span>
                                   </div>
                                 </div>
                               </td>
-                              <td className="px-5 py-3">{badge(insp.status.replace("_", " "), statusColors[insp.status])}</td>
+                              <td className="px-5 py-3">{badge(insp.status.replace("_", " "), statusTones[insp.status])}</td>
                               <td className="px-5 py-3 text-right">
                                 <button
                                   onClick={() => setSelectedInspection(insp)}
@@ -628,8 +629,8 @@ isCode: cl.is_code_reference || "—",
                     <div>
                       <p className="font-bold text-foreground">{cl.title}</p>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[10px] bg-info/10 text-info border border-info/20 px-2 py-0.5 rounded-full font-bold">{cl.category}</span>
-                        <span className="text-[10px] bg-sky-500/10 text-sky-400 border border-sky-500/20 px-2 py-0.5 rounded-full font-bold">{cl.isCode}</span>
+                        <Badge tone="info">{cl.category}</Badge>
+                        <Badge tone="primary">{cl.isCode}</Badge>
                         <span className="text-[10px] text-muted">{cl.items.length} items</span>
                       </div>
                     </div>
@@ -651,15 +652,15 @@ isCode: cl.is_code_reference || "—",
                         ))}
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/[0.03]">
+                    <tbody className="divide-y divide-border-custom">
                       {cl.items.map(item => (
                         <tr key={item.id} className="hover:bg-elevated">
                           <td className="px-4 py-2.5 text-muted font-sans">{item.sequence}</td>
-                          <td className="px-4 py-2.5 text-muted">{item.description}</td>
+                          <td className="px-4 py-2.5 text-foreground">{item.description}</td>
                           <td className="px-4 py-2.5 text-muted">{item.criteria}</td>
                           <td className="px-4 py-2.5">
                             {item.mandatory
-                              ? <span className="text-danger font-bold text-[10px]">MANDATORY</span>
+                              ? <Badge tone="danger">MANDATORY</Badge>
                               : <span className="text-muted text-[10px]">Optional</span>}
                           </td>
                         </tr>
@@ -673,7 +674,7 @@ isCode: cl.is_code_reference || "—",
 
           {/* ── NCR KANBAN ──────────────────────────────────────────────────── */}
           {tab === "ncr" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Open */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2 mb-3">
@@ -684,14 +685,14 @@ isCode: cl.is_code_reference || "—",
                 {openNCRs.map(ncr => (
                   <div key={ncr.id} className="bg-card border border-danger/10 rounded-md p-4 space-y-2">
                     <div className="flex items-center justify-between">
-                      {badge(ncr.severity, severityColors[ncr.severity])}
+                      {badge(ncr.severity, severityTones[ncr.severity])}
                       <span className="text-[10px] text-muted font-sans">{ncr.number}</span>
                     </div>
                     <p className="text-xs font-semibold text-foreground leading-snug">{ncr.title}</p>
                     <p className="text-[10px] text-muted">{ncr.zone} · Due {ncr.dueDate}</p>
                     <button onClick={() => moveNCR(ncr.id, "under_review")}
-                      className="w-full text-[10px] py-1 rounded bg-info/10 text-info border border-info/20 hover:bg-info/10 font-bold transition-all cursor-pointer">
-                      → Move to Review
+                      className="w-full text-[10px] py-1 rounded bg-info/10 text-info border border-info/20 hover:bg-info/10 font-bold transition-all cursor-pointer inline-flex items-center justify-center gap-1">
+                      <Icon name="arrow_forward" className="w-3 h-3" /> Move to Review
                     </button>
                   </div>
                 ))}
@@ -707,14 +708,14 @@ isCode: cl.is_code_reference || "—",
                 {reviewNCRs.map(ncr => (
                   <div key={ncr.id} className="bg-card border border-info/10 rounded-md p-4 space-y-2">
                     <div className="flex items-center justify-between">
-                      {badge(ncr.severity, severityColors[ncr.severity])}
+                      {badge(ncr.severity, severityTones[ncr.severity])}
                       <span className="text-[10px] text-muted font-sans">{ncr.number}</span>
                     </div>
                     <p className="text-xs font-semibold text-foreground leading-snug">{ncr.title}</p>
                     <p className="text-[10px] text-muted">{ncr.zone} · Due {ncr.dueDate}</p>
                     <button onClick={() => moveNCR(ncr.id, "closed")}
-                      className="w-full text-[10px] py-1 rounded bg-success/10 text-success border border-success/20 hover:bg-success/10 font-bold transition-all cursor-pointer">
-                      ✓ Close NCR
+                      className="w-full text-[10px] py-1 rounded bg-success/10 text-success border border-success/20 hover:bg-success/10 font-bold transition-all cursor-pointer inline-flex items-center justify-center gap-1">
+                      <Icon name="check" className="w-3 h-3" /> Close NCR
                     </button>
                   </div>
                 ))}
@@ -730,12 +731,12 @@ isCode: cl.is_code_reference || "—",
                 {closedNCRs.map(ncr => (
                   <div key={ncr.id} className="bg-card border border-success/10 rounded-md p-4 space-y-2 opacity-70">
                     <div className="flex items-center justify-between">
-                      {badge(ncr.severity, severityColors[ncr.severity])}
+                      {badge(ncr.severity, severityTones[ncr.severity])}
                       <span className="text-[10px] text-muted font-sans">{ncr.number}</span>
                     </div>
                     <p className="text-xs font-semibold text-foreground leading-snug">{ncr.title}</p>
                     <p className="text-[10px] text-muted italic">{ncr.resolution}</p>
-                    {badge("Closed", statusColors["closed"])}
+                    {badge("Closed", statusTones["closed"])}
                   </div>
                 ))}
               </div>
@@ -749,9 +750,9 @@ isCode: cl.is_code_reference || "—",
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-2">
                 {[
                   { label: "Total Tests", val: labTests.length, color: "text-foreground" },
-                  { label: "Passed", val: labTests.filter(t => t.pass).length, color: "text-success" },
-                  { label: "Failed", val: labTests.filter(t => !t.pass).length, color: "text-danger" },
-                  { label: "Pass Rate", val: labTests.length ? `${Math.round(labTests.filter(t => t.pass).length / labTests.length * 100)}%` : "0%", color: "text-primary" },
+                  { label: "Passed", val: labTests.filter(t => t.pass === true).length, color: "text-success" },
+                  { label: "Failed", val: labTests.filter(t => t.pass === false).length, color: "text-danger" },
+                  { label: "Pass Rate", val: (() => { const ev = labTests.filter(t => t.pass != null); return ev.length ? `${Math.round(ev.filter(t => t.pass).length / ev.length * 100)}%` : "0%"; })(), color: "text-primary" },
                 ].map(({ label, val, color }) => (
                   <div key={label} className="bg-card border border-border-custom rounded-md p-4">
                     <p className="text-[10px] text-muted uppercase font-bold tracking-wider mb-1">{label}</p>
@@ -773,7 +774,7 @@ isCode: cl.is_code_reference || "—",
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/[0.03]">
+                  <tbody className="divide-y divide-border-custom">
                     {labTests.map(t => (
                       <tr key={t.id} className="hover:bg-elevated transition-colors">
                         <td className="px-4 py-3 font-semibold text-foreground">{t.type}</td>
@@ -781,16 +782,18 @@ isCode: cl.is_code_reference || "—",
                         <td className="px-4 py-3 font-sans text-muted text-[10px]">{t.sampleRef}</td>
                         <td className="px-4 py-3 text-muted">{t.date}</td>
                         <td className="px-4 py-3">
-                          <span className={`font-bold text-sm ${t.pass ? "text-success" : "text-danger"}`}>
+                          <span className={`font-bold text-sm ${t.pass == null ? "text-muted" : t.pass ? "text-success" : "text-danger"}`}>
                             {t.value} {t.unit}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-muted">{t.min != null && t.max != null ? `${t.min}–${t.max} ${t.unit}` : "—"}</td>
                         <td className="px-4 py-3 text-muted">{t.zone}</td>
                         <td className="px-4 py-3">
-                          {t.pass
-                            ? <span className="flex items-center gap-1 text-success font-bold text-[10px]"><span className="h-1.5 w-1.5 rounded-full bg-success" />PASS</span>
-                            : <span className="flex items-center gap-1 text-danger font-bold text-[10px]"><span className="h-1.5 w-1.5 rounded-full bg-danger" />FAIL</span>}
+                          {t.pass == null
+                            ? <span className="flex items-center gap-1 text-muted font-bold text-[10px]"><span className="h-1.5 w-1.5 rounded-full bg-elevated" />Not evaluated</span>
+                            : t.pass
+                              ? <span className="flex items-center gap-1 text-success font-bold text-[10px]"><span className="h-1.5 w-1.5 rounded-full bg-success" />PASS</span>
+                              : <span className="flex items-center gap-1 text-danger font-bold text-[10px]"><span className="h-1.5 w-1.5 rounded-full bg-danger" />FAIL</span>}
                         </td>
                       </tr>
                     ))}
@@ -813,12 +816,12 @@ isCode: cl.is_code_reference || "—",
                 <h2 className="font-bold text-foreground">{selectedInspection.zone}</h2>
                 <p className="text-xs text-muted">{selectedInspection.checklist} · {selectedInspection.date}</p>
               </div>
-              <button onClick={() => setSelectedInspection(null)} className="text-muted hover:text-foreground text-xl cursor-pointer">✕</button>
+              <button onClick={() => setSelectedInspection(null)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
 
             <div className="flex items-center gap-4 mb-5">
               <div className="flex-1 h-2 bg-elevated rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full"
+                <div className="h-full bg-success rounded-full"
                   style={{ width: `${passRate(selectedInspection.passCount, selectedInspection.failCount)}%` }} />
               </div>
               <span className="text-sm font-bold text-foreground">{passRate(selectedInspection.passCount, selectedInspection.failCount)}%</span>
@@ -838,7 +841,7 @@ isCode: cl.is_code_reference || "—",
             </div>
 
             <div className="mb-4">
-              {badge(selectedInspection.status, statusColors[selectedInspection.status])}
+              {badge(selectedInspection.status, statusTones[selectedInspection.status])}
             </div>
 
             {/* Checklist Checkpoints Audit Form */}

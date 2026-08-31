@@ -11,6 +11,7 @@ import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import { TableSkeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
+import Icon from "@/components/marketing/Icon";
 
 // ── Transaction taxonomy (exact list from build spec) ────────────────────────
 type Endpoint = "bill" | "debit" | "credit" | "request";
@@ -120,7 +121,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
       <div className="my-8 w-full max-w-2xl rounded-lg border border-border-custom bg-card p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-foreground">{title}</h3>
-          <button onClick={onClose} className="text-muted hover:text-foreground">✕</button>
+          <button onClick={onClose} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
         </div>
         {children}
       </div>
@@ -301,7 +302,7 @@ export default function TransactionPage() {
       >
         <button
           onClick={() => setAddOpen(true)}
-          className="rounded-md bg-primary px-3.5 py-1.5 text-xs font-semibold text-white hover:opacity-90 shadow-md cursor-pointer"
+          className="rounded-md bg-primary px-3.5 py-1.5 text-xs font-semibold text-white hover:opacity-90 cursor-pointer"
         >
           + Add Transaction
         </button>

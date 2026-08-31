@@ -10,6 +10,7 @@ import PageHeader from "@/components/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton, TableSkeleton } from "@/components/ui/Skeleton";
 import SegmentedTabs from "@/components/ui/Tabs";
+import Icon from "@/components/marketing/Icon";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -152,8 +153,8 @@ function Modal({
       >
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-base font-semibold text-foreground">{title}</h3>
-          <button className="text-muted hover:text-foreground" onClick={onClose}>
-            ✕
+          <button className="text-muted hover:text-foreground cursor-pointer" onClick={onClose}>
+            <Icon name="close" className="w-5 h-5" />
           </button>
         </div>
         {children}
@@ -181,8 +182,8 @@ function Drawer({
       >
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-base font-semibold text-foreground">{title}</h3>
-          <button className="text-muted hover:text-foreground" onClick={onClose}>
-            ✕
+          <button className="text-muted hover:text-foreground cursor-pointer" onClick={onClose}>
+            <Icon name="close" className="w-5 h-5" />
           </button>
         </div>
         {children}
@@ -425,8 +426,8 @@ function SalaryBreakupModal({
                 editLine(allowances, setAllowances, i, "amount", parseFloat(e.target.value) || 0)
               }
             />
-            <button className="text-muted hover:text-danger" onClick={() => setAllowances(allowances.filter((_, j) => j !== i))}>
-              ✕
+            <button className="text-muted hover:text-danger cursor-pointer p-1" onClick={() => setAllowances(allowances.filter((_, j) => j !== i))}>
+              <Icon name="close" className="w-4 h-4" />
             </button>
           </div>
         ))}
@@ -464,8 +465,8 @@ function SalaryBreakupModal({
                 editLine(deductions, setDeductions, i, "amount", parseFloat(e.target.value) || 0)
               }
             />
-            <button className="text-muted hover:text-danger" onClick={() => setDeductions(deductions.filter((_, j) => j !== i))}>
-              ✕
+            <button className="text-muted hover:text-danger cursor-pointer p-1" onClick={() => setDeductions(deductions.filter((_, j) => j !== i))}>
+              <Icon name="close" className="w-4 h-4" />
             </button>
           </div>
         ))}
@@ -1228,12 +1229,12 @@ function AttendanceTab({
           <option>Week Off</option>
         </select>
         <div className="flex items-center gap-1">
-          <button className={btnGhost} onClick={() => shift(-1)}>
-            ‹
+          <button className={btnGhost} onClick={() => shift(-1)} aria-label="Previous day">
+            <Icon name="chevron_left" className="w-4 h-4" />
           </button>
           <div className="whitespace-nowrap rounded-md border border-border-custom px-3 py-2 text-sm text-foreground">{date}</div>
-          <button className={btnGhost} onClick={() => shift(1)}>
-            ›
+          <button className={btnGhost} onClick={() => shift(1)} aria-label="Next day">
+            <Icon name="chevron_right" className="w-4 h-4" />
           </button>
           <input type="date" className={inputCls + " max-w-[160px]"} value={date} onChange={(e) => setDate(e.target.value)} />
         </div>
@@ -1242,7 +1243,7 @@ function AttendanceTab({
             <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-success" /> {counts.present} Present</span>
             <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-danger" /> {counts.absent} Absent</span>
             <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-warning" /> {counts.paid} Paid Leave</span>
-            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-sky-500" /> {counts.weekoff} Week Off</span>
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-primary" /> {counts.weekoff} Week Off</span>
           </div>
         )}
       </div>
@@ -1275,7 +1276,7 @@ function AttendanceTab({
                             : r.status === "Paid Leave"
                             ? "text-warning"
                             : r.status === "Week Off"
-                            ? "text-sky-600"
+                            ? "text-primary"
                             : "text-danger"
                         }
                       >

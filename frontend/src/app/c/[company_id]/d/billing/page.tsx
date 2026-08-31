@@ -10,6 +10,7 @@ import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import SegmentedTabs from "@/components/ui/Tabs";
 import { EmptyState } from "@/components/ui/EmptyState";
+import Icon from "@/components/marketing/Icon";
 
 // Types
 interface Deduction {
@@ -666,9 +667,9 @@ export default function SubcontractorBillingPage() {
                               {!isAuditApproved(bill) && (
                                 <button
                                   onClick={() => handleApproveBill(bill.id)}
-                                  className="bg-success hover:bg-success text-white rounded-lg px-2.5 py-1 text-[10px] font-bold transition-all cursor-pointer"
+                                  className="bg-success hover:bg-success text-white rounded-lg px-2.5 py-1 text-[10px] font-bold transition-all cursor-pointer inline-flex items-center gap-1"
                                 >
-                                  ✓ Auditor Approve
+                                  <Icon name="check" className="w-3 h-3" /> Auditor Approve
                                 </button>
                               )}
                               <button

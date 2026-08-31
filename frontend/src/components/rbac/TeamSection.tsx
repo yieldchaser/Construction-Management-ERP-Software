@@ -117,8 +117,8 @@ export default function TeamSection({ companyId }: Props) {
         <div
           className={`p-3 text-xs rounded-lg border ${
             msg.type === "ok"
-              ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-              : "bg-rose-500/10 border-rose-500/20 text-rose-400"
+              ? "bg-success/10 border-success/20 text-success"
+              : "bg-danger/10 border-danger/20 text-danger"
           }`}
         >
           {msg.text}

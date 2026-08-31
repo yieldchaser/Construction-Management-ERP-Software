@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Badge } from "@/components/ui/Badge";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -24,19 +25,19 @@ export default function PwaControls() {
 
     const handleOnline = () => {
       setIsOnline(true);
-      setStatus("Connection restored");
+      setStatus("Online - cloud sync operational");
     };
 
     const handleOffline = () => {
       setIsOnline(false);
-      setStatus("Offline mode active");
+      setStatus("Offline - queued locally for background sync");
     };
-
-    setIsOnline(navigator.onLine);
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
+
+    setIsOnline(navigator.onLine);
 
     return () => {
       window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
@@ -47,19 +48,19 @@ export default function PwaControls() {
 
   const handleInstall = async () => {
     if (!deferredPrompt) {
-      setStatus("Install prompt not available yet");
+      setStatus("Use browser menu to install SiteFlow on this device");
       return;
     }
 
     await deferredPrompt.prompt();
-    const result = await deferredPrompt.userChoice;
-    setStatus(result.outcome === "accepted" ? "App installed" : "Install dismissed");
+    const { outcome } = await deferredPrompt.userChoice;
+    setStatus(outcome === "accepted" ? "App installed successfully" : "Install dismissed");
     setDeferredPrompt(null);
   };
 
   const handleEnableNotifications = async () => {
-    if (!("Notification" in window)) {
-      setStatus("Notifications are not supported here");
+    if (typeof window === "undefined" || !("Notification" in window)) {
+      setStatus("Notifications are not supported in this browser");
       return;
     }
 
@@ -72,22 +73,16 @@ export default function PwaControls() {
   };
 
   return (
-    <div className="rounded-lg border border-border-custom bg-elevated p-4 shadow-md">
+    <div className="rounded-lg border border-border-custom bg-elevated p-4">
       <div className="flex items-center justify-between gap-3">
         <div>
           <div className="text-[10px] uppercase tracking-[0.2em] text-muted">Mobile PWA</div>
           <div className="mt-1 text-sm font-semibold text-white">Installable shell and offline punch capture</div>
           <div className="mt-1 text-[11px] text-muted">{status}</div>
         </div>
-        <span
-          className={`rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
-            isOnline
-              ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-400"
-              : "border-amber-500/25 bg-amber-500/10 text-amber-400"
-          }`}
-        >
+        <Badge tone={isOnline ? "success" : "warning"}>
           {isOnline ? "Online" : "Offline"}
-        </span>
+        </Badge>
       </div>
 
       <div className="mt-3 flex flex-wrap gap-2">
@@ -99,7 +94,7 @@ export default function PwaControls() {
         </button>
         <button
           onClick={handleEnableNotifications}
-          className="rounded-lg border border-border-custom bg-white/[0.03] px-3 py-2 text-[11px] font-bold text-zinc-200 transition-colors hover:bg-white/[0.05]"
+          className="rounded-lg border border-border-custom bg-white/[0.03] px-3 py-2 text-[11px] font-bold text-foreground transition-colors hover:bg-white/[0.05]"
         >
           Enable Notifications
         </button>

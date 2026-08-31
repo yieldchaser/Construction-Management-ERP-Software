@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { getApi, authHeaders } from "@/lib/siteflow";
+import { Badge } from "@/components/ui/Badge";
 
 type ZatcaPayload = {
   is_zatca_enabled: boolean;
@@ -69,19 +70,13 @@ export default function ZatcaInvoicePanel({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium text-foreground">ZATCA Simplified Tax Invoice</span>
-        <span
-          className={`rounded-full px-2 py-0.5 text-xs ${
-            data?.is_zatca_enabled
-              ? "bg-emerald-500/10 text-emerald-400"
-              : "bg-amber-500/10 text-amber-400"
-          }`}
-        >
+        <Badge tone={data?.is_zatca_enabled ? "success" : "warning"}>
           {data?.is_zatca_enabled ? "Enabled" : "Not enabled for company"}
-        </span>
+        </Badge>
       </div>
 
       {loading && <p className="text-sm text-muted">Loading…</p>}
-      {error && <p className="text-sm text-rose-400">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
 
       {data && (
         <div className="space-y-4">

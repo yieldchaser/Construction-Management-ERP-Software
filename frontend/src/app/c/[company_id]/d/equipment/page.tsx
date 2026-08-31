@@ -83,6 +83,7 @@ export default function EquipmentTrackingPage() {
   const [stopMeterVal, setStopMeterVal] = useState("");
   const [isStopPhotoCaptured, setIsStopPhotoCaptured] = useState(false);
   const [isGpsLocked, setIsGpsLocked] = useState(true);
+  const [isBreakdown, setIsBreakdown] = useState(false);
 
   // Log Fuel States
   const [activeFuelingEq, setActiveFuelingEq] = useState<Equipment | null>(null);
@@ -683,7 +684,7 @@ export default function EquipmentTrackingPage() {
           <div className="bg-background border border-border-custom rounded-lg w-full max-w-md shadow-2xl p-6 space-y-4">
             <div className="flex justify-between items-center border-b border-border-custom pb-2">
               <h3 className="text-xs font-extrabold text-foreground">Start Deployment: {activeDeployingEq.name}</h3>
-              <button onClick={() => setActiveDeployingEq(null)} className="text-muted hover:text-foreground">✕</button>
+              <button onClick={() => setActiveDeployingEq(null)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
             
             <div className="space-y-3 text-xs">
@@ -709,7 +710,7 @@ export default function EquipmentTrackingPage() {
                   >
                     <Icon name="camera" className="w-4 h-4" />Take Photo
                   </button>
-                  {isStartPhotoCaptured && <span className="text-success font-bold">✓ Captured (GPS Locked)</span>}
+                  {isStartPhotoCaptured && <span className="inline-flex items-center gap-1 text-success font-bold"><Icon name="check" className="w-3.5 h-3.5" /> Captured (GPS Locked)</span>}
                 </div>
               </div>
             </div>
@@ -728,7 +729,7 @@ export default function EquipmentTrackingPage() {
           <div className="bg-background border border-border-custom rounded-lg w-full max-w-md shadow-2xl p-6 space-y-4">
             <div className="flex justify-between items-center border-b border-border-custom pb-2">
               <h3 className="text-xs font-extrabold text-foreground">Stop Deployment: {activeStoppingEq.name}</h3>
-              <button onClick={() => setActiveStoppingEq(null)} className="text-muted hover:text-foreground">✕</button>
+              <button onClick={() => setActiveStoppingEq(null)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
 
             <div className="space-y-3 text-xs">
@@ -753,25 +754,27 @@ export default function EquipmentTrackingPage() {
                   >
                     <Icon name="camera" className="w-4 h-4" />Take Photo
                   </button>
-                  {isStopPhotoCaptured && <span className="text-success font-bold">✓ Captured (GPS verification active)</span>}
+                  {isStopPhotoCaptured && <span className="inline-flex items-center gap-1 text-success font-bold"><Icon name="check" className="w-3.5 h-3.5" /> Captured (GPS verification active)</span>}
                 </div>
               </div>
 
               <div className="flex items-center gap-2 pt-2">
                 <input
                   type="checkbox"
-                  id="gpsLock"
-                  checked={isGpsLocked}
-                  onChange={(e) => setIsGpsLocked(e.target.checked)}
-                  className="accent-primary"
+                  id="breakdownCheck"
+                  checked={isBreakdown}
+                  onChange={(e) => setIsBreakdown(e.target.checked)}
+                  className="accent-danger h-4 w-4"
                 />
-                <label htmlFor="gpsLock" className="text-muted select-none cursor-pointer">Verify background GPS authenticity token</label>
+                <label htmlFor="breakdownCheck" className="text-danger font-semibold cursor-pointer">
+                  Flag Breakdown Maintenance Required
+                </label>
               </div>
             </div>
 
             <div className="flex gap-2 justify-end border-t border-border-custom pt-4">
-              <button onClick={() => handleStopMachinery(false)} className="px-4 py-2.5 bg-primary text-white font-bold rounded-md text-xs">Save</button>
-              <button onClick={() => handleStopMachinery(true)} className="px-4 py-2.5 bg-secondary text-white font-bold rounded-md text-xs">Save & Add Fuel</button>
+              <button onClick={() => setActiveStoppingEq(null)} className="px-4 py-2 bg-elevated text-muted hover:text-foreground rounded-md text-xs">Cancel</button>
+              <button onClick={() => handleStopMachinery()} className="px-5 py-2.5 bg-primary text-white font-bold rounded-md text-xs">Complete Shift & Clock Log</button>
             </div>
           </div>
         </div>
@@ -783,7 +786,7 @@ export default function EquipmentTrackingPage() {
           <div className="bg-background border border-border-custom rounded-lg w-full max-w-md shadow-2xl p-6 space-y-4">
             <div className="flex justify-between items-center border-b border-border-custom pb-2">
               <h3 className="text-xs font-extrabold text-foreground">Log Refueling: {activeFuelingEq.name}</h3>
-              <button onClick={() => setActiveFuelingEq(null)} className="text-muted hover:text-foreground">✕</button>
+              <button onClick={() => setActiveFuelingEq(null)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
 
             <div className="space-y-3 text-xs">
@@ -823,7 +826,7 @@ export default function EquipmentTrackingPage() {
           <div className="bg-background border border-border-custom rounded-lg w-full max-w-md shadow-2xl p-6 space-y-4">
             <div className="flex justify-between items-center border-b border-border-custom pb-2">
               <h3 className="text-xs font-extrabold text-foreground">Add Equipment Assets</h3>
-              <button onClick={() => setIsAddEqOpen(false)} className="text-muted hover:text-foreground">✕</button>
+              <button onClick={() => setIsAddEqOpen(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
 
             <form onSubmit={handleAddEquipment} className="space-y-3 text-xs">

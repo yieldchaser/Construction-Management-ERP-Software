@@ -857,7 +857,7 @@ export default function DynamicReportViewPage() {
           <div className="relative">
             <button 
               onClick={() => setShowExportDropdown(!showExportDropdown)}
-              className="text-white text-xs bg-primary hover:bg-primary/90 font-bold rounded-lg px-3.5 py-1.5 transition-all flex items-center gap-1 cursor-pointer shadow-md"
+              className="text-white text-xs bg-primary hover:bg-primary/90 font-bold rounded-lg px-3.5 py-1.5 transition-all flex items-center gap-1 cursor-pointer"
               title="Export Options"
             >
               <Icon name="arrow_up" className="w-3.5 h-3.5" /> Export
@@ -1011,10 +1011,10 @@ export default function DynamicReportViewPage() {
                   {/* Segment 1 */}
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-xs font-semibold">
-                      <span className="text-sky-400">1. New Enquiries</span>
+                      <span className="text-primary">1. New Enquiries</span>
                       <span className="text-white">{totalLeadsCount} Leads (100% baseline)</span>
                     </div>
-                    <div className="h-9 w-full bg-gradient-to-r from-sky-600 to-sky-500 rounded-lg flex items-center px-4 shadow-lg shadow-sky-500/10 hover:opacity-95 transition-opacity min-w-[75px]">
+                    <div className="h-9 w-full bg-primary rounded-lg flex items-center px-4 hover:opacity-95 transition-opacity min-w-[75px]">
                       <span className="text-[11px] font-bold text-white font-sans tracking-wide whitespace-nowrap">{totalLeadsCount} / {totalLeadsCount}</span>
                     </div>
                   </div>
@@ -1022,10 +1022,10 @@ export default function DynamicReportViewPage() {
                   {/* Segment 2 */}
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-xs font-semibold">
-                      <span className="text-sky-400">2. Contacted / Qualified</span>
+                      <span className="text-info">2. Contacted / Qualified</span>
                       <span className="text-white">{contactedLeads} Leads ({contactedPct}% conversion)</span>
                     </div>
-                    <div className="h-9 bg-gradient-to-r from-sky-500 to-cyan-500 rounded-lg flex items-center px-4 shadow-lg shadow-sky-500/10 hover:opacity-95 transition-opacity min-w-[75px]" style={{ width: `${Math.max(contactedPct, 8)}%` }}>
+                    <div className="h-9 bg-info rounded-lg flex items-center px-4 hover:opacity-95 transition-opacity min-w-[75px]" style={{ width: `${Math.max(contactedPct, 8)}%` }}>
                       <span className="text-[11px] font-bold text-white font-sans tracking-wide whitespace-nowrap">{contactedLeads} / {totalLeadsCount}</span>
                     </div>
                   </div>
@@ -1033,10 +1033,10 @@ export default function DynamicReportViewPage() {
                   {/* Segment 3 */}
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-xs font-semibold">
-                      <span className="text-cyan-400">3. Site Visit Scheduled</span>
+                      <span className="text-chart-3">3. Site Visit Scheduled</span>
                       <span className="text-white">{siteVisitLeads} Leads ({siteVisitPct}% conversion)</span>
                     </div>
-                    <div className="h-9 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-lg flex items-center px-4 shadow-lg shadow-cyan-500/10 hover:opacity-95 transition-opacity min-w-[75px]" style={{ width: `${Math.max(siteVisitPct, 8)}%` }}>
+                    <div className="h-9 bg-chart-3 rounded-lg flex items-center px-4 hover:opacity-95 transition-opacity min-w-[75px]" style={{ width: `${Math.max(siteVisitPct, 8)}%` }}>
                       <span className="text-[11px] font-bold text-white font-sans tracking-wide whitespace-nowrap">{siteVisitLeads} / {totalLeadsCount}</span>
                     </div>
                   </div>
@@ -1044,10 +1044,10 @@ export default function DynamicReportViewPage() {
                   {/* Segment 4 */}
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-xs font-semibold">
-                      <span className="text-teal-400">4. Quotation Shared</span>
+                      <span className="text-chart-4">4. Quotation Shared</span>
                       <span className="text-white">{quotationLeads} Leads ({quotationPct}% conversion)</span>
                     </div>
-                    <div className="h-9 bg-gradient-to-r from-teal-500 to-sky-600 rounded-lg flex items-center px-4 shadow-lg shadow-teal-500/10 hover:opacity-95 transition-opacity min-w-[75px]" style={{ width: `${Math.max(quotationPct, 8)}%` }}>
+                    <div className="h-9 bg-chart-4 rounded-lg flex items-center px-4 hover:opacity-95 transition-opacity min-w-[75px]" style={{ width: `${Math.max(quotationPct, 8)}%` }}>
                       <span className="text-[11px] font-bold text-white font-sans tracking-wide whitespace-nowrap">{quotationLeads} / {totalLeadsCount}</span>
                     </div>
                   </div>
@@ -1058,7 +1058,7 @@ export default function DynamicReportViewPage() {
                       <span className="text-success">5. Client Confirmed / Won</span>
                       <span className="text-white">{wonLeads} Leads ({wonPct}% conversion)</span>
                     </div>
-                    <div className="h-9 bg-gradient-to-r from-emerald-500 to-sky-500 rounded-lg flex items-center px-4 shadow-lg shadow-emerald-500/10 hover:opacity-95 transition-opacity min-w-[75px]" style={{ width: `${Math.max(wonPct, 8)}%` }}>
+                    <div className="h-9 bg-success rounded-lg flex items-center px-4 hover:opacity-95 transition-opacity min-w-[75px]" style={{ width: `${Math.max(wonPct, 8)}%` }}>
                       <span className="text-[11px] font-bold text-white font-sans tracking-wide whitespace-nowrap">{wonLeads} / {totalLeadsCount}</span>
                     </div>
                   </div>
@@ -1081,16 +1081,17 @@ export default function DynamicReportViewPage() {
                 </div>
               </div>
             );
-          })() : slug === "cost-code-expense-analysis" ? (() => {
-            const totalSpent = financePayments.reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
+          })() : slug === "cost-code-expense" ? (() => {
+            /* HIGH-AESTHETIC CATEGORICAL DONUT GRAPHIC FOR COST CODE EXPENSE */
+            const totalSpent = processedData.reduce((acc, row) => acc + (Number(row.amount) || 0), 0);
             const groups: Record<string, number> = {};
-            financePayments.forEach(p => {
-              const cc = p.cost_code || p.category || "—";
-              groups[cc] = (groups[cc] || 0) + (Number(p.amount) || 0);
+            processedData.forEach(row => {
+              const name = String(row.cost_code || row.name || "General");
+              groups[name] = (groups[name] || 0) + (Number(row.amount) || 0);
             });
             const entries = Object.entries(groups).sort((a, b) => b[1] - a[1]);
-            const colors = ["bg-sky-500", "bg-cyan-500", "bg-teal-500", "bg-success", "bg-info"];
-            const textColors = ["text-sky-400", "text-cyan-400", "text-teal-400", "text-success", "text-info"];
+            const colors = ["bg-primary", "bg-info", "bg-chart-3", "bg-chart-4", "bg-success"];
+            const textColors = ["text-primary", "text-info", "text-chart-3", "text-chart-4", "text-success"];
 
             return (
               <div className="max-w-4xl mx-auto bg-card border border-border-custom rounded-xl p-8 space-y-8">
@@ -1102,7 +1103,7 @@ export default function DynamicReportViewPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
                   {/* Donut graphic */}
                   <div className="flex justify-center relative py-6">
-                    <div className="w-48 h-48 rounded-full border-8 border-sky-500 flex items-center justify-center relative shadow-lg shadow-sky-500/10">
+                    <div className="w-48 h-48 rounded-full border-8 border-primary flex items-center justify-center relative">
                       <div className="w-32 h-32 rounded-full bg-card flex flex-col items-center justify-center text-center border border-border-custom">
                         <span className="text-[10px] text-muted uppercase font-bold">Total Spent</span>
                         <span className="text-base font-extrabold text-white mt-1">₹{totalSpent.toLocaleString("en-IN")}</span>
@@ -1224,7 +1225,7 @@ export default function DynamicReportViewPage() {
               <div className="min-w-full overflow-x-auto rounded-xl border border-border-custom bg-card">
                 <table className="w-full text-xs">
                 <thead>
-                  <tr className="bg-gradient-to-r from-primary to-primary-hover text-white">
+                  <tr className="bg-primary text-white">
                     <th className="px-3 py-2.5 text-left font-semibold whitespace-nowrap w-12">#</th>
                     {meta.columns.map(col => (
                       <th key={col} className="px-3 py-2.5 text-left font-semibold whitespace-nowrap">
@@ -1265,8 +1266,8 @@ export default function DynamicReportViewPage() {
 
         {/* Back Navigation Bar */}
         <div className="px-6 py-3 border-t border-border-custom bg-sidebar shrink-0">
-          <Link href={`/c/${companyId}/reports`} className="text-xs text-muted hover:text-primary transition-colors flex items-center gap-1 w-fit">
-            <span>←</span> Back to Reports Hub
+          <Link href={`/c/${companyId}/reports`} className="text-xs text-muted hover:text-primary transition-colors flex items-center gap-1.5 w-fit">
+            <Icon name="arrow_left" className="w-3.5 h-3.5" /> Back to Reports Hub
           </Link>
         </div>
 

@@ -145,7 +145,7 @@ export default function ServicesPage() {
         </div>
 
         {/* Referral Banner */}
-        <div className="relative rounded-2xl bg-gradient-to-r from-primary/15 via-primary/10 to-transparent border border-border-custom p-8 overflow-hidden">
+        <div className="relative rounded-2xl bg-primary/10 border border-border-custom p-8 overflow-hidden">
           <div className="max-w-2xl relative z-10 space-y-3">
             <h3 className="text-lg font-extrabold tracking-tight text-foreground">SiteFlow Referral Program</h3>
             <p className="text-xs text-muted">

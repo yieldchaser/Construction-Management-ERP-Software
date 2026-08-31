@@ -6,6 +6,7 @@ import { getApi, authHeaders, fmtINR } from "@/lib/siteflow";
 import { useCompanySettings } from "@/context/CompanySettingsContext";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
+import Icon from "@/components/marketing/Icon";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type ProjectDash = {
@@ -103,7 +104,7 @@ function KpiCard({
     >
       <div className="flex items-center justify-between">
         <div className="text-xs uppercase tracking-wider text-muted">{label}</div>
-        <span className="text-[10px] text-muted group-hover:text-primary">details ›</span>
+        <span className="text-[10px] text-muted group-hover:text-primary inline-flex items-center gap-0.5">details <Icon name="chevron_right" className="w-3 h-3" /></span>
       </div>
       <div className={`mt-2 text-2xl font-bold ${color}`}>{value}</div>
       {sub && <div className="mt-1 text-[11px] text-muted">{sub}</div>}
@@ -128,8 +129,8 @@ function DrillModal({
       >
         <div className="flex items-center justify-between mb-1">
           <h3 className="text-lg font-semibold text-foreground">{data.title}</h3>
-          <button onClick={onClose} className="text-muted hover:text-foreground text-lg">
-            ✕
+          <button onClick={onClose} className="text-muted hover:text-foreground cursor-pointer">
+            <Icon name="close" className="w-5 h-5" />
           </button>
         </div>
         {data.subtitle && <div className="text-[11px] text-muted mb-4">{data.subtitle}</div>}
@@ -544,8 +545,8 @@ export default function ProjectDashboardPage() {
           <div className="w-full max-w-sm rounded-lg border border-border-custom bg-card p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-foreground">Add Cost Code</h3>
-              <button onClick={() => setShowAddCC(false)} className="text-muted hover:text-foreground">
-                ✕
+              <button onClick={() => setShowAddCC(false)} className="text-muted hover:text-foreground cursor-pointer">
+                <Icon name="close" className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={saveCostCode} className="space-y-4">

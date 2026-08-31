@@ -175,7 +175,7 @@ export function CustomFieldsSection({
                 onChange={(e) => setValue(f.id, e.target.checked)}
               />
               {f.field_label}
-              {f.is_required && <span className="text-rose-500">*</span>}
+              {f.is_required && <span className="text-danger">*</span>}
             </label>
           );
         }
@@ -184,7 +184,7 @@ export function CustomFieldsSection({
           <div key={f.id}>
             <div className="mb-1 text-xs font-medium text-muted">
               {f.field_label}
-              {f.is_required && <span className="text-rose-500"> *</span>}
+              {f.is_required && <span className="text-danger"> *</span>}
             </div>
 
             {f.field_type === "text" && (

@@ -606,7 +606,6 @@ export default function DashboardPage() {
                                   height="16"
                                   rx="2"
                                   fill="var(--success)"
-                                  className="shadow-sm"
                                 />
                                 <text
                                   x={calloutH2.x - 39}
@@ -636,7 +635,6 @@ export default function DashboardPage() {
                                   height="16"
                                   rx="2"
                                   fill="var(--warning)"
-                                  className="shadow-sm"
                                 />
                                 <text
                                   x={calloutW2.x + 39}
@@ -666,7 +664,6 @@ export default function DashboardPage() {
                                   height="16"
                                   rx="2"
                                   fill="var(--danger)"
-                                  className="shadow-sm"
                                 />
                                 <text
                                   x={calloutC2.x + 39}
@@ -1158,7 +1155,7 @@ export default function DashboardPage() {
                   </div>
 
                   {/* Project Financial Summary Table */}
-                  <div className="bg-card border border-border-custom rounded-lg overflow-hidden transition-all shadow-sm">
+                  <div className="bg-card border border-border-custom rounded-lg overflow-hidden transition-all">
                     <div className="overflow-x-auto">
                       <table className="w-full text-xs text-left border-collapse">
                         <thead>
@@ -1742,9 +1739,9 @@ export default function DashboardPage() {
               </div>
               <button
                 onClick={() => setIsWizardOpen(false)}
-                className="text-muted hover:text-foreground text-sm font-bold cursor-pointer"
+                className="text-muted hover:text-foreground cursor-pointer"
               >
-                ✕
+                <Icon name="close" className="w-5 h-5" />
               </button>
             </div>
 
@@ -1752,7 +1749,7 @@ export default function DashboardPage() {
             <div className="px-6 py-4 bg-elevated border-b border-border-custom flex items-center justify-center gap-8">
               <div className="flex items-center gap-2">
                 <span className={`h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold ${wizardStep === 1 ? "bg-primary text-white" : "bg-success text-white"}`}>
-                  {wizardStep > 1 ? "✓" : "1"}
+                  {wizardStep > 1 ? <Icon name="check" className="w-3.5 h-3.5" /> : "1"}
                 </span>
                 <span className={`text-xs font-semibold ${wizardStep === 1 ? "text-foreground" : "text-muted"}`}>Project Details</span>
               </div>

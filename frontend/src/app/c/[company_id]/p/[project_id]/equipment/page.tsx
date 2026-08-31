@@ -319,7 +319,7 @@ export default function EquipmentTrackingPage() {
           title="Equipment & Machinery Logs"
           subtitle="GPS verified mileage and refueling timeline"
         >
-          <button onClick={() => setIsAddEqOpen(true)} className="px-3.5 py-1.5 bg-primary rounded-md text-xs font-bold text-white hover:opacity-90 transition-all shadow-md cursor-pointer">
+          <button onClick={() => setIsAddEqOpen(true)} className="px-3.5 py-1.5 bg-primary rounded-md text-xs font-bold text-white hover:opacity-90 transition-all cursor-pointer">
             + Add Equipment
           </button>
         </PageHeader>
@@ -682,7 +682,7 @@ export default function EquipmentTrackingPage() {
           <div className="bg-background border border-border-custom rounded-lg w-full max-w-md shadow-2xl p-6 space-y-4">
             <div className="flex justify-between items-center border-b border-border-custom pb-2">
               <h3 className="text-xs font-extrabold text-foreground">Start Deployment: {activeDeployingEq.name}</h3>
-              <button onClick={() => setActiveDeployingEq(null)} className="text-muted hover:text-foreground">✕</button>
+              <button onClick={() => setActiveDeployingEq(null)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
             
             <div className="space-y-3 text-xs">
@@ -708,7 +708,7 @@ export default function EquipmentTrackingPage() {
                   >
                     <Icon name="camera" className="w-4 h-4" />Take Photo
                   </button>
-                  {isStartPhotoCaptured && <span className="text-success font-bold">✓ Captured (GPS Locked)</span>}
+                  {isStartPhotoCaptured && <span className="inline-flex items-center gap-1 text-success font-bold"><Icon name="check" className="w-3.5 h-3.5" /> Captured (GPS Locked)</span>}
                 </div>
               </div>
             </div>
@@ -727,7 +727,7 @@ export default function EquipmentTrackingPage() {
           <div className="bg-background border border-border-custom rounded-lg w-full max-w-md shadow-2xl p-6 space-y-4">
             <div className="flex justify-between items-center border-b border-border-custom pb-2">
               <h3 className="text-xs font-extrabold text-foreground">Stop Deployment: {activeStoppingEq.name}</h3>
-              <button onClick={() => setActiveStoppingEq(null)} className="text-muted hover:text-foreground">✕</button>
+              <button onClick={() => setActiveStoppingEq(null)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
 
             <div className="space-y-3 text-xs">
@@ -752,7 +752,7 @@ export default function EquipmentTrackingPage() {
                   >
                     <Icon name="camera" className="w-4 h-4" />Take Photo
                   </button>
-                  {isStopPhotoCaptured && <span className="text-success font-bold">✓ Captured (GPS verification active)</span>}
+                  {isStopPhotoCaptured && <span className="inline-flex items-center gap-1 text-success font-bold"><Icon name="check" className="w-3.5 h-3.5" /> Captured (GPS verification active)</span>}
                 </div>
               </div>
 
@@ -782,7 +782,7 @@ export default function EquipmentTrackingPage() {
           <div className="bg-background border border-border-custom rounded-lg w-full max-w-md shadow-2xl p-6 space-y-4">
             <div className="flex justify-between items-center border-b border-border-custom pb-2">
               <h3 className="text-xs font-extrabold text-foreground">Log Refueling: {activeFuelingEq.name}</h3>
-              <button onClick={() => setActiveFuelingEq(null)} className="text-muted hover:text-foreground">✕</button>
+              <button onClick={() => setActiveFuelingEq(null)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
 
             <div className="space-y-3 text-xs">
@@ -822,7 +822,7 @@ export default function EquipmentTrackingPage() {
           <div className="bg-background border border-border-custom rounded-lg w-full max-w-md shadow-2xl p-6 space-y-4">
             <div className="flex justify-between items-center border-b border-border-custom pb-2">
               <h3 className="text-xs font-extrabold text-foreground">Add Equipment Assets</h3>
-              <button onClick={() => setIsAddEqOpen(false)} className="text-muted hover:text-foreground">✕</button>
+              <button onClick={() => setIsAddEqOpen(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
 
             <form onSubmit={handleAddEquipment} className="space-y-3 text-xs">

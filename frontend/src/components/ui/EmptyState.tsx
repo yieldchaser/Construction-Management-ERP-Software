@@ -50,7 +50,7 @@ export function EmptyState({
             (action.href ? (
               <Link
                 href={action.href}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-bold text-white hover:opacity-90 transition-all shadow-sm"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-bold text-white hover:opacity-90 transition-all"
               >
                 {action.icon && <Icon name={action.icon} className="w-3.5 h-3.5" />}
                 {action.label}
@@ -59,7 +59,7 @@ export function EmptyState({
               <button
                 type="button"
                 onClick={action.onClick}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-bold text-white hover:opacity-90 transition-all shadow-sm cursor-pointer"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-bold text-white hover:opacity-90 transition-all cursor-pointer"
               >
                 {action.icon && <Icon name={action.icon} className="w-3.5 h-3.5" />}
                 {action.label}

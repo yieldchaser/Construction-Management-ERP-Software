@@ -754,7 +754,9 @@ export default function AttendancePage() {
                   <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
                     <div className="px-5 py-3 border-b border-border-custom flex items-center justify-between">
                       <h2 className="text-xs font-bold text-muted uppercase tracking-wider">{strings.workerLog}</h2>
-                      <span className="text-[10px] text-success font-semibold">● Real-time Logs</span>
+                      <span className="inline-flex items-center gap-1.5 text-[10px] text-success font-semibold">
+                        <span className="h-1.5 w-1.5 rounded-full bg-success" /> Real-time Logs
+                      </span>
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full text-xs">
@@ -790,7 +792,9 @@ export default function AttendancePage() {
                                   <td className="px-5 py-3 text-muted font-bold">{log.shift_multiplier || 1.0}x</td>
                                   <td className="px-5 py-3">
                                     {log.location_verified ? (
-                                      <span className="text-success">✓ Yes</span>
+                                      <span className="inline-flex items-center gap-1 text-success font-medium">
+                                        <Icon name="check" className="w-3.5 h-3.5" /> Yes
+                                      </span>
                                     ) : (
                                       <span className="text-danger font-bold uppercase text-[9px] tracking-wider bg-danger/10 border border-danger/20 px-2 py-0.5 rounded-full">
                                         Location (Not Verified)
@@ -835,9 +839,10 @@ export default function AttendancePage() {
                           </div>
                           <button
                             onClick={() => { setSelectedSubcon(sc); setSubconPhoto(""); }}
-                            className="mt-6 w-full text-center py-2 bg-primary/10 border border-primary/20 text-primary text-xs font-bold rounded-md hover:bg-primary/20 transition-all"
+                            className="mt-6 w-full py-2 bg-primary/10 border border-primary/20 text-primary text-xs font-bold rounded-md hover:bg-primary/20 transition-all inline-flex items-center justify-center gap-1 cursor-pointer"
                           >
-                            Log Daily Crew Size →
+                            Log Daily Crew Size
+                            <Icon name="arrow_forward" className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       ))
@@ -853,7 +858,7 @@ export default function AttendancePage() {
                             <h2 className="text-sm font-extrabold text-foreground">Log Subcontractor Crew Attendance</h2>
                             <p className="text-[10px] text-muted mt-0.5">{selectedSubcon.name} · Role Allocation Grid</p>
                           </div>
-                          <button onClick={() => setSelectedSubcon(null)} className="text-muted hover:text-foreground">✕</button>
+                          <button onClick={() => setSelectedSubcon(null)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
                         </div>
                         
                         <div className="p-6 overflow-y-auto space-y-6 flex-1">
@@ -1156,7 +1161,7 @@ export default function AttendancePage() {
           <div className="bg-background border border-border-custom rounded-lg w-full max-w-md shadow-2xl p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-border-custom pb-2">
               <h3 className="text-sm font-extrabold text-foreground">Select Regional Language</h3>
-              <button onClick={() => setShowLanguageDrawer(false)} className="text-muted hover:text-foreground">✕</button>
+              <button onClick={() => setShowLanguageDrawer(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

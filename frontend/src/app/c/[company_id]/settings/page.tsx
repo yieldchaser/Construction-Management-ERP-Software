@@ -1080,7 +1080,7 @@ export default function CompanySettingsPage() {
               key={s.id}
               onClick={() => setActiveSection(s.id)}
               className={`w-full text-left px-3 py-2.5 rounded-md text-xs font-bold transition-all duration-200 ${
-                activeSection === s.id ? "bg-primary text-white shadow-lg shadow-primary/10" : "text-muted hover:text-foreground hover:bg-elevated"
+                activeSection === s.id ? "bg-primary text-white" : "text-muted hover:text-foreground hover:bg-elevated"
               }`}
             >
               {s.label}
@@ -1117,7 +1117,7 @@ export default function CompanySettingsPage() {
                   {([["details", "Company Details"], ["branches", "Branches"], ["business", "Business Profile"]] as const).map(([id, label]) => (
                     <button key={id} onClick={() => setCompanyTab(id)}
                       className={`px-5 py-2.5 rounded-md text-xs font-bold transition-all duration-200 ${
-                        companyTab === id ? "bg-primary text-white shadow-lg shadow-primary/10" : "text-muted hover:text-foreground hover:bg-elevated"
+                        companyTab === id ? "bg-primary text-white" : "text-muted hover:text-foreground hover:bg-elevated"
                       }`}>
                       {label}
                     </button>
@@ -1266,10 +1266,10 @@ export default function CompanySettingsPage() {
                     <h3 className="text-[10px] uppercase tracking-wider text-muted font-bold">Construction Type</h3>
                     <div className="flex flex-wrap gap-2">
                       {bTypes.map((t) => (
-                        <span key={t} className="text-xs bg-primary/15 text-primary border border-primary/20 px-2.5 py-1 rounded-full flex items-center gap-1.5">
-                          {t}
-                          <button onClick={() => toggleCType(t)} className="text-primary/70 hover:text-primary">×</button>
-                        </span>
+                          <span key={t} className="text-xs bg-primary/15 text-primary border border-primary/20 px-2.5 py-1 rounded-full flex items-center gap-1.5">
+                            {t}
+                            <button onClick={() => toggleCType(t)} className="text-primary/70 hover:text-primary cursor-pointer"><Icon name="close" className="w-3.5 h-3.5" /></button>
+                          </span>
                       ))}
                       {bTypes.length === 0 && <span className="text-xs text-muted">None selected</span>}
                     </div>
@@ -1394,7 +1394,7 @@ export default function CompanySettingsPage() {
                 {([["leave", "Leave Policy"], ["holiday", "Holiday Calendar"], ["salary", "Salary Template"], ["statutory", "Statutory (PF/ESI/TDS)"]] as const).map(([id, label]) => (
                   <button key={id} onClick={() => setPayrollTab(id)}
                     className={`px-5 py-2.5 rounded-md text-xs font-bold transition-all duration-200 ${
-                      payrollTab === id ? "bg-primary text-white shadow-lg shadow-primary/10" : "text-muted hover:text-foreground hover:bg-elevated"
+                      payrollTab === id ? "bg-primary text-white" : "text-muted hover:text-foreground hover:bg-elevated"
                     }`}>
                     {label}
                   </button>
@@ -1430,7 +1430,7 @@ export default function CompanySettingsPage() {
                             <input type="number" placeholder="Days" value={t.days}
                               onChange={(e) => editLtType(i, "days", Number(e.target.value) || 0)}
                               className="w-24 bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
-                            <button type="button" onClick={() => removeLtType(i)} className="text-muted hover:text-danger px-2">✕</button>
+                            <button type="button" onClick={() => removeLtType(i)} className="text-muted hover:text-danger px-2 cursor-pointer"><Icon name="close" className="w-4 h-4" /></button>
                           </div>
                         ))}
                       </div>
@@ -1587,7 +1587,9 @@ export default function CompanySettingsPage() {
                             <input type="number" placeholder="Amount" value={a.amount}
                               onChange={(e) => editLine(stAllowances, setStAllowances, i, "amount", parseFloat(e.target.value) || 0)}
                               className="w-32 bg-elevated border border-border-custom focus:border-primary rounded-md px-3 py-2 text-xs text-foreground outline-none" />
-                            <button type="button" onClick={() => setStAllowances(stAllowances.filter((_, j) => j !== i))} className="text-muted hover:text-danger px-2">✕</button>
+                            <button type="button" onClick={() => setStAllowances(stAllowances.filter((_, j) => j !== i))} className="text-muted hover:text-danger px-2 cursor-pointer inline-flex items-center">
+                              <Icon name="close" className="w-3.5 h-3.5" />
+                            </button>
                           </div>
                         ))}
                         <div className="text-right text-sm text-muted">Fixed Allowance: ₹{stFixedAllowance.toLocaleString("en-IN")}</div>
@@ -1836,7 +1838,7 @@ export default function CompanySettingsPage() {
                 {([["entry", "Entry Controls"], ["progress", "Progress Controls"], ["finance", "Finance Controls"], ["material", "Material Controls"]] as const).map(([id, label]) => (
                   <button key={id} onClick={() => setWfTab(id)}
                     className={`px-5 py-2.5 rounded-md text-xs font-bold transition-all duration-200 ${
-                      wfTab === id ? "bg-primary text-white shadow-lg shadow-primary/10" : "text-muted hover:text-foreground hover:bg-elevated"
+                      wfTab === id ? "bg-primary text-white" : "text-muted hover:text-foreground hover:bg-elevated"
                     }`}>{label}</button>
                 ))}
               </div>
@@ -1926,7 +1928,7 @@ export default function CompanySettingsPage() {
               <div className="flex border-b border-border-custom gap-1 bg-elevated p-1 rounded-lg w-max">
                 {([["pdf", "PDF Template"], ["terms", "Terms & Conditions"], ["number", "Number Format"], ["custom", "Custom Fields"]] as const).map(([id, label]) => (
                   <button key={id} onClick={() => setDocTab(id)}
-                    className={`px-5 py-2.5 rounded-md text-xs font-bold transition-all duration-200 ${docTab === id ? "bg-primary text-white shadow-lg shadow-primary/10" : "text-muted hover:text-foreground hover:bg-elevated"}`}>
+                    className={`px-5 py-2.5 rounded-md text-xs font-bold transition-all duration-200 ${docTab === id ? "bg-primary text-white" : "text-muted hover:text-foreground hover:bg-elevated"}`}>
                     {label}
                   </button>
                 ))}
@@ -2279,7 +2281,7 @@ export default function CompanySettingsPage() {
                     ) : gsPhones.map((p) => (
                       <span key={p} className="text-xs bg-primary/15 text-primary border border-primary/20 px-2.5 py-1 rounded-full flex items-center gap-1.5">
                         {p}
-                        <button onClick={() => removeGsPhone(p)} className="text-primary/70 hover:text-primary">×</button>
+                        <button onClick={() => removeGsPhone(p)} className="text-primary/70 hover:text-primary cursor-pointer"><Icon name="close" className="w-3.5 h-3.5" /></button>
                       </span>
                     ))}
                   </div>
@@ -2463,7 +2465,7 @@ export default function CompanySettingsPage() {
 
               <div className="bg-card border border-border-custom rounded-lg p-6 space-y-3">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-primary/15 text-primary font-bold flex items-center justify-center text-lg">★</div>
+                  <div className="h-10 w-10 rounded-full bg-primary/15 text-primary font-bold flex items-center justify-center"><Icon name="star" className="w-5 h-5" /></div>
                   <div>
                     <div className="text-sm font-bold text-foreground">Need to change your plan?</div>
                     <div className="text-[10px] text-muted">Plan, billing cycle and renewal are managed by the billing team.</div>

@@ -717,7 +717,7 @@ ${tasksXml}
                 className="input-field px-2 py-1.5 text-xs focus:outline-none"
                 placeholder="From"
               />
-              <span className="text-muted">→</span>
+              <span className="text-muted text-xs">to</span>
               <input
                 type="date"
                 value={dateTo}
@@ -901,7 +901,7 @@ ${tasksXml}
                 onChange={(e) => setTsDateFrom(e.target.value)}
                 className="input-field px-2 py-1.5 text-xs focus:outline-none"
               />
-              <span className="text-muted">→</span>
+              <span className="text-muted text-xs">to</span>
               <input
                 type="date"
                 value={tsDateTo}
@@ -933,7 +933,7 @@ ${tasksXml}
                 setTsFormError(null);
                 setTsDrawerOpen(true);
               }}
-              className="px-4 py-1.5 bg-primary hover:bg-primary-hover text-white rounded-md text-xs font-medium shadow-sm transition-all cursor-pointer"
+              className="px-4 py-1.5 bg-primary hover:bg-primary-hover text-white rounded-md text-xs font-medium transition-all cursor-pointer"
             >
               + New Timesheet
             </button>
@@ -1006,8 +1006,8 @@ ${tasksXml}
           <div className="w-full max-w-md bg-card border border-border-custom rounded-lg overflow-hidden shadow-lg">
             <div className="p-6 border-b border-border-custom flex justify-between items-center">
               <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">New Timesheet</h3>
-              <button onClick={() => setTsDrawerOpen(false)} className="text-muted hover:text-foreground font-bold">
-                ×
+              <button onClick={() => setTsDrawerOpen(false)} className="text-muted hover:text-foreground cursor-pointer">
+                <Icon name="close" className="w-5 h-5" />
               </button>
             </div>
 
@@ -1170,7 +1170,7 @@ ${tasksXml}
               <button
                 type="submit"
                 disabled={tsSaving || !tsProjectId || !tsPartyId}
-                className="w-full py-2 bg-primary hover:bg-primary-hover text-white font-medium text-sm rounded-md shadow-sm transition-all mt-2 cursor-pointer disabled:opacity-50"
+                className="w-full py-2 bg-primary hover:bg-primary-hover text-white font-medium text-sm rounded-md transition-all mt-2 cursor-pointer disabled:opacity-50"
               >
                 {tsSaving ? "Saving…" : "Save Timesheet"}
               </button>

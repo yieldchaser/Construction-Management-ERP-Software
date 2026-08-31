@@ -70,7 +70,7 @@ export default function ItemWiseSalesReportPage() {
         title="Item Wise Sales Report"
         subtitle="Itemized client billing, quantities, taxes and realization tracker"
       >
-        <button onClick={() => showToast("Exporting Item Wise Sales Report...")} className="px-3.5 py-1.5 bg-accent hover:bg-accent-hover text-white text-xs font-bold rounded-lg inline-flex items-center gap-1.5 cursor-pointer shadow-md">
+        <button onClick={() => showToast("Exporting Item Wise Sales Report...")} className="px-3.5 py-1.5 bg-accent hover:bg-accent-hover text-white text-xs font-bold rounded-lg inline-flex items-center gap-1.5 cursor-pointer">
           Download Excel <Icon name="arrow_down" className="w-3.5 h-3.5" />
         </button>
       </PageHeader>

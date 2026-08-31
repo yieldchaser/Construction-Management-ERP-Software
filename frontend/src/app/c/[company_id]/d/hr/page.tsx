@@ -1212,9 +1212,9 @@ export default function HRPayrollPage() {
                         </div>
                         <button
                           onClick={() => setShowNewTimesheetDrawer(false)}
-                          className="text-muted hover:text-foreground text-lg font-bold"
+                          className="text-muted hover:text-foreground cursor-pointer"
                         >
-                          ✕
+                          <Icon name="close" className="w-5 h-5" />
                         </button>
                       </div>
 
@@ -1650,7 +1650,7 @@ export default function HRPayrollPage() {
                 <button onClick={() => window.print()} className="inline-flex items-center gap-1 px-3 py-1 bg-primary/20 hover:bg-primary/35 text-primary border border-border-custom rounded text-[10px] font-bold transition-all">
                   <Icon name="printer" className="w-3.5 h-3.5" /> Download PDF
                 </button>
-                <button onClick={() => setSelectedPayslip(null)} className="text-muted hover:text-foreground text-xl">✕</button>
+                <button onClick={() => setSelectedPayslip(null)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
               </div>
             </div>
 
@@ -1712,7 +1712,7 @@ export default function HRPayrollPage() {
           <div className="bg-card border border-border-custom rounded-lg w-full max-w-xl p-6" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-base font-bold text-foreground">Add New Employee</h2>
-              <button onClick={() => setShowAddEmp(false)} className="text-muted hover:text-foreground text-xl">✕</button>
+              <button onClick={() => setShowAddEmp(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
               {[
@@ -1758,7 +1758,7 @@ export default function HRPayrollPage() {
           <div className="bg-card border border-border-custom rounded-lg w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-base font-bold text-foreground">Apply for Leave</h2>
-              <button onClick={() => setShowApplyLeaveModal(false)} className="text-muted hover:text-foreground text-xl">✕</button>
+              <button onClick={() => setShowApplyLeaveModal(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
             
             <div className="space-y-4 text-xs">
@@ -1871,7 +1871,7 @@ export default function HRPayrollPage() {
           <div className="bg-card border border-border-custom rounded-lg w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-base font-bold text-foreground">Add Company Holiday</h2>
-              <button onClick={() => setShowAddHolidayModal(false)} className="text-muted hover:text-foreground text-xl">✕</button>
+              <button onClick={() => setShowAddHolidayModal(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
             <div className="space-y-4 text-xs">
               <div className="space-y-1">
@@ -1914,7 +1914,7 @@ export default function HRPayrollPage() {
             <div>
               <div className="flex items-center justify-between pb-4 border-b border-border-custom mb-5">
                 <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">Add Workforce</h2>
-                <button onClick={() => setShowWorkforceDrawer(false)} className="text-muted hover:text-foreground text-lg">✕</button>
+                <button onClick={() => setShowWorkforceDrawer(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
               </div>
               
               <div className="space-y-4 text-xs">
@@ -2006,7 +2006,7 @@ export default function HRPayrollPage() {
             <div>
               <div className="flex items-center justify-between pb-4 border-b border-border-custom mb-5">
                 <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">Workforce Library</h2>
-                <button onClick={() => setShowLibraryDrawer(false)} className="text-muted hover:text-foreground text-lg">✕</button>
+                <button onClick={() => setShowLibraryDrawer(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
               </div>
 
               <div className="mb-4">
@@ -2060,7 +2060,7 @@ export default function HRPayrollPage() {
                   <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">{selectedEmpDetail.name}</h2>
                   <p className="text-[10px] text-muted font-sans">{selectedEmpDetail.code}</p>
                 </div>
-                <button onClick={() => setShowDetailsDrawer(false)} className="text-muted hover:text-foreground text-lg">✕</button>
+                <button onClick={() => setShowDetailsDrawer(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
               </div>
 
               <div className="space-y-4 text-xs">

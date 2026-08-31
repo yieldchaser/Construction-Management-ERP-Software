@@ -214,7 +214,7 @@ export default function SubconPage() {
       >
         <button
           onClick={() => setShowWOModal(true)}
-          className="flex items-center gap-1.5 px-3.5 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary/95 transition-all shadow-md cursor-pointer"
+          className="flex items-center gap-1.5 px-3.5 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary/95 transition-all cursor-pointer"
         >
           + Sub Con Work Order
         </button>
@@ -335,14 +335,14 @@ export default function SubconPage() {
         {showWOModal && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowWOModal(false)}>
             <div className="bg-card border border-border-custom rounded-xl w-full max-w-sm p-5 relative overflow-hidden" onClick={e => e.stopPropagation()}>
-              <div className="flex justify-between items-start mb-4">
+              <div className="flex justify-between items-start">
                 <div>
                   <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Sub-Con Workorder</h3>
                   <div className="flex items-center gap-1 mt-0.5">
                     <span className="text-[11px] text-muted font-sans">WO number: pending</span>
                   </div>
                 </div>
-                <button onClick={() => setShowWOModal(false)} className="text-muted hover:text-foreground text-base">✕</button>
+                <button onClick={() => setShowWOModal(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
               </div>
 
               <div className="space-y-4 my-4 text-xs">
@@ -367,22 +367,23 @@ export default function SubconPage() {
                   <button
                     type="button"
                     onClick={() => setShowAddPartyDrawer(true)}
-                    className="w-full mt-2.5 py-3 border border-dashed border-primary/50 text-primary hover:bg-primary/5 font-bold rounded-lg text-xs flex items-center justify-center gap-1 transition-all"
+                    className="w-full mt-2.5 py-3 border border-dashed border-primary/50 text-primary hover:bg-primary/5 font-bold rounded-lg text-xs flex items-center justify-center gap-1 transition-all cursor-pointer"
                   >
                     <span>+ Create Subcontractor</span>
                   </button>
                 </div>
+
 
               </div>
 
               <div className="mt-5 flex flex-col gap-2">
                 <button
                   onClick={handleCreateWorkorder}
-                  className="w-full py-2 bg-primary hover:bg-primary/95 text-white text-xs font-bold rounded-lg transition-all shadow-md"
+                  className="w-full py-2 bg-primary hover:bg-primary/95 text-white text-xs font-bold rounded-lg transition-all cursor-pointer"
                 >
                   Create Workorder
                 </button>
-                <button onClick={() => setShowWOModal(false)} className="text-[11px] text-muted hover:text-foreground font-medium self-center mt-1">close</button>
+                <button onClick={() => setShowWOModal(false)} className="text-[11px] text-muted hover:text-foreground font-medium self-center mt-1 cursor-pointer">close</button>
               </div>
             </div>
           </div>
@@ -395,7 +396,7 @@ export default function SubconPage() {
               <div>
                 <div className="flex items-center justify-between pb-4 border-b border-border-custom mb-5">
                   <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">Create Subcontractor</h2>
-                  <button onClick={() => setShowAddPartyDrawer(false)} className="text-muted hover:text-foreground text-lg">✕</button>
+                  <button onClick={() => setShowAddPartyDrawer(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
                 </div>
 
                 <div className="space-y-4 text-xs">

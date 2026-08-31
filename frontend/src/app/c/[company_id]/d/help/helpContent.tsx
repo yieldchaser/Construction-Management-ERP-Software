@@ -217,7 +217,7 @@ export function getHelpCategories(companyId: string): HelpCategory[] {
                 <Link className="help-link" href={c(companyId, "/d/budget")}>
                   "Budget"
                 </Link>
-                , and click the "↑ Import Excel" button.
+                , and click the "Import Excel" button.
               </p>
               <p className="mt-2">
                 Provide an Excel spreadsheet with columns for item description, quantity, unit, and rate (or supply and installation rates), along with optional section names and cost codes.

@@ -438,7 +438,7 @@ export default function LibraryHubPage() {
             else if (activeTab === "rate") setIsRateDrawerOpen(true);
             else setIsSimpleDrawerOpen(true);
           }}
-          className="px-3.5 py-1.5 bg-primary hover:bg-primary/95 text-white rounded-lg text-xs font-bold shadow-md transition-all cursor-pointer"
+          className="px-3.5 py-1.5 bg-primary hover:bg-primary/95 text-white rounded-lg text-xs font-bold transition-all cursor-pointer"
         >
           {activeTab === "todo" ? "+ Add To Do" : "+ Add to Library"}
         </button>
@@ -818,7 +818,7 @@ export default function LibraryHubPage() {
           <div className="w-full max-w-md bg-card border border-border-custom rounded-lg overflow-hidden shadow-lg animate-in fade-in zoom-in-95 duration-150">
             <div className="p-6 border-b border-border-custom flex justify-between items-center">
               <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider">{activeTab === "todo" ? "Add To Do" : `Add ${activeTab.replace("-", " ")}`}</h3>
-              <button onClick={() => setIsSimpleDrawerOpen(false)} className="text-muted hover:text-foreground font-bold">×</button>
+              <button onClick={() => setIsSimpleDrawerOpen(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
 
             <form onSubmit={handleCreateSimple} className="p-6 space-y-4">
@@ -863,7 +863,7 @@ export default function LibraryHubPage() {
 
               <button
                 type="submit"
-                className="w-full py-2 bg-primary hover:bg-primary-hover text-white font-medium rounded-md text-sm shadow-sm transition-all mt-4 cursor-pointer"
+                className="w-full py-2 bg-primary hover:bg-primary-hover text-white font-medium rounded-md text-sm transition-all mt-4 cursor-pointer"
               >
                 Create Item
               </button>
@@ -878,7 +878,7 @@ export default function LibraryHubPage() {
           <div className="w-full max-w-md bg-card border border-border-custom rounded-lg overflow-hidden shadow-lg animate-in fade-in zoom-in-95 duration-150">
             <div className="p-6 border-b border-border-custom flex justify-between items-center">
               <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">Register Library Party</h3>
-              <button onClick={() => setIsPartyDrawerOpen(false)} className="text-muted hover:text-foreground font-bold">×</button>
+              <button onClick={() => setIsPartyDrawerOpen(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
 
             <form onSubmit={handleCreateParty} className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
@@ -1100,7 +1100,7 @@ export default function LibraryHubPage() {
 
               <button
                 type="submit"
-                className="w-full py-2 bg-primary hover:bg-primary-hover text-white font-medium rounded-md text-sm shadow-sm transition-all mt-2 cursor-pointer"
+                className="w-full py-2 bg-primary hover:bg-primary-hover text-white font-medium rounded-md text-sm transition-all mt-2 cursor-pointer"
               >
                 Register Party
               </button>
@@ -1115,7 +1115,7 @@ export default function LibraryHubPage() {
           <div className="w-full max-w-md bg-card border border-border-custom rounded-lg overflow-hidden shadow-lg animate-in fade-in zoom-in-95 duration-150">
             <div className="p-6 border-b border-border-custom flex justify-between items-center">
               <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">New Material Item</h3>
-              <button onClick={() => setIsMaterialDrawerOpen(false)} className="text-muted hover:text-foreground font-bold">×</button>
+              <button onClick={() => setIsMaterialDrawerOpen(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
 
             <form onSubmit={handleCreateMaterial} className="p-6 space-y-3.5 max-h-[500px] overflow-y-auto">
@@ -1225,7 +1225,7 @@ export default function LibraryHubPage() {
 
               <button
                 type="submit"
-                className="w-full py-2 bg-primary hover:bg-primary-hover text-white font-medium rounded-md text-sm shadow-sm transition-all mt-2 cursor-pointer"
+                className="w-full py-2 bg-primary hover:bg-primary-hover text-white font-medium rounded-md text-sm transition-all mt-2 cursor-pointer"
               >
                 Save Material
               </button>
@@ -1240,7 +1240,7 @@ export default function LibraryHubPage() {
           <div className="w-full max-w-md bg-card border border-border-custom rounded-lg overflow-hidden shadow-lg animate-in fade-in zoom-in-95 duration-150">
             <div className="p-6 border-b border-border-custom flex justify-between items-center">
               <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">New Rate Card Item</h3>
-              <button onClick={() => setIsRateDrawerOpen(false)} className="text-muted hover:text-foreground font-bold">×</button>
+              <button onClick={() => setIsRateDrawerOpen(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
 
             <form onSubmit={handleCreateRate} className="p-6 space-y-3.5 max-h-[500px] overflow-y-auto">
@@ -1370,7 +1370,7 @@ export default function LibraryHubPage() {
 
               <button
                 type="submit"
-                className="w-full py-2 bg-primary hover:bg-primary-hover text-white font-medium rounded-md text-sm shadow-sm transition-all mt-2 cursor-pointer"
+                className="w-full py-2 bg-primary hover:bg-primary-hover text-white font-medium rounded-md text-sm transition-all mt-2 cursor-pointer"
               >
                 Save Rate Card Item
               </button>

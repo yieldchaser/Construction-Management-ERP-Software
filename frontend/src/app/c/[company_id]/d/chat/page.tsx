@@ -684,9 +684,9 @@ export default function ChatPage() {
             {/* Close */}
             <button
               onClick={() => setShowGroupModal(false)}
-              className="absolute right-4 top-4 text-muted hover:text-foreground text-sm cursor-pointer"
+              className="absolute right-4 top-4 text-muted hover:text-foreground cursor-pointer"
             >
-              ✕
+              <Icon name="close" className="w-5 h-5" />
             </button>
 
             <h2 className="text-sm font-extrabold text-foreground uppercase tracking-wider mb-6 text-center">Create Group</h2>
@@ -729,7 +729,7 @@ export default function ChatPage() {
               <div className="flex gap-3 pt-4">
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2.5 bg-primary hover:bg-primary-hover text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-primary/20 cursor-pointer"
+                  className="flex-1 px-4 py-2.5 bg-primary hover:bg-primary-hover text-white rounded-lg text-xs font-bold transition-all cursor-pointer"
                 >
                   Create Chat Group
                 </button>
@@ -746,9 +746,9 @@ export default function ChatPage() {
             {/* Close */}
             <button
               onClick={() => setShowMembersModal(false)}
-              className="absolute right-4 top-4 text-muted hover:text-foreground text-sm cursor-pointer"
+              className="absolute right-4 top-4 text-muted hover:text-foreground cursor-pointer"
             >
-              ✕
+              <Icon name="close" className="w-5 h-5" />
             </button>
 
             {/* Header info */}
@@ -868,9 +868,9 @@ export default function ChatPage() {
             {/* Close */}
             <button
               onClick={() => setShowAddMemberModal(false)}
-              className="absolute right-4 top-4 text-muted hover:text-foreground text-sm cursor-pointer"
+              className="absolute right-4 top-4 text-muted hover:text-foreground cursor-pointer"
             >
-              ✕
+              <Icon name="close" className="w-5 h-5" />
             </button>
 
             <h2 className="text-sm font-extrabold text-foreground uppercase tracking-wider mb-6 text-center">Add Member</h2>

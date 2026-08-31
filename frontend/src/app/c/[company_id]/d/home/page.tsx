@@ -604,9 +604,9 @@ export default function ProjectsHomePage() {
               </div>
               <button
                 onClick={() => setIsLeaveModalOpen(false)}
-                className="text-muted hover:text-foreground font-semibold text-xl cursor-pointer"
+                className="text-muted hover:text-foreground cursor-pointer"
               >
-                ×
+                <Icon name="close" className="w-5 h-5" />
               </button>
             </div>
 
@@ -662,7 +662,7 @@ export default function ProjectsHomePage() {
           <div className="w-full max-w-md bg-card border border-border-custom rounded-lg overflow-hidden shadow-lg animate-in fade-in zoom-in-95 duration-150">
             <div className="p-5 border-b border-border-custom flex justify-between items-center bg-card">
               <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider">Add New Project</h3>
-              <button onClick={() => setIsNewProjectOpen(false)} className="text-muted hover:text-foreground font-semibold text-lg cursor-pointer">×</button>
+              <button onClick={() => setIsNewProjectOpen(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
 
             <form onSubmit={handleCreateProject} className="p-5 space-y-4">
@@ -702,7 +702,7 @@ export default function ProjectsHomePage() {
 
               <button
                 type="submit"
-                className="w-full py-2 bg-primary hover:bg-primary-hover text-white font-medium rounded-md text-sm shadow-sm transition-all mt-4 cursor-pointer"
+                className="w-full py-2 bg-primary hover:bg-primary-hover text-white font-medium rounded-md text-sm transition-all mt-4 cursor-pointer"
               >
                 Create Project
               </button>
@@ -723,9 +723,9 @@ export default function ProjectsHomePage() {
               </div>
               <button
                 onClick={() => setIsMaterialDrawerOpen(false)}
-                className="text-muted hover:text-foreground font-semibold text-lg cursor-pointer"
+                className="text-muted hover:text-foreground cursor-pointer"
               >
-                ×
+                <Icon name="close" className="w-5 h-5" />
               </button>
             </div>
 

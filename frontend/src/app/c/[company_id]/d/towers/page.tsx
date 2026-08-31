@@ -9,6 +9,7 @@ import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import { CardSkeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
+import Icon from "@/components/marketing/Icon";
 
 interface Tower {
   id: string;
@@ -235,7 +236,7 @@ export default function TowersPage() {
           <div className="bg-background border border-border-custom rounded-lg w-full max-w-md shadow-2xl p-6 space-y-4 text-xs font-sans max-h-[85vh] overflow-y-auto">
             <div className="flex justify-between items-center border-b border-border-custom pb-2">
               <h3 className="text-xs font-extrabold text-foreground">{editingId ? "Edit Tower / Phase" : "New Tower / Phase"}</h3>
-              <button onClick={resetForm} className="text-muted hover:text-foreground">✕</button>
+              <button onClick={resetForm} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
             <div className="space-y-3">
               <div className="space-y-1">

@@ -8,6 +8,7 @@ import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import SegmentedTabs from "@/components/ui/Tabs";
 import { EmptyState } from "@/components/ui/EmptyState";
+import Icon from "@/components/marketing/Icon";
 
 interface Project {
   id: string;
@@ -227,7 +228,7 @@ export default function ToDoPage() {
       >
         <button
           onClick={() => setIsNewTodoOpen(true)}
-          className="px-3.5 py-1.5 bg-primary hover:bg-primary-hover text-white rounded-md text-xs font-medium shadow-md transition-all cursor-pointer"
+          className="px-3.5 py-1.5 bg-primary hover:bg-primary-hover text-white rounded-md text-xs font-medium transition-all cursor-pointer"
         >
           + New To Do
         </button>
@@ -346,7 +347,7 @@ export default function ToDoPage() {
           <div className="w-full max-w-md bg-card border border-border-custom rounded-lg overflow-hidden shadow-lg animate-in fade-in zoom-in-95 duration-150 relative">
             <div className="p-6 border-b border-border-custom flex justify-between items-center">
               <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">Add New To Do</h3>
-              <button onClick={() => setIsNewTodoOpen(false)} className="text-muted hover:text-foreground font-bold">×</button>
+              <button onClick={() => setIsNewTodoOpen(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
 
             <form onSubmit={handleCreateTodo} className="p-6 space-y-4">
@@ -418,7 +419,7 @@ export default function ToDoPage() {
 
               <button
                 type="submit"
-                className="w-full py-2 bg-primary hover:bg-primary-hover text-white font-medium text-sm rounded-md shadow-sm transition-all mt-4 cursor-pointer"
+                className="w-full py-2 bg-primary hover:bg-primary-hover text-white font-medium text-sm rounded-md transition-all mt-4 cursor-pointer"
               >
                 Save To Do
               </button>

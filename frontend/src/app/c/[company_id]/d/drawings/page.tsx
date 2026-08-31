@@ -57,9 +57,9 @@ const PIN_META: Record<PinCategory, { bg: string; text: string; ring: string; la
   Approval:    { bg: "bg-success", text: "text-white",  ring: "ring-success/40", label: "Appr" },
 };
 
-const REV_META: Record<RevStatus, { label: string; badge: string; dot: string; icon?: string; iconName?: IconName }> = {
-  current:    { label: "Current",    badge: "bg-success/10 border-success/20 text-success", dot: "bg-success", icon: "●" },
-  superseded: { label: "Superseded", badge: "bg-elevated/30 border-border-custom/20 text-muted",         dot: "bg-elevated",   icon: "◌" },
+const REV_META: Record<RevStatus, { label: string; badge: string; dot: string; iconName?: IconName }> = {
+  current:    { label: "Current",    badge: "bg-success/10 border-success/20 text-success", dot: "bg-success", iconName: "check" },
+  superseded: { label: "Superseded", badge: "bg-elevated/30 border-border-custom/20 text-muted",         dot: "bg-elevated",   iconName: "schedule" },
   locked:     { label: "Locked",     badge: "bg-warning/10 border-warning/20 text-warning",       dot: "bg-warning",  iconName: "lock" },
 };
 
@@ -397,8 +397,9 @@ export default function DrawingsPage() {
       >
         {tab === "drawings" && (
           <button onClick={() => { setNewRevCode(getNextRevCode()); setNewRevComment(""); setNewRevFile(null); setShowRevModal(true); }}
-            className="px-3.5 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:opacity-90 transition-all shadow-md cursor-pointer">
-            ↑ Upload New Revision
+            className="px-3.5 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:opacity-90 transition-all cursor-pointer inline-flex items-center gap-1.5">
+            <Icon name="arrow_up" className="w-3.5 h-3.5" />
+            Upload New Revision
           </button>
         )}
       </PageHeader>
@@ -518,15 +519,15 @@ export default function DrawingsPage() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${m.bg} ${m.text}`}>{pin.category} #{pin.seq}</span>
-                          {pin.resolved && <span className="text-[9px] text-success font-bold bg-success/10 px-1.5 py-0.5 rounded">✓ Resolved</span>}
+                          {pin.resolved && <span className="text-[9px] text-success font-bold bg-success/10 px-1.5 py-0.5 rounded inline-flex items-center gap-1"><Icon name="check" className="w-3 h-3" /> Resolved</span>}
                           {pin.photoAttached && <span className="text-[9px] text-info bg-info/10 px-1.5 py-0.5 rounded inline-flex items-center gap-1"><Icon name="camera" className="w-3 h-3" /> Photo</span>}
                         </div>
                         <div className="flex items-center gap-2">
                           <button onClick={() => handleToggleResolved(pin.id)}
-                            className={`text-[10px] px-2.5 py-1 font-bold rounded-lg border transition-all ${pin.resolved ? "bg-elevated/30 border-border-custom/20 text-muted hover:border-border-custom" : "bg-success/10 border-success/20 text-success hover:bg-success/10"}`}>
-                            {pin.resolved ? "Re-open" : "✓ Mark Resolved"}
+                            className={`text-[10px] px-2.5 py-1 font-bold rounded-lg border transition-all inline-flex items-center gap-1 cursor-pointer ${pin.resolved ? "bg-elevated/30 border-border-custom/20 text-muted hover:border-border-custom" : "bg-success/10 border-success/20 text-success hover:bg-success/10"}`}>
+                            {pin.resolved ? "Re-open" : <><Icon name="check" className="w-3 h-3" /> Mark Resolved</>}
                           </button>
-                          <button onClick={() => setSelectedPinId(null)} className="text-muted hover:text-foreground text-lg leading-none">×</button>
+                          <button onClick={() => setSelectedPinId(null)} className="text-muted hover:text-foreground p-1 cursor-pointer"><Icon name="close" className="w-4 h-4" /></button>
                         </div>
                       </div>
                       <p className="text-foreground leading-relaxed">{pin.comment}</p>
@@ -559,7 +560,7 @@ export default function DrawingsPage() {
                             <div className="flex items-center justify-between mb-1">
                               <span className="text-xs font-extrabold text-foreground">{rev.version}</span>
                               <span className={`text-[8px] px-1.5 py-0.5 rounded border font-bold inline-flex items-center gap-1 ${m.badge}`}>
-                                {m.iconName ? <Icon name={m.iconName} className="w-2.5 h-2.5" /> : m.icon} {m.label}
+                                {m.iconName && <Icon name={m.iconName} className="w-2.5 h-2.5" />} {m.label}
                               </span>
                             </div>
                             <div className="text-[10px] text-muted line-clamp-2">{rev.comments}</div>
@@ -647,7 +648,7 @@ export default function DrawingsPage() {
                 <div className="text-sm font-extrabold text-foreground">Drop Pin on Drawing</div>
                 <div className="text-[10px] text-muted mt-0.5">Position: {tempXY.x.toFixed(1)}% × {tempXY.y.toFixed(1)}%</div>
               </div>
-              <button onClick={() => setShowPinModal(false)} className="text-muted hover:text-foreground text-lg leading-none">×</button>
+              <button onClick={() => setShowPinModal(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
             <div>
               <div className="text-muted mb-1.5">Pin Category</div>
@@ -693,7 +694,7 @@ export default function DrawingsPage() {
                 <div className="text-sm font-extrabold text-foreground">Upload New Revision</div>
                 <div className="text-[10px] text-muted mt-0.5">{activeDrawing ? "Issued as Pending; approving it supersedes the current sheet" : "Creates the first drawing for this project"}</div>
               </div>
-              <button onClick={() => setShowRevModal(false)} className="text-muted hover:text-foreground text-lg leading-none">×</button>
+              <button onClick={() => setShowRevModal(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
             {/* State transition preview */}
             {activeDrawing && (
@@ -702,7 +703,7 @@ export default function DrawingsPage() {
               {activeDrawing?.revisions.slice(0, 3).map(r => (
                 <div key={r.id} className="flex items-center gap-2 text-[10px]">
                   <span className="text-muted font-bold w-6 shrink-0">{r.version}</span>
-                  <span className="text-muted">→</span>
+                  <Icon name="arrow_forward" className="w-3 h-3 text-muted" />
                   <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold border ${r.status === "current" ? "bg-warning/10 border-warning/20 text-warning" : REV_META[r.status].badge}`}>
                     {r.status === "current" ? "Superseded on approval" : REV_META[r.status].label}
                   </span>
@@ -710,7 +711,7 @@ export default function DrawingsPage() {
               ))}
               <div className="flex items-center gap-2 text-[10px] border-t border-border-custom pt-1.5">
                 <span className="text-foreground font-bold w-6 shrink-0">{newRevCode}</span>
-                <span className="text-muted">→</span>
+                <Icon name="arrow_forward" className="w-3 h-3 text-muted" />
                 <span className="px-1.5 py-0.5 rounded text-[8px] font-bold border bg-success/10 border-success/20 text-success">New Current</span>
               </div>
             </div>

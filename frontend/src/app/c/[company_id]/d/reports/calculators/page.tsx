@@ -379,7 +379,7 @@ export default function CalculatorsPage() {
               }}
               className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all cursor-pointer ${
                 activeCalc === tab.id
-                  ? "bg-primary text-white font-bold shadow-sm"
+                  ? "bg-primary text-white font-bold"
                   : "bg-input text-muted hover:text-foreground hover:bg-elevated border border-border-custom"
               }`}
             >

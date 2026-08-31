@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import Icon from "@/components/marketing/Icon";
 import { getApi, authHeaders } from "@/lib/siteflow";
 import {
   MODULES,
@@ -158,18 +159,18 @@ export default function RolePermissionsModal({ role, onClose, onSaved }: Props) 
           </div>
           <button
             onClick={onClose}
-            className="text-muted hover:text-foreground text-lg leading-none px-2"
+            className="text-muted hover:text-foreground p-1 cursor-pointer"
             aria-label="Close"
           >
-            ×
+            <Icon name="close" className="w-5 h-5" />
           </button>
         </div>
 
         <div className="space-y-6 px-6 py-5">
           {locked ? (
-            <div className="rounded-md border border-emerald-500/30 bg-emerald-500/10 p-4 text-xs text-emerald-400">
+            <div className="rounded-md border border-success/30 bg-success/10 p-4 text-xs text-success">
               <span className="font-bold">{role.role_name}</span> is a superuser role
-              with <code className="text-emerald-300">{"{ all: true }"}</code> — full
+              with <code className="text-success font-semibold">{"{ all: true }"}</code> — full
               access to every module and capability. No per-key editing is available.
             </div>
           ) : (
@@ -276,9 +277,9 @@ export default function RolePermissionsModal({ role, onClose, onSaved }: Props) 
 
               {/* Preserved Legacy / Out-of-Taxonomy Permissions */}
               {unrecognisedKeys.length > 0 && (
-                <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3">
+                <div className="rounded-md border border-warning/30 bg-warning/10 p-3">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-[10px] uppercase tracking-wider text-amber-400 font-bold">
+                    <span className="text-[10px] uppercase tracking-wider text-warning font-bold">
                       Preserved Legacy Permissions ({unrecognisedKeys.length})
                     </span>
                     <span className="text-[10px] text-muted">
@@ -289,7 +290,7 @@ export default function RolePermissionsModal({ role, onClose, onSaved }: Props) 
                     {unrecognisedKeys.map((k) => (
                       <span
                         key={k}
-                        className="inline-flex items-center gap-1 rounded bg-amber-500/20 px-2 py-0.5 text-[11px] font-mono text-amber-300 border border-amber-500/40"
+                        className="inline-flex items-center gap-1 rounded bg-warning/20 px-2 py-0.5 text-[11px] font-mono text-warning border border-warning/40"
                       >
                         <code>{k}</code>
                       </span>
@@ -307,7 +308,7 @@ export default function RolePermissionsModal({ role, onClose, onSaved }: Props) 
             {msg && (
               <span
                 className={`text-xs ${
-                  msg.type === "ok" ? "text-emerald-400" : "text-rose-400"
+                  msg.type === "ok" ? "text-success" : "text-danger"
                 }`}
               >
                 {msg.text}

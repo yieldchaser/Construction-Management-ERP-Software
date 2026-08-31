@@ -1346,33 +1346,41 @@ export default function FinancePage() {
             <div className="space-y-6 relative h-full flex flex-col">
               {/* Four Cards Metrics Summary Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-card border border-border-custom rounded-lg p-4 flex items-center justify-between shadow-sm relative overflow-hidden">
+                <div className="bg-card border border-border-custom rounded-lg p-4 flex items-center justify-between relative overflow-hidden">
                   <div className="space-y-1 z-10">
                     <span className="text-[10px] font-bold text-success/80 uppercase tracking-wider block">Advance Paid</span>
                     <strong className="text-xl font-extrabold text-foreground tracking-tight block">₹{partySums.advance_paid.toLocaleString("en-IN")}</strong>
                   </div>
-                  <div className="h-9 w-9 rounded-full bg-success/10 flex items-center justify-center text-success z-10">↗</div>
+                  <div className="h-9 w-9 rounded-full bg-success/10 flex items-center justify-center text-success z-10">
+                    <Icon name="arrow_up" className="w-4 h-4" />
+                  </div>
                 </div>
-                <div className="bg-card border border-border-custom rounded-lg p-4 flex items-center justify-between shadow-sm relative overflow-hidden">
+                <div className="bg-card border border-border-custom rounded-lg p-4 flex items-center justify-between relative overflow-hidden">
                   <div className="space-y-1 z-10">
                     <span className="text-[10px] font-bold text-danger/80 uppercase tracking-wider block">To Pay</span>
                     <strong className="text-xl font-extrabold text-foreground tracking-tight block">₹{partySums.to_pay.toLocaleString("en-IN")}</strong>
                   </div>
-                  <div className="h-9 w-9 rounded-full bg-danger/10 flex items-center justify-center text-danger z-10">↑</div>
+                  <div className="h-9 w-9 rounded-full bg-danger/10 flex items-center justify-center text-danger z-10">
+                    <Icon name="arrow_up" className="w-4 h-4" />
+                  </div>
                 </div>
-                <div className="bg-card border border-border-custom rounded-lg p-4 flex items-center justify-between shadow-sm relative overflow-hidden">
+                <div className="bg-card border border-border-custom rounded-lg p-4 flex items-center justify-between relative overflow-hidden">
                   <div className="space-y-1 z-10">
                     <span className="text-[10px] font-bold text-danger/80 uppercase tracking-wider block">To Receive</span>
                     <strong className="text-xl font-extrabold text-foreground tracking-tight block">₹{partySums.to_receive.toLocaleString("en-IN")}</strong>
                   </div>
-                  <div className="h-9 w-9 rounded-full bg-danger/10 flex items-center justify-center text-danger z-10">↓</div>
+                  <div className="h-9 w-9 rounded-full bg-danger/10 flex items-center justify-center text-danger z-10">
+                    <Icon name="arrow_down" className="w-4 h-4" />
+                  </div>
                 </div>
-                <div className="bg-card border border-border-custom rounded-lg p-4 flex items-center justify-between shadow-sm relative overflow-hidden">
+                <div className="bg-card border border-border-custom rounded-lg p-4 flex items-center justify-between relative overflow-hidden">
                   <div className="space-y-1 z-10">
                     <span className="text-[10px] font-bold text-success/80 uppercase tracking-wider block">Advance Received</span>
                     <strong className="text-xl font-extrabold text-foreground tracking-tight block">₹{partySums.advance_received.toLocaleString("en-IN")}</strong>
                   </div>
-                  <div className="h-9 w-9 rounded-full bg-success/10 flex items-center justify-center text-success z-10">↙</div>
+                  <div className="h-9 w-9 rounded-full bg-success/10 flex items-center justify-center text-success z-10">
+                    <Icon name="arrow_down" className="w-4 h-4" />
+                  </div>
                 </div>
               </div>
 
@@ -1474,9 +1482,9 @@ export default function FinancePage() {
               <div onClick={() => setShowAddPartyModal(false)} className="fixed inset-0 bg-black/60 z-40" />
               <div className="fixed right-0 top-0 h-full w-[480px] max-w-full bg-card border-l border-border-custom shadow-2xl z-50 p-6 overflow-y-auto flex flex-col gap-5">
                 <div className="flex justify-between items-center border-b border-border-custom pb-4">
-                  <div>
-                    <button onClick={() => setShowAddPartyModal(false)} className="text-muted hover:text-foreground text-sm font-semibold pr-2">✕</button>
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-foreground inline ml-1">New Party</h3>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => setShowAddPartyModal(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">New Party</h3>
                   </div>
                   <button onClick={handleCreateParty} disabled={submitting} className="px-4 py-1.5 bg-primary hover:bg-primary/90 text-white text-xs font-semibold rounded disabled:opacity-50">
                     {submitting ? "Saving..." : "Save Party"}
@@ -1555,7 +1563,7 @@ export default function FinancePage() {
                           {serviceTags.map((t, i) => (
                             <span key={i} className="text-[10px] px-2 py-1 rounded bg-primary/10 text-primary flex items-center gap-1">
                               {t}
-                              <button type="button" onClick={() => setServiceTags(serviceTags.filter((_, j) => j !== i))} className="text-primary/70">✕</button>
+                              <button type="button" onClick={() => setServiceTags(serviceTags.filter((_, j) => j !== i))} className="text-primary/70 hover:text-primary cursor-pointer"><Icon name="close" className="w-3 h-3" /></button>
                             </span>
                           ))}
                         </div>
@@ -1643,7 +1651,7 @@ export default function FinancePage() {
               <div className="fixed right-0 top-0 h-full w-[520px] max-w-full bg-card border-l border-border-custom shadow-2xl z-50 p-6 overflow-y-auto flex flex-col gap-4">
                 <div className="flex justify-between items-center border-b border-border-custom pb-4">
                   <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">Bill To / Ship To</h3>
-                  <button onClick={() => setShowBillShipModal(false)} className="text-muted hover:text-foreground text-sm font-semibold">✕</button>
+                  <button onClick={() => setShowBillShipModal(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
                 </div>
 
                 {(["billFrom", "billTo", "shipFrom", "shipTo"] as const).map((key) => {
@@ -2147,7 +2155,15 @@ export default function FinancePage() {
                     <p className="text-[10px] text-muted mt-1">EAC = Estimate At Completion (projects final cost at current burn rate assuming 60% completion).</p>
                   </div>
                   <span className={`text-[10px] px-3 py-1.5 rounded-full font-bold border ${totalVariance >= 0 ? "bg-success/10 border-success/20 text-success" : "bg-danger/10 border-danger/20 text-danger"}`}>
-                    {totalVariance >= 0 ? "↓ Underspent" : "↑ Overspent"} by ₹{Math.abs(totalVariance).toLocaleString("en-IN")}
+                    {totalVariance >= 0 ? (
+                      <span className="inline-flex items-center gap-1">
+                        <Icon name="arrow_down" className="w-3.5 h-3.5" /> Underspent
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1">
+                        <Icon name="arrow_up" className="w-3.5 h-3.5" /> Overspent
+                      </span>
+                    )} by ₹{Math.abs(totalVariance).toLocaleString("en-IN")}
                   </span>
                 </div>
 
@@ -2221,12 +2237,12 @@ export default function FinancePage() {
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-end">
           <div className="bg-background border-l border-border-custom w-full max-w-md h-full shadow-2xl flex flex-col overflow-hidden text-xs">
             {selectedVoucher.status === "Pending" ? (
-              <div className="bg-gradient-to-r from-amber-500 to-orange-600 px-6 py-2.5 text-center font-bold text-black uppercase tracking-wider text-[10px] inline-flex items-center justify-center gap-1.5 w-full">
+              <div className="bg-warning px-6 py-2.5 text-center font-bold text-black uppercase tracking-wider text-[10px] inline-flex items-center justify-center gap-1.5 w-full">
                 <Icon name="warning" className="w-3.5 h-3.5" /> Pending Voucher Approval (Accrued Expense)
               </div>
             ) : (
-              <div className="bg-success px-6 py-2.5 text-center font-bold text-black uppercase tracking-wider text-[10px]">
-                ✓ Approved & Settled Ledger Voucher
+              <div className="bg-success px-6 py-2.5 text-center font-bold text-black uppercase tracking-wider text-[10px] inline-flex items-center justify-center gap-1.5 w-full">
+                <Icon name="check" className="w-3.5 h-3.5" /> Approved & Settled Ledger Voucher
               </div>
             )}
 
@@ -2235,7 +2251,7 @@ export default function FinancePage() {
                 <span className="text-[9px] uppercase tracking-wider font-extrabold text-primary">Voucher Details</span>
                 <h2 className="text-base font-extrabold text-foreground mt-1">{selectedVoucher.ref}</h2>
               </div>
-              <button onClick={() => setSelectedVoucher(null)} className="text-muted hover:text-foreground">✕ Close</button>
+              <button onClick={() => setSelectedVoucher(null)} className="text-muted hover:text-foreground cursor-pointer inline-flex items-center gap-1"><Icon name="close" className="w-4 h-4" /> Close</button>
             </div>
 
             <div className="flex-1 p-6 overflow-y-auto space-y-6">
@@ -2253,7 +2269,7 @@ export default function FinancePage() {
                   </div>
                 )}
                 {selectedVoucher.project_name && (
-                  <div className="text-[10px] text-sky-400 bg-sky-500/10 border border-sky-500/20 px-2 py-0.5 rounded-full inline-block mt-1.5 font-bold mr-1.5">
+                  <div className="text-[10px] text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-full inline-block mt-1.5 font-bold mr-1.5">
                     Project: {selectedVoucher.project_name}
                   </div>
                 )}
@@ -2269,7 +2285,7 @@ export default function FinancePage() {
                 <span className="text-muted uppercase text-[9px] tracking-wider block">Sequential Approvals</span>
                 <div className="space-y-3 mt-2">
                   <div className="flex items-center gap-3">
-                    <div className="h-5 w-5 rounded-full bg-success/10 border border-success/20 text-success flex items-center justify-center font-bold text-[10px]">✓</div>
+                    <div className="h-5 w-5 rounded-full bg-success/10 border border-success/20 text-success flex items-center justify-center font-bold text-[10px]"><Icon name="check" className="w-3 h-3" /></div>
                     <div>
                       <div className="text-[11px] font-bold text-foreground">1. Site Supervisor</div>
                       <div className="text-[9px] text-muted">Verified upon entry & photo upload</div>
@@ -2277,7 +2293,7 @@ export default function FinancePage() {
                   </div>
                   <div className="flex items-center gap-3">
                     <div className={`h-5 w-5 rounded-full flex items-center justify-center font-bold text-[10px] ${selectedVoucher.status === "Approved" ? "bg-success/10 border-success/20 text-success" : "bg-warning/10 border-warning/20 text-warning"}`}>
-                      {selectedVoucher.status === "Approved" ? "✓" : <Icon name="schedule" className="w-3 h-3" />}
+                      {selectedVoucher.status === "Approved" ? <Icon name="check" className="w-3 h-3" /> : <Icon name="schedule" className="w-3 h-3" />}
                     </div>
                     <div>
                       <div className="text-[11px] font-bold text-foreground">2. Project Manager</div>
@@ -3575,7 +3591,7 @@ export default function FinancePage() {
                 <div className="bg-card border border-border-custom rounded-xl p-5 w-full max-w-sm space-y-4 text-xs">
                   <div className="flex justify-between items-center pb-2 border-b border-border-custom">
                     <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Add Item</h4>
-                    <button type="button" onClick={() => setShowAddItemForm(false)} className="text-muted hover:text-foreground text-lg">✕</button>
+                    <button type="button" onClick={() => setShowAddItemForm(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
                   </div>
 
                   <div className="space-y-3">
@@ -3730,7 +3746,7 @@ export default function FinancePage() {
             <div>
               <div className="flex justify-between items-center border-b border-border-custom pb-4 mb-5">
                 <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">Add New Account</h3>
-                <button onClick={() => setShowAddBankModal(false)} className="text-muted hover:text-foreground text-lg cursor-pointer">✕</button>
+                <button onClick={() => setShowAddBankModal(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
               </div>
 
               <form onSubmit={handleAddBankAccount} className="space-y-4 text-xs font-sans">
@@ -3849,7 +3865,7 @@ export default function FinancePage() {
                 <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">New Cash Account</h3>
                 <p className="text-[10px] text-muted mt-0.5">Set the opening cash balance for the company</p>
               </div>
-              <button onClick={() => setShowAddCashModal(false)} className="text-muted hover:text-foreground text-lg cursor-pointer">✕</button>
+              <button onClick={() => setShowAddCashModal(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
 
             <form onSubmit={handleCreateCashAccount} className="space-y-4 text-xs font-sans">
@@ -3898,7 +3914,7 @@ export default function FinancePage() {
                   <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">New Payment Request</h3>
                   <p className="text-[10px] text-muted font-sans mt-0.5">Voucher: PR-{paymentRequests.length + 1}</p>
                 </div>
-                <button onClick={() => setShowAddRequestModal(false)} className="text-muted hover:text-foreground text-lg cursor-pointer">✕</button>
+                <button onClick={() => setShowAddRequestModal(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
               </div>
 
               {prStep === "type" ? (
@@ -3920,7 +3936,7 @@ export default function FinancePage() {
                 </div>
               ) : (
                 <form onSubmit={handleCreatePaymentRequest} className="space-y-4 text-xs font-sans">
-                  <button type="button" onClick={() => { setPrStep("type"); setPrType(null); }} className="text-[10px] text-primary hover:underline font-bold cursor-pointer">← Change type</button>
+                  <button type="button" onClick={() => { setPrStep("type"); setPrType(null); }} className="text-[10px] text-primary hover:underline font-bold cursor-pointer inline-flex items-center gap-1"><Icon name="arrow_left" className="w-3 h-3" /> Change type</button>
                   <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-3 py-1 text-[10px] font-bold text-primary">
                     {prType?.icon && <Icon name={prType.icon} className="w-3.5 h-3.5" />}{prType?.label}
                   </div>
@@ -4042,7 +4058,7 @@ export default function FinancePage() {
                 <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mt-0.5">{selectedPR.request_type || "—"}</h3>
                 <p className="text-xs text-foreground mt-1">{selectedPR.party_name}</p>
               </div>
-              <button onClick={() => setSelectedPR(null)} className="text-muted hover:text-foreground text-lg cursor-pointer">✕</button>
+              <button onClick={() => setSelectedPR(null)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
 
             <div className="space-y-4 text-xs font-sans">
@@ -4149,7 +4165,7 @@ export default function FinancePage() {
                 <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">Record Payment</h3>
                 <p className="text-[10px] text-muted font-sans mt-0.5">{selectedPR.request_no} · {selectedPR.party_name}</p>
               </div>
-              <button onClick={() => setShowRecordPaymentModal(false)} className="text-muted hover:text-foreground text-lg cursor-pointer">✕</button>
+              <button onClick={() => setShowRecordPaymentModal(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
 
             <div className="space-y-4 text-xs font-sans">

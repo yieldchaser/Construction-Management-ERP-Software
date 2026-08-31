@@ -41,10 +41,10 @@ interface DPRLog {
 }
 
 const PHOTO_SLOTS: { label: string; icon: IconName; color: string }[] = [
-  { label: "Site Progress", icon: "site", color: "from-primary/20 to-primary/5" },
-  { label: "Material Delivery", icon: "truck", color: "from-secondary/20 to-secondary/5" },
-  { label: "Quality Check", icon: "check_circle", color: "from-emerald-500/20 to-emerald-500/5" },
-  { label: "Safety Observation", icon: "warning", color: "from-amber-500/20 to-amber-500/5" },
+  { label: "Site Progress", icon: "site", color: "bg-primary/15" },
+  { label: "Material Delivery", icon: "truck", color: "bg-info/15" },
+  { label: "Quality Check", icon: "check_circle", color: "bg-success/15" },
+  { label: "Safety Observation", icon: "warning", color: "bg-warning/15" },
 ];
 
 export default function DPRPage() {
@@ -187,7 +187,7 @@ export default function DPRPage() {
         >
           <button
             onClick={() => setIsCreateDPROpen(true)}
-            className="px-3.5 py-1.5 bg-primary rounded-md text-xs font-bold text-white hover:opacity-90 transition-all shadow-md shadow-primary/20 cursor-pointer"
+            className="px-3.5 py-1.5 bg-primary rounded-md text-xs font-bold text-white hover:opacity-90 transition-all cursor-pointer"
           >
             + Create DPR
           </button>
@@ -204,9 +204,9 @@ export default function DPRPage() {
               { label: "Equipment Used", value: logs.length > 0 ? `${logs.length} Reports` : "0 Active", desc: "DPR reports logged", color: "border-secondary/20 bg-secondary/5 text-secondary" },
               { label: "Subcon Updates", value: logs.filter((l: any) => l.subcon_name).length > 0 ? `${logs.filter((l: any) => l.subcon_name).length} Updates` : "0 Tasks updated", desc: "Logged by subcontractors", color: "border-success/20 bg-success/5 text-success" },
               { label: "Material Received", value: (summary.material_received_today || 0) > 0 ? `${summary.material_received_today} Units` : "No GRNs today", desc: "Material inward logged", color: "border-warning/20 bg-warning/5 text-warning" },
-              { label: "Material Used Today", value: (summary.material_used_today || 0) > 0 ? `${summary.material_used_today} Units` : "No consumption logged", desc: "On-site consumption", color: "border-sky-500/20 bg-sky-500/5 text-sky-400" }
+              { label: "Material Used Today", value: (summary.material_used_today || 0) > 0 ? `${summary.material_used_today} Units` : "No consumption logged", desc: "On-site consumption", color: "border-primary/20 bg-primary/5 text-primary" }
             ].map((card, idx) => (
-              <div key={idx} className={`p-4 rounded-lg border ${card.color} flex flex-col justify-between h-28 shadow-sm`}>
+              <div key={idx} className={`p-4 rounded-lg border ${card.color} flex flex-col justify-between h-28`}>
                 <span className="text-[10px] uppercase font-bold tracking-wider opacity-70">{card.label}</span>
                 <div>
                   <h3 className="text-lg font-extrabold mt-1">{card.value}</h3>
@@ -265,7 +265,7 @@ export default function DPRPage() {
                 <h3 className="text-sm font-extrabold text-foreground">Create Daily Progress Report (DPR)</h3>
                 <p className="text-[10px] text-muted">Log task physical status, workers, and consumption</p>
               </div>
-              <button onClick={() => { setIsCreateDPROpen(false); setMessage(""); }} className="text-muted hover:text-foreground">✕</button>
+              <button onClick={() => { setIsCreateDPROpen(false); setMessage(""); }} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
 
             <form onSubmit={handleSubmitDPR} className="p-6 overflow-y-auto space-y-4 text-xs">
@@ -343,7 +343,7 @@ export default function DPRPage() {
                 <span className="text-muted font-bold block">Attach Progress Records</span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-center text-[10px]">
                   {PHOTO_SLOTS.map((slot, i) => (
-                    <div key={i} className={`p-2.5 rounded-md border border-border-custom bg-gradient-to-tr ${slot.color} flex flex-col items-center justify-center cursor-pointer hover:border-border-custom`}>
+                    <div key={i} className={`p-2.5 rounded-md border border-border-custom ${slot.color} flex flex-col items-center justify-center cursor-pointer hover:border-border-custom`}>
                       <Icon name={slot.icon} className="w-5 h-5" />
                       <span className="mt-1 text-muted font-bold">{slot.label}</span>
                     </div>
@@ -373,7 +373,7 @@ export default function DPRPage() {
                 </h3>
                 <p className="text-[10px] text-muted">Calculate quantities by structural dimensions (N × L × W × H)</p>
               </div>
-              <button onClick={() => setShowMBModal(false)} className="text-muted hover:text-foreground">✕</button>
+              <button onClick={() => setShowMBModal(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
 
             <div className="p-6 overflow-y-auto space-y-4 max-h-[60vh]">
@@ -507,9 +507,10 @@ export default function DPRPage() {
                   setExecutedQty(total.toFixed(3));
                   setShowMBModal(false);
                 }}
-                className="px-5 py-2.5 bg-primary text-white font-bold rounded-md hover:opacity-90 cursor-pointer"
+                className="px-5 py-2.5 bg-primary text-white font-bold rounded-md hover:opacity-90 cursor-pointer inline-flex items-center gap-1.5"
               >
-                Apply to Executed Qty ✓
+                Apply to Executed Qty
+                <Icon name="check" className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
