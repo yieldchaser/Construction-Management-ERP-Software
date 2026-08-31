@@ -30,6 +30,15 @@ interface BudgetCommitted {
   total_variance: number;
 }
 
+interface TowerBudgetBreakdown {
+  tower_id: string | null;
+  tower_name: string;
+  budget: number;
+  committed: number;
+  actual: number;
+  variance: number;
+}
+
 export default function BudgetPage() {
   const { company_id } = useParams();
   const companyId = company_id || "demo-company";
@@ -37,6 +46,7 @@ export default function BudgetPage() {
   const projectId = activeProjectId;
 
   const [budget, setBudget] = useState<BudgetCommitted | null>(null);
+  const [towerBreakdowns, setTowerBreakdowns] = useState<TowerBudgetBreakdown[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -51,9 +61,13 @@ export default function BudgetPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const budRes = await fetch(`${getApiHost()}/apis/v3/budget/committed/${projectId}`, { headers: authHeaders() });
+      const [budRes, towerRes] = await Promise.all([
+        fetch(`${getApiHost()}/apis/v3/budget/committed/${projectId}`, { headers: authHeaders() }),
+        fetch(`${getApiHost()}/apis/v3/budget/committed/${projectId}/towers`, { headers: authHeaders() }),
+      ]);
       if (budRes.ok) setBudget(await budRes.json());
-    } catch (e) {
+      if (towerRes.ok) setTowerBreakdowns(await towerRes.json());
+    } catch {
       setError("Failed to load budget data");
     } finally {
       setLoading(false);
@@ -191,6 +205,59 @@ export default function BudgetPage() {
                   </table>
                 </div>
               </div>
+
+              {/* Tower / Scope Committed Breakdown */}
+              {towerBreakdowns.length > 0 && (
+                <div className="bg-card border border-border-custom rounded-lg overflow-hidden mt-6">
+                  <div className="px-5 py-4 border-b border-border-custom flex items-center justify-between">
+                    <div>
+                      <h2 className="text-xs font-bold uppercase tracking-wider text-muted">Tower / Phase Committed Breakdown</h2>
+                      <p className="text-[11px] text-muted mt-0.5">PO & WO commitments attributed by tower and project scope</p>
+                    </div>
+                    <span className="text-[10px] text-muted font-bold uppercase">{towerBreakdowns.length} Scope{towerBreakdowns.length > 1 ? "s" : ""}</span>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs text-left">
+                      <thead>
+                        <tr className="border-b border-border-custom text-muted">
+                          <th className="px-5 py-3 font-bold">Tower / Scope</th>
+                          <th className="px-5 py-3 font-bold text-right">Budget</th>
+                          <th className="px-5 py-3 font-bold text-right">Committed (POs/WOs)</th>
+                          <th className="px-5 py-3 font-bold text-right">Actual Billed</th>
+                          <th className="px-5 py-3 font-bold text-right">Committed Var.</th>
+                          <th className="px-5 py-3 font-bold text-right">Actual Var.</th>
+                          <th className="px-5 py-3 font-bold text-center">Utilization</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {towerBreakdowns.map((t, idx) => {
+                          const noTowerBudget = (t.budget || 0) <= 0;
+                          return (
+                            <tr key={t.tower_id || idx} className="border-b border-border-custom hover:bg-elevated transition-all">
+                              <td className="px-5 py-3.5 text-foreground font-semibold">
+                                {t.tower_name || "Overall Project"}
+                              </td>
+                              <td className="px-5 py-3.5 text-right font-sans text-muted">₹{fmt(t.budget)}</td>
+                              <td className="px-5 py-3.5 text-right font-sans text-warning">₹{fmt(t.committed)}</td>
+                              <td className="px-5 py-3.5 text-right font-sans text-primary">₹{fmt(t.actual)}</td>
+                              <td className="px-5 py-3.5 text-right font-sans text-muted">{noTowerBudget ? "—" : `₹${fmt(t.budget - t.committed)}`}</td>
+                              <td className="px-5 py-3.5 text-right font-sans text-muted">{noTowerBudget ? "—" : `₹${fmt(t.variance)}`}</td>
+                              <td className="px-5 py-3.5 text-center">
+                                <div className="flex items-center justify-center gap-2">
+                                  <div className="w-24 bg-elevated rounded-full h-1.5 overflow-hidden">
+                                    <div className="h-full bg-primary rounded-full" style={{ width: `${noTowerBudget ? 0 : Math.min(Number(pct(t.actual, t.budget)), 100)}%` }} />
+                                  </div>
+                                  <span className="text-[10px] text-muted w-10 text-right">{noTowerBudget ? "—" : `${pct(t.actual, t.budget)}%`}</span>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </>
           )}
           </PageShell>

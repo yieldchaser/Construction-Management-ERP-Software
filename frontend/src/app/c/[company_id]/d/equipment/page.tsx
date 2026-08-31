@@ -1,7 +1,7 @@
 "use client";
 import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import {  getApiHost , readErrorDetail } from "@/lib/api";
-import { authHeaders } from "@/lib/siteflow";
+import { authHeaders, downloadWithAuth } from "@/lib/siteflow";
 
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
@@ -57,19 +57,31 @@ interface MaintenanceSchedule {
   remarks: string | null;
 }
 
+interface EquipmentExpenseBill {
+  id: string;
+  invoice_number: string;
+  invoice_date: string;
+  subtotal: number;
+  gst_amount: number;
+  total_payable: number;
+  status: string;
+  terms?: string | null;
+}
+
 export default function EquipmentTrackingPage() {
   const params = useParams();
   const companyId = params?.company_id as string;
   const { activeProjectId } = useProject();
   const projectId = activeProjectId;
 
-  const [activeTab, setActiveTab] = useState<"fleet" | "timeline" | "odologs" | "maintenance">("fleet");
+  const [activeTab, setActiveTab] = useState<"fleet" | "timeline" | "odologs" | "maintenance" | "expenses">("fleet");
   
   // Data states
   const [fleet, setFleet] = useState<Equipment[]>([]);
   const [deployments, setDeployments] = useState<EquipmentDeployment[]>([]);
   const [fuelLogs, setFuelLogs] = useState<FuelLog[]>([]);
   const [maintenanceLogs, setMaintenanceLogs] = useState<MaintenanceSchedule[]>([]);
+  const [expenseBills, setExpenseBills] = useState<EquipmentExpenseBill[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Modal open states
@@ -134,6 +146,15 @@ export default function EquipmentTrackingPage() {
       if (fuelRes.ok) {
         setFuelLogs(await fuelRes.json());
       }
+      const billsRes = await fetch(
+        projectId
+          ? `${getApiHost()}/apis/v3/billing/bills?project_id=${projectId}&invoice_type=equipment`
+          : `${getApiHost()}/apis/v3/billing/bills?invoice_type=equipment`,
+        { headers: authHeaders() }
+      );
+      if (billsRes.ok) {
+        setExpenseBills(await billsRes.json());
+      }
     } catch (err) {
       console.error("Error loading equipment data:", err);
       setError("Could not load equipment data");
@@ -141,6 +162,7 @@ export default function EquipmentTrackingPage() {
       setDeployments([]);
       setFuelLogs([]);
       setMaintenanceLogs([]);
+      setExpenseBills([]);
     } finally {
       setLoading(false);
     }
@@ -344,6 +366,7 @@ export default function EquipmentTrackingPage() {
               { id: "timeline", icon: <Icon name="fuel_pump" className="w-3.5 h-3.5" />, label: "Usage & Refuel Timeline" },
               { id: "odologs", icon: <Icon name="bar_chart" className="w-3.5 h-3.5" />, label: "Odometer Run Logs" },
               { id: "maintenance", icon: <Icon name="wrench" className="w-3.5 h-3.5" />, label: "Maintenance Schedule" },
+              { id: "expenses", icon: <Icon name="receipt" className="w-3.5 h-3.5" />, label: "Equipment Expenses & Invoices" },
             ]}
             activeTab={activeTab}
             onChange={(t) => setActiveTab(t as any)}
@@ -673,6 +696,85 @@ export default function EquipmentTrackingPage() {
                             </tr>
                           );
                         })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === "expenses" && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-bold text-muted uppercase tracking-wider">Equipment Expense Bills & Invoices</h3>
+                    <span className="text-[10px] text-muted">{expenseBills.length} invoice entries</span>
+                  </div>
+
+                  <div className="bg-background border border-border-custom rounded-lg overflow-hidden">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="border-b border-border-custom text-muted text-left">
+                          <th className="px-5 py-3 font-semibold">Bill / Invoice #</th>
+                          <th className="px-5 py-3 font-semibold">Date</th>
+                          <th className="px-5 py-3 text-right font-semibold">Subtotal</th>
+                          <th className="px-5 py-3 text-right font-semibold">GST</th>
+                          <th className="px-5 py-3 text-right font-semibold">Total Payable</th>
+                          <th className="px-5 py-3 text-center font-semibold">Status</th>
+                          <th className="px-5 py-3 text-right font-semibold">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {expenseBills.length === 0 ? (
+                          <tr>
+                            <td colSpan={7} className="p-8">
+                              <EmptyState
+                                title="No equipment expense bills recorded"
+                                description="Billed equipment maintenance, rentals, and fuel adjustments will appear here."
+                              />
+                            </td>
+                          </tr>
+                        ) : expenseBills.map((bill) => (
+                          <tr key={bill.id} className="border-b border-white/[0.03] hover:bg-elevated transition-all">
+                            <td className="px-5 py-3">
+                              <span className="font-bold text-primary font-sans">{bill.invoice_number}</span>
+                              {bill.terms && <span className="block text-[9px] text-muted truncate max-w-xs">{bill.terms}</span>}
+                            </td>
+                            <td className="px-5 py-3 text-muted">
+                              {bill.invoice_date ? new Date(bill.invoice_date).toLocaleDateString() : "—"}
+                            </td>
+                            <td className="px-5 py-3 text-right font-sans text-muted">
+                              ₹{(bill.subtotal || 0).toLocaleString("en-IN")}
+                            </td>
+                            <td className="px-5 py-3 text-right font-sans text-muted">
+                              ₹{(bill.gst_amount || 0).toLocaleString("en-IN")}
+                            </td>
+                            <td className="px-5 py-3 text-right font-sans font-bold text-foreground">
+                              ₹{(bill.total_payable || 0).toLocaleString("en-IN")}
+                            </td>
+                            <td className="px-5 py-3 text-center">
+                              <Badge
+                                tone={bill.status === "Paid" ? "success" : bill.status === "Cancelled" ? "danger" : "warning"}
+                                className="uppercase font-bold text-[9px]"
+                              >
+                                {bill.status || "Unpaid"}
+                              </Badge>
+                            </td>
+                            <td className="px-5 py-3 text-right">
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  try {
+                                    await downloadWithAuth(`/equipment/expenses/${bill.id}/pdf`);
+                                  } catch (e) {
+                                    alert(`Download failed: ${e instanceof Error ? e.message : "unknown error"}`);
+                                  }
+                                }}
+                                className="px-2.5 py-1 bg-elevated hover:bg-elevated/70 border border-border-custom text-foreground text-xs font-bold rounded transition-all cursor-pointer inline-flex items-center gap-1"
+                              >
+                                <Icon name="receipt" className="w-3.5 h-3.5" /> PDF
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
                       </tbody>
                     </table>
                   </div>
