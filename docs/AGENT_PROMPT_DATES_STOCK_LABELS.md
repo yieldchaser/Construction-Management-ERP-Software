@@ -1,3 +1,5 @@
+> **SUPERSEDED. Do not run this file.** Everything in it, plus two further defects, is in `docs/AGENT_PROMPT_COMBINED_PRESENTATION_AND_PUBLIC_SITE.md`. Run that instead.
+
 # AGENT PROMPT: ambiguous dates, contradictory stock figures, mangled acronyms
 
 Four items, found by driving the app against a company that has real data. The earlier sweeps were mostly against an empty company, so these are things only populated screens show.

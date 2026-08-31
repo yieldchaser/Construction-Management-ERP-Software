@@ -1,3 +1,5 @@
+> **SUPERSEDED. Do not run this file.** Everything in it, plus two further defects, is in `docs/AGENT_PROMPT_COMBINED_PRESENTATION_AND_PUBLIC_SITE.md`. Run that instead.
+
 # AGENT PROMPT: an internal page in production, no robots, no sitemap, duplicate titles
 
 Four items on the public site. Found by loading the public routes in a browser against production, a surface none of the earlier sweeps had touched.
