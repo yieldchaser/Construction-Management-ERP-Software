@@ -84,12 +84,55 @@ Add the three fields to the Tally integration screens built in the earlier run, 
 
 ---
 
-# PART 5: two groups that need the founder's input, not your judgement
+# PART 5: statutory payroll settings cannot be saved at all
 
-These were deliberately excluded from the last run and remain excluded. **Do not build them. Do not report them as missed.** Write a short note in your report on each, describing what the field does and what decision is needed, so the founder can answer.
+This was previously deferred as needing the founder's input. Investigation showed it needs none: the defaults are already chosen in the model and both are the conservative ones. What it actually contains is a live bug.
 
-- **`aadhaar_file` and `pan_file` on `PartyCreate`.** KYC document upload for a party. Needs a decision on where the files live and who may read them, since these are identity documents.
-- **`pf_wage_ceiling`, `assume_full_month_when_no_attendance` and `confirm_changes` in payroll settings.** Statutory payroll configuration. The PF wage ceiling is a legal figure and the attendance assumption changes what people are paid. Neither should be given a default by an agent.
+## 5.1 The bug
+
+`update_payroll_settings` at `settings.py:729` refuses any change unless the request carries `confirm_changes: true`:
+
+```python
+if changes and not payload.confirm_changes:
+    raise HTTPException(status_code=400, detail="confirm_changes must be true to modify statutory payroll settings")
+```
+
+`savePayroll` in `settings/page.tsx:932` posts `pDraft` and nothing else. **So every attempt to save statutory payroll settings returns 400 and always has.** The handler sets `setPayrollStatus("error")` and shows no message, so the user sees a failure with no reason.
+
+Fix it as the deliberate confirmation gate it is, not by removing the check. Show a confirmation dialog that names which settings are changing and states that they affect statutory deductions, then send `confirm_changes: true` on confirm. Surface the API message on failure through `readErrorDetail` instead of a bare error state.
+
+## 5.2 The two fields, with their defaults already decided in code
+
+Expose both on the statutory payroll settings form. **Neither needs a new default invented; the model already carries the right one.**
+
+- **`pf_wage_ceiling`**, `models.py:105` and `:279`, already defaults to `15000.0`. That is the EPF statutory wage ceiling, and `_compute_payslip` caps the PF wage base at it per CD-4. Expose it as an editable amount so a company that contributes on full wages can raise it. Show the current value; do not silently reset it.
+- **`assume_full_month_when_no_attendance`**, `models.py:103`, already defaults to `False`, and `hr.py:964` carries a comment saying it defaults off deliberately. Expose it as a toggle whose copy says plainly that turning it on pays a full month to staff with no attendance recorded. Leave the default off.
+
+---
+
+# PART 5B: party KYC documents
+
+Also previously deferred. The two questions it was deferred on both have answers in the codebase.
+
+**Where the files live is already solved.** `supabase_storage.py` provides `is_storage_configured`, `upload_bytes`, `create_signed_url(expires_in)` and `delete_object`, and `ensure_buckets` already creates its buckets with `public=False`. `files.py:268` is the working reference: check `is_storage_configured()`, upload, store the path. `aadhaar_file` and `pan_file` on `PartyCreate` are `Optional[str]` holding that path, not blobs.
+
+**Who may read them follows the existing permission.** Gate upload and read behind the same permission that governs editing a party, exactly as the sibling handler does.
+
+## Build
+
+**5B.1** Add PAN and Aadhaar document upload to the party forms in `d/library/page.tsx` and the finance party modal, following the `files.py` upload pattern. Store the returned path in `pan_file` and `aadhaar_file`.
+
+**5B.2** Serve them back only through `create_signed_url` with a **short expiry, 15 minutes**. Never make the bucket public, never render a raw storage path into the page, and never put the path in a link that survives being copied.
+
+**5B.3** When a party is deleted, delete its stored objects with `delete_object`. An identity document that outlives the record it belonged to is the worst version of this feature.
+
+## 5B.4 Mask the Aadhaar number, which is a defect that exists today
+
+`aadhaar_number` is already collected in both party forms and stored. It is currently rendered in full in the parties table at `d/library/page.tsx:682` and written in full into the CSV export at `:502`.
+
+**Mask it to the last four digits everywhere it is displayed or exported**, in the shape `XXXX XXXX 1234`. Keep the stored value intact. This is independent of the upload work and should be done even if the upload is not.
+
+**One thing stays with the founder, and it is a legal question rather than an engineering one.** Storing images of Aadhaar cards by a private entity in India is restricted, and the usual guidance is to hold masked Aadhaar only. The number is already being stored today, so this is an increase in exposure rather than a new one. Build the upload as specified, and **write a short note in your report flagging that the Aadhaar document feature should be reviewed by an advisor before launch.** Do not make that call yourself and do not skip the build over it.
 
 ---
 
@@ -126,7 +169,11 @@ Command, exit code, one sentence. Nothing pasted.
 - [ ] The nine Part 2 resources have their correction paths. GRN cancel reverses the stock movement, or is reported as unsafe and left alone.
 - [ ] The four Tally ledger fields are sent by the integration screens.
 - [ ] `project_avatar` handled or explicitly skipped with a reason. `source_ref_id` investigated and reported, changed only if genuinely needed.
-- [ ] Part 5 untouched, with a short note on each of the two groups.
+- [ ] Statutory payroll settings can be saved. The confirmation dialog names what is changing and the request carries `confirm_changes: true`. The 400 message is surfaced on failure.
+- [ ] `pf_wage_ceiling` and `assume_full_month_when_no_attendance` exposed, defaults unchanged at 15000.0 and false.
+- [ ] PAN and Aadhaar upload work, stored via the `files.py` pattern, read only through a 15 minute signed URL, deleted with the party.
+- [ ] `aadhaar_number` masked to the last four digits in the parties table and the CSV export.
+- [ ] A note in the report flagging the Aadhaar document legal review.
 - [ ] Part 6 untouched. Confirm `labour/muster-roll` still has no update endpoint.
 - [ ] `python scripts/verification/check_route_reachability.py` reports **0 unreachable** and the exemption file is still 30 entries.
 - [ ] `cd backend && PYTHONPATH=. pytest tests/coverage -n 4` passes. It is **1140 passed, 4 skipped** today and must only go up.
