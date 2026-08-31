@@ -2,7 +2,9 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import { getApi, authHeaders, resolveCompanyId, fmtINR } from "@/lib/siteflow";
+import { readErrorDetail } from "@/lib/api";
 import { useCompanySettings } from "@/context/CompanySettingsContext";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
@@ -10,9 +12,12 @@ import SegmentedTabs from "@/components/ui/Tabs";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { TableSkeleton } from "@/components/ui/Skeleton";
 import Icon from "@/components/marketing/Icon";
+import Badge from "@/components/ui/Badge";
 import FieldHint from "@/components/ui/FieldHint";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+
+type Project = { id: string; name: string; state?: string | null };
 
 type Lead = {
   id: string;
@@ -271,6 +276,7 @@ export default function CRMPage() {
   const [categories, setCategories] = useState<Lookup[]>([]);
   const [statuses, setStatuses] = useState<Lookup[]>([]);
   const [banks, setBanks] = useState<BankAccount[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(false);
 
   // quotation sub-tab
@@ -281,6 +287,17 @@ export default function CRMPage() {
   const [qDetail, setQDetail] = useState<Quotation | null>(null);
   const [qSaving, setQSaving] = useState(false);
   const [qError, setQError] = useState("");
+
+  // Quotation to Invoice Conversion state
+  const [convertModal, setConvertModal] = useState<{
+    quotation: Quotation;
+    projectId: string;
+    partyId: string;
+    invoiceNumber: string;
+  } | null>(null);
+  const [convertSaving, setConvertSaving] = useState(false);
+  const [convertError, setConvertError] = useState("");
+  const [convertSuccess, setConvertSuccess] = useState<{ invoice_number: string } | null>(null);
 
   const emptyQItem = {
     section_name: "",
@@ -393,13 +410,14 @@ export default function CRMPage() {
     if (!companyId) return;
     setLoading(true);
     try {
-      const [ld, tm, src, cat, sts, bk] = await Promise.all([
+      const [ld, tm, src, cat, sts, bk, prj] = await Promise.all([
         jget(`/crm/leads?company_id=${companyId}`).catch(() => []),
         jget(`/crm/team-members/${companyId}`).catch(() => []),
         jget(`/crm/lead-sources/${companyId}`).catch(() => []),
         jget(`/crm/lead-categories/${companyId}`).catch(() => []),
         jget(`/crm/lead-statuses/${companyId}`).catch(() => []),
         jget(`/finance/accounts/${companyId}`).catch(() => []),
+        jget(`/planning/projects?company_id=${companyId}`).catch(() => []),
       ]);
       setLeads(ld);
       setTeam(tm);
@@ -407,11 +425,82 @@ export default function CRMPage() {
       setCategories(cat);
       setStatuses(sts);
       setBanks(bk);
+      setProjects(prj || []);
       if (ld.length && !selLeadId) setSelLeadId(ld[0].id);
     } finally {
       setLoading(false);
     }
   }, [companyId, selLeadId]);
+
+  const openConvertModal = async (quotation: Quotation) => {
+    const currentLead = leads.find((l) => l.id === quotation.lead_id || l.id === selLeadId);
+    const defaultParty = currentLead?.assignee_id || (team.length > 0 ? team[0].id : "");
+    const defaultProject = projects.length > 0 ? projects[0].id : "";
+    let invoiceNum = quotation.qt_no ? `INV-${quotation.qt_no}` : `INV-${quotation.id.slice(0, 8)}`;
+
+    try {
+      const res = await fetch(getApi(`/billing/next-number/${companyId}?invoice_type=sale`), {
+        headers: authHeaders() || undefined,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.invoice_number) {
+          invoiceNum = data.invoice_number;
+        }
+      }
+    } catch {
+      /* fallback */
+    }
+
+    setConvertModal({
+      quotation,
+      projectId: defaultProject,
+      partyId: defaultParty,
+      invoiceNumber: invoiceNum,
+    });
+    setConvertError("");
+  };
+
+  const handleConvertToInvoice = async () => {
+    if (!convertModal) return;
+    if (!convertModal.projectId) {
+      setConvertError("Please select a target project.");
+      return;
+    }
+    if (!convertModal.partyId) {
+      setConvertError("Please select a billing party / customer team member.");
+      return;
+    }
+    setConvertSaving(true);
+    setConvertError("");
+    try {
+      const res = await fetch(getApi(`/crm/quotations/${convertModal.quotation.id}/convert-to-invoice`), {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+        body: JSON.stringify({
+          project_id: convertModal.projectId,
+          party_company_user_id: convertModal.partyId,
+          invoice_number: convertModal.invoiceNumber || undefined,
+        }),
+      });
+      if (!res.ok) {
+        const err = await readErrorDetail(res);
+        setConvertError(err || "Failed to convert quotation to invoice");
+        return;
+      }
+      const data = await res.json();
+      setConvertSuccess({ invoice_number: data.invoice_number });
+      setConvertModal(null);
+      if (qDetail && qDetail.id === convertModal.quotation.id) {
+        setQDetail(prev => prev ? { ...prev, status: "converted" } : null);
+      }
+      loadQuots();
+    } catch (e: any) {
+      setConvertError(e?.message || "Failed to convert quotation to invoice");
+    } finally {
+      setConvertSaving(false);
+    }
+  };
 
   const loadQuots = useCallback(async () => {
     if (!selLeadId) {
@@ -1002,7 +1091,7 @@ export default function CRMPage() {
             <table className="w-full text-sm">
               <thead className="bg-elevated text-left text-muted">
                 <tr>
-                  {["QT No", "Date", "Subject", "Items", "Tax", "CGST", "SGST", "Total", "Status"].map((h) => (
+                  {["QT No", "Date", "Subject", "Items", "Tax", "CGST", "SGST", "Total", "Status", "Actions"].map((h) => (
                     <th key={h} className="whitespace-nowrap px-3 py-2 font-medium">{h}</th>
                   ))}
                 </tr>
@@ -1010,14 +1099,14 @@ export default function CRMPage() {
               <tbody>
                 {qLoading && (
                   <tr>
-                    <td colSpan={9} className="p-4">
-                      <TableSkeleton rows={3} cols={9} />
+                    <td colSpan={10} className="p-4">
+                      <TableSkeleton rows={3} cols={10} />
                     </td>
                   </tr>
                 )}
                 {!qLoading && quots.length === 0 && (
                   <tr>
-                    <td colSpan={9} className="p-8">
+                    <td colSpan={10} className="p-8">
                       <EmptyState
                         title={selLeadId ? "No quotations yet" : "No quotations to display"}
                         description={selLeadId ? "Create a quotation for this lead to send proposals and estimates." : "Select a lead from the list above to view associated quotations."}
@@ -1031,15 +1120,50 @@ export default function CRMPage() {
                     className="cursor-pointer border-t border-border-custom hover:bg-elevated"
                     onClick={() => setQDetail(q)}
                   >
-                    <td className="px-3 py-2 text-foreground">{q.qt_no || "—"}</td>
+                    <td className="px-3 py-2 text-foreground font-semibold">{q.qt_no || "—"}</td>
                     <td className="px-3 py-2 text-foreground">{fmtDate(q.qt_date)}</td>
                     <td className="px-3 py-2 text-foreground">{q.subject}</td>
                     <td className="px-3 py-2 text-foreground">{q.items.length}</td>
                     <td className="px-3 py-2 text-foreground">{q.gst_pct}%</td>
                     <td className="px-3 py-2 text-foreground">{fmtINR(q.cgst_amount, currencyDecimalPlaces)}</td>
                     <td className="px-3 py-2 text-foreground">{fmtINR(q.sgst_amount, currencyDecimalPlaces)}</td>
-                    <td className="px-3 py-2 text-foreground">{fmtINR(q.total_amount, currencyDecimalPlaces)}</td>
-                    <td className="px-3 py-2 text-foreground">{q.status}</td>
+                    <td className="px-3 py-2 text-foreground font-bold">{fmtINR(q.total_amount, currencyDecimalPlaces)}</td>
+                    <td className="px-3 py-2">
+                      <Badge
+                        tone={
+                          q.status === "converted"
+                            ? "success"
+                            : q.status === "accepted"
+                            ? "success"
+                            : q.status === "rejected"
+                            ? "danger"
+                            : "neutral"
+                        }
+                        className="uppercase font-bold text-[9px]"
+                      >
+                        {q.status}
+                      </Badge>
+                    </td>
+                    <td className="px-3 py-2 text-right">
+                      <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                        {q.status === "converted" ? (
+                          <Link
+                            href={`/c/${companyId}/d/billing`}
+                            className="bg-success/10 border border-success/20 text-success rounded px-2.5 py-1 text-xs font-bold hover:bg-success/20 transition-all inline-flex items-center gap-1"
+                          >
+                            <Icon name="check" className="w-3 h-3" /> View Invoice
+                          </Link>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => openConvertModal(q)}
+                            className="bg-primary hover:bg-primary/95 text-white rounded px-2.5 py-1 text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1"
+                          >
+                            Convert to Invoice
+                          </button>
+                        )}
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -1163,7 +1287,12 @@ export default function CRMPage() {
               <div className="mb-3 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                 <div><span className="text-muted">Subject: </span>{qDetail.subject}</div>
                 <div><span className="text-muted">Date: </span>{fmtDate(qDetail.qt_date)}</div>
-                <div><span className="text-muted">Status: </span>{qDetail.status}</div>
+                <div className="flex items-center gap-2">
+                  <span className="text-muted">Status: </span>
+                  <Badge tone={qDetail.status === "converted" ? "success" : qDetail.status === "accepted" ? "success" : "neutral"} className="uppercase font-bold text-[9px]">
+                    {qDetail.status}
+                  </Badge>
+                </div>
                 <div><span className="text-muted">Tax: </span>{qDetail.gst_pct}% ({qDetail.tax_type})</div>
                 <div className="col-span-2"><span className="text-muted">Bank: </span>{bankById(qDetail.bank_account_id) ? `${bankById(qDetail.bank_account_id)!.bank_name} — ${bankById(qDetail.bank_account_id)!.account_number}` : "—"}</div>
               </div>
@@ -1205,7 +1334,157 @@ export default function CRMPage() {
                 <div className="flex justify-between border-t border-border-custom pt-1 font-semibold"><span>Grand Total</span><span>{fmtINR(qDetail.total_amount, currencyDecimalPlaces)}</span></div>
               </div>
               {qDetail.terms && <div className="mt-3 text-sm text-muted">Terms: {qDetail.terms}</div>}
+
+              <div className="mt-4 flex items-center justify-between border-t border-border-custom pt-3">
+                {qDetail.status === "converted" ? (
+                  <Link
+                    href={`/c/${companyId}/d/billing`}
+                    className="bg-success/10 border border-success/20 text-success rounded-md px-3 py-2 text-xs font-bold hover:bg-success/20 transition-all inline-flex items-center gap-1.5"
+                  >
+                    <Icon name="check" className="w-4 h-4" /> Converted · View in Billing
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const q = qDetail;
+                      setQDetail(null);
+                      openConvertModal(q);
+                    }}
+                    className="bg-primary hover:bg-primary/95 text-white rounded-md px-4 py-2 text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1.5"
+                  >
+                    <Icon name="receipt" className="w-4 h-4" /> Convert to Invoice
+                  </button>
+                )}
+                <button className={btnGhost} onClick={() => setQDetail(null)}>Close</button>
+              </div>
             </Drawer>
+          )}
+
+          {/* Convert to Invoice Modal */}
+          {convertModal && (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setConvertModal(null)}>
+              <div className="bg-card border border-border-custom rounded-xl w-full max-w-lg p-6 relative shadow-2xl space-y-4" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center justify-between border-b border-border-custom pb-3">
+                  <div>
+                    <h3 className="text-sm font-bold text-foreground uppercase tracking-wider font-sans">Convert Quotation to Invoice</h3>
+                    <p className="text-xs text-muted mt-0.5">
+                      QT #{convertModal.quotation.qt_no || convertModal.quotation.subject} · {fmtINR(convertModal.quotation.total_amount, currencyDecimalPlaces)}
+                    </p>
+                  </div>
+                  <button onClick={() => setConvertModal(null)} className="text-muted hover:text-foreground cursor-pointer p-1">
+                    <Icon name="close" className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-3 text-xs">
+                  <div>
+                    <label className="text-[10px] uppercase font-bold text-muted block mb-1">Target Project *</label>
+                    <select
+                      value={convertModal.projectId}
+                      onChange={(e) => setConvertModal({ ...convertModal, projectId: e.target.value })}
+                      className="w-full bg-background border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none focus:border-primary font-semibold"
+                    >
+                      <option value="">Select project</option>
+                      {projects.map((p) => (
+                        <option key={p.id} value={p.id}>{p.name}{p.state ? ` (${p.state})` : ""}</option>
+                      ))}
+                    </select>
+                    {projects.length === 0 && (
+                      <FieldHint text="No projects found. Create a project in Projects." href={`/c/${companyId}/projects`} linkLabel="Go to Projects" />
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] uppercase font-bold text-muted block mb-1">Billing Party / Customer Team Member *</label>
+                    <select
+                      value={convertModal.partyId}
+                      onChange={(e) => setConvertModal({ ...convertModal, partyId: e.target.value })}
+                      className="w-full bg-background border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none focus:border-primary font-semibold"
+                    >
+                      <option value="">Select party/member</option>
+                      {team.map((t) => (
+                        <option key={t.id} value={t.id}>{t.name}</option>
+                      ))}
+                    </select>
+                    {team.length === 0 && (
+                      <FieldHint text="No team members or parties found. Add team members in Settings." href={`/c/${companyId}/settings`} linkLabel="Go to Settings" />
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] uppercase font-bold text-muted block mb-1">Invoice Number</label>
+                    <input
+                      type="text"
+                      value={convertModal.invoiceNumber}
+                      onChange={(e) => setConvertModal({ ...convertModal, invoiceNumber: e.target.value })}
+                      placeholder="e.g. INV-2026-001"
+                      className="w-full bg-background border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none focus:border-primary font-sans font-bold"
+                    />
+                    <span className="text-[10px] text-muted block mt-1">Pre-filled sequence number; editable.</span>
+                  </div>
+
+                  {convertError && (
+                    <div className="bg-danger/10 border border-danger/20 rounded-md p-3 text-xs text-danger">
+                      {convertError}
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-end gap-2 pt-3 border-t border-border-custom">
+                    <button
+                      type="button"
+                      onClick={() => setConvertModal(null)}
+                      className="px-4 py-2 bg-elevated hover:bg-card border border-border-custom text-muted hover:text-foreground text-xs font-semibold rounded-lg transition-all cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleConvertToInvoice}
+                      disabled={convertSaving}
+                      className="px-5 py-2 bg-primary hover:bg-primary/95 text-white text-xs font-bold rounded-lg transition-all cursor-pointer disabled:opacity-50 inline-flex items-center gap-1.5"
+                    >
+                      {convertSaving ? "Converting…" : "Confirm Conversion"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Convert Success Dialog */}
+          {convertSuccess && (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setConvertSuccess(null)}>
+              <div className="bg-card border border-border-custom rounded-xl w-full max-w-md p-6 relative shadow-2xl space-y-4" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-success/20 text-success flex items-center justify-center">
+                    <Icon name="check" className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-foreground font-sans">Quotation Converted Successfully</h3>
+                    <p className="text-xs text-muted mt-0.5">
+                      Sale Invoice #{convertSuccess.invoice_number} has been created.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-end gap-2 pt-3 border-t border-border-custom">
+                  <button
+                    type="button"
+                    onClick={() => setConvertSuccess(null)}
+                    className="px-4 py-2 bg-elevated hover:bg-card border border-border-custom text-muted hover:text-foreground text-xs font-semibold rounded-lg transition-all cursor-pointer"
+                  >
+                    Done
+                  </button>
+                  <Link
+                    href={`/c/${companyId}/d/billing`}
+                    onClick={() => setConvertSuccess(null)}
+                    className="px-5 py-2 bg-primary hover:bg-primary/95 text-white text-xs font-bold rounded-lg transition-all inline-flex items-center gap-1.5"
+                  >
+                    View in Billing Register
+                  </Link>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       )}
