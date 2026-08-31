@@ -1136,29 +1136,19 @@ export default function FinancePage() {
         throw new Error(err.detail || "Failed to create party");
       }
       const created = await res.json();
-      // Spin party directly into a Sub-Con Work Order if requested (requires an active project context)
-      if (newParty.create_wo && newParty.wo_title.trim() && activeProjectId) {
-        await fetch(`${getApiHost()}/apis/v3/billing/work-orders`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
-          body: JSON.stringify({
-            company_id: companyId,
-            project_id: activeProjectId,
-            subcontractor_id: created.id,
-            wo_number: `WO-${Date.now().toString().slice(-6)}`,
-            wo_date: new Date().toISOString(),
-            items: [],
-            terms: newParty.wo_terms,
-          }),
-        }).catch(() => null);
-      }
       // Refresh party list
       const pr = await fetch(`${getApiHost()}/apis/v3/finance/parties/${companyId}`, { headers: authHeaders() });
       if (pr.ok) setCompanyParties(await pr.json());
       setShowAddPartyModal(false);
+      const shouldCreateWO = newParty.create_wo;
       setNewParty({ name: "", phone: "", email: "", party_type: "Supplier", address: "", party_id_custom: "", date_of_joining: "", aadhaar_number: "", pan_number: "", contractor_role: "", bank_account_id: "", opening_balance: "", opening_balance_type: "pay", create_wo: false, wo_title: "", wo_terms: "" });
       setServiceTags([]);
-      alert("Party created successfully" + (newParty.create_wo ? " with Work Order" : ""));
+      if (shouldCreateWO) {
+        // Deliberate work order creation with line items in Subcontractor Management
+        router.push(`/c/${companyId}/d/subcon?create_wo=true&party_id=${created.id}`);
+      } else {
+        alert("Party created successfully");
+      }
     } catch (err: any) {
       alert(err?.message || "Error creating party");
     } finally {

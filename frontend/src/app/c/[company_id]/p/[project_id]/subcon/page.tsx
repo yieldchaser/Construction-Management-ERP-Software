@@ -14,12 +14,37 @@ import FieldHint from "@/components/ui/FieldHint";
 
 interface WorkOrder {
   id: string;
+  woNumber: string;
   sNo: number;
   subContractor: string;
-  progress: string | null;
+  progress: string;
+  progressPct?: number | null;
   woValue: number;
-  billedValue: number | null;
-  status: "Draft" | "Pending Approval" | "Approved" | "Rejected";
+  billedValue: number;
+  status: string;
+}
+
+interface BOQItemOption {
+  id: string;
+  item_name: string;
+  section_name?: string;
+  unit: string;
+  quantity: number;
+  rate: number;
+}
+
+interface TaskOption {
+  id: string;
+  name: string;
+  wbs_code?: string;
+}
+
+interface WOFormItem {
+  referenceType: "boq" | "task";
+  boq_item_id?: string;
+  task_id?: string;
+  quantity: number;
+  rate: number;
 }
 
 interface Subcontractor {
@@ -40,6 +65,11 @@ export default function SubconPage() {
   const [subcontractors, setSubcontractors] = useState<Subcontractor[]>([]);
   const [loading, setLoading] = useState(false);
 
+  // Scope & Terms state
+  const [boqItems, setBoqItems] = useState<BOQItemOption[]>([]);
+  const [tasks, setTasks] = useState<TaskOption[]>([]);
+  const [defaultSubconTerms, setDefaultSubconTerms] = useState("");
+
   const [searchQuery, setSearchQuery] = useState("");
   const [toastMessage, setToastMessage] = useState("");
 
@@ -48,9 +78,16 @@ export default function SubconPage() {
   const [showAddPartyDrawer, setShowAddPartyDrawer] = useState(false);
 
   // Form states
-  const [woForm, setWoForm] = useState({
+  const [woForm, setWoForm] = useState<{
+    partyId: string;
+    date: string;
+    terms: string;
+    items: WOFormItem[];
+  }>({
     partyId: "",
-    date: new Date().toISOString().split("T")[0]
+    date: new Date().toISOString().split("T")[0],
+    terms: "",
+    items: [{ referenceType: "boq", boq_item_id: "", task_id: "", quantity: 1, rate: 0 }],
   });
 
   const [partyForm, setPartyForm] = useState({
@@ -64,6 +101,41 @@ export default function SubconPage() {
     address: ""
   });
 
+  const fetchProjectScopes = async () => {
+    if (!projectId || projectId === "d0000000-0000-0000-0000-000000000001") return;
+    try {
+      const [bRes, tRes] = await Promise.all([
+        fetch(`${getApiHost()}/apis/v3/budgeting/boq?project_id=${projectId}`, { headers: authHeaders() }),
+        fetch(`${getApiHost()}/apis/v3/planning/tasks?project_id=${projectId}`, { headers: authHeaders() }),
+      ]);
+      if (bRes.ok) {
+        const data = await bRes.json();
+        setBoqItems(Array.isArray(data) ? data : []);
+      }
+      if (tRes.ok) {
+        const data = await tRes.json();
+        setTasks(Array.isArray(data) ? data : []);
+      }
+    } catch (e) {
+      console.error("Failed to load BOQ or tasks", e);
+    }
+  };
+
+  const fetchCompanyTerms = async () => {
+    if (!companyId) return;
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/settings/company-terms/${companyId}`, { headers: authHeaders() });
+      if (res.ok) {
+        const d = await res.json();
+        const terms = d.subcon_terms || "";
+        setDefaultSubconTerms(terms);
+        setWoForm(prev => ({ ...prev, terms: prev.terms || terms }));
+      }
+    } catch (e) {
+      /* ignore */
+    }
+  };
+
   const fetchSubconData = async () => {
     if (!projectId || projectId === "d0000000-0000-0000-0000-000000000001") return;
     setLoading(true);
@@ -76,12 +148,14 @@ export default function SubconPage() {
         const data = await woRes.json();
         setWorkOrders(
           (data as any[]).map((wo: any, i: number) => ({
-            id: wo.wo_number || wo.id,
+            id: wo.id,
+            woNumber: wo.wo_number || `WO-${i + 1}`,
             sNo: i + 1,
             subContractor: wo.subcontractor_name || "Unknown",
-            progress: null,
+            progress: wo.progress_pct !== null && wo.progress_pct !== undefined ? `${Math.min(100, Math.max(0, wo.progress_pct))}%` : "—",
+            progressPct: wo.progress_pct !== null && wo.progress_pct !== undefined ? Number(wo.progress_pct) : null,
             woValue: Number(wo.estimated_work_amount) || 0,
-            billedValue: null,
+            billedValue: Number(wo.billed_amount) || 0,
             status: wo.status || "—",
           }))
         );
@@ -106,6 +180,8 @@ export default function SubconPage() {
 
   useEffect(() => {
     fetchSubconData();
+    fetchCompanyTerms();
+    fetchProjectScopes();
   }, [projectId, companyId]);
 
   const showToast = (msg: string) => {
@@ -114,6 +190,26 @@ export default function SubconPage() {
   };
 
   const fmt = (n: number) => "₹" + n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  const handleCancelWorkOrder = async (woId: string, woNumber: string) => {
+    if (!confirm(`Are you sure you want to cancel Work Order ${woNumber}?`)) return;
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/billing/work-orders/${woId}/cancel`, {
+        method: "POST",
+        headers: authHeaders(),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(err.detail || "Failed to cancel work order");
+        return;
+      }
+      showToast(`Work Order ${woNumber} cancelled successfully`);
+      fetchSubconData();
+    } catch (err: any) {
+      console.error("Cancel WO error:", err);
+      alert(err?.message || "Failed to cancel work order");
+    }
+  };
 
   const handleCreateWorkorder = async () => {
     if (!woForm.partyId) {
@@ -124,6 +220,27 @@ export default function SubconPage() {
       alert("No active project selected.");
       return;
     }
+    if (woForm.items.length === 0) {
+      alert("Please add at least one line item to the work order.");
+      return;
+    }
+    for (let i = 0; i < woForm.items.length; i++) {
+      const it = woForm.items[i];
+      const hasRef = it.referenceType === "boq" ? Boolean(it.boq_item_id) : Boolean(it.task_id);
+      if (!hasRef) {
+        alert(`Line ${i + 1}: Please select a ${it.referenceType === "boq" ? "BOQ item" : "planning task"}.`);
+        return;
+      }
+      if (Number(it.quantity) <= 0) {
+        alert(`Line ${i + 1}: Quantity must be greater than 0.`);
+        return;
+      }
+      if (Number(it.rate) <= 0) {
+        alert(`Line ${i + 1}: Rate must be greater than 0.`);
+        return;
+      }
+    }
+
     try {
       const res = await fetch(`${getApiHost()}/apis/v3/billing/work-orders`, {
         method: "POST",
@@ -134,8 +251,13 @@ export default function SubconPage() {
           subcontractor_id: woForm.partyId,
           wo_number: `WO-${Date.now().toString().slice(-6)}`,
           wo_date: new Date(woForm.date).toISOString(),
-          terms: "",
-          items: [],
+          terms: woForm.terms || null,
+          items: woForm.items.map((it) => ({
+            boq_item_id: it.referenceType === "boq" ? it.boq_item_id : null,
+            task_id: it.referenceType === "task" ? it.task_id : null,
+            quantity: Number(it.quantity),
+            rate: Number(it.rate),
+          })),
         }),
       });
       if (!res.ok) {
@@ -144,7 +266,13 @@ export default function SubconPage() {
       }
       await fetchSubconData();
       setShowWOModal(false);
-      showToast("Subcontractor Workorder created successfully!");
+      setWoForm({
+        partyId: "",
+        date: new Date().toISOString().split("T")[0],
+        terms: defaultSubconTerms,
+        items: [{ referenceType: "boq", boq_item_id: "", task_id: "", quantity: 1, rate: 0 }],
+      });
+      showToast("Subcontractor Work Order created successfully!");
     } catch (err: any) {
       alert(err?.message || "Error creating work order");
     }
@@ -241,22 +369,23 @@ export default function SubconPage() {
                   <th className="px-4 py-3">Work Order Value</th>
                   <th className="px-4 py-3">Billed Value</th>
                   <th className="px-4 py-3">Approval Status</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border-custom/40">
                 {loading ? (
                   <tr>
-                    <td colSpan={7} className="p-4">
-                      <TableSkeleton rows={5} cols={7} />
+                    <td colSpan={8} className="p-4">
+                      <TableSkeleton rows={5} cols={8} />
                     </td>
                   </tr>
                 ) : filteredWO.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="p-8">
+                    <td colSpan={8} className="p-8">
                       <EmptyState
                         title="No subcontractor work orders found"
                         description={searchQuery ? "No work orders match your search query." : "Create subcontractor work orders to track billed value and approvals."}
-                        action={!searchQuery ? { label: "Add Subcontractor", onClick: () => setShowAddPartyDrawer(true) } : undefined}
+                        action={!searchQuery ? { label: "+ New Work Order", onClick: () => setShowWOModal(true) } : undefined}
                       />
                     </td>
                   </tr>
@@ -264,22 +393,39 @@ export default function SubconPage() {
                   filteredWO.map(wo => (
                     <tr key={wo.id} className="hover:bg-elevated/40 transition-colors">
                       <td className="px-4 py-3 text-muted">{wo.sNo}</td>
-                      <td className="px-4 py-3 font-sans text-muted">{wo.id}</td>
+                      <td className="px-4 py-3 font-sans font-semibold text-foreground">{wo.woNumber}</td>
                       <td className="px-4 py-3 font-semibold text-foreground">{wo.subContractor}</td>
                       <td className="px-4 py-3 text-muted">
-                        <div className="flex items-center gap-2">
-                          {wo.progress != null && (
+                        {wo.progressPct !== null && wo.progressPct !== undefined ? (
+                          <div className="flex items-center gap-2">
                             <div className="w-20 bg-background h-1.5 rounded-full overflow-hidden border border-border-custom">
-                              <div className="bg-primary h-full" style={{ width: wo.progress }}></div>
+                              <div className="bg-primary h-full" style={{ width: `${Math.min(100, Math.max(0, wo.progressPct))}%` }}></div>
                             </div>
-                          )}
-                          <span>{wo.progress ?? "—"}</span>
-                        </div>
+                            <span>{wo.progress}</span>
+                          </div>
+                        ) : (
+                          <span>—</span>
+                        )}
                       </td>
                       <td className="px-4 py-3 font-bold text-foreground">{fmt(wo.woValue)}</td>
-                      <td className="px-4 py-3 text-muted">{wo.billedValue != null ? fmt(wo.billedValue) : "—"}</td>
+                      <td className="px-4 py-3 text-muted">{fmt(wo.billedValue)}</td>
                       <td className="px-4 py-3">
-                        <Badge tone={wo.status === "Approved" ? "success" : wo.status === "Pending Approval" ? "warning" : "neutral"} className="font-bold">{wo.status}</Badge>
+                        <Badge tone={wo.status === "Approved" || wo.status === "active" ? "success" : wo.status === "Pending Approval" ? "warning" : wo.status === "cancelled" ? "danger" : "neutral"} className="font-bold">
+                          {wo.status}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        {wo.status !== "cancelled" ? (
+                          <button
+                            onClick={() => handleCancelWorkOrder(wo.id, wo.woNumber)}
+                            className="p-1 text-muted hover:text-danger rounded hover:bg-elevated transition-colors cursor-pointer"
+                            title="Cancel Work Order"
+                          >
+                            <Icon name="close" className="w-4 h-4" />
+                          </button>
+                        ) : (
+                          <span className="text-[10px] text-muted">—</span>
+                        )}
                       </td>
                     </tr>
                   ))
@@ -318,62 +464,243 @@ export default function SubconPage() {
           </PageShell>
         </div>
 
-        {/* Sub-Con Workorder Modal (Screenshot 3) */}
+        {/* Sub-Con Workorder Modal */}
         {showWOModal && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowWOModal(false)}>
-            <div className="bg-card border border-border-custom rounded-xl w-full max-w-sm p-5 relative overflow-hidden" onClick={e => e.stopPropagation()}>
-              <div className="flex justify-between items-start mb-4">
+            <div className="bg-card border border-border-custom rounded-xl w-full max-w-2xl p-6 relative shadow-2xl max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+              <div className="flex justify-between items-start border-b border-border-custom pb-3 mb-4">
                 <div>
-                  <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Sub-Con Workorder</h3>
+                  <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">Create Subcontractor Work Order</h3>
                   <div className="flex items-center gap-1 mt-0.5">
-                    <span className="text-[11px] text-muted font-sans">WO number: pending</span>
+                    <span className="text-[11px] text-muted font-sans">Scope contract with itemised BOQ lines and tasks</span>
                   </div>
                 </div>
                 <button onClick={() => setShowWOModal(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
               </div>
 
-              <div className="space-y-4 my-4 text-xs">
-                <div>
-                  <label className="text-[9px] text-muted uppercase font-bold block mb-1">Date</label>
-                  <input type="date" value={woForm.date} onChange={e => setWoForm({ ...woForm, date: e.target.value })} className="w-full bg-background border border-border-custom rounded-lg px-2.5 py-1.5 text-foreground text-xs focus:outline-none focus:border-primary" />
+              <div className="space-y-4 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Date*</label>
+                    <input type="date" value={woForm.date} onChange={e => setWoForm({ ...woForm, date: e.target.value })} className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground text-xs focus:outline-none focus:border-primary" />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Subcontractor*</label>
+                    <select
+                      value={woForm.partyId}
+                      onChange={e => setWoForm({ ...woForm, partyId: e.target.value })}
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
+                    >
+                      <option value="">Select subcontractor…</option>
+                      {subcontractors.map(s => (
+                        <option key={s.id} value={s.id}>{s.name}</option>
+                      ))}
+                    </select>
+                    {subcontractors.length === 0 && (
+                      <FieldHint text="No subcontractors yet." onAction={() => setShowAddPartyDrawer(true)} actionLabel="Add a subcontractor" />
+                    )}
+                  </div>
                 </div>
 
-                <div>
-                  <label className="text-[9px] text-muted uppercase font-bold block mb-1">Subcontractor</label>
-                  <select
-                    value={woForm.partyId}
-                    onChange={e => setWoForm({ ...woForm, partyId: e.target.value })}
-                    className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
-                  >
-                    <option value="">Select subcontractor…</option>
-                    {subcontractors.map(s => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
+                {/* Line Items Section */}
+                <div className="space-y-3 border-t border-border-custom pt-4">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <span className="text-[10px] text-muted font-bold uppercase tracking-wider block">Scope Line Items*</span>
+                      <span className="text-[11px] text-muted">Each line must reference a BOQ item or planning task.</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setWoForm({
+                        ...woForm,
+                        items: [...woForm.items, { referenceType: "boq", boq_item_id: "", task_id: "", quantity: 1, rate: 0 }]
+                      })}
+                      className="px-2.5 py-1 bg-primary/10 hover:bg-primary/20 text-primary font-bold rounded text-xs inline-flex items-center gap-1 transition-all cursor-pointer"
+                    >
+                      <Icon name="add" className="w-3.5 h-3.5" /> Add Item Line
+                    </button>
+                  </div>
+
+                  <div className="space-y-2.5">
+                    {woForm.items.map((item, idx) => (
+                      <div key={idx} className="bg-elevated/40 border border-border-custom rounded-lg p-3 space-y-2.5 relative">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-bold text-muted uppercase">Line {idx + 1} Reference:</span>
+                            <div className="flex rounded-md bg-background border border-border-custom p-0.5">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const next = [...woForm.items];
+                                  next[idx].referenceType = "boq";
+                                  next[idx].task_id = undefined;
+                                  setWoForm({ ...woForm, items: next });
+                                }}
+                                className={`px-2 py-0.5 text-[10px] font-bold rounded ${item.referenceType === "boq" ? "bg-primary text-white" : "text-muted hover:text-foreground"}`}
+                              >
+                                BOQ Item
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const next = [...woForm.items];
+                                  next[idx].referenceType = "task";
+                                  next[idx].boq_item_id = undefined;
+                                  setWoForm({ ...woForm, items: next });
+                                }}
+                                className={`px-2 py-0.5 text-[10px] font-bold rounded ${item.referenceType === "task" ? "bg-primary text-white" : "text-muted hover:text-foreground"}`}
+                              >
+                                Planning Task
+                              </button>
+                            </div>
+                          </div>
+                          {woForm.items.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => setWoForm({ ...woForm, items: woForm.items.filter((_, i) => i !== idx) })}
+                              className="text-muted hover:text-danger p-1 cursor-pointer"
+                              title="Remove Line"
+                            >
+                              <Icon name="trash" className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+
+                        {item.referenceType === "boq" ? (
+                          <div>
+                            <select
+                              value={item.boq_item_id || ""}
+                              onChange={e => {
+                                const bId = e.target.value;
+                                const selectedBOQ = boqItems.find(b => b.id === bId);
+                                const next = [...woForm.items];
+                                next[idx].boq_item_id = bId;
+                                if (selectedBOQ) {
+                                  next[idx].rate = Number(selectedBOQ.rate) || 0;
+                                  if (!next[idx].quantity || next[idx].quantity === 1) {
+                                    next[idx].quantity = Number(selectedBOQ.quantity) || 1;
+                                  }
+                                }
+                                setWoForm({ ...woForm, items: next });
+                              }}
+                              className="w-full bg-background border border-border-custom rounded px-2.5 py-1.5 text-foreground text-xs focus:outline-none focus:border-primary"
+                            >
+                              <option value="">Select BOQ item…</option>
+                              {boqItems.map(b => (
+                                <option key={b.id} value={b.id}>
+                                  {b.section_name ? `${b.section_name} - ` : ""}{b.item_name} ({b.unit}) {b.rate ? `• ₹${b.rate}` : ""}
+                                </option>
+                              ))}
+                            </select>
+                            {boqItems.length === 0 && (
+                              <FieldHint text="No BOQ items found for this project." href={`/c/${companyId}/p/${projectId}/boq`} linkLabel="Go to BOQ" />
+                            )}
+                          </div>
+                        ) : (
+                          <div>
+                            <select
+                              value={item.task_id || ""}
+                              onChange={e => {
+                                const tId = e.target.value;
+                                const next = [...woForm.items];
+                                next[idx].task_id = tId;
+                                setWoForm({ ...woForm, items: next });
+                              }}
+                              className="w-full bg-background border border-border-custom rounded px-2.5 py-1.5 text-foreground text-xs focus:outline-none focus:border-primary"
+                            >
+                              <option value="">Select Planning Task…</option>
+                              {tasks.map(t => (
+                                <option key={t.id} value={t.id}>
+                                  {t.wbs_code ? `${t.wbs_code} - ` : ""}{t.name}
+                                </option>
+                              ))}
+                            </select>
+                            {tasks.length === 0 && (
+                              <FieldHint text="No planning tasks found for this project." href={`/c/${companyId}/d/planning/gantt`} linkLabel="Go to Gantt" />
+                            )}
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-3 gap-2 items-center">
+                          <div>
+                            <label className="text-[9px] text-muted uppercase font-bold block mb-0.5">Quantity</label>
+                            <input
+                              type="number"
+                              min="0"
+                              step="any"
+                              value={item.quantity}
+                              onChange={e => {
+                                const next = [...woForm.items];
+                                next[idx].quantity = parseFloat(e.target.value) || 0;
+                                setWoForm({ ...woForm, items: next });
+                              }}
+                              className="w-full bg-background border border-border-custom rounded px-2 py-1 text-foreground text-xs"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[9px] text-muted uppercase font-bold block mb-0.5">Rate (₹)</label>
+                            <input
+                              type="number"
+                              min="0"
+                              step="any"
+                              value={item.rate}
+                              onChange={e => {
+                                const next = [...woForm.items];
+                                next[idx].rate = parseFloat(e.target.value) || 0;
+                                setWoForm({ ...woForm, items: next });
+                              }}
+                              className="w-full bg-background border border-border-custom rounded px-2 py-1 text-foreground text-xs"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[9px] text-muted uppercase font-bold block mb-0.5">Amount</label>
+                            <div className="text-xs font-bold text-foreground py-1">
+                              {fmt((Number(item.quantity) || 0) * (Number(item.rate) || 0))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     ))}
-                  </select>
-                  {subcontractors.length === 0 && (
-                    <FieldHint text="No subcontractors yet." onAction={() => setShowAddPartyDrawer(true)} actionLabel="Add a subcontractor" />
-                  )}
+                  </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setShowAddPartyDrawer(true)}
-                    className="w-full mt-2.5 py-3 border border-dashed border-primary/50 text-primary hover:bg-primary/5 font-bold rounded-lg text-xs flex items-center justify-center gap-1 transition-all cursor-pointer"
-                  >
-                    <span>+ Create Subcontractor</span>
-                  </button>
+                  {/* Running Total Banner */}
+                  <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg flex items-center justify-between">
+                    <span className="text-xs font-bold text-foreground uppercase tracking-wider">Estimated Work Order Value</span>
+                    <span className="text-sm font-extrabold text-primary">
+                      {fmt(woForm.items.reduce((sum, it) => sum + (Number(it.quantity) || 0) * (Number(it.rate) || 0), 0))}
+                    </span>
+                  </div>
                 </div>
 
-
+                {/* Terms & Conditions */}
+                <div className="space-y-1 border-t border-border-custom pt-3">
+                  <label className="text-[10px] text-muted uppercase font-bold block">Terms & Conditions</label>
+                  <textarea
+                    rows={3}
+                    value={woForm.terms}
+                    onChange={e => setWoForm({ ...woForm, terms: e.target.value })}
+                    placeholder="Work order payment terms, milestone release schedule, retention clauses..."
+                    className="w-full bg-background border border-border-custom rounded-lg p-2.5 text-foreground text-xs focus:outline-none focus:border-primary"
+                  />
+                </div>
               </div>
 
-              <div className="mt-5 flex flex-col gap-2">
+              <div className="mt-5 flex items-center justify-end gap-2 border-t border-border-custom pt-3">
                 <button
+                  type="button"
+                  onClick={() => setShowWOModal(false)}
+                  className="px-4 py-2 bg-elevated hover:bg-card border border-border-custom text-muted hover:text-foreground text-xs font-semibold rounded-lg transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
                   onClick={handleCreateWorkorder}
-                  className="w-full py-2 bg-primary hover:bg-primary/95 text-white text-xs font-bold rounded-lg transition-all cursor-pointer"
+                  className="px-5 py-2 bg-primary hover:bg-primary/95 text-white text-xs font-bold rounded-lg transition-all cursor-pointer"
                 >
                   Create Workorder
                 </button>
-                <button onClick={() => setShowWOModal(false)} className="text-[11px] text-muted hover:text-foreground font-medium self-center mt-1 cursor-pointer">close</button>
               </div>
             </div>
           </div>
