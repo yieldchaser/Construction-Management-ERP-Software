@@ -38,6 +38,7 @@ interface POItem {
   qty: number;
   unit: string;
   rate: number;
+  tax_pct?: number;
 }
 
 interface PO {
@@ -51,6 +52,7 @@ interface PO {
   status: "draft" | "approved" | "sent" | "partial" | "received" | "closed" | "cancelled";
   approvalFlag: "pending" | "approved" | "rejected";
   date: string;
+  expectedDeliveryDate?: string | null;
 }
 
 interface GRNItem {
@@ -147,7 +149,8 @@ export default function ProcurementPage() {
     if (!projectId) return;
     try {
       const apiHost = getApiHost();
-      const [indentsRes, posRes, grnsRes, invRes, vendorsRes, materialsRes, matchesRes] = await Promise.all([
+      const [teamRes, indentsRes, posRes, grnsRes, invRes, vendorsRes, materialsRes, matchesRes] = await Promise.all([
+        fetch(`${apiHost}/apis/v3/crm/team-members/${companyId}`, { headers: authHeaders() }),
         fetch(indentScope === "company" ? `${apiHost}/apis/v3/procurement/indents/company/${companyId}` : `${apiHost}/apis/v3/procurement/indents?project_id=${projectId}`, { headers: authHeaders() }),
         fetch(`${apiHost}/apis/v3/procurement/pos?project_id=${projectId}`, { headers: authHeaders() }),
         fetch(`${apiHost}/apis/v3/procurement/grns?project_id=${projectId}`, { headers: authHeaders() }),
@@ -164,6 +167,17 @@ export default function ProcurementPage() {
           if (m.grn_id) billedGrnIds.add(String(m.grn_id));
         });
       }
+
+      const teamMembersArr: Array<{ id: string; name: string }> = [];
+      if (teamRes.ok) {
+        const tdata = await teamRes.json();
+        (Array.isArray(tdata) ? tdata : []).forEach((t: any) => {
+          teamMembersArr.push({ id: String(t.id), name: t.name || "Member" });
+        });
+        setTeamMembers(teamMembersArr);
+      }
+      const teamById: Record<string, string> = {};
+      teamMembersArr.forEach((t) => (teamById[t.id] = t.name));
 
       if (materialsRes.ok) {
         const mdata = await materialsRes.json();
@@ -188,7 +202,7 @@ export default function ProcurementPage() {
           projectName: ind.project_id === projectId ? "Active Project" : `Project ${String(ind.project_id).slice(0, 8)}`,
           items: (ind.items || []).map((item: any) => ({ name: item.material_name, qty: item.quantity, unit: item.unit })),
           status: ind.status,
-          requestedBy: "Auto-synced",
+          requestedBy: ind.requested_by ? (teamById[String(ind.requested_by)] || "Site Member") : "Auto-synced",
           date: ind.created_at ? ind.created_at.split("T")[0] : "",
         }));
         setIndents(mapped);
@@ -199,13 +213,21 @@ export default function ProcurementPage() {
           id: po.id,
           poNumber: po.po_number,
           vendor: po.vendor_name || (po.vendor_id ? (vendorById[String(po.vendor_id)] || "—") : "—"),
-          items: (po.items || []).map((item: any) => ({ id: item.id, name: item.material_name, qty: item.quantity, unit: item.unit, rate: item.rate })),
+          items: (po.items || []).map((item: any) => ({
+            id: item.id,
+            name: item.material_name,
+            qty: item.quantity,
+            unit: item.unit,
+            rate: item.rate,
+            tax_pct: item.tax_pct ?? 18,
+          })),
           grossAmount: po.gross_amount,
           taxAmount: po.tax_amount,
           totalAmount: po.total_amount,
           status: po.status,
           approvalFlag: po.approval_flag,
           date: po.po_date ? po.po_date.split("T")[0] : "",
+          expectedDeliveryDate: po.expected_delivery_date ? po.expected_delivery_date.split("T")[0] : null,
         }));
         setPos(mapped);
       }
@@ -217,7 +239,7 @@ export default function ProcurementPage() {
           poNumber: "",
           vendor: "",
           receivedDate: grn.received_date ? grn.received_date.split("T")[0] : "",
-          receivedBy: "Auto-synced",
+          receivedBy: grn.received_by ? (teamById[String(grn.received_by)] || "Store Incharge") : "Auto-synced",
           items: (grn.items || []).map((item: any) => ({ name: "", qty: item.received_qty, unit: "", rate: 0 })),
           isBilled: billedGrnIds.has(String(grn.id)),
         }));
@@ -267,20 +289,25 @@ export default function ProcurementPage() {
   const [showRFQDrawer, setShowRFQDrawer] = useState(false);
   const [selectedRFQItem, setSelectedRFQItem] = useState<string>("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  // Team members for user attribution
+  const [teamMembers, setTeamMembers] = useState<Array<{ id: string; name: string }>>([]);
+
   // New Indent form state
   const [newIndentNum, setNewIndentNum] = useState("");
   const [newIndentMaterial, setNewIndentMaterial] = useState("");
   const [newIndentQty, setNewIndentQty] = useState(50);
   const [newIndentUnit, setNewIndentUnit] = useState("bags");
   const [newIndentSpec, setNewIndentSpec] = useState("");
+  const [newIndentRequestedBy, setNewIndentRequestedBy] = useState("");
 
-  // New PO form state (Multi-item support)
+  // New PO form state (Multi-item support with tax and expected delivery date)
   const [newPONum, setNewPONum] = useState("");
   const [newPOVendor, setNewPOVendor] = useState("");
+  const [newPOExpectedDeliveryDate, setNewPOExpectedDeliveryDate] = useState("");
   const [vendorOptions, setVendorOptions] = useState<Array<{ id: string; name: string }>>([]);
   const [materials, setMaterials] = useState<Array<{ id: string; name: string }>>([]);
   const [poFormItems, setPoFormItems] = useState<POItem[]>([
-    { name: "", qty: 0, unit: "", rate: 0 }
+    { name: "", qty: 0, unit: "", rate: 0, tax_pct: 18 }
   ]);
   const [newPOTerms, setNewPOTerms] = useState("");
   const [poDefaultTerms, setPoDefaultTerms] = useState("");
@@ -293,6 +320,7 @@ export default function ProcurementPage() {
   // GRN form state
   const [selectedPOForGRN, setSelectedPOForGRN] = useState<PO | null>(null);
   const [grnNum, setGrnNum] = useState("GRN-2026-010");
+  const [grnReceivedBy, setGrnReceivedBy] = useState("");
   const [grnItemsChecked, setGrnItemsChecked] = useState<Record<string, boolean>>({});
   const [grnReceivedQtys, setGrnReceivedQtys] = useState<Record<string, string>>({});
   // D-010: gate photo upload removed until object storage exists
@@ -303,6 +331,7 @@ export default function ProcurementPage() {
 
   // Add Material Indent Submission
   const handleCreateIndent = async () => {
+    const requestedName = teamMembers.find(t => t.id === newIndentRequestedBy)?.name || "Site Engineer";
     const newIndent: Indent = {
       id: `IND-${Date.now()}`,
       indentNumber: newIndentNum,
@@ -313,7 +342,7 @@ export default function ProcurementPage() {
         specOverride: newIndentSpec || undefined,
       }],
       status: "pending",
-      requestedBy: "Amit K (Site Engineer)",
+      requestedBy: requestedName,
       date: new Date().toISOString().split("T")[0]
     };
 
@@ -326,6 +355,7 @@ export default function ProcurementPage() {
           company_id: companyId,
           project_id: projectId,
           indent_number: newIndentNum,
+          requested_by: newIndentRequestedBy || null,
           items: [{ material_name: newIndentMaterial, quantity: newIndentQty, unit: newIndentUnit }],
         }),
       });
@@ -335,6 +365,7 @@ export default function ProcurementPage() {
       } else {
         const err = await readErrorDetail(res);
         alert(err || 'Action failed');
+        return;
       }
     } catch (err) {
       console.error("Indent create error, using local only:", err);
@@ -344,6 +375,7 @@ export default function ProcurementPage() {
     setShowIndentModal(false);
     setNewIndentSpec("");
     setNewIndentNum("");
+    setNewIndentRequestedBy("");
   };
 
   // Approve Indent
@@ -409,14 +441,18 @@ export default function ProcurementPage() {
     }
   };
 
-  // Add Purchase Order Submission (Multi-item support)
+  // Add Purchase Order Submission (Multi-item support with line-item tax and delivery date)
   const handleCreatePO = async () => {
     let gross = 0;
+    let totalTax = 0;
     poFormItems.forEach(item => {
-      gross += item.qty * item.rate;
+      const lineGross = (item.qty || 0) * (item.rate || 0);
+      const taxRate = typeof item.tax_pct === "number" ? item.tax_pct : 18;
+      const lineTax = lineGross * (taxRate / 100);
+      gross += lineGross;
+      totalTax += lineTax;
     });
-    const tax = gross * 0.18;
-    const total = gross + tax;
+    const total = gross + totalTax;
 
     const newPO: PO = {
       id: `PO-${Date.now()}`,
@@ -424,11 +460,12 @@ export default function ProcurementPage() {
       vendor: vendorOptions.find((v) => v.id === newPOVendor)?.name || "—",
       items: poFormItems,
       grossAmount: gross,
-      taxAmount: tax,
+      taxAmount: totalTax,
       totalAmount: total,
       status: "draft",
       approvalFlag: "pending",
-      date: new Date().toISOString().split("T")[0]
+      date: new Date().toISOString().split("T")[0],
+      expectedDeliveryDate: newPOExpectedDeliveryDate || null,
     };
 
     try {
@@ -449,9 +486,16 @@ export default function ProcurementPage() {
           company_id: companyId,
           project_id: projectId,
           po_number: newPONum,
-          po_date: new Date().toISOString().split("T")[0],
+          po_date: new Date().toISOString(),
+          expected_delivery_date: newPOExpectedDeliveryDate ? new Date(newPOExpectedDeliveryDate).toISOString() : null,
           vendor_id: newPOVendor || null,
-          items: poFormItems.map(item => ({ material_name: item.name, quantity: item.qty, unit: item.unit, rate: item.rate })),
+          items: poFormItems.map(item => ({
+            material_name: item.name,
+            quantity: item.qty,
+            unit: item.unit,
+            rate: item.rate,
+            tax_pct: typeof item.tax_pct === "number" ? item.tax_pct : 18.0,
+          })),
           terms: newPOTerms || null,
         }),
       });
@@ -461,6 +505,7 @@ export default function ProcurementPage() {
       } else {
         const err = await readErrorDetail(res);
         alert(err || 'Action failed');
+        return;
       }
     } catch (err) {
       console.error("PO create error, using local only:", err);
@@ -468,9 +513,11 @@ export default function ProcurementPage() {
 
     setPos([newPO, ...pos]);
     setShowPOModal(false);
-    setPoFormItems([{ name: "", qty: 0, unit: "", rate: 0 }]);
+    setPoFormItems([{ name: "", qty: 0, unit: "", rate: 0, tax_pct: 18 }]);
     setNewPOTerms("");
     setNewPONum("");
+    setNewPOVendor("");
+    setNewPOExpectedDeliveryDate("");
   };
 
   // Approve PO
@@ -601,12 +648,13 @@ export default function ProcurementPage() {
           po_id: selectedPOForGRN.id,
           grn_number: grnNum,
           received_date: new Date().toISOString().split("T")[0],
+          received_by: grnReceivedBy || null,
           items: receivedItems.map((item) => ({ po_item_id: item.id, received_qty: item.qty })),
         }),
       });
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        alert(`Failed to record GRN: ${typeof err.detail === "string" ? err.detail : `HTTP ${res.status}`}`);
+        const err = await readErrorDetail(res);
+        alert(`Failed to record GRN: ${err}`);
         return;
       }
     } catch (err) {
@@ -617,6 +665,7 @@ export default function ProcurementPage() {
 
     setShowGRNModal(false);
     setSelectedPOForGRN(null);
+    setGrnReceivedBy("");
     fetchProcurementData();
   };
 
@@ -883,13 +932,24 @@ export default function ProcurementPage() {
                       ) : (
                         pos.map((po) => (
                           <tr key={po.id} className="border-b border-border-custom hover:bg-elevated transition-all align-top">
-                            <td className="px-5 py-3 font-sans font-bold text-foreground whitespace-nowrap">{po.poNumber}</td>
+                            <td className="px-5 py-3 font-sans text-foreground whitespace-nowrap">
+                              <div className="font-bold text-foreground">{po.poNumber}</div>
+                              <div className="text-[10px] text-muted font-normal">Date: {po.date || "—"}</div>
+                              {po.expectedDeliveryDate && (
+                                <div className="text-[10px] text-primary font-medium mt-0.5">Exp: {po.expectedDeliveryDate}</div>
+                              )}
+                            </td>
                             <td className="px-5 py-3 text-foreground whitespace-nowrap">{po.vendor}</td>
                             <td className="px-5 py-3 space-y-1">
                               {po.items.map((item, i) => (
-                                <div key={i} className="text-muted">
+                                <div key={i} className="text-muted text-xs">
                                   <span className="font-semibold text-foreground">{item.name}</span>{" "}
                                   <span className="text-muted">{item.qty} {item.unit} @ ₹{item.rate.toLocaleString("en-IN")}</span>
+                                  {typeof item.tax_pct === "number" && item.tax_pct > 0 ? (
+                                    <span className="text-[10px] ml-1 bg-elevated px-1.5 py-0.2 rounded text-muted font-medium border border-border-custom">+{item.tax_pct}% GST</span>
+                                  ) : (
+                                    <span className="text-[10px] ml-1 bg-elevated px-1.5 py-0.2 rounded text-muted border border-border-custom">0% Tax</span>
+                                  )}
                                 </div>
                               ))}
                             </td>
@@ -899,7 +959,12 @@ export default function ProcurementPage() {
                             <td className="px-5 py-3">
                               <Badge tone={(po.status === "received" || po.status === "closed") ? "success" : "primary"} className="uppercase font-bold">{po.status}</Badge>
                             </td>
-                            <td className="px-5 py-3 text-right font-sans font-bold text-foreground whitespace-nowrap">₹{po.totalAmount.toLocaleString("en-IN")}</td>
+                            <td className="px-5 py-3 text-right font-sans whitespace-nowrap">
+                              <div className="font-bold text-foreground">₹{po.totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                              <div className="text-[10px] text-muted font-normal">
+                                Sub: ₹{po.grossAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · Tax: ₹{po.taxAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </div>
+                            </td>
                             <td className="px-5 py-3 text-right whitespace-nowrap">
                               <div className="flex gap-2 justify-end">
                                 <button
@@ -1216,6 +1281,16 @@ export default function ProcurementPage() {
                 <label className="text-muted">Indent Number</label>
                 <input type="text" value={newIndentNum} onChange={(e) => setNewIndentNum(e.target.value)} required className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" />
               </div>
+
+              <div className="space-y-1">
+                <label className="text-muted">Requested By (Team Member)</label>
+                <select value={newIndentRequestedBy} onChange={(e) => setNewIndentRequestedBy(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground">
+                  <option value="">Select Team Member (Default: Site Engineer)</option>
+                  {teamMembers.map((t) => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+              </div>
               
               <div className="space-y-1">
                 <label className="text-muted">Material Item</label>
@@ -1272,6 +1347,16 @@ export default function ProcurementPage() {
               <div className="space-y-1">
                 <label className="text-muted">GRN Serial Number</label>
                 <input type="text" value={grnNum} onChange={(e) => setGrnNum(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-muted">Received By (Store / Site Incharge)</label>
+                <select value={grnReceivedBy} onChange={(e) => setGrnReceivedBy(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground">
+                  <option value="">Select Team Member (Default: Incharge)</option>
+                  {teamMembers.map((t) => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
               </div>
 
               {/* Checklist list of PO items (Screen 5768) */}
@@ -1364,16 +1449,25 @@ export default function ProcurementPage() {
       {/* PO Creation modal */}
       {showPOModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-background border border-border-custom rounded-lg w-full max-w-md shadow-2xl p-6 space-y-4 text-xs font-sans max-h-[85vh] overflow-y-auto">
+          <div className="bg-background border border-border-custom rounded-lg w-full max-w-lg shadow-2xl p-6 space-y-4 text-xs font-sans max-h-[85vh] overflow-y-auto">
             <div className="flex justify-between items-center border-b border-border-custom pb-2">
-              <h3 className="text-xs font-extrabold text-foreground">Create Purchase Order (PO)</h3>
+              <div>
+                <h3 className="text-xs font-extrabold text-foreground">Create Purchase Order (PO)</h3>
+                <p className="text-[10px] text-muted mt-0.5">Procurement order with line-item tax and vendor promised delivery date</p>
+              </div>
               <button onClick={() => setShowPOModal(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
 
             <div className="space-y-3">
-              <div className="space-y-1">
-                <label className="text-muted font-bold">PO Number</label>
-                <input type="text" value={newPONum} onChange={(e) => setNewPONum(e.target.value)} required className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <label className="text-muted font-bold">PO Number*</label>
+                  <input type="text" value={newPONum} onChange={(e) => setNewPONum(e.target.value)} required className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" placeholder="PO-2026-001" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-muted font-bold">Expected Delivery Date</label>
+                  <input type="date" value={newPOExpectedDeliveryDate} onChange={(e) => setNewPOExpectedDeliveryDate(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" />
+                </div>
               </div>
 
               <div className="space-y-1">
@@ -1393,7 +1487,7 @@ export default function ProcurementPage() {
               <div className="space-y-2 border-t border-border-custom pt-3">
                 <div className="flex justify-between items-center">
                   <span className="text-muted font-bold uppercase tracking-wider text-[9px]">PO Line Items</span>
-                  <button type="button" onClick={() => setPoFormItems([...poFormItems, { name: "", qty: 0, unit: "", rate: 0 }])}
+                  <button type="button" onClick={() => setPoFormItems([...poFormItems, { name: "", qty: 0, unit: "", rate: 0, tax_pct: 18 }])}
                     className="text-[9px] text-primary font-bold hover:underline">+ Add Item Line</button>
                 </div>
                 {poFormItems.map((item, idx) => (
@@ -1419,9 +1513,9 @@ export default function ProcurementPage() {
                         <FieldHint text="No materials yet. Add one in Library." href={`/c/${companyId}/d/library`} linkLabel="Go to Library" />
                       )}
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                       <div className="space-y-1">
-                        <label className="text-muted text-[9px]">Quantity ({item.unit})</label>
+                        <label className="text-muted text-[9px]">Quantity ({item.unit || "unit"})</label>
                         <input type="number" value={item.qty}
                           onChange={e => { const next = [...poFormItems]; next[idx].qty = parseFloat(e.target.value) || 0; setPoFormItems(next); }}
                           className="w-full bg-input border border-border-custom rounded p-1 text-foreground text-[11px]" />
@@ -1432,10 +1526,62 @@ export default function ProcurementPage() {
                           onChange={e => { const next = [...poFormItems]; next[idx].rate = parseFloat(e.target.value) || 0; setPoFormItems(next); }}
                           className="w-full bg-input border border-border-custom rounded p-1 text-foreground text-[11px]" />
                       </div>
+                      <div className="space-y-1">
+                        <label className="text-muted text-[9px]">GST Tax %</label>
+                        <select
+                          value={item.tax_pct ?? 18}
+                          onChange={e => { const next = [...poFormItems]; next[idx].tax_pct = parseFloat(e.target.value) || 0; setPoFormItems(next); }}
+                          className="w-full bg-input border border-border-custom rounded p-1 text-foreground text-[11px]"
+                        >
+                          <option value={0}>0% (Exempt)</option>
+                          <option value={5}>5%</option>
+                          <option value={12}>12%</option>
+                          <option value={18}>18% (Standard GST)</option>
+                          <option value={28}>28%</option>
+                        </select>
+                      </div>
                     </div>
+                    {item.qty > 0 && item.rate > 0 && (
+                      <div className="text-[10px] text-muted flex justify-between pt-1 border-t border-border-custom/50">
+                        <span>Line Total (incl. {item.tax_pct ?? 18}% tax):</span>
+                        <span className="font-semibold text-foreground">
+                          ₹{((item.qty * item.rate) * (1 + (item.tax_pct ?? 18) / 100)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
+
+              {/* Running total calculation breakdown matching backend */}
+              {(() => {
+                let subtotal = 0;
+                let totalTax = 0;
+                poFormItems.forEach(it => {
+                  const lineSub = (it.qty || 0) * (it.rate || 0);
+                  const taxRate = typeof it.tax_pct === "number" ? it.tax_pct : 18;
+                  const lineTax = lineSub * (taxRate / 100);
+                  subtotal += lineSub;
+                  totalTax += lineTax;
+                });
+                const grandTotal = subtotal + totalTax;
+                return (
+                  <div className="bg-card/70 border border-border-custom rounded-lg p-3 space-y-1.5 text-xs">
+                    <div className="flex justify-between text-muted">
+                      <span>Items Subtotal:</span>
+                      <span className="font-semibold text-foreground">₹{subtotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="flex justify-between text-muted">
+                      <span>GST Tax Amount:</span>
+                      <span className="font-semibold text-foreground">₹{totalTax.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="flex justify-between border-t border-border-custom pt-1.5 font-bold text-sm text-foreground">
+                      <span>Grand Total:</span>
+                      <span className="text-primary font-sans">₹{grandTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>
+                  </div>
+                );
+              })()}
 
               <div className="space-y-1 border-t border-border-custom pt-3">
                 <label className="text-muted font-bold">Terms &amp; Conditions</label>
