@@ -2,8 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useSearchParams } from "next/navigation";
-import {  getApiHost , readErrorDetail } from "@/lib/api";
+import { useProject } from "@/context/ProjectContext";
+import { getApiHost, readErrorDetail } from "@/lib/api";
 import { UNITS } from "@/lib/units";
+import Badge from "@/components/ui/Badge";
 import Icon, { type IconName } from "@/components/marketing/Icon";
 import SegmentedTabs from "@/components/ui/Tabs";
 import PageShell from "@/components/layout/PageShell";
@@ -12,6 +14,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 
 type LibraryType =
   | "party"
+  | "party-balances"
   | "asset-type"
   | "cost-code"
   | "deduction"
@@ -24,7 +27,7 @@ type LibraryType =
   | "todo";
 
 const LIBRARY_TABS: LibraryType[] = [
-  "party", "asset-type", "cost-code", "deduction", "progress", "workforce",
+  "party", "party-balances", "asset-type", "cost-code", "deduction", "progress", "workforce",
   "material", "rate", "retention", "material-category", "todo",
 ];
 
@@ -32,6 +35,8 @@ export default function LibraryHubPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const companyId = params.company_id as string;
+  const { activeProjectId } = useProject();
+  const projectId = activeProjectId;
   const accessToken = typeof window !== "undefined" ? localStorage.getItem("access_token") : "";
 
   const initialTab = ((): LibraryType => {
@@ -41,6 +46,7 @@ export default function LibraryHubPage() {
 
   const [activeTab, setActiveTab] = useState<LibraryType>(initialTab);
   const [libraryData, setLibraryData] = useState<any[]>([]);
+  const [partyBalancesSummary, setPartyBalancesSummary] = useState<{ advance_paid: number; to_pay: number } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [partyTypeFilter, setPartyTypeFilter] = useState("");
   const [toastMessage, setToastMessage] = useState("");
@@ -144,6 +150,7 @@ export default function LibraryHubPage() {
   const getEndpoint = (tab: LibraryType) => {
     switch (tab) {
       case "party": return "parties";
+      case "party-balances": return "parties";
       case "asset-type": return "asset-types";
       case "cost-code": return "cost-codes";
       case "deduction": return "deductions";
@@ -160,6 +167,24 @@ export default function LibraryHubPage() {
   const fetchLibraryData = async () => {
     if (!companyId || !accessToken) return;
     try {
+      if (activeTab === "party-balances") {
+        const partyRes = await fetch(`${apiHost}/apis/v3/library/parties/${companyId}`, {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        });
+        if (partyRes.ok) {
+          const data = await partyRes.json();
+          setLibraryData(data);
+        }
+        if (projectId) {
+          const balRes = await fetch(`${apiHost}/apis/v3/library/parties/${companyId}/balances?project_id=${projectId}`, {
+            headers: { Authorization: `Bearer ${accessToken}` }
+          });
+          if (balRes.ok) {
+            setPartyBalancesSummary(await balRes.json());
+          }
+        }
+        return;
+      }
       const endpoint = getEndpoint(activeTab);
       let url = `${apiHost}/apis/v3/library/${endpoint}/${companyId}`;
       if (activeTab === "party" && partyTypeFilter) {
@@ -466,6 +491,7 @@ export default function LibraryHubPage() {
           <SegmentedTabs
             tabs={[
               { id: "party", label: "Party Library", icon: <Icon name="group" className="w-3.5 h-3.5" /> },
+              { id: "party-balances", label: "Party Balances", icon: <Icon name="payments" className="w-3.5 h-3.5" /> },
               { id: "asset-type", label: "Asset Type Library", icon: <Icon name="tractor" className="w-3.5 h-3.5" /> },
               { id: "cost-code", label: "Cost Code Library", icon: <Icon name="tag" className="w-3.5 h-3.5" /> },
               { id: "deduction", label: "Deduction Library", icon: <Icon name="minus" className="w-3.5 h-3.5" /> },
@@ -771,12 +797,13 @@ export default function LibraryHubPage() {
                   <th className="px-5 py-3">Created Date</th>
                   <th className="px-5 py-3">Component Count</th>
                   <th className="px-5 py-3">HSN/SAC</th>
+                  <th className="px-6 py-4 text-center">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border-custom">
                 {filteredData.length === 0 ? (
                   <tr>
-                    <td colSpan={12} className="p-8">
+                    <td colSpan={13} className="p-8">
                       <EmptyState
                         title="No rate card items found"
                         description="Build your central rate card library with standardized rates, units, and markup configurations."
@@ -816,12 +843,81 @@ export default function LibraryHubPage() {
                         </td>
                         <td className="px-6 py-4 text-center text-muted">{formatLibraryCell(item.component_count)}</td>
                         <td className="px-6 py-4 text-muted">{formatLibraryCell(item.hsn_sac)}</td>
+                        <td className="px-6 py-4 text-center">
+                          <button
+                            onClick={() => handleDeleteItem(item.id)}
+                            className="px-2.5 py-1 bg-elevated hover:bg-elevated/80 border border-border-custom text-foreground text-xs font-medium rounded transition-all cursor-pointer"
+                          >
+                            Remove
+                          </button>
+                        </td>
                       </tr>
                     );
                   })
                 )}
               </tbody>
             </table>
+          )}
+
+          {/* Party Balances Table */}
+          {activeTab === "party-balances" && (
+            <div className="space-y-4">
+              {partyBalancesSummary && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-card border-b border-border-custom">
+                  <div className="p-3 bg-elevated rounded-md border border-border-custom">
+                    <span className="text-[10px] uppercase font-bold text-muted block">Total Advance Paid</span>
+                    <span className="text-sm font-bold text-foreground font-sans">₹{partyBalancesSummary.advance_paid.toLocaleString()}</span>
+                  </div>
+                  <div className="p-3 bg-elevated rounded-md border border-border-custom">
+                    <span className="text-[10px] uppercase font-bold text-muted block">Total To Pay</span>
+                    <span className="text-sm font-bold text-foreground font-sans">₹{partyBalancesSummary.to_pay.toLocaleString()}</span>
+                  </div>
+                </div>
+              )}
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-border-custom text-muted font-semibold uppercase tracking-wider bg-background/50">
+                    <th className="px-5 py-3">Party Name</th>
+                    <th className="px-5 py-3">Party Type</th>
+                    <th className="px-5 py-3 text-right">Opening Balance</th>
+                    <th className="px-5 py-3">Balance Direction</th>
+                    <th className="px-5 py-3">Contact</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-custom">
+                  {filteredData.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-12 text-center text-muted font-semibold">No party balances recorded.</td>
+                    </tr>
+                  ) : (
+                    filteredData.map((item) => (
+                      <tr key={item.id} className="hover:bg-elevated/20 transition-colors border-b border-border-custom last:border-b-0">
+                        <td className="px-6 py-4 font-semibold text-foreground">{item.name}</td>
+                        <td className="px-5 py-3">
+                          <span className="bg-elevated text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider text-muted">
+                            {item.party_type || "Party"}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right font-bold text-foreground font-sans">
+                          ₹{(item.opening_balance || 0).toLocaleString()}
+                        </td>
+                        <td className="px-5 py-3">
+                          <Badge
+                            tone={item.opening_balance_type === "pay" || item.opening_balance_direction === "will_pay" ? "warning" : "info"}
+                            className="text-[10px]"
+                          >
+                            {item.opening_balance_type === "pay" || item.opening_balance_direction === "will_pay" ? "Will Pay" : "Will Receive"}
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-4 text-muted">
+                          {item.phone || item.email || "—"}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
         </PageShell>
