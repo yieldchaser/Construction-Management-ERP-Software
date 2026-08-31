@@ -339,71 +339,99 @@ export default function FinancePage() {
 
   const fetchData = async () => {
     try {
-      // Project-scoped P&L only when a real project is active.
-      if (projectId) {
-        const plRes = await fetch(`${getApiHost()}/apis/v3/finance/pl?project_id=${projectId}`, { headers: authHeaders() });
-        if (plRes.ok) {
-          setPlData(await plRes.json());
-        }
-      }
-      const tallyRes = await fetch(`${getApiHost()}/apis/v3/tally/connections?company_id=${companyId}`, { headers: authHeaders() });
-      if (tallyRes.ok) {
-        const data = await tallyRes.json();
-        if (data && data.connected === false) {
-          setTallyConn(null);
-        } else {
-          setTallyConn(data);
-          setTallyCompany(data.tally_company_name || "");
-          setTallyMobile(data.registered_mobile || "");
-          setTallyVoucherTemplate(data.voucher_number_template || "");
-          setTallyDefaultCash(data.default_cash_ledger || "");
-          setTallyAutoCreate(Boolean(data.auto_create_missing_ledgers));
-        }
-      }
-      // Fetch Bank Accounts
-      const bankRes = await fetch(`${getApiHost()}/apis/v3/finance/accounts/${companyId}`, { headers: authHeaders() });
-      if (bankRes.ok) {
-        setBankAccounts(await bankRes.json());
-      }
-      // Fetch Cash Account (running balance)
-      const cashRes = await fetch(`${getApiHost()}/apis/v3/finance/cash-account/${companyId}`, { headers: authHeaders() });
-      if (cashRes.ok) {
-        const ca = await cashRes.json();
-        setCashAccount(ca);
-        setCashRunning(ca ? ca.running_balance : 0);
-      }
-      // Fetch Payment Requests
-      const reqRes = await fetch(`${getApiHost()}/apis/v3/finance/payment-requests/${companyId}`, { headers: authHeaders() });
-      if (reqRes.ok) {
-        setPaymentRequests(await reqRes.json());
-      }
-      // Fetch Company-level Parties (Finance tab: Party sub-tab)
-      const partyRes = await fetch(`${getApiHost()}/apis/v3/finance/parties/${companyId}`, { headers: authHeaders() });
-      if (partyRes.ok) {
-        setCompanyParties(await partyRes.json());
-      }
       // Fetch Company-level Transactions & Summary (Finance tab: Transaction sub-tab)
-      const txnRes = await fetch(`${getApiHost()}/apis/v3/finance/transactions/${companyId}`, { headers: authHeaders() });
-      if (txnRes.ok) {
-        setTxnSummary(await txnRes.json());
-        setTxnLoad("ready");
-      } else {
+      try {
+        const txnRes = await fetch(`${getApiHost()}/apis/v3/finance/transactions/${companyId}`, { headers: authHeaders() });
+        if (txnRes.ok) {
+          setTxnSummary(await txnRes.json());
+          setTxnLoad("ready");
+        } else {
+          setTxnLoad("error");
+        }
+      } catch {
         setTxnLoad("error");
       }
-      // Zoho Books connection status (gates the per-bill push button)
-      const zohoRes = await fetch(`${getApiHost()}/apis/v3/integrations/zoho-books/status/${companyId}`, { headers: authHeaders() });
-      if (zohoRes.ok) {
-        const zs = await zohoRes.json();
-        setZohoConnected(Boolean(zs.connected));
+
+      // Project-scoped P&L only when a real project is active.
+      if (projectId) {
+        try {
+          const plRes = await fetch(`${getApiHost()}/apis/v3/finance/pl?project_id=${projectId}`, { headers: authHeaders() });
+          if (plRes.ok) {
+            setPlData(await plRes.json());
+          }
+        } catch {}
       }
+
+      try {
+        const tallyRes = await fetch(`${getApiHost()}/apis/v3/tally/connections?company_id=${companyId}`, { headers: authHeaders() });
+        if (tallyRes.ok) {
+          const data = await tallyRes.json();
+          if (data && data.connected === false) {
+            setTallyConn(null);
+          } else {
+            setTallyConn(data);
+            setTallyCompany(data.tally_company_name || "");
+            setTallyMobile(data.registered_mobile || "");
+            setTallyVoucherTemplate(data.voucher_number_template || "");
+            setTallyDefaultCash(data.default_cash_ledger || "");
+            setTallyAutoCreate(Boolean(data.auto_create_missing_ledgers));
+          }
+        }
+      } catch {}
+
+      // Fetch Bank Accounts
+      try {
+        const bankRes = await fetch(`${getApiHost()}/apis/v3/finance/accounts/${companyId}`, { headers: authHeaders() });
+        if (bankRes.ok) {
+          setBankAccounts(await bankRes.json());
+        }
+      } catch {}
+
+      // Fetch Cash Account (running balance)
+      try {
+        const cashRes = await fetch(`${getApiHost()}/apis/v3/finance/cash-account/${companyId}`, { headers: authHeaders() });
+        if (cashRes.ok) {
+          const ca = await cashRes.json();
+          setCashAccount(ca);
+          setCashRunning(ca ? ca.running_balance : 0);
+        }
+      } catch {}
+
+      // Fetch Payment Requests
+      try {
+        const reqRes = await fetch(`${getApiHost()}/apis/v3/finance/payment-requests/${companyId}`, { headers: authHeaders() });
+        if (reqRes.ok) {
+          setPaymentRequests(await reqRes.json());
+        }
+      } catch {}
+
+      // Fetch Company-level Parties (Finance tab: Party sub-tab)
+      try {
+        const partyRes = await fetch(`${getApiHost()}/apis/v3/finance/parties/${companyId}`, { headers: authHeaders() });
+        if (partyRes.ok) {
+          setCompanyParties(await partyRes.json());
+        }
+      } catch {}
+
+      // Zoho Books connection status (gates the per-bill push button)
+      try {
+        const zohoRes = await fetch(`${getApiHost()}/apis/v3/integrations/zoho-books/status/${companyId}`, { headers: authHeaders() });
+        if (zohoRes.ok) {
+          const zs = await zohoRes.json();
+          setZohoConnected(Boolean(zs.connected));
+        }
+      } catch {}
+
       // Fetch Employees for party dropdown (only when a real project is active;
       // firing with an empty/placeholder project id just 403s).
       if (projectId) {
-        const empRes = await fetch(`${getApiHost()}/apis/v3/hr/employees/${projectId}`, { headers: authHeaders() });
-        if (empRes.ok) {
-          setUsersList(await empRes.json());
-        }
-        await fetchGeneralLedger();
+        try {
+          const empRes = await fetch(`${getApiHost()}/apis/v3/hr/employees/${projectId}`, { headers: authHeaders() });
+          if (empRes.ok) {
+            setUsersList(await empRes.json());
+          }
+          await fetchGeneralLedger();
+        } catch {}
       }
     } catch (e) {
       console.error("Failed to load finance data", e);
@@ -901,6 +929,9 @@ export default function FinancePage() {
       if (res.ok) {
         setTallyConn(null);
         setTallyMsg({ type: "ok", text: "Tally connection removed." });
+      } else {
+        const err = await readErrorDetail(res);
+        setTallyMsg({ type: "err", text: err || "Failed to remove Tally connection." });
       }
     } catch (e: any) {
       setTallyMsg({ type: "err", text: e?.message || "Failed to remove Tally connection." });
@@ -2541,7 +2572,7 @@ export default function FinancePage() {
               <div className="space-y-5">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h2 className="text-xs font-bold text-muted uppercase tracking-wider">Budget vs Actual — Cost Variance Report</h2>
+                    <h2 className="text-xs font-bold text-muted uppercase tracking-wider">Budget vs Actual: Cost Variance Report</h2>
                     <p className="text-[10px] text-muted mt-1">EAC = Estimate At Completion (projects final cost at current burn rate assuming 60% completion).</p>
                   </div>
                   <Badge tone={totalVariance >= 0 ? "success" : "danger"} className="font-bold">

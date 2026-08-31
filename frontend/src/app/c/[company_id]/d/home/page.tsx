@@ -465,7 +465,7 @@ export default function ProjectsHomePage() {
               <div className="text-[11px] font-semibold uppercase tracking-wider text-primary">Project Details</div>
               <h3 className="text-sm font-semibold text-foreground">Project Name, Project Code, Project Status, Project Health, Project Address</h3>
               <p className="text-xs text-muted max-w-3xl">
-                Pulled from the planning projects endpoint so the home page exposes the richer project labels the workbook called out.
+                Overview of key project attributes including identifier codes, current status, health metrics, and location.
               </p>
             </div>
             <div className="px-3 py-1.5 rounded-md bg-elevated border border-border-custom text-xs font-medium text-muted">

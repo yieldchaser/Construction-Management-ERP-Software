@@ -1,7 +1,7 @@
 "use client";
 import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import { getApiHost } from "@/lib/api";
-import { authHeaders } from "@/lib/siteflow";
+import { authHeaders, formatLabel } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
@@ -216,7 +216,7 @@ export default function DepreciationPage() {
                 ) : (
                   schedules.map((s) => (
                     <tr key={s.id} className="hover:bg-elevated transition-colors">
-                      <td className="px-6 py-4 capitalize">{s.method.replace("_", " ")}</td>
+                      <td className="px-6 py-4">{formatLabel(s.method)}</td>
                       <td className="px-6 py-4">{s.useful_life_years}</td>
                       <td className="px-6 py-4">₹{Number(s.salvage_value).toLocaleString()}</td>
                       <td className="px-6 py-4">{s.depreciation_pct}%</td>

@@ -94,3 +94,36 @@ export const initials = (name: string): string =>
     .slice(0, 2)
     .map((w) => w[0]?.toUpperCase() || "")
     .join("");
+
+export const formatLabel = (value: string | undefined | null): string => {
+  if (!value) return "—";
+  const map: Record<string, string> = {
+    not_started: "Not Started",
+    in_progress: "In Progress",
+    under_review: "Under Review",
+    partially_completed: "Partially Completed",
+    on_hold: "On Hold",
+    purchase_order: "Purchase Order",
+    goods_receipt_note: "Goods Receipt Note",
+    cash_voucher: "Cash Voucher",
+    approval_rule: "Approval Rule",
+    asset_type: "Asset Type",
+    chat_group_member: "Chat Group Member",
+    cost_code: "Cost Code",
+    crm_lead: "CRM Lead",
+    drawing_pin: "Drawing Pin",
+    leave_template: "Leave Template",
+    library_todo: "Library To Do",
+    material_category: "Material Category",
+    payment_request: "Payment Request",
+    project_member: "Project Member",
+    project_party: "Project Party",
+    salary_template: "Salary Template",
+  };
+  const key = String(value).toLowerCase();
+  if (map[key]) return map[key];
+  return String(value)
+    .split("_")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ");
+};

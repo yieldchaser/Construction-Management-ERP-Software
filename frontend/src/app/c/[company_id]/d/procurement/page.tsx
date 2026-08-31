@@ -819,7 +819,7 @@ export default function ProcurementPage() {
       <main className="flex-1 flex flex-col overflow-hidden h-full">
         {isOffline && (
           <div className="px-6 py-2.5 bg-warning/10 border-b border-warning/20 text-warning text-xs">
-            Using demo procurement data — backend connection unavailable
+            Offline mode: backend connection unavailable
           </div>
         )}
         <PageHeader

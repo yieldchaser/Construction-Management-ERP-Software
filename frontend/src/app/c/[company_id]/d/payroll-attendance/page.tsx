@@ -1269,7 +1269,7 @@ function AttendanceTab({
             {loadError ? (
               <tr>
                 <td colSpan={2} className="px-3 py-6 text-center text-danger">
-                  Attendance could not be loaded for this day — no statuses are shown rather than marking everyone absent.
+                  Attendance could not be loaded for this day: no statuses are shown rather than marking everyone absent.
                 </td>
               </tr>
             ) : (

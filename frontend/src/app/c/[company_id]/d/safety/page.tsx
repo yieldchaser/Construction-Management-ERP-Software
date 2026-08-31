@@ -513,7 +513,7 @@ export default function SafetyPage() {
                   Worked · Calculated on{" "}
                   {stats.total_manhours_used ? stats.total_manhours_used.toLocaleString("en-IN") : "50,000"} manhours
                   basis
-                  {stats.manhours_source === "fallback" ? " (estimated — no attendance data)" : ""}.
+                  {stats.manhours_source === "fallback" ? " (estimated: no attendance data)" : ""}.
                 </span>
               </div>
             </>
@@ -854,7 +854,7 @@ export default function SafetyPage() {
                   value={talkForm.topic}
                   onChange={(e) => setTalkForm({ ...talkForm, topic: e.target.value })}
                   className="w-full bg-elevated border border-border-custom rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary"
-                  placeholder="e.g. Working at Height — Scaffolding Safety"
+                  placeholder="e.g. Working at Height: Scaffolding Safety"
                 />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

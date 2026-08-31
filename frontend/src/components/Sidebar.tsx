@@ -42,7 +42,7 @@ export default function Sidebar() {
     }
   }, [companyId]);
 
-  const { activeProjectId, setActiveProjectId, projects, projectContext } = useProject();
+  const { activeProjectId, setActiveProjectId, projects, projectContext, projectsLoadingState } = useProject();
   const { can } = usePermissions();
   const {
     mobileOpen,
@@ -706,7 +706,11 @@ export default function Sidebar() {
                 >
                   {projects.length === 0 && (
                     <option value={activeProjectId}>
-                      {projectContext.name && projectContext.name !== "Project Context"
+                      {projectsLoadingState === "failed"
+                        ? "Failed to load projects"
+                        : projectsLoadingState === "loaded"
+                        ? "No projects yet (create in Projects)"
+                        : projectContext.name && projectContext.name !== "Project Context"
                         ? `${projectContext.name}${projectContext.code ? ` (${projectContext.code})` : ""}`
                         : "Loading projects..."}
                     </option>

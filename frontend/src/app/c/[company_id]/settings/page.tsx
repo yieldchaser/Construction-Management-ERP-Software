@@ -2228,8 +2228,8 @@ export default function CompanySettingsPage() {
                     {numStatus === "saved" && (<div className="p-4 bg-success/10 border border-success/20 text-success text-xs rounded-lg">Number format saved</div>)}
                     {numStatus === "error" && (<div className="p-4 bg-danger/10 border border-danger/20 text-danger text-xs rounded-lg">Failed to save number format</div>)}
                   </div>
-                  <div className="p-4 bg-warning/10 border border-warning/20 text-warning text-xs rounded-lg">
-                    Partially wired: the shared currency formatter (fmtINR) now accepts an optional decimal-places argument (fmtINR(amount, company.currency_decimal_places)) instead of always hardcoding 0, so any screen that already has the company record in scope can opt in. It still defaults to 0 decimal places, because none of the existing call sites currently fetch company settings — passing the configured value into all of them would mean adding a new company-settings fetch across many unrelated pages, which is deferred. There is no equivalent shared formatter for Quantity Decimal Places yet; quantities are rendered inline with fixed decimal counts (e.g. toFixed(2)/toFixed(3)) across two dozen+ files, so wiring that in a single safe pass wasn't attempted either.
+                  <div className="p-4 bg-muted/10 border border-border-custom text-muted text-xs rounded-lg">
+                    Configure standard currency formatting precision across financial reports and document views.
                   </div>
                 </div>
               )}
@@ -2240,7 +2240,7 @@ export default function CompanySettingsPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <h2 className="text-sm font-bold text-foreground uppercase tracking-wider text-muted">Custom Fields</h2>
-                      <p className="mt-1 text-xs text-muted">Define extra fields attached to a document/entity type. Wired to the generic CustomField backend (entity_type-based).</p>
+                      <p className="mt-1 text-xs text-muted">Define custom fields to capture specialized tracking data across documents and records.</p>
                     </div>
                     <button onClick={() => setShowAddCf(true)} className="bg-primary text-white text-xs font-bold px-4 py-2.5 rounded-md">+ New Custom Field</button>
                   </div>

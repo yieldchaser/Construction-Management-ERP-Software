@@ -105,7 +105,7 @@ export default function EnterpriseRollupPage() {
     <div className="flex-1 flex flex-col overflow-hidden">
       <PageHeader
         title="Enterprise Rollup"
-        subtitle={`Consolidated view across ${data.company_count} compan${data.company_count === 1 ? "y" : "ies"}${data.company_count === 1 ? " — this entity is not yet grouped under an enterprise." : ""}`}
+        subtitle={`Consolidated view across ${data.company_count} compan${data.company_count === 1 ? "y" : "ies"}${data.company_count === 1 ? " (this entity is not yet grouped under an enterprise)" : ""}`}
       />
       <div className="flex-1 overflow-y-auto">
         <PageShell width="wide">

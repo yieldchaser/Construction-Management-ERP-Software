@@ -66,7 +66,13 @@ export default function TowersPage() {
     setLoading(false);
   };
 
-  useEffect(() => { if (projectId) fetchData(); }, [projectId]);
+  useEffect(() => {
+    if (projectId) {
+      fetchData();
+    } else {
+      setLoading(false);
+    }
+  }, [projectId]);
 
   const resetForm = () => {
     setShowForm(false);
@@ -156,9 +162,20 @@ export default function TowersPage() {
 
         <div className="flex-1 overflow-y-auto z-10">
           <PageShell width="wide">
-            {loading && <CardSkeleton />}
-
-            {!loading && (
+            {!projectId ? (
+              <EmptyState
+                icon="building"
+                title="No project selected"
+                description='No active projects. Click "+ New Project" to create one.'
+                action={{
+                  label: "+ New Project",
+                  href: `/c/${companyId}/projects`,
+                  icon: "add",
+                }}
+              />
+            ) : loading ? (
+              <CardSkeleton />
+            ) : (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                   {towers.map((t) => (

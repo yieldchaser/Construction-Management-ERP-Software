@@ -66,7 +66,13 @@ export default function VendorPerformancePage() {
     }
   };
 
-  useEffect(() => { if (projectId) fetchData(); }, [projectId]);
+  useEffect(() => {
+    if (projectId) {
+      fetchData();
+    } else {
+      setLoading(false);
+    }
+  }, [projectId]);
 
   const onTimePct = (v: VendorPerf) => v.total_grns > 0 ? ((v.on_time_deliveries / v.total_grns) * 100).toFixed(1) : "0.0";
 
@@ -98,16 +104,25 @@ export default function VendorPerformancePage() {
 
         <div className="flex-1 overflow-y-auto z-10">
           <PageShell width="wide">
-            {loading && <TableSkeleton rows={5} cols={7} />}
-
-            {!loading && vendors.length === 0 && (
+            {!projectId ? (
+              <EmptyState
+                icon="building"
+                title="No project selected"
+                description='No active projects. Click "+ New Project" to create one.'
+                action={{
+                  label: "+ New Project",
+                  href: `/c/${companyId}/projects`,
+                  icon: "add",
+                }}
+              />
+            ) : loading ? (
+              <TableSkeleton rows={5} cols={7} />
+            ) : vendors.length === 0 ? (
               <EmptyState
                 title="No vendor performance data yet"
                 description="Performance metrics are auto-calculated from purchase order and goods receipt note history."
               />
-            )}
-
-          {!loading && vendors.length > 0 && (
+            ) : (
             <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-xs text-left">

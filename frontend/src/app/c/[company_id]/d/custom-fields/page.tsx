@@ -1,7 +1,7 @@
 "use client";
 import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import { getApiHost } from "@/lib/api";
-import { authHeaders } from "@/lib/siteflow";
+import { authHeaders, formatLabel } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
@@ -253,7 +253,7 @@ export default function CustomFieldsPage() {
                   <Badge tone={f.is_active ? "success" : "neutral"}>{f.is_active ? "Active" : "Inactive"}</Badge>
                 </div>
                 <div className="flex items-center justify-between text-xs text-muted mb-4">
-                  <span className="capitalize">{f.entity_type}</span>
+                  <span>{formatLabel(f.entity_type)}</span>
                   {f.is_required && <span className="text-danger">Required</span>}
                 </div>
                 <div className="text-xs mb-4 truncate">

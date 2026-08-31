@@ -388,6 +388,12 @@ def get_lookahead(project_id: UUID, days: int = 14, db: Session = Depends(get_db
     return out
 
 
+def _snapshot_task_baseline(task: Task) -> None:
+    """Helper to snapshot start/end dates into baseline fields for a task."""
+    task.baseline_start = task.start_date
+    task.baseline_end = task.end_date
+
+
 @router.post("/tasks/{task_id}/set-baseline", response_model=TaskResponse)
 def set_baseline(task_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Snapshot the task's current planned start/end into the baseline fields."""
@@ -400,8 +406,7 @@ def set_baseline(task_id: UUID, db: Session = Depends(get_db), current_user: Use
     get_company_membership(db, current_user, project.company_id)
     require_permission(db, current_user, project.company_id, "planning:edit")
 
-    task.baseline_start = task.start_date
-    task.baseline_end = task.end_date
+    _snapshot_task_baseline(task)
     db.add(task)
     db.commit()
     db.refresh(task)
@@ -409,6 +414,36 @@ def set_baseline(task_id: UUID, db: Session = Depends(get_db), current_user: Use
         db.query(Task).filter(Task.project_id == task.project_id).all(), db
     )
     return task
+
+
+@router.post("/projects/{project_id}/baseline")
+def freeze_project_baseline(
+    project_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Snapshot planned start/end dates into baseline fields for every task in the project atomically."""
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "planning:edit")
+
+    tasks = db.query(Task).filter(Task.project_id == project_id).all()
+    for task in tasks:
+        _snapshot_task_baseline(task)
+        db.add(task)
+    db.commit()
+
+    if tasks:
+        annotate_critical(tasks, db)
+
+    return {
+        "status": "success",
+        "project_id": str(project_id),
+        "tasks_updated": len(tasks),
+        "message": f"Successfully froze baseline for {len(tasks)} tasks."
+    }
 
 
 @router.get("/milestones", response_model=List[MilestoneResponse])

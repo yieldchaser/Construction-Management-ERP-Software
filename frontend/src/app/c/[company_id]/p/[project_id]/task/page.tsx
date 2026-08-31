@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import { getApi, authHeaders } from "@/lib/siteflow";
+import { getApi, authHeaders, formatLabel } from "@/lib/siteflow";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import { TableSkeleton } from "@/components/ui/Skeleton";
@@ -136,7 +136,7 @@ export default function TaskPage() {
     <div className="flex-1 flex flex-col overflow-hidden">
       <PageHeader
         title="Tasks & Schedule"
-        subtitle="Delay and Forecast End are computed live from start/end dates and actual progress — no estimates faked."
+        subtitle="Delay and Forecast End are computed live from start/end dates and actual progress, with no estimates faked."
       />
       <div className="flex-1 overflow-y-auto">
         <PageShell width="wide">
@@ -235,7 +235,7 @@ export default function TaskPage() {
                 <td className={`px-4 py-3 whitespace-nowrap ${r.forecast === "Insufficient data" ? "text-warning italic" : "text-foreground"}`}>
                   {r.forecast}
                 </td>
-                <td className="px-4 py-3 text-muted">{r.task.status}</td>
+                <td className="px-4 py-3 text-muted">{formatLabel(r.task.status)}</td>
               </tr>
             ))}
           </tbody>

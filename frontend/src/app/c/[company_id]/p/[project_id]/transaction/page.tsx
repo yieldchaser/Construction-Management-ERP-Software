@@ -891,7 +891,7 @@ function NewTransactionModal({
                 {(cfg.key === "sales_invoice" || cfg.key === "material_sales") && (
                   <input
                     placeholder="HSN/SAC"
-                    title="HSN/SAC code — mandatory on a tax invoice (Rule 46, CGST Rules)"
+                    title="HSN/SAC code: mandatory on a tax invoice (Rule 46, CGST Rules)"
                     value={it.hsn}
                     onChange={(e) => setItems((s) => s.map((x, j) => j === i ? { ...x, hsn: e.target.value } : x))}
                     className="col-span-1 rounded-md border border-border-custom bg-background px-2 py-1.5 text-sm text-foreground"

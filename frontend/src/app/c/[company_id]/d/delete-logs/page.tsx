@@ -52,6 +52,33 @@ const ENTITY_TYPES = [
   "workforce",
 ];
 
+const formatEntityType = (type: string): string => {
+  if (!type) return "—";
+  const map: Record<string, string> = {
+    purchase_order: "Purchase Order",
+    goods_receipt_note: "Goods Receipt Note",
+    cash_voucher: "Cash Voucher",
+    approval_rule: "Approval Rule",
+    asset_type: "Asset Type",
+    chat_group_member: "Chat Group Member",
+    cost_code: "Cost Code",
+    crm_lead: "CRM Lead",
+    drawing_pin: "Drawing Pin",
+    leave_template: "Leave Template",
+    library_todo: "Library To Do",
+    material_category: "Material Category",
+    payment_request: "Payment Request",
+    project_member: "Project Member",
+    project_party: "Project Party",
+    salary_template: "Salary Template",
+  };
+  if (map[type]) return map[type];
+  return type
+    .split("_")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+};
+
 export default function DeleteLogsPage() {
   const params = useParams();
   const companyId = params.company_id as string;
@@ -144,7 +171,7 @@ export default function DeleteLogsPage() {
             <option value="">All</option>
             {ENTITY_TYPES.map((t) => (
               <option key={t} value={t}>
-                {t.charAt(0).toUpperCase() + t.slice(1)}
+                {formatEntityType(t)}
               </option>
             ))}
           </select>
@@ -234,7 +261,7 @@ export default function DeleteLogsPage() {
                     {log.deleted_at ? new Date(log.deleted_at).toLocaleString() : "-"}
                   </td>
                   <td className="px-4 py-3">
-                    <Badge tone="primary" className="capitalize">{log.entity_type}</Badge>
+                    <Badge tone="primary">{formatEntityType(log.entity_type)}</Badge>
                   </td>
                   <td className="px-4 py-3 text-foreground">{log.entity_summary}</td>
                   <td className="px-4 py-3 text-muted">{log.party_name || "-"}</td>

@@ -531,7 +531,7 @@ export default function DrawingsPage() {
                   )}
                   {!isEditable && (
                     <div className="absolute top-3 left-3 text-[10px] text-muted bg-black/60 px-2.5 py-1 rounded-full pointer-events-none">
-                      Viewing {activeRev?.version} ({activeRev?.status}) — switch to Current revision to add pins
+                      Viewing {activeRev?.version} ({activeRev?.status}): switch to Current revision to add pins
                     </div>
                   )}
 

@@ -167,6 +167,8 @@ export default function EquipmentTrackingPage() {
   useEffect(() => {
     if (companyId && projectId) {
       loadData();
+    } else {
+      setLoading(false);
     }
   }, [companyId, projectId]);
 
@@ -381,7 +383,18 @@ export default function EquipmentTrackingPage() {
                 {error}
               </div>
             )}
-            {loading ? (
+            {!projectId ? (
+              <EmptyState
+                icon="building"
+                title="No project selected"
+                description='No active projects. Click "+ New Project" to create one.'
+                action={{
+                  label: "+ New Project",
+                  href: `/c/${companyId}/projects`,
+                  icon: "add",
+                }}
+              />
+            ) : loading ? (
               <CardSkeleton />
             ) : (
             <>

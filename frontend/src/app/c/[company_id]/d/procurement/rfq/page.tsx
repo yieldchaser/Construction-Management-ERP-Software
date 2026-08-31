@@ -11,6 +11,7 @@ import FieldHint from "@/components/ui/FieldHint";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { CardSkeleton } from "@/components/ui/Skeleton";
 import Icon from "@/components/marketing/Icon";
 
 interface RFQItem {
@@ -173,6 +174,8 @@ export default function RFQPage() {
   useEffect(() => {
     if (projectId) {
       fetchRFQs();
+    } else {
+      setLoading(false);
     }
     if (companyId) {
       fetchMaterialsAndVendors();
@@ -396,15 +399,42 @@ export default function RFQPage() {
 
         <div className="flex-1 overflow-y-auto z-10">
           <PageShell width="wide">
-            <div className="space-y-6">
-              {/* RFQ List Section */}
-              <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
-                <div className="px-5 py-4 border-b border-border-custom flex items-center justify-between">
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-muted">RFQ Register</h2>
-                  <span className="text-[10px] text-muted">{rfqs.length} Total</span>
-                </div>
-                <div className="divide-y divide-border-custom/30">
-                  {rfqs.map((rfq) => (
+            {!projectId ? (
+              <EmptyState
+                icon="building"
+                title="No project selected"
+                description='No active projects. Click "+ New Project" to create one.'
+                action={{
+                  label: "+ New Project",
+                  href: `/c/${companyId}/projects`,
+                  icon: "add",
+                }}
+              />
+            ) : loading ? (
+              <CardSkeleton />
+            ) : (
+              <div className="space-y-6">
+                {/* RFQ List Section */}
+                <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
+                  <div className="px-5 py-4 border-b border-border-custom flex items-center justify-between">
+                    <h2 className="text-xs font-bold uppercase tracking-wider text-muted">RFQ Register</h2>
+                    <span className="text-[10px] text-muted">{rfqs.length} Total</span>
+                  </div>
+                  <div className="divide-y divide-border-custom/30">
+                    {rfqs.length === 0 ? (
+                      <div className="p-8">
+                        <EmptyState
+                          icon="inbox"
+                          title="No RFQs created yet"
+                          description="Create a Request for Quotation to solicit rates from multiple vendors."
+                          action={{
+                            label: "+ Create RFQ",
+                            onClick: () => setShowCreate(true),
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      rfqs.map((rfq) => (
                     <div
                       key={rfq.id}
                       className="px-5 py-4 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:bg-elevated/30 transition-all"
@@ -477,15 +507,7 @@ export default function RFQPage() {
                         </button>
                       </div>
                     </div>
-                  ))}
-
-                  {rfqs.length === 0 && !loading && (
-                    <EmptyState
-                      title="No RFQs created yet"
-                      description="Create a request for quotations to specify line items, collect vendor quotes, and perform automated price comparison."
-                      action={{ label: "+ Create RFQ", onClick: () => setShowCreate(true) }}
-                    />
-                  )}
+                  )))}
                 </div>
               </div>
 
@@ -619,6 +641,7 @@ export default function RFQPage() {
                 </div>
               )}
             </div>
+            )}
           </PageShell>
         </div>
       </div>

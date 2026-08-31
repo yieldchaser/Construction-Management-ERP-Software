@@ -74,20 +74,16 @@ export default function SubconScorecardsPage() {
     }
   };
 
-  useEffect(() => { if (projectId) fetchData(); }, [projectId]);
+  useEffect(() => {
+    if (projectId) {
+      fetchData();
+    } else {
+      setLoading(false);
+    }
+  }, [projectId]);
 
   const fmt = (v: number) => v.toFixed(1) + "%";
   const fmtMoney = (v: number) => "₹" + Number(v).toLocaleString();
-
-  if (loading) {
-    return (
-      <div className="flex-1 overflow-y-auto">
-        <PageShell width="wide">
-          <TableSkeleton rows={6} cols={8} />
-        </PageShell>
-      </div>
-    );
-  }
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden font-sans">
@@ -103,11 +99,26 @@ export default function SubconScorecardsPage() {
           <PageShell width="wide">
             {error && <div className="p-4 rounded-md bg-danger/10 border border-danger/20 text-xs text-danger">{error}</div>}
 
-          {/* Comparative Analysis */}
-          <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
-            <div className="px-5 py-4 border-b border-border-custom">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-muted">Comparative Analysis</h2>
-            </div>
+            {!projectId ? (
+              <EmptyState
+                icon="building"
+                title="No project selected"
+                description='No active projects. Click "+ New Project" to create one.'
+                action={{
+                  label: "+ New Project",
+                  href: `/c/${companyId}/projects`,
+                  icon: "add",
+                }}
+              />
+            ) : loading ? (
+              <TableSkeleton rows={6} cols={8} />
+            ) : (
+              <div className="space-y-6">
+                {/* Comparative Analysis */}
+                <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
+                  <div className="px-5 py-4 border-b border-border-custom">
+                    <h2 className="text-xs font-bold uppercase tracking-wider text-muted">Comparative Analysis</h2>
+                  </div>
             <div className="overflow-x-auto">
               <table className="w-full text-xs text-left">
                 <thead>
@@ -125,8 +136,8 @@ export default function SubconScorecardsPage() {
                 </thead>
                 <tbody>
                   {comparative.map((row) => (
-                    <tr key={row.subcontractor_id} className="border-b border-white/[0.02] hover:bg-elevated transition-all">
-                      <td className="px-5 py-3.5 text-white font-semibold">{row.subcontractor_name}</td>
+                    <tr key={row.subcontractor_id} className="border-b border-border-custom hover:bg-elevated transition-all">
+                      <td className="px-5 py-3.5 text-foreground font-semibold">{row.subcontractor_name}</td>
                       <td className="px-5 py-3.5 text-muted">{row.scorecard_count}</td>
                       <td className="px-5 py-3.5 text-right font-sans font-bold text-success">{fmt(row.avg_on_time_pct)}</td>
                       <td className="px-5 py-3.5 text-right font-sans font-bold text-info">{fmt(row.avg_billing_accuracy_pct)}</td>
@@ -173,9 +184,9 @@ export default function SubconScorecardsPage() {
                 <tbody>
                   {scorecards.map((sc) => {
                     return (
-                      <tr key={sc.id} className="border-b border-white/[0.02] hover:bg-elevated transition-all">
-                        <td className="px-5 py-3.5 text-white font-semibold">{sc.subcontractor_name}</td>
-                        <td className="px-5 py-3.5 text-muted">{sc.period_start?.split("T")[0]} – {sc.period_end?.split("T")[0]}</td>
+                      <tr key={sc.id} className="border-b border-border-custom hover:bg-elevated transition-all">
+                        <td className="px-5 py-3.5 text-foreground font-semibold">{sc.subcontractor_name}</td>
+                        <td className="px-5 py-3.5 text-muted">{sc.period_start?.split("T")[0]} to {sc.period_end?.split("T")[0]}</td>
                         <td className="px-5 py-3.5 text-right font-sans font-bold text-success">{fmt(sc.on_time_pct)}</td>
                         <td className="px-5 py-3.5 text-right font-sans font-bold text-info">{fmt(sc.billing_accuracy_pct)}</td>
                         <td className="px-5 py-3.5 text-right font-sans font-bold text-secondary">{fmt(sc.quality_score)}</td>
@@ -198,7 +209,9 @@ export default function SubconScorecardsPage() {
               </table>
             </div>
           </div>
-          </PageShell>
+        </div>
+        )}
+      </PageShell>
         </div>
       </div>
     </div>

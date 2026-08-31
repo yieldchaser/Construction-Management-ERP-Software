@@ -590,7 +590,7 @@ export default function BoqTab() {
                                 <button type="button" onClick={() => { setShowInlineRow(false); setInlineError(null); resetInlineDraft(); }} className="px-3 py-1.5 bg-elevated border border-border-custom text-muted text-xs rounded-lg">
                                   Cancel
                                 </button>
-                                <span className="text-[10px] text-muted">Validates via POST /boq-documents/{"{doc_id}"}/items — same gate as Excel import (cost-code library, ge checks).</span>
+                                <span className="text-[10px] text-muted">Upload your BOQ spreadsheet (.xlsx or .csv) using the form below.</span>
                               </div>
                             </div>
                           )}
@@ -616,7 +616,7 @@ export default function BoqTab() {
                             <div className="text-[10px] text-muted">Loading items…</div>
                           ) : docItems.length === 0 ? (
                             <div className="text-[10px] text-muted">
-                              No line items yet — import an Excel with item_name, unit, qty, rate.
+                              No line items yet: import an Excel with item_name, unit, qty, rate.
                             </div>
                           ) : (
                             <table className="w-full text-[11px] text-left border-collapse">

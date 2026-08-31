@@ -42,6 +42,22 @@ const HOUSE_RATE_DEFAULTS: Record<"budget" | "standard" | "premium", number> = {
   premium: 3400,
 };
 
+const CALC_TITLES: Record<string, string> = {
+  steel_column: "Column Steel",
+  steel_slab: "One-Way Slab Steel",
+  steel_twoway: "Two-Way Slab Steel",
+  concrete: "Concrete Volume",
+  rmc: "RMC Mixer",
+  bricks: "Brickwork & Blockwork",
+  plaster: "Plastering",
+  paint: "Painting & Primer",
+  tile: "Tile Flooring",
+  waterproofing: "Waterproofing",
+  house_cost: "House Construction Cost",
+  brickwork_blockwork: "Brickwork & Blockwork",
+  shuttering_formwork: "Shuttering & Formwork",
+};
+
 export default function CalculatorsPage() {
   const params = useParams();
   const companyId = params?.company_id as string;
@@ -353,7 +369,7 @@ export default function CalculatorsPage() {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <PageHeader
-        title={`${activeCalc.replace(/_/g, " ")} Quantity Estimator`}
+        title={`${CALC_TITLES[activeCalc] || activeCalc.replace(/_/g, " ")} Quantity Estimator`}
         subtitle="IS 456 & CPWD standard quantity takeoff engine"
       >
         {/* Calculator Selector Tabs */}

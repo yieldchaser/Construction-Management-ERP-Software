@@ -48,6 +48,8 @@ ALLOWED_CONTENT_TYPES = {
 
 
 def _sniff_content_type(data: bytes) -> Optional[str]:
+    if not data:
+        return None
     head = data[:16]
     if head.startswith(b"%PDF-"):
         return "application/pdf"
@@ -73,11 +75,28 @@ def _sniff_content_type(data: bytes) -> Optional[str]:
         return "application/x-msdownload"
     if head.startswith(b"\x7fELF"):
         return "application/octet-stream"
+    if head.startswith((b"AC10", b"AC1015", b"AC1018", b"AC1021", b"AC1024", b"AC1027", b"AC1032")):
+        return "application/dwg"
+    if head.startswith(b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"):
+        return "application/vnd.ms-excel"
+    if len(data) >= 262 and data[257:262] == b"ustar":
+        return "application/x-tar"
     lower = data[:1024].lstrip().lower()
     if lower.startswith((b"<!doctype html", b"<html", b"<head", b"<body", b"<script", b"<!--")):
         return "text/html"
     if lower.startswith((b"<?xml", b"<svg")):
         return "image/svg+xml"
+    if lower.startswith((b"0\nsection", b"0\r\nsection", b"0\nheader", b"0\r\nheader")):
+        return "application/dxf"
+    # Text / CSV detection: valid ASCII/UTF-8 with no null bytes in sample
+    sample = data[:4096]
+    if b"\x00" not in sample:
+        try:
+            decoded = sample.decode("utf-8")
+            if decoded and all(c.isprintable() or c in "\r\n\t\f\b" for c in decoded):
+                return "text/plain"
+        except UnicodeDecodeError:
+            pass
     return None
 
 
@@ -247,22 +266,13 @@ async def upload_file(
         )
 
     name = file.filename or "untitled"
-    declared_type = (file.content_type or "").strip().lower()
     sniffed = _sniff_content_type(contents)
-    if sniffed and sniffed not in ALLOWED_CONTENT_TYPES:
+    if not sniffed or sniffed not in ALLOWED_CONTENT_TYPES:
         raise HTTPException(
             status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
             detail="File type not allowed. Upload documents, images, CAD files or archives.",
         )
-    if declared_type in ALLOWED_CONTENT_TYPES:
-        content_type = declared_type
-    elif sniffed in ALLOWED_CONTENT_TYPES:
-        content_type = sniffed
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            detail="File type not allowed. Upload documents, images, CAD files or archives.",
-        )
+    content_type = sniffed
     file_id = uuid.uuid4()
 
     storage_path = None

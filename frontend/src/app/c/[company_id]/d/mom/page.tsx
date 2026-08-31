@@ -231,7 +231,7 @@ export default function MoMPage() {
 
         {isOffline && (
           <div className="px-6 py-2.5 bg-warning/10 border-b border-warning/20 text-warning text-xs">
-            Backend connection unavailable — MOM list could not be loaded.
+            Backend connection unavailable: MOM list could not be loaded.
           </div>
         )}
 

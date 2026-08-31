@@ -8,6 +8,7 @@ import { authHeaders } from "@/lib/siteflow";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import { PageSkeleton } from "@/components/ui/Skeleton";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 interface BudgetCommitted {
   project_id: string;
@@ -74,7 +75,13 @@ export default function BudgetPage() {
     }
   };
 
-  useEffect(() => { if (projectId) fetchData(); }, [projectId]);
+  useEffect(() => {
+    if (projectId) {
+      fetchData();
+    } else {
+      setLoading(false);
+    }
+  }, [projectId]);
 
   const handleSetBudget = async () => {
     if (!projectId) return;
@@ -133,9 +140,20 @@ export default function BudgetPage() {
           <PageShell width="wide">
           {error && <div className="p-4 rounded-md bg-danger/10 border border-danger/20 text-xs text-danger">{error}</div>}
 
-          {loading && <PageSkeleton />}
-
-          {budget && (
+          {!projectId ? (
+            <EmptyState
+              icon="building"
+              title="No project selected"
+              description='No active projects. Click "+ New Project" to create one.'
+              action={{
+                label: "+ New Project",
+                href: `/c/${companyId}/projects`,
+                icon: "add",
+              }}
+            />
+          ) : loading ? (
+            <PageSkeleton />
+          ) : budget ? (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 {[
@@ -153,7 +171,7 @@ export default function BudgetPage() {
 
               {noBudget && (
                 <div className="p-4 rounded-md bg-warning/10 border border-warning/20 text-xs text-warning">
-                  No budget has been set for this project — set one to see committed variance and utilization.
+                  No budget has been set for this project: set one to see committed variance and utilization.
                 </div>
               )}
 
@@ -259,7 +277,7 @@ export default function BudgetPage() {
                 </div>
               )}
             </>
-          )}
+          ) : null}
           </PageShell>
         </div>
       </div>

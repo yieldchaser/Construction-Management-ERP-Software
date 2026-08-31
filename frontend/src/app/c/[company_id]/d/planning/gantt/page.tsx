@@ -1,6 +1,6 @@
 "use client";
 import {  getApiHost , readErrorDetail } from "@/lib/api";
-import { authHeaders } from "@/lib/siteflow";
+import { authHeaders, formatLabel } from "@/lib/siteflow";
 
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
@@ -170,7 +170,9 @@ export default function GanttSchedulerPage() {
         headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
       });
       if (res.ok) {
-        setSuccess("Baseline saved successfully");
+        const data = await res.json().catch(() => ({}));
+        const count = typeof data.tasks_updated === "number" ? data.tasks_updated : null;
+        setSuccess(count !== null ? `Froze baseline for ${count} task${count === 1 ? "" : "s"}.` : "Baseline saved successfully");
         fetchTasks();
         fetchHierarchy();
       } else {
@@ -693,7 +695,7 @@ export default function GanttSchedulerPage() {
           {/* ── MILESTONES TAB ── */}
           {mainTab === "milestones" && (
             <div className="space-y-3">
-              <div className="text-xs text-muted mb-4">Project milestone tracker — key deliverables, inspections, and payment events.</div>
+              <div className="text-xs text-muted mb-4">Project milestone tracker: key deliverables, inspections, and payment events.</div>
 
               {milestones.map(m => {
                 const colors = {
@@ -1193,7 +1195,7 @@ export default function GanttSchedulerPage() {
                                     : node.status === "not_started"
                                       ? "bg-elevated/20 border-border-custom/20 text-muted"
                                       : "bg-info/10 border-info/20 text-info"
-                                }`}>{(node.status || "").replace("_", " ")}</span>
+                                }`}>{formatLabel(node.status)}</span>
                               </div>
                               <div className="text-[10px] text-muted">
                                 Start: {fmtDate(node.start_date)} · End: {fmtDate(node.end_date)} · Duration: {node.duration_days} Days
@@ -1261,7 +1263,7 @@ export default function GanttSchedulerPage() {
                             : task.status === "not_started"
                               ? "bg-elevated/20 border-border-custom/20 text-muted"
                               : "bg-info/10 border-info/20 text-info"
-                        }`}>{(task.status || "").replace("_", " ")}</span>
+                        }`}>{formatLabel(task.status)}</span>
                       </div>
                       <div className="text-[10px] text-muted">
                         Start: {fmtDate(task.start_date)} · End: {fmtDate(task.end_date)} · Duration: {task.duration_days} Days
@@ -1438,7 +1440,7 @@ export default function GanttSchedulerPage() {
                         : selectedTask.status === "not_started"
                           ? "bg-elevated/20 border-border-custom/20 text-muted"
                           : "bg-info/10 border-info/20 text-info"
-                    }`}>{(selectedTask.status || "").replace("_", " ")}</span>
+                    }`}>{formatLabel(selectedTask.status)}</span>
                   </div>
                   <div className="flex gap-2">
                     <input

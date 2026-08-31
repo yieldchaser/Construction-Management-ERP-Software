@@ -969,7 +969,7 @@ export default function HRPayrollPage() {
         <PageHeader
           title={
             (tab === "employees" && "Staff Directory") ||
-            (tab === "attendance" && `Daily Attendance — ${selectedDate}`) ||
+            (tab === "attendance" && `Daily Attendance: ${selectedDate}`) ||
             (tab === "timesheets" && "Weekly Timesheets") ||
             (tab === "payroll" && "Payroll Engine") ||
             (tab === "leaves" && "Leave Management") ||
@@ -1528,7 +1528,7 @@ export default function HRPayrollPage() {
                   {/* Payslips table */}
                   <div className="bg-card border border-border-custom rounded-md overflow-hidden">
                     <div className="px-4 py-3 border-b border-border-custom flex items-center justify-between">
-                      <span className="text-xs font-bold text-foreground">Employee Payslips — {payrollRun.month}</span>
+                      <span className="text-xs font-bold text-foreground">Employee Payslips: {payrollRun.month}</span>
                       <div className="flex items-center gap-2">
                         {gsConnected ? (
                           <button
@@ -1778,7 +1778,7 @@ export default function HRPayrollPage() {
           <div className="bg-card border border-border-custom rounded-lg w-full max-w-lg p-6" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
               <div>
-                <h2 className="text-base font-bold text-foreground">Payslip — {selectedPayslip.employeeName}</h2>
+                <h2 className="text-base font-bold text-foreground">Payslip: {selectedPayslip.employeeName}</h2>
                 <p className="text-xs text-muted">{selectedPayslip.designation} · {payrollMonth}</p>
               </div>
               <div className="flex items-center gap-3">

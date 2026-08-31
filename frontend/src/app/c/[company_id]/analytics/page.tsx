@@ -332,7 +332,7 @@ export default function CompanyAnalyticsPage() {
               {
                 label: "Burn Rate",
                 value: data ? (data.burn_rate_pct == null ? "—" : `${data.burn_rate_pct}%`) : "—",
-                hint: data && data.burn_rate_pct == null ? "No budget set — not tracked" : "Company-wide budget consumption",
+                hint: data && data.burn_rate_pct == null ? "No budget set: not tracked" : "Company-wide budget consumption",
                 tone: "text-success",
               },
               {

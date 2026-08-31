@@ -1156,7 +1156,7 @@ export default function AttendancePage() {
                                 <span className="inline-flex items-center gap-1.5">
                                   {emp.employee_name}
                                   {emp.attendance_source === "assumed" && (
-                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold bg-warning/10 text-warning border border-warning/20" title="Attendance was assumed (no punch/leave recorded) — not measured">Assumed</span>
+                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold bg-warning/10 text-warning border border-warning/20" title="Attendance was assumed (no punch/leave recorded): not measured">Assumed</span>
                                   )}
                                 </span>
                                 {emp.attendance_source === "assumed" && <div className="text-[8px] text-warning/70 font-normal">no punch on file</div>}

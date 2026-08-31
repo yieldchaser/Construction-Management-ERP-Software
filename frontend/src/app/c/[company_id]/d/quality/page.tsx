@@ -1,6 +1,6 @@
 "use client";
 import {  getApiHost , readErrorDetail } from "@/lib/api";
-import { authHeaders } from "@/lib/siteflow";
+import { authHeaders, formatLabel } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
@@ -10,6 +10,7 @@ import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import FieldHint from "@/components/ui/FieldHint";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -549,7 +550,7 @@ isCode: cl.is_code_reference || "—",
 
         {isOffline && (
           <div className="px-6 py-2.5 bg-warning/10 border-b border-warning/20 text-warning text-xs">
-            Using demo quality data — backend connection unavailable
+            Offline mode: backend connection unavailable
           </div>
         )}
 
@@ -640,7 +641,21 @@ isCode: cl.is_code_reference || "—",
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredInspections.length === 0 ? (
+                    {inspections.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="px-5 py-8">
+                          <EmptyState
+                            icon="search"
+                            title="No inspections yet"
+                            description="Conduct quality inspections to record pass/fail checklists across project zones."
+                            action={{
+                              label: "+ New Inspection",
+                              onClick: () => setShowInspForm(true),
+                            }}
+                          />
+                        </td>
+                      </tr>
+                    ) : filteredInspections.length === 0 ? (
                       <tr>
                         <td colSpan={7} className="px-5 py-8 text-center text-muted">
                           No inspections match the filter.
@@ -671,7 +686,7 @@ isCode: cl.is_code_reference || "—",
                                 </div>
                               </div>
                             </td>
-                            <td className="px-5 py-3">{badge(insp.status.replace("_", " "), statusTones[insp.status])}</td>
+                            <td className="px-5 py-3">{badge(formatLabel(insp.status), statusTones[insp.status])}</td>
                             <td className="px-5 py-3 text-right whitespace-nowrap">
                               <div className="flex gap-2 justify-end">
                                 <button

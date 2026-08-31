@@ -31,6 +31,21 @@ const LIBRARY_TABS: LibraryType[] = [
   "material", "rate", "retention", "material-category", "todo",
 ];
 
+const TAB_TITLES: Record<LibraryType, string> = {
+  party: "Party",
+  "party-balances": "Party Balances",
+  "asset-type": "Asset Type",
+  "cost-code": "Cost Code",
+  deduction: "Deduction",
+  progress: "Progress",
+  workforce: "Workforce",
+  material: "Material",
+  rate: "Rate",
+  retention: "Retention",
+  "material-category": "Material Category",
+  todo: "To Do",
+};
+
 export default function LibraryHubPage() {
   const params = useParams();
   const searchParams = useSearchParams();
@@ -653,7 +668,7 @@ export default function LibraryHubPage() {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <PageHeader
-        title={`${activeTab.replace("-", " ")} Library`}
+        title={`${TAB_TITLES[activeTab] || activeTab} Library`}
         subtitle="Manage global templates and codes shared across all project locations."
       >
         <button

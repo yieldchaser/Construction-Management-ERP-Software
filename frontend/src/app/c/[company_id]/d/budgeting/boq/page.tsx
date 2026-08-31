@@ -396,7 +396,7 @@ export default function BOQPage() {
                     {showInlineD ? "Cancel" : "+ Add Item"}
                   </button>
                   {!selectedDocId && documents.length > 0 && <span className="text-[10px] text-warning">Select a BOQ document to add items</span>}
-                  {documents.length === 0 && <span className="text-[10px] text-muted">Create a BOQ document first — then add items</span>}
+                  {documents.length === 0 && <span className="text-[10px] text-muted">Create a BOQ document first, then add items</span>}
                   {inlineDError && <span className="text-[10px] text-danger">{inlineDError}</span>}
                   {inlineDMsg && <span className="text-[10px] text-success">{inlineDMsg}</span>}
                 </div>
@@ -425,7 +425,7 @@ export default function BOQPage() {
                         {inlineDSaving ? "Saving..." : "Save"}
                       </button>
                       <button onClick={() => { setShowInlineD(false); setInlineDError(null); resetInlineD(); }} className="px-3 py-1.5 bg-elevated border border-border-custom text-muted text-xs rounded-lg">Cancel</button>
-                      <span className="text-[10px] text-muted">POST /boq-documents/{"{doc_id}"}/items — same validation as Excel import</span>
+                      <span className="text-[10px] text-muted">Upload your BOQ spreadsheet (.xlsx or .csv) using the form below.</span>
                     </div>
                   </div>
                 )}
