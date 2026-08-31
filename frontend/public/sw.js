@@ -1,4 +1,4 @@
-const SITEFLOW_BUILD_ID = "f76b7597d7b5c4f9";
+const SITEFLOW_BUILD_ID = "e87d3b692d5a0dac";
 const CACHE_NAME = `siteflow-shell-${SITEFLOW_BUILD_ID}`;
 const OFFLINE_URL = "/offline";
 const APP_SHELL = [

@@ -66,20 +66,73 @@ const ProjectContext = createContext<ProjectContextValue | null>(null);
 
 const FALLBACK_PROJECT_ID = "d0000000-0000-0000-0000-000000000001";
 
+function getStoredProjectForCompany(compId: string): string {
+  if (typeof window === "undefined" || !compId) return "";
+
+  // 1. Check direct company-scoped key
+  const scopedKey = `last_project_id_${compId}`;
+  const scopedVal = localStorage.getItem(scopedKey);
+  if (scopedVal && isValidUuid(scopedVal) && scopedVal !== FALLBACK_PROJECT_ID) {
+    return scopedVal;
+  }
+
+  // 2. Check if compId is a slug and has a mapped UUID key
+  try {
+    const slugMapRaw = localStorage.getItem("company_slug_mappings");
+    if (slugMapRaw) {
+      const slugMap = JSON.parse(slugMapRaw);
+      const uuid = slugMap[compId];
+      if (uuid && uuid !== compId) {
+        const mappedVal = localStorage.getItem(`last_project_id_${uuid}`);
+        if (mappedVal && isValidUuid(mappedVal) && mappedVal !== FALLBACK_PROJECT_ID) {
+          return mappedVal;
+        }
+      }
+    }
+  } catch {}
+
+  // 3. Check legacy pair: last_project_company_id === compId
+  const pairComp = localStorage.getItem("last_project_company_id");
+  const pairProj = localStorage.getItem("last_project_id");
+  if (pairComp === compId && pairProj && isValidUuid(pairProj) && pairProj !== FALLBACK_PROJECT_ID) {
+    return pairProj;
+  }
+
+  return "";
+}
+
+function setStoredProjectForCompany(compId: string, projId: string, companyUuid?: string) {
+  if (typeof window === "undefined" || !compId) return;
+
+  if (projId && isValidUuid(projId) && projId !== FALLBACK_PROJECT_ID) {
+    localStorage.setItem(`last_project_id_${compId}`, projId);
+    if (companyUuid && companyUuid !== compId) {
+      localStorage.setItem(`last_project_id_${companyUuid}`, projId);
+    }
+    localStorage.setItem("last_project_company_id", compId);
+    localStorage.setItem("last_project_id", projId);
+  } else {
+    localStorage.removeItem(`last_project_id_${compId}`);
+    if (companyUuid) {
+      localStorage.removeItem(`last_project_id_${companyUuid}`);
+    }
+    const currentPairComp = localStorage.getItem("last_project_company_id");
+    if (currentPairComp === compId || (companyUuid && currentPairComp === companyUuid)) {
+      localStorage.removeItem("last_project_company_id");
+      localStorage.removeItem("last_project_id");
+    }
+  }
+}
+
 export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const params = useParams();
   const searchParams = useSearchParams();
 
+  const urlCompanyId = (params?.company_id as string) || "";
+
   const [activeProjectId, setActiveProjectIdState] = useState<string>(() => {
-    if (typeof window === "undefined") return "";
-    const stored = localStorage.getItem("last_project_id") || "";
-    // Never seed from the legacy placeholder id — it 403s every project-scoped
-    // fetch and blocks the real project from ever being auto-selected.
-    if (stored === FALLBACK_PROJECT_ID || !isValidUuid(stored)) {
-      localStorage.removeItem("last_project_id");
-      return "";
-    }
-    return stored;
+    if (typeof window === "undefined" || !urlCompanyId) return "";
+    return getStoredProjectForCompany(urlCompanyId);
   });
   const [projects, setProjects] = useState<ProjectRecord[]>([]);
   const [projectContext, setProjectContext] = useState<{ name: string; code: string }>({
@@ -103,12 +156,21 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       (params.company_id as string) || "e0000000-0000-0000-0000-000000000000";
     const routeProjectId = (params.project_id as string) || "";
     const validRouteProjectId = isValidUuid(routeProjectId) ? routeProjectId : "";
-    const storedRaw =
-      typeof window !== "undefined" ? localStorage.getItem("last_project_id") : null;
-    // Ignore the legacy placeholder so nextProjectId can be empty -> the real
-    // project gets auto-selected from the company project list below.
-    const storedProjectId = storedRaw && storedRaw !== FALLBACK_PROJECT_ID && isValidUuid(storedRaw) ? storedRaw : null;
-    const nextProjectId = validRouteProjectId || queryProjectId || storedProjectId || "";
+
+    // Clear active project immediately on company switch if stored ID belongs to another company
+    if (typeof window !== "undefined" && companyId) {
+      const storedCompany = localStorage.getItem("company_id");
+      if (storedCompany && storedCompany !== companyId) {
+        localStorage.setItem("company_id", companyId);
+        const scopedId = getStoredProjectForCompany(companyId);
+        if (!scopedId && !validRouteProjectId && !queryProjectId) {
+          setActiveProjectIdState("");
+          setProjectContext({ name: "Project Context", code: "" });
+        }
+      } else if (!storedCompany) {
+        localStorage.setItem("company_id", companyId);
+      }
+    }
 
     const token =
       typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
@@ -120,7 +182,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       const resolvedName = project.name || project.project_name || "Active Project";
       const resolvedCode = project.code || project.project_code || "";
       setProjectContext({ name: resolvedName, code: resolvedCode });
-      setActiveProjectIdState(project.id || nextProjectId || "");
+      setActiveProjectIdState(project.id || "");
     };
 
     const resolve = async () => {
@@ -149,25 +211,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      // Resolve the active project's details only when nextProjectId is a valid UUID
-      if (nextProjectId && isValidUuid(nextProjectId) && nextProjectId !== FALLBACK_PROJECT_ID) {
-        if (typeof window !== "undefined") {
-          localStorage.setItem("last_project_id", nextProjectId);
-        }
-        try {
-          const res = await fetch(
-            `${apiHost}/apis/v3/planning/projects/${nextProjectId}`,
-            { headers: authHeaders }
-          );
-          if (res.ok) {
-            applyProject(await res.json());
-          }
-        } catch {
-          // Fall through to the company project list.
-        }
-      }
-
-      // Fetch the full project list for the "Pinned Projects" dropdown when company UUID is valid.
+      // Fetch the full project list for the company to validate ownership
       if (isValidUuid(activeCompanyUuid)) {
         try {
           const res = await fetch(
@@ -189,24 +233,33 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
               setProjectsLoadingState("loaded");
             }
 
-            if (!nextProjectId) {
-              const first = list.find((p) => p?.id && isValidUuid(p.id));
-              if (first) {
-                if (typeof window !== "undefined") {
-                  localStorage.setItem("last_project_id", first.id ?? "");
-                }
-                applyProject(first);
-              } else if (isActive) {
+            // Determine candidate: route parameter, query parameter, or company-scoped stored selection
+            const storedCandidate = getStoredProjectForCompany(activeCompanyUuid) || getStoredProjectForCompany(companyId);
+            const candidateProjectId = validRouteProjectId || queryProjectId || storedCandidate || "";
+
+            // Validate ownership: candidate MUST belong to this company's project list
+            const matched = candidateProjectId ? list.find((p) => p?.id === candidateProjectId) : undefined;
+
+            if (matched && matched.id) {
+              setStoredProjectForCompany(companyId, matched.id, activeCompanyUuid);
+              applyProject(matched);
+            } else {
+              // Failed ownership check or no project selected -> clear selection
+              setStoredProjectForCompany(companyId, "", activeCompanyUuid);
+              if (isActive) {
+                setActiveProjectIdState("");
                 setProjectContext({ name: "Project Context", code: "Unavailable" });
               }
             }
           } else if (isActive) {
             setProjectsLoadingState("failed");
+            setActiveProjectIdState("");
             setProjectContext({ name: "Project Context", code: "Unavailable" });
           }
         } catch {
           if (isActive) {
             setProjectsLoadingState("failed");
+            setActiveProjectIdState("");
             setProjectContext({ name: "Project Context", code: "Unavailable" });
           }
         } finally {
@@ -215,6 +268,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       } else {
         if (isActive) {
           setProjectsLoadingState("failed");
+          setActiveProjectIdState("");
           setLoading(false);
         }
       }
@@ -228,16 +282,21 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   }, [params.company_id, params.project_id, queryProjectId]);
 
   const setActiveProjectId = (id: string) => {
-    setActiveProjectIdState(id);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("last_project_id", id);
-    }
-    // Update the displayed context immediately from the already-loaded list.
+    const compId = (params.company_id as string) || "";
     const chosen = projects.find((p) => p.id === id);
-    if (chosen) {
+    if (chosen && chosen.id) {
+      setActiveProjectIdState(chosen.id);
+      setStoredProjectForCompany(compId, chosen.id);
       setProjectContext({
         name: chosen.name || chosen.project_name || "Active Project",
         code: chosen.code || chosen.project_code || "",
+      });
+    } else if (!id) {
+      setActiveProjectIdState("");
+      setStoredProjectForCompany(compId, "");
+      setProjectContext({
+        name: "Project Context",
+        code: "Unavailable",
       });
     }
   };
