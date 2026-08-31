@@ -4,7 +4,7 @@ import {  getApiHost , readErrorDetail } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
 import Icon, { type IconName } from "@/components/marketing/Icon";
 // R2-755: shared CSV guard. Quote-doubling protects the delimiter, not the
@@ -125,6 +125,7 @@ function fyStartIso(): string {
 }
 
 export default function FinancePage() {
+  const router = useRouter();
   const params = useParams();
   const companyId = params?.company_id as string;
   const { activeProjectId } = useProject();
@@ -2192,11 +2193,19 @@ export default function FinancePage() {
                     <h2 className="text-sm font-bold text-foreground">Tally Prime Connection</h2>
                     <div className="text-xs text-muted">Configure the Tally company this SiteFlow data exports into.</div>
                   </div>
-                  {tallyConn ? (
-                    <button onClick={openTallySetup} className="text-xs font-bold px-3 py-1.5 rounded-md border border-border-custom hover:bg-elevated">Edit</button>
-                  ) : (
-                    <button onClick={openTallySetup} className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-md hover:opacity-90">Connect Tally</button>
-                  )}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => router.push(`/c/${companyId}/d/integrations/tally`)}
+                      className="text-xs font-bold px-3 py-1.5 rounded-md bg-elevated border border-border-custom hover:bg-card text-foreground cursor-pointer inline-flex items-center gap-1.5"
+                    >
+                      <Icon name="settings" className="w-3.5 h-3.5" /> Desktop Agents & Mappings
+                    </button>
+                    {tallyConn ? (
+                      <button onClick={openTallySetup} className="text-xs font-bold px-3 py-1.5 rounded-md border border-border-custom hover:bg-elevated cursor-pointer">Edit Connection</button>
+                    ) : (
+                      <button onClick={openTallySetup} className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-md hover:opacity-90 cursor-pointer">Connect Tally</button>
+                    )}
+                  </div>
                 </div>
                 {tallyConn ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
