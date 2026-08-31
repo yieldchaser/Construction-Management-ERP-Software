@@ -4,8 +4,9 @@ import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
-import { getApiHost } from "@/lib/api";
+import { getApiHost, readErrorDetail } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
+import Icon from "@/components/marketing/Icon";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import { TableSkeleton } from "@/components/ui/Skeleton";
@@ -31,6 +32,7 @@ export default function VendorPerformancePage() {
 
   const [vendors, setVendors] = useState<VendorPerf[]>([]);
   const [loading, setLoading] = useState(true);
+  const [recalculating, setRecalculating] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -39,6 +41,29 @@ export default function VendorPerformancePage() {
       if (res.ok) setVendors(await res.json());
     } catch (e) { console.error(e); }
     setLoading(false);
+  };
+
+  const handleRecalculate = async () => {
+    if (!projectId) return;
+    setRecalculating(true);
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/procurement/vendors/performance/${projectId}/refresh`, {
+        method: "POST",
+        headers: authHeaders(),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setVendors(Array.isArray(data) ? data : []);
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || "Failed to recalculate vendor ratings");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Failed to recalculate vendor performance");
+    } finally {
+      setRecalculating(false);
+    }
   };
 
   useEffect(() => { if (projectId) fetchData(); }, [projectId]);
@@ -52,7 +77,23 @@ export default function VendorPerformancePage() {
           title="Vendor Performance"
           subtitle="On-time delivery · GRN history · Quality issues"
         >
-          <button onClick={fetchData} className="px-3.5 py-1.5 rounded-md border border-border-custom text-xs font-bold hover:bg-elevated cursor-pointer">Refresh</button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={fetchData}
+              disabled={loading || recalculating}
+              className="px-3.5 py-1.5 rounded-md border border-border-custom text-xs font-bold hover:bg-elevated cursor-pointer inline-flex items-center gap-1.5"
+            >
+              <Icon name="refresh" className="w-3.5 h-3.5" /> Refresh
+            </button>
+            <button
+              onClick={handleRecalculate}
+              disabled={loading || recalculating}
+              className="px-3.5 py-1.5 rounded-md bg-primary text-white text-xs font-bold hover:bg-primary/95 transition-all cursor-pointer disabled:opacity-50 inline-flex items-center gap-1.5"
+            >
+              <Icon name="bolt" className="w-3.5 h-3.5" />
+              {recalculating ? "Recalculating..." : "Recalculate Ratings"}
+            </button>
+          </div>
         </PageHeader>
 
         <div className="flex-1 overflow-y-auto z-10">
