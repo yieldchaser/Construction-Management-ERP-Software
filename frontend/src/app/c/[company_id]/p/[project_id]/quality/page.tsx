@@ -139,6 +139,7 @@ export default function QualityPage() {
     description: "",
     severity: "Major" as "Minor" | "Major" | "Critical",
     zone: "",
+    inspectionId: "",
     dueDate: new Date(Date.now() + 86400000).toISOString().split("T")[0]
   });
 
@@ -340,6 +341,7 @@ isCode: cl.is_code_reference || "—",
         headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           project_id: projectId,
+          inspection_id: ncrForm.inspectionId || null,
           ncr_number: `NCR-2026-${Math.floor(100 + Math.random() * 900)}`,
           title: ncrForm.title,
           description: ncrForm.description,
@@ -355,6 +357,7 @@ isCode: cl.is_code_reference || "—",
           description: "",
           severity: "Major",
           zone: "",
+          inspectionId: "",
           dueDate: new Date(Date.now() + 86400000).toISOString().split("T")[0]
         });
       } else {
@@ -638,13 +641,33 @@ isCode: cl.is_code_reference || "—",
                                 </div>
                               </td>
                               <td className="px-5 py-3">{badge(insp.status.replace("_", " "), statusTones[insp.status])}</td>
-                              <td className="px-5 py-3 text-right">
-                                <button
-                                  onClick={() => setSelectedInspection(insp)}
-                                  className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-[10px] font-bold border border-primary/20 hover:bg-primary/20 cursor-pointer"
-                                >
-                                  View
-                                </button>
+                              <td className="px-5 py-3 text-right whitespace-nowrap">
+                                <div className="flex gap-2 justify-end">
+                                  <button
+                                    onClick={() => setSelectedInspection(insp)}
+                                    className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-[10px] font-bold border border-primary/20 hover:bg-primary/20 cursor-pointer"
+                                  >
+                                    View
+                                  </button>
+                                  {(insp.status === "fail" || insp.failCount > 0) && (
+                                    <button
+                                      onClick={() => {
+                                        setNcrForm({
+                                          title: `NCR: Failed Inspection - ${insp.checklist}`,
+                                          description: `Quality non-conformance logged from inspection with ${insp.failCount} failed checkpoints.`,
+                                          severity: insp.failCount > 2 ? "Critical" : "Major",
+                                          zone: insp.zone || "",
+                                          inspectionId: insp.id,
+                                          dueDate: new Date(Date.now() + 86400000).toISOString().split("T")[0]
+                                        });
+                                        setShowNCRForm(true);
+                                      }}
+                                      className="px-2.5 py-1.5 rounded-lg bg-danger/10 text-danger text-[10px] font-bold border border-danger/20 hover:bg-danger/20 cursor-pointer"
+                                    >
+                                      + Raise NCR
+                                    </button>
+                                  )}
+                                </div>
                               </td>
                             </tr>
                           );
@@ -1034,6 +1057,21 @@ isCode: cl.is_code_reference || "—",
               <p className="text-xs text-muted mt-1">Issue a formal quality deviation report.</p>
             </div>
             <div className="space-y-3">
+              <div>
+                <label className="text-[10px] uppercase font-bold text-muted block mb-1">Linked Inspection (Optional)</label>
+                <select
+                  value={ncrForm.inspectionId}
+                  onChange={(e) => setNcrForm(prev => ({ ...prev, inspectionId: e.target.value }))}
+                  className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none focus:border-secondary"
+                >
+                  <option value="">General NCR / Not Linked to Inspection</option>
+                  {inspections.map((insp) => (
+                    <option key={insp.id} value={insp.id}>
+                      {insp.checklist} ({insp.zone || "No Zone"}) - {insp.status.toUpperCase()} ({insp.date})
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div>
                 <label className="text-[10px] uppercase font-bold text-muted block mb-1">Deviation Title</label>
                 <input

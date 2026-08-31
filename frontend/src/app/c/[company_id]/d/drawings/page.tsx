@@ -88,6 +88,8 @@ export default function DrawingsPage() {
   const [newPinComment, setNewPinComment] = useState("");
   const [newPinCat, setNewPinCat] = useState<PinCategory>("RFI");
   const [newPinPhoto, setNewPinPhoto] = useState(false);
+  const [newPinTaggedUserId, setNewPinTaggedUserId] = useState("");
+  const [teamMembers, setTeamMembers] = useState<Array<{ id: string; name: string }>>([]);
 
   // Add revision modal
   const [showRevModal, setShowRevModal] = useState(false);
@@ -103,6 +105,12 @@ export default function DrawingsPage() {
     if (!projectId) return;
     try {
       const apiHost = getApiHost();
+      if (companyId) {
+        fetch(`${apiHost}/apis/v3/crm/team-members/${companyId}`, { headers: authHeaders() })
+          .then(r => r.ok ? r.json() : [])
+          .then(data => setTeamMembers(data.map((m: any) => ({ id: m.id, name: m.name }))))
+          .catch(() => {});
+      }
       const res = await fetch(`${apiHost}/apis/v3/drawings?project_id=${projectId}`, { headers: authHeaders() });
       if (res.ok) {
         const data = await res.json();
@@ -205,7 +213,7 @@ export default function DrawingsPage() {
     try {
       const apiHost = getApiHost();
       // R2-435: created_by is derived server-side from the authenticated
-      // caller, so the body carries only geometry and text.
+      // caller, so the body carries geometry, text, and optional tagged user.
       const res = await fetch(`${apiHost}/apis/v3/drawings/revisions/${activeRev.id}/pins`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
@@ -213,6 +221,7 @@ export default function DrawingsPage() {
           x_coordinate: tempXY.x,
           y_coordinate: tempXY.y,
           comment: newPinComment,
+          tagged_user_id: newPinTaggedUserId || null,
         }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -230,6 +239,7 @@ export default function DrawingsPage() {
         revisions: d.revisions.map(r => r.id !== activeRevId ? r : { ...r, pins: [...r.pins, pinData] })
       }));
       setShowPinModal(false);
+      setNewPinTaggedUserId("");
     } catch (err) {
       console.error("Failed to save pin", err);
       alert("Failed to save pin. Your change was not saved.");
@@ -712,6 +722,19 @@ export default function DrawingsPage() {
               <textarea rows={3} autoFocus value={newPinComment} onChange={e => setNewPinComment(e.target.value)}
                 className="w-full bg-input border border-border-custom rounded-lg p-2.5 text-foreground resize-none text-xs"
                 placeholder="Describe the issue, clash, or observation clearly..." />
+            </div>
+            <div>
+              <div className="text-muted mb-1">Assign / Tag Team Member (Optional)</div>
+              <select
+                value={newPinTaggedUserId}
+                onChange={e => setNewPinTaggedUserId(e.target.value)}
+                className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground text-xs"
+              >
+                <option value="">Unassigned / General Observation</option>
+                {teamMembers.map(t => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
             </div>
             <label className="flex items-center gap-2 cursor-pointer select-none">
               <input type="checkbox" checked={newPinPhoto} onChange={e => setNewPinPhoto(e.target.checked)} className="accent-primary" />

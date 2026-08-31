@@ -88,6 +88,7 @@ export default function EquipmentTrackingPage() {
   // Start/Stop wizard modal states
   const [activeDeployingEq, setActiveDeployingEq] = useState<Equipment | null>(null);
   const [startMeterVal, setStartMeterVal] = useState("");
+  const [startHoursUsed, setStartHoursUsed] = useState("");
   const [isStartPhotoCaptured, setIsStartPhotoCaptured] = useState(false);
 
   const [activeStoppingEq, setActiveStoppingEq] = useState<Equipment | null>(null);
@@ -212,6 +213,7 @@ export default function EquipmentTrackingPage() {
   const handleStartMachinery = async () => {
     if (!activeDeployingEq || !startMeterVal) return;
     try {
+      const hoursNum = startHoursUsed ? parseFloat(startHoursUsed) : 0;
       const res = await fetch(`${getApiHost()}/apis/v3/equipment/${activeDeployingEq.id}/deploy`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
@@ -219,12 +221,14 @@ export default function EquipmentTrackingPage() {
           equipment_id: activeDeployingEq.id,
           project_id: projectId,
           start_date: new Date().toISOString(),
+          hours_used: hoursNum >= 0 ? hoursNum : 0,
           remarks: `Start reading: ${startMeterVal}. Photo Proof: ${isStartPhotoCaptured}`
         }),
       });
       if (res.ok) {
         setActiveDeployingEq(null);
         setStartMeterVal("");
+        setStartHoursUsed("");
         setIsStartPhotoCaptured(false);
         loadData();
       } else {
@@ -792,15 +796,27 @@ export default function EquipmentTrackingPage() {
             </div>
             
             <div className="space-y-3 text-xs">
-              <div className="space-y-1">
-                <label className="text-muted">Odometer / Start Hour Meter Reading</label>
-                <input
-                  type="number"
-                  value={startMeterVal}
-                  onChange={(e) => setStartMeterVal(e.target.value)}
-                  placeholder="e.g. 435"
-                  className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-muted">Start Meter / Odometer</label>
+                  <input
+                    type="number"
+                    value={startMeterVal}
+                    onChange={(e) => setStartMeterVal(e.target.value)}
+                    placeholder="e.g. 435"
+                    className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-muted">Initial / Base Hours Used</label>
+                  <input
+                    type="number"
+                    value={startHoursUsed}
+                    onChange={(e) => setStartHoursUsed(e.target.value)}
+                    placeholder="e.g. 0 or 8.0"
+                    className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground"
+                  />
+                </div>
               </div>
 
               {/* Photo scanning viewport */}
