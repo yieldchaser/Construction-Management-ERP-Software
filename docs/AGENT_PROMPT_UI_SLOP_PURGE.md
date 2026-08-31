@@ -142,6 +142,8 @@ Base classes: `inline-flex items-center gap-1 rounded-full border px-2 py-0.5 te
 
 Convert all 101 pill sites to it. Where a site currently uses a solid fill with white text, it becomes the tinted tone for the same colour; the solid style does not survive anywhere.
 
+**Never collapse two states that must stay distinguishable.** The point of this part is one visual language, not fewer meanings. If a status map has more states than tones, keep every state visually distinct by extending `BadgeTone` with the `chart-1` through `chart-8` tokens for the overflow, following the same `bg-x/10 text-x border-x/20` shape. The known case is `statusColors` in `d/quality/page.tsx` and `p/[project_id]/quality/page.tsx`, which carries **7 states across 6 tones**. Every other map in the console fits inside the six. Before converting any map, count its states and its distinct tones, and if the tone count drops, say so and fix it rather than shipping two states that render identically.
+
 ---
 
 # PART 6: fix the Safety incident card specifically
