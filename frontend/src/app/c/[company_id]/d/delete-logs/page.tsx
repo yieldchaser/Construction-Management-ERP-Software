@@ -1,4 +1,5 @@
 "use client";
+import Badge, { type BadgeTone } from "@/components/ui/Badge";
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
@@ -233,9 +234,7 @@ export default function DeleteLogsPage() {
                     {log.deleted_at ? new Date(log.deleted_at).toLocaleString() : "-"}
                   </td>
                   <td className="px-4 py-3">
-                    <span className="inline-block px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium capitalize">
-                      {log.entity_type}
-                    </span>
+                    <Badge tone="primary" className="capitalize">{log.entity_type}</Badge>
                   </td>
                   <td className="px-4 py-3 text-foreground">{log.entity_summary}</td>
                   <td className="px-4 py-3 text-muted">{log.party_name || "-"}</td>

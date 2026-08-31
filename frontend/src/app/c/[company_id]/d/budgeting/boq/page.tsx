@@ -1,4 +1,5 @@
 "use client";
+import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 
@@ -328,9 +329,7 @@ export default function BOQPage() {
       >
         <div className="flex items-center gap-3">
           {/* KPI pill */}
-          <div className={`text-[10px] px-3 py-1 rounded-full border font-bold ${overallPct > 10 ? "bg-danger/10 border-danger/20 text-danger" : overallPct > 0 ? "bg-warning/10 border-warning/20 text-warning" : "bg-success/10 border-success/20 text-success"}`}>
-            {overallPct > 0 ? "+" : ""}{overallPct.toFixed(1)}% overall variance
-          </div>
+          <Badge tone={overallPct > 10 ? "danger" : overallPct > 0 ? "warning" : "success"} className="font-bold">{overallPct > 0 ? "+" : ""}{overallPct.toFixed(1)}% overall variance</Badge>
           {/* Import trigger */}
           <label className="px-3.5 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:opacity-90 cursor-pointer transition-all inline-flex items-center gap-1.5">
             <Icon name="arrow_up" className="w-3.5 h-3.5" /> Import Excel

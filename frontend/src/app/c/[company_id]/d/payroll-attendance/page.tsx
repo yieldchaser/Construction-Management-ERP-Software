@@ -1682,7 +1682,7 @@ export default function PayrollPage() {
         action={
           <button
             onClick={() => setNewOpen("site")}
-            className="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary/95 text-white rounded-md text-xs font-semibold shadow-sm transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary/95 text-white rounded-md text-xs font-semibold transition-all cursor-pointer"
           >
             + New Allowance / Staff
           </button>

@@ -1,4 +1,5 @@
 "use client";
+import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 
@@ -12,14 +13,14 @@ import PageHeader from "@/components/PageHeader";
 import SegmentedTabs from "@/components/ui/Tabs";
 import { EmptyState } from "@/components/ui/EmptyState";
 
-const STATUS_MAP: Record<string, string> = {
-  Present: "bg-success/10 text-success border-success/20",
-  present: "bg-success/10 text-success border-success/20",
-  Absent: "bg-danger/10 text-danger border-danger/20",
-  absent: "bg-danger/10 text-danger border-danger/20",
-  "Half Day": "bg-warning/10 text-warning border-warning/20",
-  half_day: "bg-warning/10 text-warning border-warning/20",
-  "half day": "bg-warning/10 text-warning border-warning/20",
+const STATUS_TONES: Record<string, BadgeTone> = {
+  Present: "success",
+  present: "success",
+  Absent: "danger",
+  absent: "danger",
+  "Half Day": "warning",
+  half_day: "warning",
+  "half day": "warning",
 };
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -796,14 +797,12 @@ export default function AttendancePage() {
                                         <Icon name="check" className="w-3.5 h-3.5" /> Yes
                                       </span>
                                     ) : (
-                                      <span className="text-danger font-bold uppercase text-[9px] tracking-wider bg-danger/10 border border-danger/20 px-2 py-0.5 rounded-full">
-                                        Location (Not Verified)
-                                      </span>
+                                      <Badge tone="danger" className="uppercase tracking-wider font-bold">Location (Not Verified)</Badge>
                                     )}
                                   </td>
                                   <td className="px-5 py-3 text-muted font-sans">{log.distance_from_site_m ? `${log.distance_from_site_m}m` : "0m (Inside)"}</td>
                                   <td className="px-5 py-3">
-                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${STATUS_MAP[log.status] || STATUS_MAP.Present}`}>{log.status}</span>
+                                    <Badge tone={STATUS_TONES[log.status] || "success"}>{log.status}</Badge>
                                   </td>
                                 </tr>
                               )
@@ -1226,7 +1225,7 @@ export default function AttendancePage() {
                 <div className="flex flex-col md:flex-row gap-6">
                   {/* Left Column Avatar */}
                   <div className="flex flex-col items-center md:items-start shrink-0">
-                    <div className="h-16 w-16 bg-primary rounded-xl flex items-center justify-center text-white text-lg font-bold shadow-md shadow-primary/20">
+                    <div className="h-16 w-16 bg-primary rounded-xl flex items-center justify-center text-white text-lg font-bold">
                       PD
                     </div>
                     <span className="text-[9px] text-muted font-bold uppercase mt-2 block">PROJECT BRAND</span>

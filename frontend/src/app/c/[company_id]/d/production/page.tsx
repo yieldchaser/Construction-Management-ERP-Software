@@ -361,9 +361,7 @@ export default function ProductionPage() {
                     <div className="text-[10px] uppercase tracking-[0.24em] text-muted">Execution Health</div>
                     <h2 className="mt-1 text-lg font-bold text-foreground">Batch versus output and material drift</h2>
                   </div>
-                  <div className="rounded-full border border-border-custom bg-elevated px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">
-                    {data?.batch_count ?? 0} batches
-                  </div>
+                  <Badge tone="neutral" className="uppercase tracking-[0.18em] font-semibold">{data?.batch_count ?? 0} batches</Badge>
                 </div>
 
                 <div className="mt-5 space-y-4">
@@ -451,9 +449,7 @@ export default function ProductionPage() {
                         </div>
                         <div className="mt-3 flex flex-wrap gap-2">
                           {recipe.materials.slice(0, 4).map((material) => (
-                            <span key={material.id} className="rounded-full bg-elevated px-2.5 py-1 text-[10px] text-muted">
-                              {material.material_name} {formatQty(material.planned_qty, 3)} {material.unit}
-                            </span>
+                            <Badge key={material.id} tone="neutral">{material.material_name} {formatQty(material.planned_qty, 3)} {material.unit}</Badge>
                           ))}
                         </div>
                       </div>
@@ -473,9 +469,7 @@ export default function ProductionPage() {
                             {formatQty(item.available_qty)} available · {formatQty(item.reserved_qty)} reserved
                           </div>
                         </div>
-                        <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${item.needs_reorder ? "bg-danger/10 text-danger" : "bg-success/10 text-success"}`}>
-                          {item.needs_reorder ? "Reorder" : "Healthy"}
-                        </span>
+                        <Badge tone={item.needs_reorder ? "danger" : "success"} className="uppercase tracking-[0.18em] font-semibold">{item.needs_reorder ? "Reorder" : "Healthy"}</Badge>
                       </div>
                     ))}
                   </div>
@@ -563,9 +557,7 @@ export default function ProductionPage() {
                       <h2 className="mt-1 text-xl font-bold text-foreground">{recipe.product_name}</h2>
                       <p className="mt-2 text-sm text-muted">{recipe.mix_type} · Output target {formatQty(recipe.target_output_qty)} {recipe.unit}</p>
                     </div>
-                    <span className="rounded-full bg-primary/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
-                      {recipe.wastage_pct}% wastage
-                    </span>
+                    <Badge tone="primary" className="uppercase tracking-[0.18em] font-semibold">{recipe.wastage_pct}% wastage</Badge>
                   </div>
 
                   <div className="mt-4 grid gap-2 md:grid-cols-2">
@@ -578,9 +570,7 @@ export default function ProductionPage() {
                               {formatQty(material.planned_qty, 3)} {material.unit}
                             </div>
                           </div>
-                          <span className={`rounded-full px-2 py-1 text-[10px] uppercase tracking-[0.18em] ${material.is_optional ? "bg-elevated text-muted" : "bg-success/10 text-success"}`}>
-                            {material.is_optional ? "Optional" : "Required"}
-                          </span>
+                          <Badge tone={material.is_optional ? "neutral" : "success"} className="uppercase tracking-[0.18em]">{material.is_optional ? "Optional" : "Required"}</Badge>
                         </div>
                       </div>
                     ))}

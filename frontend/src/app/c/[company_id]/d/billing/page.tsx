@@ -11,6 +11,7 @@ import PageHeader from "@/components/PageHeader";
 import SegmentedTabs from "@/components/ui/Tabs";
 import { EmptyState } from "@/components/ui/EmptyState";
 import Icon from "@/components/marketing/Icon";
+import Badge from "@/components/ui/Badge";
 
 // Types
 interface Deduction {
@@ -549,7 +550,7 @@ export default function SubcontractorBillingPage() {
               if (tab === "wo") setShowWOModal(true);
               else setShowBillModal(true);
             }}
-            className="flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-1.5 text-xs font-bold text-white hover:opacity-90 transition-all cursor-pointer shadow-md shadow-primary/10"
+            className="flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-1.5 text-xs font-bold text-white hover:opacity-90 transition-all cursor-pointer"
           >
             {tab === "wo" ? "+ Create Work Order" : "+ Submit RA Bill"}
           </button>
@@ -641,17 +642,13 @@ export default function SubcontractorBillingPage() {
                           <td className="px-5 py-3.5 font-extrabold text-foreground">₹{bill.totalPayable.toLocaleString()}</td>
                           <td className="px-5 py-3.5">
                             <div className="flex flex-col gap-1">
-                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                                isAuditApproved(bill)
-                                  ? "bg-success/10 text-success border border-success/20"
-                                  : "bg-warning/10 text-warning border border-warning/20"
-                              }`}>
+                              <Badge tone={isAuditApproved(bill) ? "success" : "warning"} className="uppercase font-bold">
                                 {isAuditApproved(bill) ? "approved" : bill.approvalFlag}
-                              </span>
+                              </Badge>
                               {bill.invoiceType !== "sale" && bill.matchStatus !== "approved" && (
-                                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-danger/10 text-danger border border-danger/20 w-fit">
+                                <Badge tone="danger" className="uppercase font-bold w-fit">
                                   Unmatched
-                                </span>
+                                </Badge>
                               )}
                             </div>
                           </td>
@@ -795,13 +792,9 @@ export default function SubcontractorBillingPage() {
                           <td className="px-5 py-3.5 font-bold text-foreground">₹{wo.value.toLocaleString()}</td>
                           <td className="px-5 py-3.5 text-muted">{wo.date}</td>
                           <td className="px-5 py-3.5">
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                              wo.status === "Completed"
-                                ? "bg-success/10 text-success border border-success/20"
-                                : "bg-info/10 text-info border border-info/20"
-                            }`}>
+                            <Badge tone={wo.status === "Completed" ? "success" : "info"} className="uppercase font-bold">
                               {wo.status}
-                            </span>
+                            </Badge>
                           </td>
                         </tr>
                       ))}
@@ -856,13 +849,9 @@ export default function SubcontractorBillingPage() {
                           </td>
                           <td className="px-5 py-3.5 text-muted">{note.notes}</td>
                           <td className="px-5 py-3.5">
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                              note.type === "credit"
-                                ? "bg-success/10 text-success border border-success/20"
-                                : "bg-danger/10 text-danger border border-danger/20"
-                            }`}>
+                            <Badge tone={note.type === "credit" ? "success" : "danger"} className="uppercase font-bold">
                               {note.type.toUpperCase() + " NOTE"}
-                            </span>
+                            </Badge>
                           </td>
                           <td className="px-5 py-3.5 text-muted font-semibold">{note.status.toUpperCase()}</td>
                           <td className="px-5 py-3.5 text-muted">{note.date}</td>

@@ -534,7 +534,7 @@ export default function GanttSchedulerPage() {
                 document.getElementById("milestone-form")?.scrollIntoView({ behavior: "smooth" });
                 document.getElementById("ms-name-input")?.focus();
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary/95 text-white rounded-md text-xs font-semibold shadow-sm transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary/95 text-white rounded-md text-xs font-semibold transition-all cursor-pointer"
             >
               <Icon name="flag_checkered" className="w-3.5 h-3.5" />
               Add Milestone
@@ -545,7 +545,7 @@ export default function GanttSchedulerPage() {
                 document.getElementById("task-form")?.scrollIntoView({ behavior: "smooth" });
                 document.getElementById("task-title-input")?.focus();
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary/95 text-white rounded-md text-xs font-semibold shadow-sm transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary/95 text-white rounded-md text-xs font-semibold transition-all cursor-pointer"
             >
               <Icon name="clipboard" className="w-3.5 h-3.5" />
               Create WBS Task
@@ -695,9 +695,10 @@ export default function GanttSchedulerPage() {
                 <button
                   onClick={handleSetBaseline}
                   disabled={baselineSaving}
-                  className="px-3.5 py-1.5 bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary rounded-lg text-xs font-bold transition-all disabled:opacity-50"
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary rounded-lg text-xs font-bold transition-all disabled:opacity-50"
                 >
-                  {baselineSaving ? "Freezing..." : "📸 Freeze New Baseline"}
+                  <Icon name="camera" className="w-3.5 h-3.5" />
+                  {baselineSaving ? "Freezing..." : "Freeze New Baseline"}
                 </button>
               </div>
 

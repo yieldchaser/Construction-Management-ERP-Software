@@ -1,4 +1,5 @@
 "use client";
+import Badge, { type BadgeTone } from "@/components/ui/Badge";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
@@ -118,15 +119,11 @@ export default function DPRReportPage() {
   const materialRows = rows.filter(r => projectMatch(r));
   const equipmentRows = rows.filter(r => projectMatch(r));
 
-  const statusBadge = (status: string) => {
+  const getStatusTone = (status: string): BadgeTone => {
     const s = status.toString();
-    if (s === "Completed" || s === "Fulfilled") {
-      return "bg-success/10 text-success border border-success/20";
-    }
-    if (s === "Ongoing" || s === "Partially Fulfilled") {
-      return "bg-warning/10 text-warning border border-warning/20";
-    }
-    return "bg-elevated text-muted border border-border-custom";
+    if (s === "Completed" || s === "Fulfilled") return "success";
+    if (s === "Ongoing" || s === "Partially Fulfilled") return "warning";
+    return "neutral";
   };
 
   const emptyRow = (colSpan: number) => (
@@ -239,7 +236,7 @@ export default function DPRReportPage() {
                           <td className="py-2.5 font-medium text-foreground">{cell(row, "Project Name")}</td>
                           <td className="py-2.5 text-muted">{cell(row, "Activity Name")}</td>
                           <td className="py-2.5">
-                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${statusBadge(cell(row, "Status"))}`}>{cell(row, "Status")}</span>
+                            <Badge tone={getStatusTone(cell(row, "Status"))}>{cell(row, "Status")}</Badge>
                           </td>
                           <td className="py-2.5 text-muted">{cell(row, "Type")}</td>
                         </tr>
@@ -278,7 +275,7 @@ export default function DPRReportPage() {
                           <td className="py-2.5 text-foreground">{cell(row, "Request Qty")}</td>
                           <td className="py-2.5 text-muted">{cell(row, "Unsettled Qty")}</td>
                           <td className="py-2.5">
-                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${statusBadge(cell(row, "Status"))}`}>{cell(row, "Status")}</span>
+                            <Badge tone={getStatusTone(cell(row, "Status"))}>{cell(row, "Status")}</Badge>
                           </td>
                         </tr>
                       ))

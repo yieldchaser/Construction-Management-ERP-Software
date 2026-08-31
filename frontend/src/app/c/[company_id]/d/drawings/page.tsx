@@ -1,4 +1,5 @@
 "use client";
+import Badge, { type BadgeTone } from "@/components/ui/Badge";
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
@@ -440,9 +441,7 @@ export default function DrawingsPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     {openCount > 0 && (
-                      <span className="text-[10px] px-2 py-0.5 bg-warning/10 border border-warning/20 text-warning rounded-full font-bold">
-                        {openCount} Open {openCount === 1 ? "Item" : "Items"}
-                      </span>
+                      <Badge tone="warning" className="font-bold">{openCount} Open {openCount === 1 ? "Item" : "Items"}</Badge>
                     )}
                     {/* Filter pills */}
                     <div className="flex gap-1">
@@ -518,7 +517,7 @@ export default function DrawingsPage() {
                     <div className="shrink-0 bg-input border border-border-custom rounded-md p-4 space-y-2 text-xs">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${m.bg} ${m.text}`}>{pin.category} #{pin.seq}</span>
+                          <Badge tone={pin.category === "RFI" ? "warning" : pin.category === "Clash" ? "danger" : pin.category === "Observation" ? "info" : "success"} className="font-bold">{pin.category} #{pin.seq}</Badge>
                           {pin.resolved && <span className="text-[9px] text-success font-bold bg-success/10 px-1.5 py-0.5 rounded inline-flex items-center gap-1"><Icon name="check" className="w-3 h-3" /> Resolved</span>}
                           {pin.photoAttached && <span className="text-[9px] text-info bg-info/10 px-1.5 py-0.5 rounded inline-flex items-center gap-1"><Icon name="camera" className="w-3 h-3" /> Photo</span>}
                         </div>
@@ -601,7 +600,7 @@ export default function DrawingsPage() {
                           <button key={pin.id} onClick={() => setSelectedPinId(pin.id)}
                             className="w-full text-left p-2 rounded-lg bg-input hover:bg-elevated border border-border-custom transition-all">
                             <div className="flex items-center gap-1.5 mb-0.5">
-                              <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ${m.bg} ${m.text}`}>{pin.category} #{pin.seq}</span>
+                              <Badge tone={pin.category === "RFI" ? "warning" : pin.category === "Clash" ? "danger" : pin.category === "Observation" ? "info" : "success"} className="font-bold">{pin.category} #{pin.seq}</Badge>
                             </div>
                             <p className="text-[10px] text-muted line-clamp-1">{pin.comment}</p>
                           </button>

@@ -1,4 +1,5 @@
 "use client";
+import Badge, { type BadgeTone } from "@/components/ui/Badge";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
@@ -134,7 +135,7 @@ export default function PartyPage() {
         action={
           <button
             onClick={() => setAddOpen(true)}
-            className="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary/95 text-white rounded-md text-xs font-semibold shadow-sm transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary/95 text-white rounded-md text-xs font-semibold transition-all cursor-pointer"
           >
             + Add Party
           </button>
@@ -226,15 +227,8 @@ export default function PartyPage() {
                 <td className="px-4 py-3 text-muted">{p.party_type || "—"}</td>
                 <td className="px-4 py-3 text-right text-foreground">{fmtINR(p.balance, currencyDecimalPlaces)}</td>
                 <td className="px-4 py-3">
-                  <button
-                    onClick={() => toggleStatus(p)}
-                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${
-                      (p.status || "—") === "Active"
-                        ? "bg-success/10 text-success"
-                        : "bg-danger/10 text-danger"
-                    }`}
-                  >
-                    {p.status || "—"}
+                  <button onClick={() => toggleStatus(p)} className="cursor-pointer">
+                    <Badge tone={(p.status || "—") === "Active" ? "success" : "danger"}>{p.status || "—"}</Badge>
                   </button>
                 </td>
                 <td className="px-4 py-3 text-right">

@@ -1,4 +1,5 @@
 "use client";
+import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
@@ -124,9 +125,7 @@ export default function RFQPage() {
                       <span className="text-[10px] text-muted ml-2">{rfq.items?.length || 0} items</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                        rfq.status === "draft" ? "bg-warning/10 text-warning border border-warning/20" : "bg-success/10 text-success border border-success/20"
-                      }`}>{rfq.status}</span>
+                      <Badge tone={rfq.status === "draft" ? "warning" : "success"} className="uppercase font-bold">{rfq.status}</Badge>
                       <button onClick={() => { setViewRfqId(rfq.id); fetchComparison(rfq.id); }} className="px-3 py-1 rounded-lg border border-border-custom text-[10px] font-bold hover:bg-elevated cursor-pointer">Compare Quotes</button>
                     </div>
                   </div>

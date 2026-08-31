@@ -1,4 +1,5 @@
 "use client";
+import Badge, { type BadgeTone } from "@/components/ui/Badge";
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -277,11 +278,7 @@ export default function SubconPage() {
                       <td className="px-4 py-3 font-bold text-foreground">{fmt(wo.woValue)}</td>
                       <td className="px-4 py-3 text-muted">{wo.billedValue != null ? fmt(wo.billedValue) : "—"}</td>
                       <td className="px-4 py-3">
-                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
-                          wo.status === "Approved" ? "bg-success/10 text-success border border-success/20" :
-                          wo.status === "Pending Approval" ? "bg-warning/10 text-warning border border-warning/20" :
-                          "bg-elevated text-muted border border-border-custom"
-                        }`}>{wo.status}</span>
+                        <Badge tone={wo.status === "Approved" ? "success" : wo.status === "Pending Approval" ? "warning" : "neutral"} className="font-bold">{wo.status}</Badge>
                       </td>
                     </tr>
                   ))

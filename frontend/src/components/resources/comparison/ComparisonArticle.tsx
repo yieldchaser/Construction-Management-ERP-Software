@@ -70,7 +70,7 @@ function ApproachRow({
           </ul>
         )}
         {whatIs && whatIs.bullets.length > 0 && (
-          <div className="mt-4 rounded-xl border border-alx-outline-variant/30 bg-alx-surface-container-lowest p-5 shadow-sm">
+          <div className="mt-4 rounded-xl border border-alx-outline-variant/30 bg-alx-surface-container-lowest p-5">
             <p className="font-body text-sm font-bold text-alx-on-surface mb-3 leading-snug">{whatIs.body}</p>
             <ul className="space-y-2.5">
               {whatIs.bullets.map((bullet, idx) => (

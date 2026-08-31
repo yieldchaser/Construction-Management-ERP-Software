@@ -1,4 +1,5 @@
 "use client";
+import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import {  getApiHost , readErrorDetail } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 
@@ -1843,7 +1844,7 @@ export default function FinancePage() {
                   )}
                 </div>
                 {cashAccount ? (
-                  <div className="bg-card border border-border-custom rounded-xl p-4 flex items-center justify-between hover:shadow-md transition-all">
+                  <div className="bg-card border border-border-custom rounded-xl p-4 flex items-center justify-between transition-all">
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 rounded-lg bg-success/10 flex items-center justify-center text-success text-lg border border-success/20">
                         <Icon name="banknote" className="w-5 h-5" />
@@ -1877,7 +1878,7 @@ export default function FinancePage() {
                     </div>
                   ) : (
                     bankAccounts.map((acc) => (
-                      <div key={acc.id} className="bg-card border border-border-custom rounded-xl p-5 space-y-4 hover:shadow-md transition-all relative">
+                      <div key={acc.id} className="bg-card border border-border-custom rounded-xl p-5 space-y-4 transition-all relative">
                         <div className="flex justify-between items-start">
                           <div className="flex items-center gap-2">
                             <div className="h-8 w-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-sm font-bold">
@@ -1886,7 +1887,7 @@ export default function FinancePage() {
                             <div>
                               <div className="text-xs font-bold text-foreground flex items-center gap-1.5">
                                 {acc.bank_name}
-                                <span className="text-[8px] bg-primary/15 text-primary border border-primary/25 px-1.5 py-0.5 rounded-full font-bold">PRIMARY</span>
+                                <Badge tone="primary" className="font-bold">PRIMARY</Badge>
                               </div>
                               <div className="text-[10px] text-muted mt-0.5">A/C: {acc.account_number}</div>
                             </div>
@@ -2165,7 +2166,7 @@ export default function FinancePage() {
                     <h2 className="text-xs font-bold text-muted uppercase tracking-wider">Budget vs Actual — Cost Variance Report</h2>
                     <p className="text-[10px] text-muted mt-1">EAC = Estimate At Completion (projects final cost at current burn rate assuming 60% completion).</p>
                   </div>
-                  <span className={`text-[10px] px-3 py-1.5 rounded-full font-bold border ${totalVariance >= 0 ? "bg-success/10 border-success/20 text-success" : "bg-danger/10 border-danger/20 text-danger"}`}>
+                  <Badge tone={totalVariance >= 0 ? "success" : "danger"} className="font-bold">
                     {totalVariance >= 0 ? (
                       <span className="inline-flex items-center gap-1">
                         <Icon name="arrow_down" className="w-3.5 h-3.5" /> Underspent
@@ -2175,7 +2176,7 @@ export default function FinancePage() {
                         <Icon name="arrow_up" className="w-3.5 h-3.5" /> Overspent
                       </span>
                     )} by ₹{Math.abs(totalVariance).toLocaleString("en-IN")}
-                  </span>
+                  </Badge>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -2211,7 +2212,7 @@ export default function FinancePage() {
                         const isOver = row.variance < 0;
                         const isWarn = row.variancePct < 10 && row.variancePct >= 0;
                         const statusLabel = isOver ? "OVERSPENT" : isWarn ? "AT RISK" : "ON TRACK";
-                        const statusColor = isOver ? "bg-danger/10 border-danger/20 text-danger" : isWarn ? "bg-warning/10 border-warning/20 text-warning" : "bg-success/10 border-success/20 text-success";
+                        const statusTone: BadgeTone = isOver ? "danger" : isWarn ? "warning" : "success";
                         return (
                           <tr key={row.code} className={`border-b border-white/[0.03] hover:bg-elevated transition-all ${isOver ? "bg-danger/[0.02]" : ""}`}>
                             <td className="px-5 py-3 font-sans text-muted">{row.code}</td>
@@ -2228,7 +2229,7 @@ export default function FinancePage() {
                               ₹{Math.round(row.eac).toLocaleString()}
                             </td>
                             <td className="px-5 py-3 text-center">
-                              <span className={`text-[9px] px-2 py-0.5 rounded-full border font-bold ${statusColor}`}>{statusLabel}</span>
+                              <Badge tone={statusTone} className="font-bold">{statusLabel}</Badge>
                             </td>
                           </tr>
                         );
@@ -2270,24 +2271,16 @@ export default function FinancePage() {
                 <span className="text-muted uppercase text-[9px] tracking-wider block">Ledger Classification</span>
                 <strong className="text-foreground block mt-0.5 text-sm">{selectedVoucher.ledger}</strong>
                 {selectedVoucher.cost_code && (
-                  <span className="text-[10px] text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-full inline-block mt-1.5 font-bold">
-                    Cost Code: {selectedVoucher.cost_code}
-                  </span>
+                  <Badge tone="primary" className="inline-flex mt-1.5 font-bold">Cost Code: {selectedVoucher.cost_code}</Badge>
                 )}
                 {selectedVoucher.ref_invoice && (
-                  <div className="text-[10px] text-warning bg-warning/10 border border-warning/20 px-2 py-0.5 rounded-full inline-block mt-1.5 font-bold mr-1.5">
-                    Ref Invoice: {selectedVoucher.ref_invoice}
-                  </div>
+                  <Badge tone="warning" className="inline-flex mt-1.5 font-bold mr-1.5">Ref Invoice: {selectedVoucher.ref_invoice}</Badge>
                 )}
                 {selectedVoucher.project_name && (
-                  <div className="text-[10px] text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-full inline-block mt-1.5 font-bold mr-1.5">
-                    Project: {selectedVoucher.project_name}
-                  </div>
+                  <Badge tone="primary" className="inline-flex mt-1.5 font-bold mr-1.5">Project: {selectedVoucher.project_name}</Badge>
                 )}
                 {selectedVoucher.due_date && (
-                  <div className="text-[10px] text-warning bg-warning/10 border border-warning/20 px-2 py-0.5 rounded-full inline-block mt-1.5 font-bold">
-                    Due Date: {selectedVoucher.due_date}
-                  </div>
+                  <Badge tone="warning" className="inline-flex mt-1.5 font-bold">Due Date: {selectedVoucher.due_date}</Badge>
                 )}
               </div>
 
@@ -2382,7 +2375,7 @@ export default function FinancePage() {
                     className="bg-background border border-border-custom rounded-lg px-2 py-1.5 text-foreground text-xs font-sans focus:outline-none focus:border-primary"
                   />
                   <button onClick={() => setShowAddModal(false)} className="text-xs text-muted hover:text-foreground transition-colors cursor-pointer">Cancel</button>
-                  <button onClick={handleRecordPayment} className="bg-primary hover:bg-primary/90 text-white font-bold text-xs px-4 py-1.5 rounded-lg shadow transition-all cursor-pointer">Save</button>
+                  <button onClick={handleRecordPayment} className="bg-primary hover:bg-primary/90 text-white font-bold text-xs px-4 py-1.5 rounded-lg transition-all cursor-pointer">Save</button>
                 </div>
               </div>
 
@@ -2680,7 +2673,7 @@ export default function FinancePage() {
                         ₹{(Number(amount || 0) + (enableGst ? Number(amount || 0) * (Number(gstPercent) / 100) : 0)).toLocaleString("en-IN")}
                       </strong>
                     </div>
-                    <span className="text-success font-extrabold text-[10px] bg-success/10 px-2.5 py-1 rounded-full border border-success/20">AUTO CALCULATED</span>
+                    <Badge tone="success" className="font-extrabold">AUTO CALCULATED</Badge>
                   </div>
                 </div>
               ) : selectedTxnType === "Equipment Expense" ? (
@@ -3210,7 +3203,7 @@ export default function FinancePage() {
                         <label className="text-[10px] text-muted uppercase font-bold block mb-1">From</label>
                         <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg px-3 py-2.5">
                           <span className="text-foreground font-medium text-xs">Cash Account (Company Wallet)</span>
-                          <span className="bg-success/10 text-success border border-success/20 text-[9px] font-bold px-2 py-0.5 rounded-full font-sans">₹ 0</span>
+                          <Badge tone="success" className="font-bold font-sans">₹ 0</Badge>
                         </div>
                       </div>
                       <div>
@@ -3244,7 +3237,7 @@ export default function FinancePage() {
                         <label className="text-[10px] text-muted uppercase font-bold block mb-1">To</label>
                         <div className="flex justify-between items-center bg-background/50 border border-border-custom rounded-lg px-3 py-2.5">
                           <span className="text-foreground font-medium text-xs">Cash Account (Company Wallet)</span>
-                          <span className="bg-success/10 text-success border border-success/20 text-[9px] font-bold px-2 py-0.5 rounded-full font-sans">₹ 0</span>
+                          <Badge tone="success" className="font-bold font-sans">₹ 0</Badge>
                         </div>
                       </div>
                     </>
@@ -3948,9 +3941,7 @@ export default function FinancePage() {
               ) : (
                 <form onSubmit={handleCreatePaymentRequest} className="space-y-4 text-xs font-sans">
                   <button type="button" onClick={() => { setPrStep("type"); setPrType(null); }} className="text-[10px] text-primary hover:underline font-bold cursor-pointer inline-flex items-center gap-1"><Icon name="arrow_left" className="w-3 h-3" /> Change type</button>
-                  <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-3 py-1 text-[10px] font-bold text-primary">
-                    {prType?.icon && <Icon name={prType.icon} className="w-3.5 h-3.5" />}{prType?.label}
-                  </div>
+                  <Badge tone="primary" className="font-bold">{prType?.icon && <Icon name={prType.icon} className="w-3.5 h-3.5 shrink-0" />}{prType?.label}</Badge>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>

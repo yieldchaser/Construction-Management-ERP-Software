@@ -1,4 +1,5 @@
 "use client";
+import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
@@ -228,9 +229,7 @@ export default function CustomFieldsPage() {
                     <h3 className="text-foreground font-semibold">{f.field_label}</h3>
                     <p className="text-muted text-xs mt-1">{f.field_name} • {f.field_type}</p>
                   </div>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${f.is_active ? "bg-success/10 text-success" : "bg-elevated text-muted"}`}>
-                    {f.is_active ? "Active" : "Inactive"}
-                  </span>
+                  <Badge tone={f.is_active ? "success" : "neutral"}>{f.is_active ? "Active" : "Inactive"}</Badge>
                 </div>
                 <div className="flex items-center justify-between text-xs text-muted mb-4">
                   <span className="capitalize">{f.entity_type}</span>

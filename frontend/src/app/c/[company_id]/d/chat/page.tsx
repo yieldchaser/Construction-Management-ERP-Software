@@ -1,4 +1,5 @@
 "use client";
+import Badge, { type BadgeTone } from "@/components/ui/Badge";
 
 import {  getApiHost , readErrorDetail } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
@@ -354,7 +355,7 @@ export default function ChatPage() {
         action={
           <button
             onClick={() => setShowGroupModal(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary/95 text-white rounded-md text-xs font-semibold shadow-sm transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary/95 text-white rounded-md text-xs font-semibold transition-all cursor-pointer"
           >
             <Icon name="group" className="w-3.5 h-3.5" />
             Create Group
@@ -555,7 +556,7 @@ export default function ChatPage() {
                     return (
                       <div key={msg.id} className={`flex ${isSystemMom ? "justify-center" : "justify-start"}`}>
                         <div
-                          className={`max-w-lg rounded-2xl p-4 shadow-sm border transition-all ${
+                          className={`max-w-lg rounded-2xl p-4 border transition-all ${
                             isSystemMom
                               ? "bg-primary/5 border-primary/20 text-center w-full max-w-md rounded-xl"
                               : "bg-card border-border-custom"
@@ -563,9 +564,7 @@ export default function ChatPage() {
                         >
                           {/* MOM Badge */}
                           {isSystemMom && (
-                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[9px] font-extrabold uppercase tracking-wider mb-2.5">
-                              <Icon name="bolt" className="w-3 h-3" /> Minutes of Meeting
-                            </div>
+                            <Badge tone="primary" icon="bolt" className="font-extrabold uppercase tracking-wider mb-2.5">Minutes of Meeting</Badge>
                           )}
 
                           {/* Sender details */}
@@ -671,7 +670,7 @@ export default function ChatPage() {
 
                         <button
                           type="submit"
-                          className="px-5 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-primary/20 flex items-center gap-1.5 cursor-pointer"
+                          className="px-5 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
                         >
                           <span>Send</span>
                           <Icon name="envelope" className="w-3.5 h-3.5" />
@@ -927,7 +926,7 @@ export default function ChatPage() {
               <div className="flex gap-3 pt-4">
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2.5 bg-primary hover:bg-primary-hover text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-primary/20 cursor-pointer"
+                  className="flex-1 px-4 py-2.5 bg-primary hover:bg-primary-hover text-white rounded-lg text-xs font-bold transition-all cursor-pointer"
                 >
                   Add Member
                 </button>

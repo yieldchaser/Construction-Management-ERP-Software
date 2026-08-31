@@ -1,4 +1,5 @@
 "use client";
+import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import {  getApiHost , readErrorDetail } from "@/lib/api";
 import { getApi, authHeaders, resolveCompanyId } from "@/lib/siteflow";
 
@@ -1325,7 +1326,7 @@ export default function HRPayrollPage() {
                       </button>
                       <button
                         onClick={handleSaveTimesheetEntry}
-                        className="flex-1 px-4 py-2 bg-primary rounded-lg text-xs font-bold text-white shadow-lg shadow-primary/20 transition-all hover:brightness-110"
+                        className="flex-1 px-4 py-2 bg-primary rounded-lg text-xs font-bold text-white transition-all hover:brightness-110"
                       >
                         Save Entry
                       </button>
@@ -1524,13 +1525,7 @@ export default function HRPayrollPage() {
                             <td className="px-4 py-3 text-center">{cell(row.sick)}</td>
                             <td className="px-4 py-3 text-center">{cell(row.earned)}</td>
                             <td className="px-4 py-3 text-center">
-                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                                row.template_source === "assigned" ? "bg-success/10 border-success/20 text-success" :
-                                row.template_source === "company_default" ? "bg-info/10 border-info/20 text-info" :
-                                "bg-elevated border-border-custom text-muted"
-                              }`}>
-                                {row.template_source === "assigned" ? "Assigned" : row.template_source === "company_default" ? "Company default" : "None"}
-                              </span>
+                              <Badge tone={row.template_source === "assigned" ? "success" : row.template_source === "company_default" ? "info" : "neutral"} className="font-bold">{row.template_source === "assigned" ? "Assigned" : row.template_source === "company_default" ? "Company default" : "None"}</Badge>
                             </td>
                           </tr>
                         );
@@ -1571,11 +1566,7 @@ export default function HRPayrollPage() {
                         </td>
                         <td className="px-4 py-3 text-muted max-w-xs truncate">{leave.reason}</td>
                         <td className="px-4 py-3">
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                            leave.status === "Approved" ? "bg-success/10 border-success/20 text-success" :
-                            leave.status === "Rejected" ? "bg-danger/10 border-danger/20 text-danger" :
-                            "bg-warning/10 border-warning/20 text-warning"
-                          }`}>{leave.status}</span>
+                          <Badge tone={leave.status === "Approved" ? "success" : leave.status === "Rejected" ? "danger" : "warning"} className="font-bold">{leave.status}</Badge>
                         </td>
                         <td className="px-4 py-3 text-right">
                           {leave.status === "Pending" && (

@@ -1,4 +1,5 @@
 "use client";
+import Badge, { type BadgeTone } from "@/components/ui/Badge";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -390,9 +391,7 @@ export default function ProjectsPage() {
                   )}
                   {!isViewer && (
                     <td className="px-4 py-3">
-                      <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
-                        {p.todo_pending ?? 0}
-                      </span>
+                      <Badge tone="primary">{p.todo_pending ?? 0}</Badge>
                     </td>
                   )}
                   <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
@@ -1088,7 +1087,7 @@ function ProjectSettingsModal({
                       <div className="text-xs text-muted">{m.role || "—"}</div>
                     </div>
                   </div>
-                  <span className="text-xs rounded-full bg-elevated px-2 py-0.5 text-muted">{m.mobile || ""}</span>
+                  <Badge tone="neutral">{m.mobile || ""}</Badge>
                 </div>
               ))}
               {members.length === 0 && <div className="text-sm text-muted">No members.</div>}

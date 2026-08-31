@@ -10,7 +10,7 @@ import ProductIcon from "@/components/marketing/product/icons";
  */
 function GuideImagePlaceholder() {
   return (
-    <div className="flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-xl border border-alx-outline-variant/40 bg-alx-surface-container-lowest p-10 text-center shadow-sm">
+    <div className="flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-xl border border-alx-outline-variant/40 bg-alx-surface-container-lowest p-10 text-center">
       <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-alx-primary-fixed text-alx-primary">
         <ProductIcon name="architecture" className="h-6 w-6" />
       </span>
@@ -58,7 +58,7 @@ export default function CalcGuide({ steps }: { steps: CalcGuideStep[] }) {
                 width={800}
                 height={500}
                 sizes="(min-width: 768px) 50vw, 100vw"
-                className="w-full h-auto rounded-xl border border-alx-outline-variant/40 shadow-sm object-cover"
+                className="w-full h-auto rounded-xl border border-alx-outline-variant/40 object-cover"
               />
             ) : (
               <GuideImagePlaceholder />

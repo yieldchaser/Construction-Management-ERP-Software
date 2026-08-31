@@ -1,4 +1,5 @@
 "use client";
+import Badge, { type BadgeTone } from "@/components/ui/Badge";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
@@ -226,9 +227,7 @@ export default function MaterialTab() {
           grouped.map(([category, items]) => (
             <div key={category} className="mb-6">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/15 text-primary font-bold border border-primary/30">
-                  {category}
-                </span>
+                <Badge tone="primary" className="uppercase tracking-wider font-bold">{category}</Badge>
                 <span className="text-[10px] text-muted">
                   {items.length} material{items.length === 1 ? "" : "s"}
                 </span>

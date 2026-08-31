@@ -65,7 +65,7 @@ export default function HelpPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search help, e.g. 'RA bill', 'attendance', 'Tally', 'PO'..."
-              className="w-full px-5 py-3.5 pl-12 rounded-lg bg-card border border-border-custom text-foreground placeholder:text-muted focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all text-sm shadow-sm"
+              className="w-full px-5 py-3.5 pl-12 rounded-lg bg-card border border-border-custom text-foreground placeholder:text-muted focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all text-sm"
             />
             <svg
               className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted"

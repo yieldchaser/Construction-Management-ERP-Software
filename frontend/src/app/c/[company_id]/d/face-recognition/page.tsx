@@ -1,4 +1,5 @@
 "use client";
+import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
@@ -150,9 +151,7 @@ export default function FaceRecognitionPage() {
                       <td className="px-6 py-4">{log.employee_id.slice(0, 8)}...</td>
                       <td className="px-6 py-4 capitalize">{log.punch_type}</td>
                       <td className="px-6 py-4">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${log.face_verified ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}>
-                          {log.face_verified ? "Verified" : "Failed"}
-                        </span>
+                        <Badge tone={log.face_verified ? "success" : "danger"}>{log.face_verified ? "Verified" : "Failed"}</Badge>
                       </td>
                       <td className="px-6 py-4">{log.confidence_score ? `${Number(log.confidence_score).toFixed(1)}%` : "-"}</td>
                       <td className="px-6 py-4">

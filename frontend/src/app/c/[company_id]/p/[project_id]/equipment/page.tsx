@@ -1,4 +1,5 @@
 "use client";
+import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import {  getApiHost , readErrorDetail } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 
@@ -403,13 +404,9 @@ export default function EquipmentTrackingPage() {
                               <span className="text-xs font-bold text-foreground line-clamp-1">{eq.name}</span>
                               <div className="flex gap-1 items-center">
                                 {isOverdue && (
-                                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase bg-danger/10 border border-danger/20 text-danger inline-flex items-center gap-1">
-                                    <Icon name="warning" className="w-3 h-3" />SERVICING OVERDUE
-                                  </span>
+                                  <Badge tone="danger" icon="warning" className="uppercase font-bold">SERVICING OVERDUE</Badge>
                                 )}
-                                <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase border ${activeDep ? "bg-primary/10 text-primary border-primary/20" : "bg-success/10 text-success border-success/20"}`}>
-                                  {activeDep ? "deployed" : "available"}
-                                </span>
+                                <Badge tone={activeDep ? "primary" : "success"} className="uppercase font-bold">{activeDep ? "deployed" : "available"}</Badge>
                               </div>
                             </div>
                             <div className="text-[10px] text-muted mt-0.5">Code: {eq.code} · Category: {eq.category}</div>

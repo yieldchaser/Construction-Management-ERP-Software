@@ -58,6 +58,8 @@ const normalizeText = (value: string) => value.toLowerCase().replace(/\s+/g, "")
 
 const getProjectName = (project: Project) => project.project_name || project.name || "—";
 
+import Badge, { type BadgeTone } from "@/components/ui/Badge";
+
 const getProjectCode = (project: Project) => project.project_code || project.code || "—";
 
 const getProjectStatus = (project: Project) => project.project_status || project.status || "—";
@@ -75,26 +77,26 @@ const getProjectAddress = (project: Project) => {
 
 const getProjectHealth = (project: Project) => project.project_health || project.health || "—";
 
-const getProjectStatusBadgeClass = (status: string) => {
+const getProjectStatusTone = (status: string): BadgeTone => {
   const normalized = normalizeText(status);
-  if (normalized.includes("complete")) return "bg-success/10 text-success border-success/20";
-  if (normalized.includes("hold")) return "bg-warning/10 text-warning border-warning/20";
+  if (normalized.includes("complete")) return "success";
+  if (normalized.includes("hold")) return "warning";
   if (normalized.includes("ongoing") || normalized.includes("active") || normalized.includes("progress")) {
-    return "bg-primary/10 text-primary border-primary/20";
+    return "primary";
   }
-  return "bg-elevated text-muted border-border-custom";
+  return "neutral";
 };
 
-const getProjectHealthBadgeClass = (health: string) => {
+const getProjectHealthTone = (health: string): BadgeTone => {
   const normalized = normalizeText(health);
   if (normalized.includes("healthy") || normalized.includes("good") || normalized.includes("stable")) {
-    return "bg-success/10 text-success border-success/20";
+    return "success";
   }
-  if (normalized.includes("warn")) return "bg-warning/10 text-warning border-warning/20";
-  if (normalized.includes("critical")) return "bg-danger/10 text-danger border-danger/20";
-  if (normalized.includes("complete")) return "bg-success/10 text-success border-success/20";
-  if (normalized.includes("hold")) return "bg-warning/10 text-warning border-warning/20";
-  return "bg-elevated text-muted border-border-custom";
+  if (normalized.includes("warn")) return "warning";
+  if (normalized.includes("critical")) return "danger";
+  if (normalized.includes("complete")) return "success";
+  if (normalized.includes("hold")) return "warning";
+  return "neutral";
 };
 
 const extractProjects = (data: unknown): Project[] => {
@@ -331,7 +333,7 @@ export default function ProjectsHomePage() {
         action={
           <button
             onClick={() => setIsNewProjectOpen(true)}
-            className="flex items-center gap-1 px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-md text-xs font-medium shadow-sm transition-all cursor-pointer"
+            className="flex items-center gap-1 px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-md text-xs font-medium transition-all cursor-pointer"
           >
             + New Project
           </button>
@@ -356,7 +358,7 @@ export default function ProjectsHomePage() {
         </div>
         <button
           onClick={() => setIsLeaveModalOpen(true)}
-          className="shrink-0 px-4 py-2 rounded-md bg-primary hover:bg-primary-hover text-xs font-medium text-white shadow-sm transition-all cursor-pointer"
+          className="shrink-0 px-4 py-2 rounded-md bg-primary hover:bg-primary-hover text-xs font-medium text-white transition-all cursor-pointer"
         >
           Open Leave Manager
         </button>
@@ -367,7 +369,7 @@ export default function ProjectsHomePage() {
         {/* Approvals */}
         <Link
           href={`/c/${companyId}/d/payment-approval`}
-          className="rounded-lg bg-card border border-border-custom p-5 hover:border-primary/35 hover:shadow-sm transition-all flex flex-col justify-between"
+          className="rounded-lg bg-card border border-border-custom p-5 hover:border-primary/35 transition-all flex flex-col justify-between"
         >
           <div className="flex justify-between items-start">
             <div className="text-muted text-xs font-medium uppercase tracking-wider">Approval (Pending)</div>
@@ -382,7 +384,7 @@ export default function ProjectsHomePage() {
         {/* Material Request */}
         <div
           onClick={() => setIsMaterialDrawerOpen(true)}
-          className="rounded-lg bg-card border border-border-custom p-5 hover:border-primary/35 hover:shadow-sm transition-all flex flex-col justify-between cursor-pointer"
+          className="rounded-lg bg-card border border-border-custom p-5 hover:border-primary/35 transition-all flex flex-col justify-between cursor-pointer"
         >
           <div className="flex justify-between items-start">
             <div className="text-muted text-xs font-medium uppercase tracking-wider">Material (Pending)</div>
@@ -397,7 +399,7 @@ export default function ProjectsHomePage() {
         {/* To Do */}
         <Link
           href={`/c/${companyId}/d/todo`}
-          className="rounded-lg bg-card border border-border-custom p-5 hover:border-primary/35 hover:shadow-sm transition-all flex flex-col justify-between"
+          className="rounded-lg bg-card border border-border-custom p-5 hover:border-primary/35 transition-all flex flex-col justify-between"
         >
           <div className="flex justify-between items-start">
             <div className="text-muted text-xs font-medium uppercase tracking-wider">To Do (Pending)</div>
@@ -477,13 +479,13 @@ export default function ProjectsHomePage() {
                 <div className="text-[10px] font-semibold uppercase tracking-wider text-muted">{tile.label}</div>
                 <div className="mt-1">
                   {tile.tone === "status" ? (
-                    <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider ${getProjectStatusBadgeClass(tile.value)}`}>
+                    <Badge tone={getProjectStatusTone(tile.value)} className="uppercase tracking-wider">
                       {tile.value}
-                    </span>
+                    </Badge>
                   ) : tile.tone === "health" ? (
-                    <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider ${getProjectHealthBadgeClass(tile.value)}`}>
+                    <Badge tone={getProjectHealthTone(tile.value)} className="uppercase tracking-wider">
                       {tile.value}
-                    </span>
+                    </Badge>
                   ) : (
                     <span className="block truncate text-sm font-semibold text-foreground">{tile.value}</span>
                   )}
@@ -527,17 +529,17 @@ export default function ProjectsHomePage() {
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider ${getProjectStatusBadgeClass(getProjectStatus(p))}`}>
+                      <Badge tone={getProjectStatusTone(getProjectStatus(p))} className="uppercase tracking-wider">
                         {getProjectStatus(p)}
-                      </span>
+                      </Badge>
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm font-medium text-foreground">{getProjectAddress(p)}</div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider ${getProjectHealthBadgeClass(getProjectHealth(p))}`}>
+                      <Badge tone={getProjectHealthTone(getProjectHealth(p))} className="uppercase tracking-wider">
                         {getProjectHealth(p)}
-                      </span>
+                      </Badge>
                     </td>
                     <td className="px-6 py-4 w-52">
                       <div className="flex items-center gap-3">
@@ -831,9 +833,9 @@ export default function ProjectsHomePage() {
                                 )}
                               </td>
                               <td className="px-6 py-4">
-                                <span className="inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider bg-elevated text-muted border-border-custom">
+                                <Badge tone="neutral" className="uppercase tracking-wider">
                                   {ind.status}
-                                </span>
+                                </Badge>
                               </td>
                               <td className="px-6 py-4 text-right">
                                 {ind.status === "pending" ? (

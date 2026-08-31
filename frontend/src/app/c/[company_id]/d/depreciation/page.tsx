@@ -1,4 +1,5 @@
 "use client";
+import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
@@ -221,9 +222,7 @@ export default function DepreciationPage() {
                       <td className="px-6 py-4">{s.depreciation_pct}%</td>
                       <td className="px-6 py-4">{new Date(s.start_date).toLocaleDateString()}</td>
                       <td className="px-6 py-4">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${s.is_active ? "bg-success/10 text-success" : "bg-elevated text-muted"}`}>
-                          {s.is_active ? "Active" : "Inactive"}
-                        </span>
+                        <Badge tone={s.is_active ? "success" : "neutral"}>{s.is_active ? "Active" : "Inactive"}</Badge>
                       </td>
                     </tr>
                   ))

@@ -1,4 +1,5 @@
 "use client";
+import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import { getApiHost } from "@/lib/api";
 import { authHeaders, fmtINR } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
@@ -166,12 +167,12 @@ export default function ThreeWayPage() {
   const selectedBill = bills.find((b) => b.id === form.invoice_id);
   const autoVariance = selectedPo && selectedBill ? selectedBill.total_payable - selectedPo.total_amount : 0;
 
-  const statusColors: Record<string, string> = {
-    matched: "bg-success/10 text-success",
-    mismatch: "bg-danger/10 text-danger",
-    pending: "bg-warning/10 text-warning",
-    approved: "bg-info/10 text-info",
-    rejected: "bg-danger/10 text-danger",
+  const statusTones: Record<string, BadgeTone> = {
+    matched: "success",
+    mismatch: "danger",
+    pending: "warning",
+    approved: "info",
+    rejected: "danger",
   };
 
   return (
@@ -236,9 +237,7 @@ export default function ThreeWayPage() {
                       {fmtINR(m.variance_amount)}
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[m.match_status] || ""}`}>
-                        {m.match_status}
-                      </span>
+                      <Badge tone={statusTones[m.match_status] || "neutral"}>{m.match_status}</Badge>
                     </td>
                     <td className="px-6 py-4 flex gap-2">
                       {m.match_status === "pending" && (

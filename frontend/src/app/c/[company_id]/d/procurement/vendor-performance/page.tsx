@@ -1,4 +1,5 @@
 "use client";
+import Badge, { type BadgeTone } from "@/components/ui/Badge";
 
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
@@ -93,9 +94,7 @@ export default function VendorPerformancePage() {
                           <td className="px-5 py-3.5 text-right font-sans text-muted">{v.avg_delay_days.toFixed(1)}</td>
                           <td className="px-5 py-3.5 text-right font-sans text-danger">{v.quality_issues}</td>
                           <td className="px-5 py-3.5 text-center">
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${rating} border-current/20`}>
-                              {otp >= 90 ? "A" : otp >= 70 ? "B" : "C"}
-                            </span>
+                            <Badge tone={otp >= 90 ? "success" : otp >= 70 ? "warning" : "danger"} className="font-bold">{otp >= 90 ? "A" : otp >= 70 ? "B" : "C"}</Badge>
                           </td>
                         </tr>
                       );

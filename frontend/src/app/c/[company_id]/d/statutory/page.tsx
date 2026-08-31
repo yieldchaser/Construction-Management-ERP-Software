@@ -1,4 +1,5 @@
 "use client";
+import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
@@ -178,10 +179,10 @@ export default function StatutoryPage() {
     it: "Income Tax",
   };
 
-  const statusColors: Record<string, string> = {
-    draft: "bg-elevated text-muted",
-    filed: "bg-success/10 text-success",
-    overdue: "bg-danger/10 text-danger",
+  const statusTones: Record<string, BadgeTone> = {
+    draft: "neutral",
+    filed: "success",
+    overdue: "danger",
   };
 
   return (
@@ -264,7 +265,7 @@ export default function StatutoryPage() {
                     <td className="px-6 py-4">₹{Number(r.tds_deducted).toLocaleString()}</td>
                     <td className="px-6 py-4">
                       <div>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[r.status]}`}>{r.status}</span>
+                        <Badge tone={statusTones[r.status] || "neutral"}>{r.status}</Badge>
                         {r.days_overdue > 0 && (
                           <span className="ml-2 text-[10px] text-danger">{r.days_overdue}d overdue</span>
                         )}

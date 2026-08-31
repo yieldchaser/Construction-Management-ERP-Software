@@ -1,4 +1,5 @@
 "use client";
+import Badge, { type BadgeTone } from "@/components/ui/Badge";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
@@ -641,7 +642,7 @@ export default function ProcurementPage() {
             <button onClick={() => setShowPOModal(true)} className="px-3.5 py-1.5 border border-border-custom hover:bg-elevated rounded-md text-xs font-bold text-foreground transition-all cursor-pointer">
               + Purchase Order
             </button>
-            <button onClick={() => setShowUseModal(true)} className="px-3.5 py-1.5 bg-primary rounded-md text-xs font-bold text-white hover:opacity-90 transition-all shadow-md cursor-pointer">
+            <button onClick={() => setShowUseModal(true)} className="px-3.5 py-1.5 bg-primary rounded-md text-xs font-bold text-white hover:opacity-90 transition-all cursor-pointer">
               Log Usage
             </button>
           </div>
@@ -670,13 +671,7 @@ export default function ProcurementPage() {
                   <div key={ind.id} className="bg-card border border-border-custom rounded-lg p-5 space-y-4">
                     <div className="flex justify-between items-center text-xs">
                       <strong className="text-foreground font-extrabold">{ind.indentNumber}</strong>
-                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
-                        ind.status === "approved"
-                          ? "bg-success/10 text-success border border-success/20"
-                          : ind.status === "cancelled" || ind.status === "rejected"
-                          ? "bg-muted/10 text-muted border border-border-custom"
-                          : "bg-warning/10 text-warning border border-warning/20"
-                      }`}>{ind.status}</span>
+                      <Badge tone={ind.status === "approved" ? "success" : (ind.status === "cancelled" || ind.status === "rejected") ? "neutral" : "warning"} className="uppercase font-bold">{ind.status}</Badge>
                     </div>
 
                     <div className="space-y-2 border-t border-border-custom pt-3">
@@ -766,16 +761,10 @@ export default function ProcurementPage() {
                               ))}
                             </td>
                             <td className="px-5 py-3">
-                              <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border ${
-                                po.approvalFlag === "approved" ? "bg-success/10 text-success border-success/20" :
-                                po.approvalFlag === "rejected" ? "bg-danger/10 text-danger border border-danger/20" :
-                                "bg-warning/10 text-warning border border-warning/20"
-                              }`}>{po.approvalFlag}</span>
+                              <Badge tone={po.approvalFlag === "approved" ? "success" : po.approvalFlag === "rejected" ? "danger" : "warning"} className="uppercase font-bold">{po.approvalFlag}</Badge>
                             </td>
                             <td className="px-5 py-3">
-                              <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border ${
-                                po.status === "received" || po.status === "closed" ? "bg-success/10 text-success border border-success/20" : "bg-primary/10 text-primary border border-primary/20"
-                              }`}>{po.status}</span>
+                              <Badge tone={(po.status === "received" || po.status === "closed") ? "success" : "primary"} className="uppercase font-bold">{po.status}</Badge>
                             </td>
                             <td className="px-5 py-3 text-right font-sans font-bold text-foreground whitespace-nowrap">₹{po.totalAmount.toLocaleString("en-IN")}</td>
                             <td className="px-5 py-3 text-right whitespace-nowrap">
@@ -926,9 +915,7 @@ export default function ProcurementPage() {
                   <p className="text-[10px] text-muted mt-1 max-w-lg">GRNs received from vendors but not yet linked to a Material Purchase invoice. Review and mark as billed to reconcile Accounts Payable. Unmatched GRNs inflate stock figures without a corresponding payable.</p>
                 </div>
                 {unbilledGRNs.length === 0 && (
-                  <span className="inline-flex items-center gap-1 text-[10px] px-3 py-1.5 bg-success/10 border border-success/20 text-success rounded-full font-bold">
-                    <Icon name="check" className="w-3.5 h-3.5" /> All GRNs Reconciled
-                  </span>
+                  <Badge tone="success" icon="check" className="font-bold">All GRNs Reconciled</Badge>
                 )}
               </div>
 
@@ -1000,9 +987,7 @@ export default function ProcurementPage() {
                                 ))}
                               </td>
                               <td className="px-5 py-3 text-center">
-                                <span className={`inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full border ${threeWay.match ? "bg-success/10 border-success/20 text-success" : "bg-danger/10 border-danger/20 text-danger"}`}>
-                                  {threeWay.match ? <Icon name="check" className="w-3 h-3 text-success" /> : <Icon name="warning" className="w-3 h-3" />} {threeWay.text}
-                                </span>
+                                <Badge tone={threeWay.match ? "success" : "danger"} icon={threeWay.match ? "check" : "warning"} className="font-bold">{threeWay.text}</Badge>
                               </td>
                               <td className="px-5 py-3 text-right font-sans font-bold text-warning">₹{grnValue.toLocaleString("en-IN")}</td>
                               <td className="px-5 py-3 text-right">
@@ -1037,7 +1022,7 @@ export default function ProcurementPage() {
                             <td className="px-5 py-3 text-muted">{grn.vendor}</td>
                             <td className="px-5 py-3 text-muted">{grn.receivedDate}</td>
                             <td className="px-5 py-3 text-right">
-                              <span className="text-[9px] px-2 py-0.5 bg-success/10 border border-success/20 text-success rounded-full font-bold">BILLED</span>
+                              <Badge tone="success" className="font-bold">BILLED</Badge>
                             </td>
                           </tr>
                         ))}

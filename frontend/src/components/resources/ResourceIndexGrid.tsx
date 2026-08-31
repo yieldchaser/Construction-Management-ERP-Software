@@ -76,7 +76,7 @@ export default function ResourceIndexGrid({
             <Link
               key={idx}
               href={c.href}
-              className="group flex flex-col rounded-2xl border border-alx-outline-variant/25 bg-alx-surface-container-lowest p-6 shadow-sm shadow-alx-on-surface/5 transition-all hover:-translate-y-1 hover:border-alx-primary/40 hover:shadow-lg"
+              className="group flex flex-col rounded-2xl border border-alx-outline-variant/25 bg-alx-surface-container-lowest p-6 transition-all hover:-translate-y-1 hover:border-alx-primary/40"
             >
               <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-alx-primary-fixed/40 text-alx-primary mb-4">
                 <ProductIcon name={icon} className="h-5 w-5" />

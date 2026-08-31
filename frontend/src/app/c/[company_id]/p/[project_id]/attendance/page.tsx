@@ -1,4 +1,5 @@
 "use client";
+import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import { getApiHost } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 
@@ -832,15 +833,11 @@ export default function AttendancePage() {
                                   <td className="px-5 py-3 text-muted font-sans">{log.punch_out ? new Date(log.punch_out).toLocaleTimeString() : "—"}</td>
                                   <td className="px-5 py-3 text-muted font-bold">{log.shift_multiplier || 1.0}x</td>
                                   <td className="px-5 py-3">
-                                    <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-success/10 text-success border border-success/20">
-                                      {log.verified ? "verified" : "logged"}
-                                    </span>
+                                    <Badge tone="success" className="uppercase font-bold">{log.verified ? "verified" : "logged"}</Badge>
                                   </td>
                                   <td className="px-5 py-3 text-muted font-mono">{log.distance_meters != null ? `${log.distance_meters.toFixed(0)}m` : "—"}</td>
                                   <td className="px-5 py-3">
-                                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border ${STATUS_MAP[log.punch_type] || "bg-elevated text-muted border-border-custom"}`}>
-                                      {log.punch_type || "Present"}
-                                    </span>
+                                    <Badge tone={(log.punch_type === "in" || log.punch_type === "Present") ? "success" : log.punch_type === "out" ? "info" : "neutral"} className="uppercase font-bold">{log.punch_type || "Present"}</Badge>
                                   </td>
                                 </tr>
                               );

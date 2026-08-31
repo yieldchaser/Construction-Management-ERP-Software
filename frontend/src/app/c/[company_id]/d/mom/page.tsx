@@ -1,4 +1,5 @@
 "use client";
+import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import {  getApiHost , readErrorDetail } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
@@ -31,17 +32,17 @@ interface ProjectOption {
 const MOM_TYPES = ["Regular", "Review", "Client Meeting", "Internal"] as const;
 const MOM_STATUSES = ["Open", "Closed", "Action Pending", "Draft"] as const;
 
-const statusColors: Record<string, string> = {
-  Open: "bg-danger/10 text-danger border-danger/20",
-  "Action Pending": "bg-warning/10 text-warning border-warning/20",
-  Closed: "bg-success/10 text-success border-success/20",
-  Draft: "bg-elevated text-muted border-border-custom",
+const statusTones: Record<string, BadgeTone> = {
+  Open: "danger",
+  "Action Pending": "warning",
+  Closed: "success",
+  Draft: "neutral",
 };
 
-const badge = (label: string, cls: string) => (
-  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${cls}`}>
+const badge = (label: string, tone?: BadgeTone) => (
+  <Badge tone={tone || "neutral"}>
     {label}
-  </span>
+  </Badge>
 );
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -309,7 +310,7 @@ export default function MoMPage() {
                         <td className="px-5 py-3 font-bold text-foreground">{(m.attendees || []).join(", ") || "—"}</td>
                         <td className="px-5 py-3 text-foreground">{projectName(m.project_id)}</td>
                         <td className="px-5 py-3 text-muted">{m.type}</td>
-                        <td className="px-5 py-3">{badge(m.status, statusColors[m.status])}</td>
+                        <td className="px-5 py-3">{badge(m.status, statusTones[m.status])}</td>
                         <td className="px-5 py-3 text-muted max-w-xs truncate">{m.notes || "—"}</td>
                         <td className="px-5 py-3 text-right space-x-2">
                           <button onClick={() => openEdit(m)}

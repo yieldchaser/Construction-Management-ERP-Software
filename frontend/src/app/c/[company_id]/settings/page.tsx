@@ -1,4 +1,5 @@
 "use client";
+import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import {  getApiHost , readErrorDetail } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 
@@ -1251,12 +1252,12 @@ export default function CompanySettingsPage() {
                               <div className="h-9 w-9 rounded-full bg-primary/15 text-primary font-bold flex items-center justify-center text-sm">{b.branch_name.charAt(0).toUpperCase()}</div>
                               <div className="font-bold text-foreground text-sm">{b.branch_name}</div>
                             </div>
-                            {b.is_primary && <span className="text-[10px] bg-success/10 text-success px-2 py-0.5 rounded-full font-bold">Primary</span>}
+                            {b.is_primary && <Badge tone="success" className="font-bold">Primary</Badge>}
                           </div>
                           <div className="text-xs space-y-1">
                             <div className="text-muted">GSTIN: <span className="font-sans text-muted">{b.gstin}</span></div>
                             <div className="text-muted line-clamp-2">Address: <span className="text-muted">{b.billing_address}</span></div>
-                            {b.is_primary && <span className="inline-block mt-1 text-[10px] bg-elevated text-muted px-2 py-0.5 rounded-full">Primary Address</span>}
+                            {b.is_primary && <Badge tone="neutral" className="mt-1">Primary Address</Badge>}
                           </div>
                           <div className="flex justify-end">
                             <button onClick={() => setPrimary(b.id)} disabled={b.is_primary} className="text-[10px] text-muted hover:text-primary disabled:opacity-40 disabled:cursor-default font-bold">
@@ -1281,10 +1282,7 @@ export default function CompanySettingsPage() {
                     <h3 className="text-[10px] uppercase tracking-wider text-muted font-bold">Construction Type</h3>
                     <div className="flex flex-wrap gap-2">
                       {bTypes.map((t) => (
-                          <span key={t} className="text-xs bg-primary/15 text-primary border border-primary/20 px-2.5 py-1 rounded-full flex items-center gap-1.5">
-                            {t}
-                            <button onClick={() => toggleCType(t)} className="text-primary/70 hover:text-primary cursor-pointer"><Icon name="close" className="w-3.5 h-3.5" /></button>
-                          </span>
+                          <Badge key={t} tone="primary" className="text-xs py-1 px-2.5 flex items-center gap-1.5">{t} <button onClick={() => toggleCType(t)} className="text-primary/70 hover:text-primary cursor-pointer"><Icon name="close" className="w-3.5 h-3.5" /></button></Badge>
                       ))}
                       {bTypes.length === 0 && <span className="text-xs text-muted">None selected</span>}
                     </div>
@@ -1361,10 +1359,10 @@ export default function CompanySettingsPage() {
                         <div className="font-bold text-foreground text-sm">{r.role_name}</div>
                         <div className="mt-1 flex flex-wrap items-center gap-1.5">
                           {DEFAULT_ROLES.includes(r.role_name) && (
-                            <span className="text-[10px] bg-elevated text-muted px-2 py-0.5 rounded-full">Default</span>
+                            <Badge tone="neutral">Default</Badge>
                           )}
                           {LOCKED_ROLES.has(r.role_name) && (
-                            <span className="text-[10px] bg-success/10 text-success px-2 py-0.5 rounded-full font-bold">Full access</span>
+                            <Badge tone="success" className="font-bold">Full access</Badge>
                           )}
                         </div>
                       </div>
@@ -1657,7 +1655,7 @@ export default function CompanySettingsPage() {
                         <div key={t.id} className="bg-card border border-border-custom rounded-lg p-5 grid grid-cols-[2fr_3fr_1fr_auto] gap-4 items-center">
                           <div className="font-bold text-foreground text-sm">{t.name}</div>
                           <div className="text-xs text-muted truncate">{t.description || "—"}</div>
-                          <div><span className="text-[10px] bg-success/10 text-success px-2 py-0.5 rounded-full font-bold">{t.status}</span></div>
+                          <div><Badge tone="success" className="font-bold">{t.status}</Badge></div>
                           <button onClick={() => deleteSalaryTemplate(t.id)} className="text-[10px] text-muted hover:text-danger justify-self-end">Delete</button>
                         </div>
                       ))}
@@ -2150,7 +2148,7 @@ export default function CompanySettingsPage() {
                         <div key={f.id} className="grid grid-cols-[2fr_1.5fr_1fr_2fr] gap-4 px-5 py-3 items-center border-b border-border-custom last:border-0">
                           <div className="font-bold text-foreground text-sm">{f.field_name}</div>
                           <div className="text-xs text-muted">{f.field_type}</div>
-                          <div>{f.set_default ? <span className="text-[10px] bg-success/10 text-success px-2 py-0.5 rounded-full font-bold">Yes</span> : <span className="text-[10px] text-muted">—</span>}</div>
+                          <div>{f.set_default ? <Badge tone="success" className="font-bold">Yes</Badge> : <span className="text-[10px] text-muted">—</span>}</div>
                           <div className="text-xs text-muted truncate">{f.default_value || "—"}</div>
                         </div>
                       ))
@@ -2294,10 +2292,7 @@ export default function CompanySettingsPage() {
                     {gsPhones.length === 0 ? (
                       <span className="text-[10px] text-muted">No authorized phones added.</span>
                     ) : gsPhones.map((p) => (
-                      <span key={p} className="text-xs bg-primary/15 text-primary border border-primary/20 px-2.5 py-1 rounded-full flex items-center gap-1.5">
-                        {p}
-                        <button onClick={() => removeGsPhone(p)} className="text-primary/70 hover:text-primary cursor-pointer"><Icon name="close" className="w-3.5 h-3.5" /></button>
-                      </span>
+                      <Badge key={p} tone="primary" className="text-xs py-1 px-2.5 flex items-center gap-1.5">{p} <button onClick={() => removeGsPhone(p)} className="text-primary/70 hover:text-primary cursor-pointer"><Icon name="close" className="w-3.5 h-3.5" /></button></Badge>
                     ))}
                   </div>
                 </div>

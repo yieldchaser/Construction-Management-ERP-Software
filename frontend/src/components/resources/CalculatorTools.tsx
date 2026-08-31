@@ -122,7 +122,7 @@ function Shell({
   };
 
   return (
-    <section className="not-prose rounded-2xl border border-alx-outline-variant/50 bg-alx-surface-container-lowest p-5 md:p-7 shadow-lg shadow-alx-on-surface/5">
+    <section className="not-prose rounded-2xl border border-alx-outline-variant/50 bg-alx-surface-container-lowest p-5 md:p-7">
       {!hideHeader && (
         <div className="mb-5">
           <span className="alx-label inline-block text-xs font-bold text-alx-primary bg-alx-primary-fixed/40 px-2.5 py-1 rounded-md">
@@ -151,9 +151,9 @@ function Shell({
           <div
             ref={resultRef}
             className={
-              "sticky top-24 rounded-xl border p-5 space-y-4 bg-alx-surface-container-low transition-shadow duration-300 " +
+              "sticky top-24 rounded-xl border p-5 space-y-4 bg-alx-surface-container-low " +
               (pulsing
-                ? "border-alx-primary shadow-lg shadow-alx-primary/20"
+                ? "border-alx-primary"
                 : "border-alx-outline-variant/40")
             }
           >

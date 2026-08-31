@@ -65,7 +65,7 @@ export default function ComparisonMatrix({
   competitorName: string;
 }) {
   return (
-    <div className="w-full overflow-x-auto rounded-2xl border border-alx-outline-variant/40 bg-alx-surface-container-lowest shadow-lg shadow-alx-on-surface/5">
+    <div className="w-full overflow-x-auto rounded-2xl border border-alx-outline-variant/40 bg-alx-surface-container-lowest">
       <table className="w-full min-w-[720px] text-left border-collapse">
         <thead>
           <tr className="border-b border-alx-outline-variant/40">

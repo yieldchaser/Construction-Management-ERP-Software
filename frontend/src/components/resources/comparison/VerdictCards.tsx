@@ -58,7 +58,7 @@ function VerdictCard({ verdict }: { verdict: ComparisonVerdict }) {
  */
 export default function VerdictCards({ verdict }: { verdict: ComparisonVerdict[] }) {
   return (
-    <div className="rounded-2xl border border-alx-outline-variant/30 bg-alx-surface-container-lowest shadow-xl shadow-alx-on-surface/5 overflow-hidden flex flex-col md:flex-row lg:flex-col divide-y md:divide-y-0 md:divide-x lg:divide-x-0 lg:divide-y divide-alx-outline-variant/25">
+    <div className="rounded-2xl border border-alx-outline-variant/30 bg-alx-surface-container-lowest overflow-hidden flex flex-col md:flex-row lg:flex-col divide-y md:divide-y-0 md:divide-x lg:divide-x-0 lg:divide-y divide-alx-outline-variant/25">
       {verdict.map((v, idx) => (
         <VerdictCard key={idx} verdict={v} />
       ))}

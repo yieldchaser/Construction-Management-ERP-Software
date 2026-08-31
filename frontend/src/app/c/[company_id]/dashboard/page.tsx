@@ -1,4 +1,5 @@
 "use client";
+import Badge, { type BadgeTone } from "@/components/ui/Badge";
 
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
@@ -1188,15 +1189,7 @@ export default function DashboardPage() {
                                   {p.project_health === "-" ? (
                                     <span className="text-muted font-bold font-sans">-</span>
                                   ) : (
-                                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${
-                                      p.project_health === "Healthy"
-                                        ? "bg-success/10 border-success/20 text-success"
-                                        : p.project_health === "Warning"
-                                        ? "bg-warning/10 border-warning/20 text-warning"
-                                        : "bg-danger/10 border-danger/20 text-danger"
-                                    }`}>
-                                      {p.project_health}
-                                    </span>
+                                    <Badge tone={p.project_health === "Healthy" ? "success" : p.project_health === "Warning" ? "warning" : "danger"} className="font-bold">{p.project_health}</Badge>
                                   )}
                                 </td>
                                 <td className="px-4 py-3 text-right border-r border-border-custom font-semibold text-muted">

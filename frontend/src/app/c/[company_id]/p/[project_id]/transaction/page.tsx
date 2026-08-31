@@ -1,4 +1,5 @@
 "use client";
+import Badge, { type BadgeTone } from "@/components/ui/Badge";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
@@ -392,7 +393,7 @@ export default function TransactionPage() {
               <tr key={`${r.kind}-${r.id}`} className="border-t border-border-custom hover:bg-elevated/50">
                 <td className="px-4 py-3 text-muted whitespace-nowrap">{r.date ? r.date.slice(0, 10) : "—"}</td>
                 <td className="px-4 py-3">
-                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">{r.type.replace(/_/g, " ")}</span>
+                  <Badge tone="primary">{r.type.replace(/_/g, " ")}</Badge>
                 </td>
                 <td className="px-4 py-3 text-foreground">{r.party}</td>
                 <td className="px-4 py-3 text-muted">{r.ref}</td>

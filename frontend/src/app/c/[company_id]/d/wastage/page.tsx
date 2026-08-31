@@ -1,4 +1,5 @@
 "use client";
+import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import {  getApiHost , readErrorDetail } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
@@ -98,11 +99,11 @@ export default function WastagePage() {
     }
   };
 
-  const statusColors: Record<string, string> = {
-    reported: "bg-warning/10 text-warning",
-    reviewed: "bg-info/10 text-info",
-    approved: "bg-success/10 text-success",
-    disposed: "bg-elevated text-muted",
+  const statusTones: Record<string, BadgeTone> = {
+    reported: "warning",
+    reviewed: "info",
+    approved: "success",
+    disposed: "neutral",
   };
 
   const typeLabels: Record<string, string> = {
@@ -152,9 +153,7 @@ export default function WastagePage() {
                     <h3 className="text-foreground font-semibold">{r.material_name}</h3>
                     <p className="text-muted text-xs mt-1">{typeLabels[r.wastage_type] || r.wastage_type} • {r.unit}</p>
                   </div>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[r.status]}`}>
-                    {r.status}
-                  </span>
+                  <Badge tone={statusTones[r.status] || "neutral"}>{r.status}</Badge>
                 </div>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">

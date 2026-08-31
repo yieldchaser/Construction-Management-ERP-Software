@@ -340,7 +340,7 @@ export default function ProjectDashboardPage() {
         action={
           <button
             onClick={() => setShowAddCC(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary/95 text-white rounded-md text-xs font-semibold shadow-sm transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary/95 text-white rounded-md text-xs font-semibold transition-all cursor-pointer"
           >
             + Add Cost Code
           </button>
