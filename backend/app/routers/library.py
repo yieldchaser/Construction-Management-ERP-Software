@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Response, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Response, Query, UploadFile, File
 from pydantic import BaseModel, Field, model_validator
 from sqlalchemy.orm import Session
 from sqlalchemy import Numeric
 from datetime import datetime
 from typing import List, Optional
 from app.database import get_db
-from app import models
+from app import models, supabase_storage
 from app.models import User
 from app.auth import get_current_user, verify_company_access, verify_project_access, get_company_membership, require_permission, assert_cost_codes_known
 import uuid
@@ -393,6 +393,154 @@ def get_party_balances(
     to_pay = sum(float(b.to_pay) for b in balances)
     return {"advance_paid": round(advance_paid, 2), "to_pay": round(to_pay, 2)}
 
+def log_kyc_access(
+    db: Session,
+    company_id: uuid.UUID,
+    party_id: uuid.UUID,
+    party_name: Optional[str],
+    document_type: str,
+    accessed_by: str,
+):
+    """5B.6 Audit trail recording KYC identity document access / unmasking."""
+    log = models.KYCAccessLog(
+        company_id=company_id,
+        party_id=party_id,
+        party_name=party_name,
+        document_type=document_type,
+        accessed_by=accessed_by,
+    )
+    db.add(log)
+    db.commit()
+
+
+@router.post("/parties/{party_id}/kyc/{doc_type}")
+async def upload_party_kyc_document(
+    party_id: uuid.UUID,
+    doc_type: str,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if doc_type not in ("aadhaar_file", "pan_file"):
+        raise HTTPException(status_code=400, detail="Invalid KYC document type. Expected 'aadhaar_file' or 'pan_file'.")
+    party = db.query(models.LibraryParty).filter(models.LibraryParty.id == party_id).first()
+    if not party:
+        raise HTTPException(status_code=404, detail="Party not found")
+    get_company_membership(db, current_user, party.company_id)
+    require_permission(db, current_user, party.company_id, "library:edit")
+
+    # 5B.2 Server-side validation: MIME type
+    content_type = (file.content_type or "").strip().lower()
+    allowed_types = {"image/jpeg": ".jpg", "image/png": ".png", "application/pdf": ".pdf"}
+    if content_type not in allowed_types:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid file type. Only JPEG, PNG, and PDF documents are allowed for identity verification.",
+        )
+    
+    contents = await file.read()
+    # 5B.2 Server-side validation: 5 MB cap
+    if len(contents) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="File size exceeds maximum allowed limit of 5 MB.")
+
+    # 5B.2 Non-client generated storage path
+    ext = allowed_types[content_type]
+    file_id = uuid.uuid4().hex[:12]
+    storage_path = f"{party.company_id}/{party.id}/{doc_type}_{file_id}{ext}"
+
+    if supabase_storage.is_storage_configured():
+        # Delete old file if exists
+        old_path = getattr(party, doc_type, None)
+        if old_path:
+            supabase_storage.delete_object(supabase_storage.BUCKET_KYC_DOCUMENTS, old_path)
+        supabase_storage.upload_bytes(
+            supabase_storage.BUCKET_KYC_DOCUMENTS, storage_path, contents, content_type
+        )
+    
+    setattr(party, doc_type, storage_path)
+    db.commit()
+    db.refresh(party)
+    return {"success": True, "doc_type": doc_type, "storage_path": storage_path}
+
+
+@router.get("/parties/{party_id}/kyc/{doc_type}")
+def get_party_kyc_document_url(
+    party_id: uuid.UUID,
+    doc_type: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if doc_type not in ("aadhaar_file", "pan_file"):
+        raise HTTPException(status_code=400, detail="Invalid KYC document type.")
+    party = db.query(models.LibraryParty).filter(models.LibraryParty.id == party_id).first()
+    if not party:
+        raise HTTPException(status_code=404, detail="Party not found")
+    get_company_membership(db, current_user, party.company_id)
+    require_permission(db, current_user, party.company_id, "library:edit")
+
+    storage_path = getattr(party, doc_type, None)
+    if not storage_path:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    # 5B.3 15-minute signed URL per request
+    signed_url = None
+    if supabase_storage.is_storage_configured():
+        signed_url = supabase_storage.create_signed_url(
+            supabase_storage.BUCKET_KYC_DOCUMENTS, storage_path, expires_in=900
+        )
+    else:
+        # Fallback for dev / unconfigured storage
+        signed_url = f"/mock-storage/{supabase_storage.BUCKET_KYC_DOCUMENTS}/{storage_path}"
+
+    # 5B.6 Access logging
+    actor = getattr(current_user, "name", None) or getattr(current_user, "email", "unknown")
+    log_kyc_access(db, party.company_id, party.id, party.name, doc_type, actor)
+
+    return {"url": signed_url, "expires_in_seconds": 900}
+
+
+@router.delete("/parties/{party_id}/kyc/{doc_type}")
+def delete_party_kyc_document(
+    party_id: uuid.UUID,
+    doc_type: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if doc_type not in ("aadhaar_file", "pan_file"):
+        raise HTTPException(status_code=400, detail="Invalid KYC document type.")
+    party = db.query(models.LibraryParty).filter(models.LibraryParty.id == party_id).first()
+    if not party:
+        raise HTTPException(status_code=404, detail="Party not found")
+    get_company_membership(db, current_user, party.company_id)
+    require_permission(db, current_user, party.company_id, "library:edit")
+
+    storage_path = getattr(party, doc_type, None)
+    if storage_path and supabase_storage.is_storage_configured():
+        supabase_storage.delete_object(supabase_storage.BUCKET_KYC_DOCUMENTS, storage_path)
+
+    setattr(party, doc_type, None)
+    db.commit()
+    return {"success": True}
+
+
+@router.get("/parties/{party_id}/aadhaar-reveal")
+def reveal_party_aadhaar(
+    party_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    party = db.query(models.LibraryParty).filter(models.LibraryParty.id == party_id).first()
+    if not party:
+        raise HTTPException(status_code=404, detail="Party not found")
+    get_company_membership(db, current_user, party.company_id)
+    require_permission(db, current_user, party.company_id, "library:edit")
+
+    actor = getattr(current_user, "name", None) or getattr(current_user, "email", "unknown")
+    log_kyc_access(db, party.company_id, party.id, party.name, "aadhaar_number_reveal", actor)
+
+    return {"aadhaar_number": party.aadhaar_number}
+
+
 @router.delete("/parties/{party_id}")
 def delete_library_party(party_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     party = db.query(models.LibraryParty).filter(models.LibraryParty.id == party_id).first()
@@ -400,6 +548,11 @@ def delete_library_party(party_id: uuid.UUID, db: Session = Depends(get_db), cur
         raise HTTPException(status_code=404, detail="Party not found")
     get_company_membership(db, current_user, party.company_id)
     require_permission(db, current_user, party.company_id, "data:delete")
+    # 5B.5 Delete stored objects with delete_object
+    if party.aadhaar_file and supabase_storage.is_storage_configured():
+        supabase_storage.delete_object(supabase_storage.BUCKET_KYC_DOCUMENTS, party.aadhaar_file)
+    if party.pan_file and supabase_storage.is_storage_configured():
+        supabase_storage.delete_object(supabase_storage.BUCKET_KYC_DOCUMENTS, party.pan_file)
     from app.routers.delete_logs import log_deletion
     log_deletion(db, party.company_id, "party", party.id, f"Party: {party.name}", party_name=party.name, deleted_by=current_user.name)
     db.delete(party)

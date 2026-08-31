@@ -32,6 +32,7 @@ type Project = {
   dimension?: string | null;
   scope_of_work?: string | null;
   attendance_radius_meters?: number | null;
+  project_avatar?: string | null;
   progress?: number;
   cash_in?: number;
   cash_out?: number;
@@ -857,6 +858,7 @@ function ProjectSettingsModal({
     dimension: project.dimension || "",
     scope_of_work: project.scope_of_work || "",
     attendance_radius_meters: project.attendance_radius_meters ?? 500,
+    project_avatar: project.project_avatar || "",
   });
   const [locations, setLocations] = useState<{ id: string; name: string; parent_id: string | null }[]>([]);
   const [newLoc, setNewLoc] = useState("");
@@ -950,6 +952,7 @@ function ProjectSettingsModal({
           dimension: form.dimension,
           scope_of_work: form.scope_of_work,
           attendance_radius_meters: form.attendance_radius_meters,
+          project_avatar: form.project_avatar || null,
           custom_fields: customFields.toPayload(),
         }),
       });
@@ -1072,6 +1075,9 @@ function ProjectSettingsModal({
               </Field>
               <Field label="Scope of Work">
                 <textarea value={form.scope_of_work} onChange={(e) => setForm({ ...form, scope_of_work: e.target.value })} rows={3} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
+              </Field>
+              <Field label="Project Avatar / Cover Image URL">
+                <input value={form.project_avatar} onChange={(e) => setForm({ ...form, project_avatar: e.target.value })} placeholder="https://... or /images/..." className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
               </Field>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <CustomFieldsSection

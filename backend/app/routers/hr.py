@@ -1234,6 +1234,23 @@ def update_leave_status(leave_id: uuid.UUID, data: LeaveStatusUpdate, db: Sessio
     return leave
 
 
+@router.post("/leaves/{leave_id}/withdraw", response_model=LeaveRequestResponse)
+def withdraw_leave_request(leave_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    leave = db.query(LeaveRequest).filter(LeaveRequest.id == leave_id).first()
+    if not leave:
+        raise HTTPException(status_code=404, detail="Leave request not found")
+    get_company_membership(db, current_user, leave.company_id)
+    if leave.status == "Withdrawn":
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Leave request is already withdrawn")
+    if leave.status in ("Approved", "Rejected"):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Cannot withdraw a leave request that is already {leave.status}")
+
+    leave.status = "Withdrawn"
+    db.commit()
+    db.refresh(leave)
+    return leave
+
+
 @router.post("/payroll/upload")
 def upload_payroll(
     company_id: uuid.UUID = Form(...),

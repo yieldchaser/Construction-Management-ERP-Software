@@ -1,6 +1,6 @@
 'use client';
 import { useProject } from '@/context/ProjectContext';
-import { getApiHost } from '@/lib/api';
+import { getApiHost, readErrorDetail } from '@/lib/api';
 import { authHeaders } from '@/lib/siteflow';
 
 import { useState, useEffect } from 'react';
@@ -247,7 +247,40 @@ export default function SafetyPage() {
       body: JSON.stringify({ ...ppeForm, project_id, non_compliant_items: items }),
     });
     if (r.ok) { flash('PPE check recorded.'); setShowPPEModal(false); fetchAll(); }
-    else flash(`Error: ${(await r.json()).detail}`);
+    else {
+      const err = await readErrorDetail(r);
+      flash(`Error: ${err}`);
+    }
+  };
+
+  const handleDeleteTalk = async (talkId: string) => {
+    if (!confirm('Are you sure you want to delete this toolbox talk?')) return;
+    const r = await fetch(`${API}/safety/toolbox-talks/${talkId}`, {
+      method: 'DELETE',
+      headers: authHeaders() || {},
+    });
+    if (r.ok) {
+      flash('Toolbox talk deleted.');
+      fetchAll();
+    } else {
+      const err = await readErrorDetail(r);
+      flash(`Error: ${err}`);
+    }
+  };
+
+  const handleDeletePPE = async (checkId: string) => {
+    if (!confirm('Are you sure you want to delete this PPE check?')) return;
+    const r = await fetch(`${API}/safety/ppe-checks/${checkId}`, {
+      method: 'DELETE',
+      headers: authHeaders() || {},
+    });
+    if (r.ok) {
+      flash('PPE check deleted.');
+      fetchAll();
+    } else {
+      const err = await readErrorDetail(r);
+      flash(`Error: ${err}`);
+    }
   };
 
   // Overall compliance %
@@ -530,6 +563,13 @@ export default function SafetyPage() {
                     <div className="text-xl font-extrabold text-primary">{t.attendee_count}</div>
                     <div className="text-[10px] text-muted uppercase tracking-wider">Attendees</div>
                   </div>
+                  <button
+                    onClick={() => handleDeleteTalk(t.id)}
+                    className="p-2 rounded-lg text-muted hover:text-danger hover:bg-danger/10 transition-colors"
+                    title="Delete toolbox talk"
+                  >
+                    <Icon name="trash" className="w-4 h-4" />
+                  </button>
                 </div>
               ))}
             </div>
@@ -610,8 +650,17 @@ export default function SafetyPage() {
                               {fmtDate(c.check_date)} · {c.total_workers} workers
                             </div>
                           </div>
-                          <div className="text-2xl font-extrabold" style={{ color: nc_color }}>
-                            {c.compliance_pct}%
+                          <div className="flex items-center gap-3">
+                            <div className="text-2xl font-extrabold" style={{ color: nc_color }}>
+                              {c.compliance_pct}%
+                            </div>
+                            <button
+                              onClick={() => handleDeletePPE(c.id)}
+                              className="p-2 rounded-lg text-muted hover:text-danger hover:bg-danger/10 transition-colors"
+                              title="Delete PPE check"
+                            >
+                              <Icon name="trash" className="w-4 h-4" />
+                            </button>
                           </div>
                         </div>
                         <div className="h-1.5 rounded-full bg-border-custom overflow-hidden mb-2">

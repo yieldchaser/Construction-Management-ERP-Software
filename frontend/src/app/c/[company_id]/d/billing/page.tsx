@@ -73,7 +73,7 @@ interface DebitCreditNote {
   amount: number;
   notes: string;
   date: string;
-  status: "approved" | "pending";
+  status: "approved" | "pending" | "cancelled";
 }
 
 export default function SubcontractorBillingPage() {
@@ -605,6 +605,25 @@ export default function SubcontractorBillingPage() {
     }
   };
 
+  const handleCancelNote = async (noteId: string, type: "debit" | "credit") => {
+    if (!confirm(`Are you sure you want to cancel this ${type} note?`)) return;
+    try {
+      const endpoint = type === "debit" ? "debit-notes" : "credit-notes";
+      const res = await fetch(`${getApiHost()}/apis/v3/billing/${endpoint}/${noteId}/cancel`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+      });
+      if (res.ok) {
+        setNotes(prev => prev.map(n => n.id === noteId ? { ...n, status: "cancelled" } : n));
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || `Failed to cancel ${type} note`);
+      }
+    } catch (e) {
+      console.error(`Failed to cancel ${type} note`, e);
+    }
+  };
+
   // Computed KPI cards from the real bills already fetched
   const fmtINR = (n: number): string => {
     if (!n || n <= 0) return "₹0";
@@ -1006,6 +1025,7 @@ export default function SubcontractorBillingPage() {
                         <th className="px-5 py-3 font-bold">Movement Type</th>
                         <th className="px-5 py-3 font-bold">Status</th>
                         <th className="px-5 py-3 font-bold">Date Logged</th>
+                        <th className="px-5 py-3 font-bold text-center">Action</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1024,11 +1044,23 @@ export default function SubcontractorBillingPage() {
                           </td>
                           <td className="px-5 py-3.5 text-muted font-semibold">{note.status.toUpperCase()}</td>
                           <td className="px-5 py-3.5 text-muted">{note.date}</td>
+                          <td className="px-5 py-3.5 text-center">
+                            {note.status !== "cancelled" && (
+                              <button
+                                type="button"
+                                onClick={() => handleCancelNote(note.id, note.type)}
+                                className="px-2.5 py-1 rounded bg-danger/10 hover:bg-danger/20 border border-danger/20 text-danger text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1"
+                                title="Cancel note"
+                              >
+                                <Icon name="close" className="w-3.5 h-3.5" /> Cancel
+                              </button>
+                            )}
+                          </td>
                         </tr>
                       ))}
                       {notes.length === 0 && (
                         <tr>
-                          <td colSpan={7} className="p-8">
+                          <td colSpan={8} className="p-8">
                             <EmptyState
                               title="No debit or credit notes recorded"
                               description="Debit and credit note adjustments linked to subcontractor billing will appear here."

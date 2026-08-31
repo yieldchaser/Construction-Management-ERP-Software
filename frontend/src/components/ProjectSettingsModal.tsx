@@ -17,6 +17,7 @@ export type ProjectSettingsData = {
   dimension?: string | null;
   scope_of_work?: string | null;
   attendance_radius_meters?: number;
+  project_avatar?: string | null;
 };
 
 type Member = {
@@ -70,6 +71,7 @@ export default function ProjectSettingsModal({
     dimension: project.dimension || "",
     scope_of_work: project.scope_of_work || "",
     attendance_radius_meters: project.attendance_radius_meters || 500,
+    project_avatar: project.project_avatar || "",
   });
   const [locations, setLocations] = useState<Location[]>([]);
   const [newLoc, setNewLoc] = useState("");
@@ -127,6 +129,7 @@ export default function ProjectSettingsModal({
           dimension: form.dimension,
           scope_of_work: form.scope_of_work,
           attendance_radius_meters: form.attendance_radius_meters,
+          project_avatar: form.project_avatar || null,
         }),
       });
       if (!res.ok) throw new Error(await readErrorDetail(res));
@@ -232,6 +235,7 @@ export default function ProjectSettingsModal({
               <Field label="Orientation"><input value={form.orientation} onChange={(e) => setForm({ ...form, orientation: e.target.value })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" /></Field>
               <Field label="Dimension"><input value={form.dimension} onChange={(e) => setForm({ ...form, dimension: e.target.value })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" /></Field>
               <Field label="Scope of Work"><textarea value={form.scope_of_work} onChange={(e) => setForm({ ...form, scope_of_work: e.target.value })} rows={3} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" /></Field>
+              <Field label="Project Avatar / Cover Image URL"><input value={form.project_avatar} onChange={(e) => setForm({ ...form, project_avatar: e.target.value })} placeholder="https://... or /images/..." className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" /></Field>
               <Field label="Attendance Radius (meters)"><input type="number" value={form.attendance_radius_meters} onChange={(e) => setForm({ ...form, attendance_radius_meters: parseInt(e.target.value) || 500 })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" /></Field>
               <div className="flex justify-end pt-2">
                 <button onClick={saveDetails} disabled={saving} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white disabled:opacity-40">

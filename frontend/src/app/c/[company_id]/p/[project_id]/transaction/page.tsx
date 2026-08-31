@@ -4,6 +4,7 @@ import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { getApi, authHeaders, fmtINR } from "@/lib/siteflow";
+import { readErrorDetail } from "@/lib/api";
 import { useCompanySettings } from "@/context/CompanySettingsContext";
 import ZatcaInvoicePanel from "@/components/ZatcaInvoicePanel";
 import { CustomFieldsSection, useCustomFields } from "@/components/CustomFieldsSection";
@@ -296,6 +297,35 @@ export default function TransactionPage() {
     return true;
   });
 
+  const handleCancelTransaction = async (r: { kind: string; id: string; type: string }) => {
+    if (!confirm(`Are you sure you want to cancel this ${r.kind}?`)) return;
+    try {
+      let url = "";
+      if (r.kind === "Debit Note") {
+        url = getApi(`/billing/debit-notes/${r.id}/cancel`);
+      } else if (r.kind === "Credit Note") {
+        url = getApi(`/billing/credit-notes/${r.id}/cancel`);
+      } else if (r.kind === "Bill") {
+        url = getApi(`/billing/bills/${r.id}/cancel`);
+      } else {
+        return;
+      }
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+      });
+      if (res.ok) {
+        load();
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || "Action failed");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Action failed");
+    }
+  };
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <PageHeader
@@ -369,19 +399,20 @@ export default function TransactionPage() {
               <th className="text-right px-4 py-3 font-medium">Amount</th>
               <th className="text-left px-4 py-3 font-medium">Status</th>
               {zatcaEnabled && <th className="text-left px-4 py-3 font-medium">ZATCA</th>}
+              <th className="text-center px-4 py-3 font-medium">Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={7} className="p-4">
+                <td colSpan={zatcaEnabled ? 8 : 7} className="p-4">
                   <TableSkeleton rows={5} cols={7} />
                 </td>
               </tr>
             )}
             {!loading && filtered.length === 0 && (
               <tr>
-                <td colSpan={7} className="p-8">
+                <td colSpan={zatcaEnabled ? 8 : 7} className="p-8">
                   <EmptyState
                     title="No transactions found"
                     description="No transactions match this filter. Add a transaction to track project ledger activity."
@@ -403,16 +434,30 @@ export default function TransactionPage() {
                   {fmtINR(r.amount, currencyDecimalPlaces)}
                 </td>
                 <td className="px-4 py-3 text-muted">{r.status}</td>
-                <td className="px-4 py-3">
-                  {zatcaEnabled && r.kind === "Bill" && r.type === "sale" ? (
+                {zatcaEnabled && (
+                  <td className="px-4 py-3">
+                    {r.kind === "Bill" && r.type === "sale" ? (
+                      <button
+                        type="button"
+                        onClick={() => setZatcaBillId(r.id)}
+                        className="rounded-md border border-border-custom px-2 py-1 text-xs text-muted hover:border-primary hover:text-foreground"
+                      >
+                        ZATCA
+                      </button>
+                    ) : null}
+                  </td>
+                )}
+                <td className="px-4 py-3 text-center">
+                  {r.status !== "Cancelled" && r.status !== "cancelled" && ["Debit Note", "Credit Note", "Bill"].includes(r.kind) && (
                     <button
                       type="button"
-                      onClick={() => setZatcaBillId(r.id)}
-                      className="rounded-md border border-border-custom px-2 py-1 text-xs text-muted hover:border-primary hover:text-foreground"
+                      onClick={() => handleCancelTransaction(r)}
+                      className="rounded border border-danger/30 bg-danger/10 px-2 py-0.5 text-xs font-bold text-danger hover:bg-danger/20 cursor-pointer"
+                      title={`Cancel ${r.kind}`}
                     >
-                      ZATCA
+                      Cancel
                     </button>
-                  ) : null}
+                  )}
                 </td>
               </tr>
             ))}
@@ -426,6 +471,7 @@ export default function TransactionPage() {
           projectId={projectId}
           members={members}
           costCodes={costCodes}
+          bills={bills}
           onClose={() => setAddOpen(false)}
           onCreated={() => { setAddOpen(false); load(); }}
         />
@@ -448,12 +494,13 @@ export default function TransactionPage() {
 
 // ── New Transaction modal (full taxonomy + shared sub-entities) ──────────────
 function NewTransactionModal({
-  companyId, projectId, members, costCodes, onClose, onCreated,
+  companyId, projectId, members, costCodes, bills = [], onClose, onCreated,
 }: {
   companyId: string;
   projectId: string;
   members: Member[];
   costCodes: CostCode[];
+  bills?: Bill[];
   onClose: () => void;
   onCreated: () => void;
 }) {
@@ -497,6 +544,12 @@ function NewTransactionModal({
   const [gstPct, setGstPct] = useState("18");
   const [preTax, setPreTax] = useState(false);
   const [shipTo, setShipTo] = useState("");
+
+  // Debit / Credit note fields
+  const [billId, setBillId] = useState("");
+  const [debitWorkAmount, setDebitWorkAmount] = useState("");
+  const [debitGstAmount, setDebitGstAmount] = useState("");
+  const [creditAmount, setCreditAmount] = useState("");
 
   // Add Item rows (subtotal calculator; cost code from library)
   // R2-747: HSN/SAC is mandatory per line on a tax invoice (Rule 46, CGST
@@ -634,6 +687,10 @@ function NewTransactionModal({
           }),
         });
       } else if (cfg.endpoint === "debit") {
+        const wAmt = parseFloat(debitWorkAmount) || 0;
+        const gAmt = parseFloat(debitGstAmount) || 0;
+        const tAmt = wAmt + gAmt;
+        if (tAmt <= 0) { setErr("Please specify a valid work amount or GST amount for debit note."); setSaving(false); return; }
         res = await fetch(getApi(`/billing/debit-notes`), {
           method: "POST",
           headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
@@ -642,11 +699,16 @@ function NewTransactionModal({
             company_id: cid,
             party_company_user_id: member.company_team_id,
             notes: shipTo || null,
-            total_amount: subtotal,
+            work_amount: wAmt,
+            gst_amount: gAmt,
+            total_amount: tAmt,
+            bill_id: billId || null,
             reference_number: invoiceNumber || null,
           }),
         });
       } else if (cfg.endpoint === "credit") {
+        const tAmt = parseFloat(creditAmount) || subtotal || 0;
+        if (tAmt <= 0) { setErr("Please specify a valid credit note amount."); setSaving(false); return; }
         res = await fetch(getApi(`/billing/credit-notes`), {
           method: "POST",
           headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
@@ -655,7 +717,8 @@ function NewTransactionModal({
             company_id: cid,
             party_company_user_id: member.company_team_id,
             notes: shipTo || null,
-            total_amount: subtotal,
+            total_amount: tAmt,
+            bill_id: billId || null,
             reference_number: invoiceNumber || null,
           }),
         });
@@ -712,6 +775,26 @@ function NewTransactionModal({
             <FieldHint text="No parties available. Invite members in Settings." href={`/c/${companyId}/settings`} linkLabel="Go to Settings" />
           )}
         </div>
+
+        {(cfg.endpoint === "debit" || cfg.endpoint === "credit") && (
+          <div className="col-span-2">
+            <Lbl>Link to Invoice / Bill (Optional)</Lbl>
+            <select
+              value={billId}
+              onChange={(e) => setBillId(e.target.value)}
+              className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground"
+            >
+              <option value="">— No invoice link (Standalone Note) —</option>
+              {bills
+                .filter((b) => b.party_company_user_id === selectedMember?.company_team_id && b.status !== "Cancelled" && b.status !== "cancelled")
+                .map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.invoice_number || b.id} · ₹{b.total_payable ?? b.subtotal ?? 0} ({b.invoice_type || "Invoice"})
+                  </option>
+                ))}
+            </select>
+          </div>
+        )}
 
         {cfg.endpoint === "bill" && (
           <div className="col-span-2">
@@ -874,6 +957,61 @@ function NewTransactionModal({
             values={customFields.values}
             setValue={customFields.setValue}
           />
+        )}
+
+        {/* Debit Note Breakdown & Live Arithmetic */}
+        {cfg.endpoint === "debit" && (
+          <div className="col-span-2 rounded-md border border-border-custom p-3 space-y-3">
+            <div className="text-xs font-bold uppercase tracking-wider text-muted">Debit Note Breakdown & Arithmetic</div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <Lbl>Taxable Work Amount (₹)</Lbl>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={debitWorkAmount}
+                  onChange={(e) => setDebitWorkAmount(e.target.value)}
+                  placeholder="0.00"
+                  className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground"
+                />
+              </div>
+              <div>
+                <Lbl>GST Amount (₹)</Lbl>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={debitGstAmount}
+                  onChange={(e) => setDebitGstAmount(e.target.value)}
+                  placeholder="0.00"
+                  className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground"
+                />
+              </div>
+            </div>
+            <div className="rounded-md bg-elevated/50 p-2.5 text-xs text-foreground font-mono flex items-center justify-between border border-border-custom">
+              <span>Work Amount (₹{(parseFloat(debitWorkAmount) || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}) + GST (₹{(parseFloat(debitGstAmount) || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })})</span>
+              <span className="font-bold text-danger">
+                Total: ₹{((parseFloat(debitWorkAmount) || 0) + (parseFloat(debitGstAmount) || 0)).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Credit Note Amount */}
+        {cfg.endpoint === "credit" && (
+          <div className="col-span-2 rounded-md border border-border-custom p-3 space-y-3">
+            <div className="text-xs font-bold uppercase tracking-wider text-muted">Credit Note Amount</div>
+            <div>
+              <Lbl>Total Credit Amount (₹)</Lbl>
+              <input
+                type="number"
+                step="0.01"
+                value={creditAmount}
+                onChange={(e) => setCreditAmount(e.target.value)}
+                placeholder="0.00"
+                className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground"
+              />
+            </div>
+          </div>
         )}
 
         {/* Bill / Ship addressing / Notes / Details depending on branch (R2-763) */}

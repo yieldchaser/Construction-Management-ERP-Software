@@ -24,7 +24,7 @@ from app.approvals import (
     record_action,
     PO_FEATURE_TYPE,
 )
-from app.workflow_controls import enforce_stock_availability, enforce_entry_creation_window, get_company, get_default_terms
+from app.workflow_controls import enforce_stock_availability, enforce_entry_creation_window, enforce_entry_editing_window, get_company, get_default_terms
 from app.inventory_reservation import release_reservation, rereserve_reservation
 from app.utils.pdf_generator import generate_document_pdf
 from app.utils.document_pdf import resolve_pdf_branding, resolve_supplier_tax_details
@@ -1130,6 +1130,91 @@ def create_grn(req: GRNCreateRequest, db: Session = Depends(get_db), current_use
         created_at=grn.created_at,
         items=item_responses
     )
+
+@router.post("/grns/{grn_id}/cancel", status_code=200)
+def cancel_grn(grn_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    grn = db.query(GoodsReceiptNote).filter(GoodsReceiptNote.id == grn_id).first()
+    if not grn:
+        raise HTTPException(status_code=404, detail="GRN not found")
+    get_company_membership(db, current_user, grn.company_id)
+    require_permission(db, current_user, grn.company_id, "procurement:edit")
+    enforce_entry_editing_window(db, grn.company_id, grn.created_at)
+
+    # Check if already cancelled
+    existing_reversal = db.query(MaterialTransaction).filter(
+        MaterialTransaction.source_ref_id == grn.id,
+        MaterialTransaction.type == "grn_cancellation"
+    ).first()
+    if existing_reversal:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="GRN is already cancelled")
+
+    # Reverse inventory and log reversal transactions
+    grn_items = db.query(GRNItem).filter(GRNItem.grn_id == grn.id).all()
+    for item in grn_items:
+        po_item = db.query(PurchaseOrderItem).filter(PurchaseOrderItem.id == item.po_item_id).first()
+        mat_name = po_item.material_name if po_item else "Unknown"
+        unit = po_item.unit if po_item else "Unit"
+
+        inv = db.query(WarehouseInventory).filter(
+            WarehouseInventory.project_id == grn.project_id,
+            WarehouseInventory.material_name == mat_name
+        ).first()
+
+        if inv:
+            inv.on_hand_qty = float(inv.on_hand_qty) - float(item.received_qty)
+
+        txn = MaterialTransaction(
+            project_id=grn.project_id,
+            material_name=mat_name,
+            qty=-float(item.received_qty),
+            type="grn_cancellation",
+            unit=unit,
+            category=inv.category if inv else "Uncategorized",
+            source_ref_id=grn.id
+        )
+        db.add(txn)
+
+    # If linked to a PO, recalculate PO status if needed
+    if grn.po_id:
+        po = db.query(PurchaseOrder).filter(PurchaseOrder.id == grn.po_id).first()
+        if po and (po.status or "").lower() not in ("cancelled", "closed"):
+            all_grn_items = (
+                db.query(GRNItem)
+                .join(GoodsReceiptNote, GoodsReceiptNote.id == GRNItem.grn_id)
+                .filter(GoodsReceiptNote.po_id == grn.po_id)
+                .all()
+            )
+            cancelled_grn_ids = set(
+                row[0] for row in db.query(MaterialTransaction.source_ref_id)
+                .filter(MaterialTransaction.type == "grn_cancellation")
+                .all()
+            )
+            cancelled_grn_ids.add(grn.id)
+
+            po_items = db.query(PurchaseOrderItem).filter(PurchaseOrderItem.po_id == grn.po_id).all()
+            if po_items:
+                received_by_po_item = {pi.id: 0.0 for pi in po_items}
+                for gi in all_grn_items:
+                    if gi.grn_id not in cancelled_grn_ids and gi.po_item_id in received_by_po_item:
+                        received_by_po_item[gi.po_item_id] += float(gi.received_qty)
+
+                fully_received = all(
+                    received_by_po_item[pi.id] >= float(pi.quantity) - 1e-9 for pi in po_items
+                )
+                some_received = any(
+                    received_by_po_item[pi.id] > 0.0 for pi in po_items
+                )
+                po.status = "received" if fully_received else ("partial" if some_received else "approved")
+
+    db.commit()
+
+    from app.routers.vendor_performance import refresh_vendor_performance
+    try:
+        refresh_vendor_performance(db, grn.project_id, grn.company_id)
+    except Exception as exc:
+        logger.exception("Failed to refresh vendor performance after cancelling GRN %s: %s", grn.id, exc)
+
+    return {"detail": "GRN cancelled and inventory movement reversed", "id": str(grn.id), "status": "cancelled"}
 
 # 4. Warehouse Inventory
 @router.get("/inventory", response_model=List[InventoryResponse])

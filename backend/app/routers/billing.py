@@ -1856,6 +1856,62 @@ def create_credit_note(req: CreditNoteCreateRequest, db: Session = Depends(get_d
         created_at=note.created_at
     )
 
+@router.post("/debit-notes/{note_id}/cancel", response_model=DebitNoteResponse)
+def cancel_debit_note(note_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    note = db.query(DebitNote).filter(DebitNote.id == note_id).first()
+    if not note:
+        raise HTTPException(status_code=404, detail="Debit note not found")
+    get_company_membership(db, current_user, note.company_id)
+    require_permission(db, current_user, note.company_id, "billing:edit")
+    if note.approval_flag == "cancelled":
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Debit note is already cancelled")
+    enforce_entry_editing_window(db, note.company_id, note.created_at)
+    note.approval_flag = "cancelled"
+    db.add(note)
+    db.commit()
+    db.refresh(note)
+    return DebitNoteResponse(
+        id=note.id,
+        project_id=note.project_id,
+        company_id=note.company_id,
+        party_company_user_id=note.party_company_user_id,
+        notes=note.notes,
+        total_amount=float(note.total_amount),
+        work_amount=float(note.work_amount),
+        gst_amount=float(note.gst_amount),
+        bill_id=note.bill_id,
+        reference_number=note.reference_number,
+        approval_flag=note.approval_flag,
+        created_at=note.created_at
+    )
+
+@router.post("/credit-notes/{note_id}/cancel", response_model=CreditNoteResponse)
+def cancel_credit_note(note_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    note = db.query(CreditNote).filter(CreditNote.id == note_id).first()
+    if not note:
+        raise HTTPException(status_code=404, detail="Credit note not found")
+    get_company_membership(db, current_user, note.company_id)
+    require_permission(db, current_user, note.company_id, "billing:edit")
+    if note.approval_flag == "cancelled":
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Credit note is already cancelled")
+    enforce_entry_editing_window(db, note.company_id, note.created_at)
+    note.approval_flag = "cancelled"
+    db.add(note)
+    db.commit()
+    db.refresh(note)
+    return CreditNoteResponse(
+        id=note.id,
+        project_id=note.project_id,
+        company_id=note.company_id,
+        party_company_user_id=note.party_company_user_id,
+        notes=note.notes,
+        total_amount=float(note.total_amount),
+        bill_id=note.bill_id,
+        reference_number=note.reference_number,
+        approval_flag=note.approval_flag,
+        created_at=note.created_at
+    )
+
 
 # 6. Subcontractors (userless CompanyTeam + linked LibraryParty, no login)
 class SubcontractorCreateRequest(BaseModel):

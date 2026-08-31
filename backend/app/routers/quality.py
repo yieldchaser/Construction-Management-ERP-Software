@@ -187,6 +187,25 @@ class MaterialTestCreate(BaseModel):
         return self
 
 
+class MaterialTestUpdate(BaseModel):
+    test_type: Optional[str] = None
+    material: Optional[str] = None
+    sample_ref: Optional[str] = None
+    test_date: Optional[datetime] = None
+    result_value: Optional[float] = None
+    unit: Optional[str] = None
+    min_acceptable: Optional[float] = None
+    max_acceptable: Optional[float] = None
+    zone: Optional[str] = None
+    remarks: Optional[str] = None
+
+    @model_validator(mode="after")
+    def acceptance_range_not_inverted(self):
+        if self.min_acceptable is not None and self.max_acceptable is not None and self.min_acceptable > self.max_acceptable:
+            raise ValueError("min_acceptable cannot exceed max_acceptable")
+        return self
+
+
 class MaterialTestResponse(BaseModel):
     id: uuid.UUID
     project_id: uuid.UUID
@@ -542,6 +561,65 @@ def list_material_tests(project_id: uuid.UUID, db: Session = Depends(get_db), _:
     return db.query(MaterialTestResult).filter(
         MaterialTestResult.project_id == project_id
     ).order_by(MaterialTestResult.test_date.desc()).all()
+
+
+@router.put("/material-tests/{test_id}", response_model=MaterialTestResponse)
+def update_material_test(test_id: uuid.UUID, payload: MaterialTestUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    test = db.query(MaterialTestResult).filter(MaterialTestResult.id == test_id).first()
+    if not test:
+        raise HTTPException(status_code=404, detail="Material test not found")
+    project = db.query(Project).filter(Project.id == test.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "quality:edit")
+
+    data = payload.model_dump(exclude_unset=True)
+    val = data.get("result_value", float(test.result_value))
+    mn = data.get("min_acceptable", float(test.min_acceptable) if test.min_acceptable is not None else None)
+    mx = data.get("max_acceptable", float(test.max_acceptable) if test.max_acceptable is not None else None)
+
+    is_pass = None
+    if mn is not None and mx is not None:
+        is_pass = bool(mn <= val <= mx)
+    elif mn is not None:
+        is_pass = bool(val >= mn)
+    elif mx is not None:
+        is_pass = bool(val <= mx)
+
+    for k, v in data.items():
+        if k in ("result_value", "min_acceptable", "max_acceptable") and v is not None:
+            setattr(test, k, Decimal(str(v)))
+        else:
+            setattr(test, k, v)
+    test.is_pass = is_pass
+
+    db.commit()
+    db.refresh(test)
+    return test
+
+
+@router.delete("/material-tests/{test_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_material_test(test_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    test = db.query(MaterialTestResult).filter(MaterialTestResult.id == test_id).first()
+    if not test:
+        raise HTTPException(status_code=404, detail="Material test not found")
+    project = db.query(Project).filter(Project.id == test.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "quality:edit")
+
+    log_deletion(
+        db,
+        company_id=project.company_id,
+        entity_type="material_test",
+        entity_id=test.id,
+        summary=f"Material test: {test.test_type} ({test.material or 'General'})",
+        deleted_by=current_user.name or current_user.email or "Unknown",
+    )
+    db.delete(test)
+    db.commit()
 
 
 @router.delete("/ncr/{ncr_id}", status_code=status.HTTP_204_NO_CONTENT)

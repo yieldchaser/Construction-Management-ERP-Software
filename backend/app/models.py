@@ -2197,6 +2197,18 @@ class DeleteLog(Base):
     deleted_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 
+class KYCAccessLog(Base):
+    """Company-level audit trail recording reads and reveals of KYC identity documents."""
+    __tablename__ = "kyc_access_logs"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), index=True, nullable=True)
+    party_id = Column(UUID(as_uuid=True), ForeignKey("library_parties.id", ondelete="CASCADE"), index=True, nullable=False)
+    party_name = Column(String(255), nullable=True)
+    document_type = Column(String(50), nullable=False)  # "aadhaar_file", "pan_file", "aadhaar_number_reveal"
+    accessed_by = Column(String(255), nullable=False)
+    accessed_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Project Tab Parity — Foundation tables (Project List, Party, Cost Code, Materials, Todos)
 # ─────────────────────────────────────────────────────────────────────────────

@@ -61,6 +61,30 @@ class TimesheetCreate(BaseModel):
         return v
 
 
+class TimesheetUpdate(BaseModel):
+    party_id: Optional[UUID] = None
+    project_id: Optional[UUID] = None
+    entry_date: Optional[datetime] = None
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+    remarks: Optional[str] = None
+    file_url: Optional[str] = None
+    file_name: Optional[str] = None
+
+    @field_validator("file_url")
+    @classmethod
+    def file_url_scheme_allowlist(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return None
+        if not v.strip():
+            raise ValueError("file_url cannot be blank; send null when there is no attachment")
+        if not _is_allowed_file_url(v):
+            raise ValueError(
+                "file_url must be a same-origin path (/...) or an https URL on this product's own storage origin; other hosts and non-https schemes are rejected"
+            )
+        return v
+
+
 class TimesheetResponse(BaseModel):
     id: UUID
     company_id: UUID
@@ -183,6 +207,52 @@ def get_timesheet(timesheet_id: UUID, db: Session = Depends(get_db), current_use
     if not row:
         raise HTTPException(status_code=404, detail="Timesheet not found")
     get_company_membership(db, current_user, row.company_id)
+    return _serialize(row, db)
+
+
+@router.put("/timesheets/{timesheet_id}", response_model=TimesheetResponse)
+def update_timesheet(timesheet_id: UUID, payload: TimesheetUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    row = db.query(models.TeamScheduleTimesheet).filter(
+        models.TeamScheduleTimesheet.id == timesheet_id
+    ).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Timesheet not found")
+    get_company_membership(db, current_user, row.company_id)
+    require_permission(db, current_user, row.company_id, "attendance:edit")
+
+    if payload.project_id is not None:
+        verify_project_in_company(db, payload.project_id, row.company_id)
+        row.project_id = payload.project_id
+
+    if payload.party_id is not None:
+        party = db.query(models.LibraryParty).filter(models.LibraryParty.id == payload.party_id).first()
+        row.party_id = payload.party_id
+        row.party_name = party.name if party else None
+
+    if payload.entry_date is not None:
+        row.entry_date = payload.entry_date
+
+    st = payload.start_time if payload.start_time is not None else row.start_time
+    et = payload.end_time if payload.end_time is not None else row.end_time
+    if st and et and et <= st:
+        raise HTTPException(status_code=422, detail="end_time must be after start_time; for a night shift send the true end date")
+
+    if payload.start_time is not None:
+        row.start_time = payload.start_time
+    if payload.end_time is not None:
+        row.end_time = payload.end_time
+    if payload.start_time is not None or payload.end_time is not None:
+        row.duration_minutes = _compute_duration(row.start_time, row.end_time)
+
+    if payload.remarks is not None:
+        row.remarks = payload.remarks
+    if payload.file_url is not None:
+        row.file_url = payload.file_url
+    if payload.file_name is not None:
+        row.file_name = payload.file_name
+
+    db.commit()
+    db.refresh(row)
     return _serialize(row, db)
 
 

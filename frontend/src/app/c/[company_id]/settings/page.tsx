@@ -95,6 +95,8 @@ interface PayrollSettings {
   esi_employer_pct: number;
   tds_monthly: number;
   is_esi_applicable: boolean;
+  pf_wage_ceiling?: number;
+  assume_full_month_when_no_attendance?: boolean;
 }
 
 interface LeaveTemplate {
@@ -909,8 +911,42 @@ export default function CompanySettingsPage() {
   const [pDraft, setPDraft] = useState({
     pf_employee_pct: 12, pf_employer_pct: 12, esi_employee_pct: 0.75,
     esi_employer_pct: 3.25, tds_monthly: 0, is_esi_applicable: true,
+    pf_wage_ceiling: 15000,
+    assume_full_month_when_no_attendance: false,
   });
   const [payrollStatus, setPayrollStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [payrollError, setPayrollError] = useState<string | null>(null);
+  const [showPayrollConfirm, setShowPayrollConfirm] = useState(false);
+
+  const getPayrollDiff = () => {
+    const diffs: string[] = [];
+    if (!payroll) return diffs;
+    if (Number(pDraft.pf_employee_pct) !== Number(payroll.pf_employee_pct)) {
+      diffs.push(`PF Employee Rate: ${payroll.pf_employee_pct}% → ${pDraft.pf_employee_pct}%`);
+    }
+    if (Number(pDraft.pf_employer_pct) !== Number(payroll.pf_employer_pct)) {
+      diffs.push(`PF Employer Rate: ${payroll.pf_employer_pct}% → ${pDraft.pf_employer_pct}%`);
+    }
+    if (Number(pDraft.esi_employee_pct) !== Number(payroll.esi_employee_pct)) {
+      diffs.push(`ESI Employee Rate: ${payroll.esi_employee_pct}% → ${pDraft.esi_employee_pct}%`);
+    }
+    if (Number(pDraft.esi_employer_pct) !== Number(payroll.esi_employer_pct)) {
+      diffs.push(`ESI Employer Rate: ${payroll.esi_employer_pct}% → ${pDraft.esi_employer_pct}%`);
+    }
+    if (Number(pDraft.tds_monthly) !== Number(payroll.tds_monthly)) {
+      diffs.push(`TDS Monthly: ₹${payroll.tds_monthly} → ₹${pDraft.tds_monthly}`);
+    }
+    if (Boolean(pDraft.is_esi_applicable) !== Boolean(payroll.is_esi_applicable)) {
+      diffs.push(`ESI Applicable: ${payroll.is_esi_applicable ? "Yes" : "No"} → ${pDraft.is_esi_applicable ? "Yes" : "No"}`);
+    }
+    if (Number(pDraft.pf_wage_ceiling) !== Number(payroll.pf_wage_ceiling ?? 15000)) {
+      diffs.push(`PF Wage Ceiling: ₹${payroll.pf_wage_ceiling ?? 15000} → ₹${pDraft.pf_wage_ceiling}`);
+    }
+    if (Boolean(pDraft.assume_full_month_when_no_attendance) !== Boolean(payroll.assume_full_month_when_no_attendance ?? false)) {
+      diffs.push(`Assume Full Month on Zero Attendance: ${payroll.assume_full_month_when_no_attendance ? "Enabled" : "Disabled"} → ${pDraft.assume_full_month_when_no_attendance ? "Enabled" : "Disabled"}`);
+    }
+    return diffs;
+  };
 
   const loadPayroll = useCallback(() => {
     if (!company_id) return;
@@ -922,6 +958,8 @@ export default function CompanySettingsPage() {
           pf_employee_pct: data.pf_employee_pct, pf_employer_pct: data.pf_employer_pct,
           esi_employee_pct: data.esi_employee_pct, esi_employer_pct: data.esi_employer_pct,
           tds_monthly: data.tds_monthly, is_esi_applicable: data.is_esi_applicable,
+          pf_wage_ceiling: data.pf_wage_ceiling ?? 15000,
+          assume_full_month_when_no_attendance: data.assume_full_month_when_no_attendance ?? false,
         });
       })
       .catch(() => {});
@@ -929,17 +967,45 @@ export default function CompanySettingsPage() {
 
   useEffect(() => { if (activeSection === "payroll") loadPayroll(); }, [activeSection, loadPayroll]);
 
-  const savePayroll = async () => {
+  const handleSavePayrollClick = () => {
+    setPayrollError(null);
+    const diffs = getPayrollDiff();
+    if (diffs.length > 0) {
+      setShowPayrollConfirm(true);
+    } else {
+      savePayroll(false);
+    }
+  };
+
+  const savePayroll = async (confirmed: boolean = false) => {
     setPayrollStatus("saving");
+    setPayrollError(null);
     try {
       const res = await fetch(`${apiHost}/apis/v3/settings/payroll/${company_id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
-        body: JSON.stringify(pDraft),
+        body: JSON.stringify({
+          ...pDraft,
+          confirm_changes: confirmed,
+        }),
       });
-      if (res.ok) { setPayroll(await res.json()); setPayrollStatus("saved"); setTimeout(() => setPayrollStatus("idle"), 2000); }
-      else setPayrollStatus("error");
-    } catch { setPayrollStatus("error"); }
+      if (res.ok) {
+        const updated = await res.json();
+        setPayroll(updated);
+        setPayrollStatus("saved");
+        setShowPayrollConfirm(false);
+        setTimeout(() => setPayrollStatus("idle"), 2000);
+      } else {
+        const err = await readErrorDetail(res);
+        setPayrollError(err || "Failed to save statutory payroll settings");
+        setPayrollStatus("error");
+        setShowPayrollConfirm(false);
+      }
+    } catch (e: any) {
+      setPayrollError(e?.message || "Failed to save payroll settings. Check your connection.");
+      setPayrollStatus("error");
+      setShowPayrollConfirm(false);
+    }
   };
 
   // ─── Payroll sub-tabs: Leave Policy | Holiday Calendar | Salary Template | Statutory ──
@@ -1722,6 +1788,12 @@ export default function CompanySettingsPage() {
                           onChange={(e) => setPDraft({ ...pDraft, tds_monthly: Number(e.target.value) })}
                           className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-foreground outline-none" />
                       </Field>
+                      <Field label="PF Wage Ceiling (₹)">
+                        <input type="number" step="1" value={pDraft.pf_wage_ceiling}
+                          onChange={(e) => setPDraft({ ...pDraft, pf_wage_ceiling: Number(e.target.value) || 0 })}
+                          className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-foreground outline-none" />
+                        <p className="text-[11px] text-muted mt-1">EPF statutory wage ceiling (defaults to ₹15,000). PF wage base is capped at this amount.</p>
+                      </Field>
                       <div className="space-y-1.5">
                         <label className="text-[10px] uppercase tracking-wider text-muted font-bold">ESI Applicable</label>
                         <label className="flex items-center gap-2 cursor-pointer mt-2">
@@ -1731,20 +1803,73 @@ export default function CompanySettingsPage() {
                           <span className="text-xs text-foreground">{pDraft.is_esi_applicable ? "Yes" : "No"}</span>
                         </label>
                       </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] uppercase tracking-wider text-muted font-bold">Assume Full Month on Zero Attendance</label>
+                        <label className="flex items-center gap-2 cursor-pointer mt-2">
+                          <input type="checkbox" checked={pDraft.assume_full_month_when_no_attendance}
+                            onChange={(e) => setPDraft({ ...pDraft, assume_full_month_when_no_attendance: e.target.checked })}
+                            className="h-4 w-4 accent-primary" />
+                          <span className="text-xs text-foreground">{pDraft.assume_full_month_when_no_attendance ? "Enabled (pay full month)" : "Disabled (no punch = zero pay)"}</span>
+                        </label>
+                        <p className="text-[11px] text-muted mt-1">When turned on, staff with no attendance recorded in the month will be paid a full month instead of zero pay.</p>
+                      </div>
                     </div>
                     <div className="flex justify-end">
-                      <button onClick={savePayroll} disabled={payrollStatus === "saving"}
-                        className="bg-primary text-white text-xs font-bold px-6 py-2.5 rounded-md disabled:opacity-50">
+                      <button onClick={handleSavePayrollClick} disabled={payrollStatus === "saving"}
+                        className="bg-primary text-white text-xs font-bold px-6 py-2.5 rounded-md disabled:opacity-50 cursor-pointer">
                         {payrollStatus === "saving" ? "Saving…" : "Save"}
                       </button>
                     </div>
                     {payrollStatus === "saved" && (
-                      <div className="p-4 bg-success/10 border border-success/20 text-success text-xs rounded-lg">Payroll settings saved</div>
+                      <div className="p-4 bg-success/10 border border-success/20 text-success text-xs rounded-lg">Payroll settings saved successfully</div>
                     )}
                     {payrollStatus === "error" && (
-                      <div className="p-4 bg-danger/10 border border-danger/20 text-danger text-xs rounded-lg">Failed to save payroll settings</div>
+                      <div className="p-4 bg-danger/10 border border-danger/20 text-danger text-xs rounded-lg">
+                        {payrollError || "Failed to save payroll settings"}
+                      </div>
                     )}
                   </div>
+
+                  {showPayrollConfirm && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+                      <div className="bg-card border border-border-custom rounded-xl p-6 max-w-lg w-full space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-base font-bold text-foreground">Confirm Statutory Payroll Changes</h3>
+                          <button onClick={() => setShowPayrollConfirm(false)} className="text-muted hover:text-foreground">
+                            <Icon name="close" className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <p className="text-xs text-muted">
+                          You are updating company statutory payroll defaults. These rates affect statutory deductions across payroll runs:
+                        </p>
+                        <div className="bg-elevated border border-border-custom rounded-lg p-3 space-y-1.5 max-h-48 overflow-y-auto">
+                          {getPayrollDiff().map((diff, idx) => (
+                            <div key={idx} className="text-xs font-medium text-foreground flex items-center gap-2">
+                              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                              <span>{diff}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="flex gap-2 justify-end pt-2">
+                          <button
+                            type="button"
+                            onClick={() => setShowPayrollConfirm(false)}
+                            className="text-muted hover:text-foreground text-xs font-bold px-4 py-2"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => savePayroll(true)}
+                            disabled={payrollStatus === "saving"}
+                            className="bg-primary text-white text-xs font-bold px-5 py-2 rounded-md disabled:opacity-50 cursor-pointer"
+                          >
+                            {payrollStatus === "saving" ? "Saving…" : "Confirm & Save"}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="bg-card border border-border-custom rounded-lg p-6 space-y-3">
                     <h3 className="text-[10px] uppercase tracking-wider text-muted font-bold">Salary Components (Payslip Structure)</h3>

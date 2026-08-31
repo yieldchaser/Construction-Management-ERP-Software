@@ -61,12 +61,14 @@ interface PLItem {
 }
 
 interface TallyConnection {
+  id?: string;
   connected?: boolean;
   tally_company_name?: string;
   registered_mobile?: string;
   sync_window_start_date?: string;
   voucher_number_template?: string;
   default_cash_ledger?: string;
+  round_off_ledger?: string;
   auto_create_missing_ledgers?: boolean;
 }
 
@@ -84,6 +86,8 @@ interface TallyLedgerMapping {
   posting_mode: string;
   tally_voucher_type: string;
   tally_ledger_name: string;
+  freight_ledger?: string;
+  surcharge_ledger?: string;
 }
 
 interface TallyCostCentreMapping {
@@ -310,6 +314,7 @@ export default function FinancePage() {
   const [tallyMobile, setTallyMobile] = useState("");
   const [tallyVoucherTemplate, setTallyVoucherTemplate] = useState("SF-{year}-{number}");
   const [tallyDefaultCash, setTallyDefaultCash] = useState("");
+  const [tallyRoundOff, setTallyRoundOff] = useState("");
   const [tallyAutoCreate, setTallyAutoCreate] = useState(false);
   const [tallySyncFrom, setTallySyncFrom] = useState(fyStartIso());
   const [tallySaving, setTallySaving] = useState(false);
@@ -321,6 +326,8 @@ export default function FinancePage() {
   const [partyLedgerInputs, setPartyLedgerInputs] = useState<Record<string, string>>({});
   const [purchaseLedgerInput, setPurchaseLedgerInput] = useState("Purchase A/c");
   const [salesLedgerInput, setSalesLedgerInput] = useState("Sales A/c");
+  const [freightLedgerInput, setFreightLedgerInput] = useState("");
+  const [surchargeLedgerInput, setSurchargeLedgerInput] = useState("");
   const [costCentreInput, setCostCentreInput] = useState("");
   const [tallySyncLogs, setTallySyncLogs] = useState<TallySyncLog[]>([]);
 
@@ -835,7 +842,11 @@ export default function FinancePage() {
         setTallyLedgerMappings(lm);
         const purchase = lm.find(m => m.onsite_transaction_type === "Material Purchase");
         const sales = lm.find(m => m.onsite_transaction_type === "Sales Invoice");
-        if (purchase) setPurchaseLedgerInput(purchase.tally_ledger_name);
+        if (purchase) {
+          setPurchaseLedgerInput(purchase.tally_ledger_name);
+          setFreightLedgerInput(purchase.freight_ledger || "");
+          setSurchargeLedgerInput(purchase.surcharge_ledger || "");
+        }
         if (sales) setSalesLedgerInput(sales.tally_ledger_name);
       }
 
@@ -874,6 +885,7 @@ export default function FinancePage() {
     setTallyMobile(tallyConn?.registered_mobile || "");
     setTallyVoucherTemplate(tallyConn?.voucher_number_template || "");
     setTallyDefaultCash(tallyConn?.default_cash_ledger || "");
+    setTallyRoundOff(tallyConn?.round_off_ledger || "");
     setTallyAutoCreate(Boolean(tallyConn?.auto_create_missing_ledgers));
     setTallySyncFrom(tallyConn?.sync_window_start_date ? String(tallyConn.sync_window_start_date).slice(0, 10) : fyStartIso());
     setShowTallySetup(true);
@@ -916,6 +928,7 @@ export default function FinancePage() {
           voucher_number_template: tallyVoucherTemplate.trim() || "",
           auto_create_missing_ledgers: tallyAutoCreate,
           default_cash_ledger: tallyDefaultCash.trim() || null,
+          round_off_ledger: tallyRoundOff.trim() || null,
         }),
       });
       if (res.ok) {
@@ -1038,13 +1051,25 @@ export default function FinancePage() {
         await fetch(`${getApiHost()}/apis/v3/tally/mappings/ledger/${existingPurchase.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
-          body: JSON.stringify({ tally_ledger_name: purchaseLedgerInput.trim() || "Purchase A/c" }),
+          body: JSON.stringify({
+            tally_ledger_name: purchaseLedgerInput.trim() || "Purchase A/c",
+            freight_ledger: freightLedgerInput.trim() || null,
+            surcharge_ledger: surchargeLedgerInput.trim() || null,
+          }),
         });
       } else {
         await fetch(`${getApiHost()}/apis/v3/tally/mappings/ledger`, {
           method: "POST",
           headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
-          body: JSON.stringify({ company_id: companyId, onsite_transaction_type: "Material Purchase", posting_mode: "lumpsum", tally_voucher_type: "Purchase", tally_ledger_name: purchaseLedgerInput.trim() || "Purchase A/c" }),
+          body: JSON.stringify({
+            company_id: companyId,
+            onsite_transaction_type: "Material Purchase",
+            posting_mode: "lumpsum",
+            tally_voucher_type: "Purchase",
+            tally_ledger_name: purchaseLedgerInput.trim() || "Purchase A/c",
+            freight_ledger: freightLedgerInput.trim() || null,
+            surcharge_ledger: surchargeLedgerInput.trim() || null,
+          }),
         });
       }
 
@@ -2315,7 +2340,7 @@ export default function FinancePage() {
                   </div>
                 </div>
                 {tallyConn ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 text-xs">
                     <div className="rounded-lg border border-border-custom p-3">
                       <div className="text-[10px] uppercase font-bold text-muted">Company</div>
                       <div className="text-foreground font-semibold">{tallyConn.tally_company_name}</div>
@@ -2327,6 +2352,10 @@ export default function FinancePage() {
                     <div className="rounded-lg border border-border-custom p-3">
                       <div className="text-[10px] uppercase font-bold text-muted">Voucher No.</div>
                       <div className="text-foreground font-semibold">{tallyConn.voucher_number_template}</div>
+                    </div>
+                    <div className="rounded-lg border border-border-custom p-3">
+                      <div className="text-[10px] uppercase font-bold text-muted">Round-off Ledger</div>
+                      <div className="text-foreground font-semibold">{tallyConn.round_off_ledger || "Round Off (Default)"}</div>
                     </div>
                     <div className="rounded-lg border border-border-custom p-3">
                       <div className="text-[10px] uppercase font-bold text-muted">Auto-create ledgers</div>
@@ -2353,14 +2382,22 @@ export default function FinancePage() {
                   {/* Transaction-type ledger mappings */}
                   <div className="space-y-3">
                     <div className="text-[10px] uppercase font-bold text-muted">Transaction Type Ledgers</div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                       <div>
                         <label className="text-xs text-muted">Purchase ledger</label>
-                        <input value={purchaseLedgerInput} onChange={(e) => setPurchaseLedgerInput(e.target.value)} className="w-full mt-1 bg-input border border-border-custom rounded-md px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary" />
+                        <input value={purchaseLedgerInput} onChange={(e) => setPurchaseLedgerInput(e.target.value)} placeholder="Purchase A/c" className="w-full mt-1 bg-input border border-border-custom rounded-md px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary" />
                       </div>
                       <div>
                         <label className="text-xs text-muted">Sales ledger</label>
-                        <input value={salesLedgerInput} onChange={(e) => setSalesLedgerInput(e.target.value)} className="w-full mt-1 bg-input border border-border-custom rounded-md px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary" />
+                        <input value={salesLedgerInput} onChange={(e) => setSalesLedgerInput(e.target.value)} placeholder="Sales A/c" className="w-full mt-1 bg-input border border-border-custom rounded-md px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary" />
+                      </div>
+                      <div>
+                        <label className="text-xs text-muted">Freight ledger (optional)</label>
+                        <input value={freightLedgerInput} onChange={(e) => setFreightLedgerInput(e.target.value)} placeholder="Freight Charges" className="w-full mt-1 bg-input border border-border-custom rounded-md px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary" />
+                      </div>
+                      <div>
+                        <label className="text-xs text-muted">Surcharge ledger (optional)</label>
+                        <input value={surchargeLedgerInput} onChange={(e) => setSurchargeLedgerInput(e.target.value)} placeholder="Surcharge / Extra Charges" className="w-full mt-1 bg-input border border-border-custom rounded-md px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary" />
                       </div>
                     </div>
                     <button onClick={saveLedgerMappings} className="text-xs font-bold px-3 py-1.5 rounded-md bg-primary/15 text-primary border border-primary/20 hover:bg-primary/25">Save Ledger Mappings</button>
@@ -4661,6 +4698,10 @@ export default function FinancePage() {
               <div>
                 <label className="text-[10px] text-muted uppercase font-bold block mb-1">Default cash ledger</label>
                 <input value={tallyDefaultCash} onChange={(e) => setTallyDefaultCash(e.target.value)} placeholder="e.g. Cash Account" className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs" />
+              </div>
+              <div>
+                <label className="text-[10px] text-muted uppercase font-bold block mb-1">Round-off ledger (optional)</label>
+                <input value={tallyRoundOff} onChange={(e) => setTallyRoundOff(e.target.value)} placeholder="e.g. Round Off / Fractional Diff" className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs" />
               </div>
               <div>
                 <label className="text-[10px] text-muted uppercase font-bold block mb-1">Sync from date</label>

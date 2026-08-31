@@ -88,6 +88,10 @@ class DrawingCreateRequest(BaseModel):
             )
         return v
 
+class DrawingUpdateRequest(BaseModel):
+    name: Optional[str] = None
+    category: Optional[str] = Field(None, pattern="^(2D Layout|3D Layout|Production File)$")
+
 class RevisionCreateRequest(BaseModel):
     version_code: str = Field(..., example="V2")
     file_url: str = Field(..., min_length=1, example="/images/drawings/ground_floor_v2.pdf")
@@ -251,6 +255,92 @@ def create_drawing(req: DrawingCreateRequest, db: Session = Depends(get_db), cur
             )
         ]
     )
+
+@router.put("/{drawing_id}", response_model=DrawingResponse)
+def update_drawing(drawing_id: UUID, req: DrawingUpdateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    drawing = db.query(Drawing).filter(Drawing.id == drawing_id).first()
+    if not drawing:
+        raise HTTPException(status_code=404, detail="Drawing not found")
+    proj = db.query(Project).filter(Project.id == drawing.project_id).first()
+    if not proj:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, proj.company_id)
+    require_permission(db, current_user, proj.company_id, "drawings:edit")
+
+    if req.name is not None:
+        drawing.name = req.name
+    if req.category is not None:
+        drawing.category = req.category
+
+    db.commit()
+    db.refresh(drawing)
+
+    # Fetch revisions for response
+    revisions = db.query(DrawingRevision).filter(DrawingRevision.drawing_id == drawing.id).order_by(DrawingRevision.created_at.desc()).all()
+    rev_ids = [r.id for r in revisions]
+    all_pins = db.query(DrawingPin).filter(DrawingPin.revision_id.in_(rev_ids)).order_by(DrawingPin.created_at.asc()).all() if rev_ids else []
+    pins_by_rev: Dict[UUID, List[DrawingPin]] = {rid: [] for rid in rev_ids}
+    for p in all_pins:
+        if p.revision_id in pins_by_rev:
+            pins_by_rev[p.revision_id].append(p)
+
+    rev_responses = []
+    for r in revisions:
+        pins = pins_by_rev.get(r.id, [])
+        pin_responses = [
+            DrawingPinResponse(
+                id=p.id,
+                revision_id=p.revision_id,
+                x_coordinate=float(p.x_coordinate),
+                y_coordinate=float(p.y_coordinate),
+                comment=p.comment,
+                tagged_user_id=p.tagged_user_id,
+                created_by=p.created_by,
+                resolved=p.resolved,
+                created_at=p.created_at
+            )
+            for p in pins
+        ]
+        rev_responses.append(
+            DrawingRevisionResponse(
+                id=r.id,
+                drawing_id=r.drawing_id,
+                version_code=r.version_code,
+                file_url=r.file_url,
+                approval_status=r.approval_status,
+                superseded_at=r.superseded_at,
+                approved_by=r.approved_by,
+                comments=r.comments,
+                created_at=r.created_at,
+                pins=pin_responses
+            )
+        )
+
+    return DrawingResponse(
+        id=drawing.id,
+        project_id=drawing.project_id,
+        name=drawing.name,
+        category=drawing.category,
+        created_by=drawing.created_by,
+        created_at=drawing.created_at,
+        revisions=rev_responses
+    )
+
+@router.delete("/{drawing_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_drawing(drawing_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    drawing = db.query(Drawing).filter(Drawing.id == drawing_id).first()
+    if not drawing:
+        raise HTTPException(status_code=404, detail="Drawing not found")
+    proj = db.query(Project).filter(Project.id == drawing.project_id).first()
+    if not proj:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, proj.company_id)
+    require_permission(db, current_user, proj.company_id, "drawings:edit")
+
+    from app.routers.delete_logs import log_deletion
+    log_deletion(db, proj.company_id, "drawing", drawing.id, f"Drawing: {drawing.name}", deleted_by=current_user.name)
+    db.delete(drawing)
+    db.commit()
 
 @router.post("/{drawing_id}/revisions", response_model=DrawingRevisionResponse)
 def add_drawing_revision(drawing_id: UUID, req: RevisionCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):

@@ -59,7 +59,18 @@ export default function TallyIntegrationPage() {
     }
   }, [companyId]);
 
-  const [tab, setTab] = useState<"agents" | "bank_mappings" | "sync_history">("agents");
+  const [tab, setTab] = useState<"agents" | "bank_mappings" | "ledger_mappings" | "sync_history">("agents");
+
+  // Ledger mappings state
+  const [purchaseLedger, setPurchaseLedger] = useState("Purchase A/c");
+  const [salesLedger, setSalesLedger] = useState("Sales A/c");
+  const [freightLedger, setFreightLedger] = useState("");
+  const [surchargeLedger, setSurchargeLedger] = useState("");
+  const [roundOffLedger, setRoundOffLedger] = useState("");
+  const [ledgerSaving, setLedgerSaving] = useState(false);
+  const [ledgerLoading, setLedgerLoading] = useState(false);
+  const [ledgerMapId, setLedgerMapId] = useState<string | null>(null);
+  const [connId, setConnId] = useState<string | null>(null);
 
   // Agents state
   const [agents, setAgents] = useState<TallyAgent[]>([]);
@@ -161,9 +172,105 @@ export default function TallyIntegrationPage() {
     }
   };
 
+  const fetchGeneralLedgers = async () => {
+    if (!companyId) return;
+    setLedgerLoading(true);
+    try {
+      const [connRes, lmRes] = await Promise.all([
+        fetch(`${getApiHost()}/apis/v3/tally/connections?company_id=${companyId}`, { headers: authHeaders() }),
+        fetch(`${getApiHost()}/apis/v3/tally/mappings/ledger?company_id=${companyId}`, { headers: authHeaders() }),
+      ]);
+      if (connRes.ok) {
+        const c = await connRes.json();
+        if (c && c.id) {
+          setConnId(c.id);
+          setRoundOffLedger(c.round_off_ledger || "");
+        }
+      }
+      if (lmRes.ok) {
+        const lms = await lmRes.json();
+        const purchase = lms.find((m: any) => m.onsite_transaction_type === "Material Purchase");
+        if (purchase) {
+          setLedgerMapId(purchase.id);
+          setPurchaseLedger(purchase.tally_ledger_name || "Purchase A/c");
+          setFreightLedger(purchase.freight_ledger || "");
+          setSurchargeLedger(purchase.surcharge_ledger || "");
+        }
+        const sales = lms.find((m: any) => m.onsite_transaction_type === "Sales Invoice");
+        if (sales) {
+          setSalesLedger(sales.tally_ledger_name || "Sales A/c");
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load general ledgers", e);
+    } finally {
+      setLedgerLoading(false);
+    }
+  };
+
+  const handleSaveGeneralLedgers = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLedgerSaving(true);
+    try {
+      if (ledgerMapId) {
+        const res = await fetch(`${getApiHost()}/apis/v3/tally/mappings/ledger/${ledgerMapId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+          body: JSON.stringify({
+            tally_ledger_name: purchaseLedger.trim() || "Purchase A/c",
+            freight_ledger: freightLedger.trim() || null,
+            surcharge_ledger: surchargeLedger.trim() || null,
+          }),
+        });
+        if (!res.ok) {
+          const err = await readErrorDetail(res);
+          alert(err || "Failed to update ledger mappings");
+          return;
+        }
+      } else {
+        const res = await fetch(`${getApiHost()}/apis/v3/tally/mappings/ledger`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+          body: JSON.stringify({
+            company_id: companyId,
+            onsite_transaction_type: "Material Purchase",
+            posting_mode: "lumpsum",
+            tally_voucher_type: "Purchase",
+            tally_ledger_name: purchaseLedger.trim() || "Purchase A/c",
+            freight_ledger: freightLedger.trim() || null,
+            surcharge_ledger: surchargeLedger.trim() || null,
+          }),
+        });
+        if (!res.ok) {
+          const err = await readErrorDetail(res);
+          alert(err || "Failed to create ledger mappings");
+          return;
+        }
+      }
+
+      if (connId) {
+        await fetch(`${getApiHost()}/apis/v3/tally/connections/${connId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+          body: JSON.stringify({
+            round_off_ledger: roundOffLedger.trim() || null,
+          }),
+        });
+      }
+
+      showToast("Tally general ledger & expense mappings saved successfully.");
+      fetchGeneralLedgers();
+    } catch (e: any) {
+      alert("Failed to save ledger mappings: " + (e?.message || ""));
+    } finally {
+      setLedgerSaving(false);
+    }
+  };
+
   useEffect(() => {
     if (tab === "agents") fetchAgents();
     else if (tab === "bank_mappings") fetchBankMappings();
+    else if (tab === "ledger_mappings") fetchGeneralLedgers();
     else if (tab === "sync_history") fetchSyncData();
   }, [companyId, tab]);
 
@@ -353,6 +460,7 @@ export default function TallyIntegrationPage() {
           tabs={[
             { id: "agents", label: "Desktop Agents", icon: <Icon name="computer" className="w-3.5 h-3.5" /> },
             { id: "bank_mappings", label: "Bank Mappings", icon: <Icon name="bank" className="w-3.5 h-3.5" /> },
+            { id: "ledger_mappings", label: "Ledger & Expense Mappings", icon: <Icon name="settings" className="w-3.5 h-3.5" /> },
             { id: "sync_history", label: "Export Queue & Sync History", icon: <Icon name="receipt" className="w-3.5 h-3.5" /> },
           ]}
           activeTab={tab}
@@ -520,6 +628,106 @@ export default function TallyIntegrationPage() {
                     </tbody>
                   </table>
                 </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── LEDGER & EXPENSE MAPPINGS TAB ── */}
+        {tab === "ledger_mappings" && (
+          <div className="space-y-6">
+            <div className="bg-card border border-border-custom rounded-xl p-5 space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Tally Ledger & Expense Mappings</h3>
+                  <p className="text-[10px] text-muted">Configure default nominal ledgers for purchases, sales, freight charges, surcharges, and fractional round-offs in Tally Prime.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={fetchGeneralLedgers}
+                  className="px-3 py-1.5 bg-elevated hover:bg-card border border-border-custom text-foreground rounded text-xs font-semibold cursor-pointer inline-flex items-center gap-1"
+                >
+                  <Icon name="refresh" className="w-3.5 h-3.5" /> Refresh
+                </button>
+              </div>
+
+              {ledgerLoading ? (
+                <TableSkeleton rows={4} cols={2} />
+              ) : (
+                <form onSubmit={handleSaveGeneralLedgers} className="space-y-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[10px] uppercase font-bold text-muted block mb-1">Purchase Ledger Name</label>
+                      <input
+                        type="text"
+                        value={purchaseLedger}
+                        onChange={(e) => setPurchaseLedger(e.target.value)}
+                        placeholder="Purchase A/c"
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary font-mono"
+                      />
+                      <p className="text-[10px] text-muted mt-1">Default ledger for vendor material bills & procurement vouchers.</p>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] uppercase font-bold text-muted block mb-1">Sales Ledger Name</label>
+                      <input
+                        type="text"
+                        value={salesLedger}
+                        onChange={(e) => setSalesLedger(e.target.value)}
+                        placeholder="Sales A/c"
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary font-mono"
+                      />
+                      <p className="text-[10px] text-muted mt-1">Default ledger for client sales invoices & billing entries.</p>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] uppercase font-bold text-muted block mb-1">Freight Ledger (Optional)</label>
+                      <input
+                        type="text"
+                        value={freightLedger}
+                        onChange={(e) => setFreightLedger(e.target.value)}
+                        placeholder="Freight & Carriage Charges"
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary font-mono"
+                      />
+                      <p className="text-[10px] text-muted mt-1">Ledger allocated for transport & delivery costs in purchase vouchers.</p>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] uppercase font-bold text-muted block mb-1">Surcharge Ledger (Optional)</label>
+                      <input
+                        type="text"
+                        value={surchargeLedger}
+                        onChange={(e) => setSurchargeLedger(e.target.value)}
+                        placeholder="Surcharge / Extra Duties"
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary font-mono"
+                      />
+                      <p className="text-[10px] text-muted mt-1">Ledger allocated for custom duties, packing or incidental surcharges.</p>
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="text-[10px] uppercase font-bold text-muted block mb-1">Round-off Ledger (Optional)</label>
+                      <input
+                        type="text"
+                        value={roundOffLedger}
+                        onChange={(e) => setRoundOffLedger(e.target.value)}
+                        placeholder="Round Off A/c"
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary font-mono"
+                      />
+                      <p className="text-[10px] text-muted mt-1">Ledger used to absorb fractional rounding discrepancies in invoice totals.</p>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={ledgerSaving}
+                      className="px-5 py-2.5 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary/95 transition-all cursor-pointer disabled:opacity-50 inline-flex items-center gap-1.5"
+                    >
+                      <Icon name="check" className="w-4 h-4" />
+                      {ledgerSaving ? "Saving Ledger Mappings..." : "Save Ledger Mappings"}
+                    </button>
+                  </div>
+                </form>
               )}
             </div>
           </div>

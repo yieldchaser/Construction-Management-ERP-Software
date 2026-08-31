@@ -77,7 +77,19 @@ export default function LibraryHubPage() {
   const [partyFatherName, setPartyFatherName] = useState("");
   const [partyPassportNo, setPartyPassportNo] = useState("");
   const [partyPassportExpiryDate, setPartyPassportExpiryDate] = useState("");
-  // D-010: ID document uploads removed until object storage exists
+  const [partyAadhaarFile, setPartyAadhaarFile] = useState<string | null>(null);
+  const [partyPanFile, setPartyPanFile] = useState<string | null>(null);
+  const [uploadingKyc, setUploadingKyc] = useState<string | null>(null);
+  const [kycError, setKycError] = useState<string | null>(null);
+  const [revealedAadhaar, setRevealedAadhaar] = useState<Record<string, string>>({});
+  const [revealingAadhaarId, setRevealingAadhaarId] = useState<string | null>(null);
+
+  const maskAadhaar = (num?: string | null) => {
+    if (!num) return "—";
+    const clean = num.replace(/\s+/g, "");
+    if (clean.length < 4) return "XXXX XXXX " + clean;
+    return `XXXX XXXX ${clean.slice(-4)}`;
+  };
 
   // Form Fields: Material
   const [matName, setMatName] = useState("");
@@ -135,6 +147,108 @@ export default function LibraryHubPage() {
     setPartyFatherName("");
     setPartyPassportNo("");
     setPartyPassportExpiryDate("");
+    setPartyAadhaarFile(null);
+    setPartyPanFile(null);
+    setKycError(null);
+  };
+
+  const handleRevealAadhaar = async (partyId: string) => {
+    if (revealedAadhaar[partyId]) {
+      setRevealedAadhaar((prev) => {
+        const next = { ...prev };
+        delete next[partyId];
+        return next;
+      });
+      return;
+    }
+    setRevealingAadhaarId(partyId);
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/library/parties/${partyId}/aadhaar-reveal`, {
+        headers: { "Authorization": `Bearer ${accessToken}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setRevealedAadhaar((prev) => ({ ...prev, [partyId]: data.aadhaar_number || "—" }));
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || "Failed to reveal Aadhaar number");
+      }
+    } catch {
+      alert("Failed to reveal Aadhaar number. Check connection.");
+    } finally {
+      setRevealingAadhaarId(null);
+    }
+  };
+
+  const handleUploadKyc = async (docType: "aadhaar_file" | "pan_file", file: File) => {
+    if (!editingId) {
+      alert("Please register the party first before uploading identity documents.");
+      return;
+    }
+    setUploadingKyc(docType);
+    setKycError(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch(`${getApiHost()}/apis/v3/library/parties/${editingId}/kyc/${docType}`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${accessToken}` },
+        body: fd,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (docType === "aadhaar_file") setPartyAadhaarFile(data.storage_path);
+        if (docType === "pan_file") setPartyPanFile(data.storage_path);
+        fetchLibraryData();
+      } else {
+        const err = await readErrorDetail(res);
+        setKycError(err || "Upload failed");
+      }
+    } catch (e: any) {
+      setKycError(e?.message || "Upload failed");
+    } finally {
+      setUploadingKyc(null);
+    }
+  };
+
+  const handleViewKyc = async (docType: "aadhaar_file" | "pan_file") => {
+    if (!editingId) return;
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/library/parties/${editingId}/kyc/${docType}`, {
+        headers: { "Authorization": `Bearer ${accessToken}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.url) {
+          window.open(data.url, "_blank", "noopener,noreferrer");
+        }
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || "Failed to retrieve document");
+      }
+    } catch {
+      alert("Failed to view document");
+    }
+  };
+
+  const handleDeleteKyc = async (docType: "aadhaar_file" | "pan_file") => {
+    if (!editingId || !confirm("Are you sure you want to remove this document?")) return;
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/library/parties/${editingId}/kyc/${docType}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${accessToken}` },
+      });
+      if (res.ok) {
+        if (docType === "aadhaar_file") setPartyAadhaarFile(null);
+        if (docType === "pan_file") setPartyPanFile(null);
+        fetchLibraryData();
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || "Failed to remove document");
+      }
+    } catch {
+      alert("Failed to remove document");
+    }
   };
 
   // Compute sale price automatically
@@ -435,6 +549,9 @@ export default function LibraryHubPage() {
     setPartyFatherName(item.father_name || "");
     setPartyPassportNo(item.passport_no || "");
     setPartyPassportExpiryDate(item.passport_expiry_date ? item.passport_expiry_date.split("T")[0] : "");
+    setPartyAadhaarFile(item.aadhaar_file || null);
+    setPartyPanFile(item.pan_file || null);
+    setKycError(null);
     setIsPartyDrawerOpen(true);
   };
 
@@ -679,7 +796,22 @@ export default function LibraryHubPage() {
                       <td className="px-6 py-4 text-muted font-sans whitespace-nowrap">{formatLibraryCell(item.ifsc_code)}</td>
                       <td className="px-6 py-4 text-muted whitespace-nowrap">{formatLibraryCell(item.tax_no)}</td>
                       <td className="px-6 py-4 text-muted whitespace-nowrap">{formatLibraryCell(item.address)}</td>
-                      <td className="px-6 py-4 text-muted font-sans whitespace-nowrap">{formatLibraryCell(item.aadhaar_number)}</td>
+                      <td className="px-6 py-4 text-muted font-sans whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <span>{revealedAadhaar[item.id] || maskAadhaar(item.aadhaar_number)}</span>
+                          {item.aadhaar_number && (
+                            <button
+                              type="button"
+                              onClick={() => handleRevealAadhaar(item.id)}
+                              disabled={revealingAadhaarId === item.id}
+                              className="text-[10px] text-primary hover:underline cursor-pointer font-medium"
+                              title={revealedAadhaar[item.id] ? "Hide full number" : "Reveal full Aadhaar number"}
+                            >
+                              {revealingAadhaarId === item.id ? "…" : revealedAadhaar[item.id] ? "Hide" : "Reveal"}
+                            </button>
+                          )}
+                        </div>
+                      </td>
                       <td className="px-6 py-4 text-muted font-sans whitespace-nowrap">{formatLibraryCell(item.pan_number)}</td>
                       <td className="px-6 py-4 text-muted font-sans whitespace-nowrap">{formatLibraryCell(item.esi_number)}</td>
                       <td className="px-6 py-4 text-muted font-sans whitespace-nowrap">{formatLibraryCell(item.pf_number)}</td>
@@ -1359,8 +1491,107 @@ export default function LibraryHubPage() {
                 </div>
               </div>
 
-              <div className="rounded-lg border border-dashed border-border-custom bg-elevated/30 p-3 text-center">
-                <p className="text-[10px] text-muted">ID document upload is not available yet. Object storage is required and has not been configured. Documents are not stored.</p>
+              <div className="rounded-lg border border-border-custom bg-elevated/40 p-4 space-y-3">
+                <div className="text-xs font-semibold text-foreground uppercase tracking-wider">KYC Identity Documents</div>
+                <p className="text-[11px] text-muted">Upload verified PAN and Aadhaar identity documents (JPEG, PNG, or PDF up to 5 MB). Documents are securely stored in private storage and accessed only via short-lived signed links.</p>
+
+                {kycError && (
+                  <div className="text-xs text-danger bg-danger/10 border border-danger/20 rounded p-2">
+                    {kycError}
+                  </div>
+                )}
+
+                {!editingId ? (
+                  <p className="text-[11px] text-muted italic">Save/register this party first to enable secure document attachments.</p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                    {/* Aadhaar File */}
+                    <div className="bg-card border border-border-custom rounded-lg p-3 space-y-2">
+                      <div className="text-xs font-medium text-foreground">Aadhaar Document</div>
+                      {partyAadhaarFile ? (
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[11px] text-success font-medium">✓ Uploaded</span>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => handleViewKyc("aadhaar_file")}
+                              className="text-[11px] text-primary hover:underline font-medium cursor-pointer"
+                            >
+                              View
+                            </button>
+                            <span className="text-muted text-xs">·</span>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteKyc("aadhaar_file")}
+                              className="text-[11px] text-danger hover:underline cursor-pointer"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <label className="inline-block text-xs font-medium text-primary hover:underline cursor-pointer">
+                            {uploadingKyc === "aadhaar_file" ? "Uploading…" : "Upload Aadhaar (PDF/Image)"}
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/png,application/pdf"
+                              disabled={uploadingKyc === "aadhaar_file"}
+                              onChange={(e) => {
+                                const f = e.target.files?.[0];
+                                if (f) handleUploadKyc("aadhaar_file", f);
+                              }}
+                              className="hidden"
+                            />
+                          </label>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* PAN File */}
+                    <div className="bg-card border border-border-custom rounded-lg p-3 space-y-2">
+                      <div className="text-xs font-medium text-foreground">PAN Document</div>
+                      {partyPanFile ? (
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[11px] text-success font-medium">✓ Uploaded</span>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => handleViewKyc("pan_file")}
+                              className="text-[11px] text-primary hover:underline font-medium cursor-pointer"
+                            >
+                              View
+                            </button>
+                            <span className="text-muted text-xs">·</span>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteKyc("pan_file")}
+                              className="text-[11px] text-danger hover:underline cursor-pointer"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <label className="inline-block text-xs font-medium text-primary hover:underline cursor-pointer">
+                            {uploadingKyc === "pan_file" ? "Uploading…" : "Upload PAN (PDF/Image)"}
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/png,application/pdf"
+                              disabled={uploadingKyc === "pan_file"}
+                              onChange={(e) => {
+                                const f = e.target.files?.[0];
+                                if (f) handleUploadKyc("pan_file", f);
+                              }}
+                              className="hidden"
+                            />
+                          </label>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <button

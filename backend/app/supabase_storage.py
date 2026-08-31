@@ -20,6 +20,7 @@ from app.config import settings
 
 BUCKET_COMPANY_FILES = "company-files"
 BUCKET_PROJECT_FILES = "project-files"
+BUCKET_KYC_DOCUMENTS = "kyc-documents"
 
 SUPABASE_URL = (getattr(settings, "SUPABASE_URL", "") or "").strip()
 SUPABASE_KEY = (getattr(settings, "SUPABASE_SERVICE_ROLE_KEY", "") or "").strip()
@@ -70,6 +71,7 @@ def ensure_buckets() -> None:
         return
     ensure_bucket(BUCKET_COMPANY_FILES, public=False)
     ensure_bucket(BUCKET_PROJECT_FILES, public=False)
+    ensure_bucket(BUCKET_KYC_DOCUMENTS, public=False)
     _storage_ready = True
 
 

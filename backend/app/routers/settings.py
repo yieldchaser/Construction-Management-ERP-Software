@@ -2,16 +2,17 @@ import re
 import uuid
 from typing import List, Optional, Literal
 from datetime import datetime
+from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Response
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field, field_validator, model_validator
 from app.database import get_db
 from app.auth import get_current_user, verify_company_access, get_company_membership, require_permission
+from app import models, supabase_storage
 from app.models import (
     Company, CompanyBranch, ApprovalRule, CompanyFile, CompanyRole, CompanyTeam,
     CompanyPayrollSettings, SalaryTemplate, PdfTemplate, CompanyTerms, User,
 )
-from app import supabase_storage
 from app.permissions import (
     DEFAULT_ROLE_PRESETS,
     validate_permissions,
@@ -713,7 +714,8 @@ class PayrollSettingsResponse(BaseModel):
     esi_employer_pct: float
     tds_monthly: float
     is_esi_applicable: bool
-    pf_wage_ceiling: Optional[float] = None
+    pf_wage_ceiling: Optional[float] = 15000.0
+    assume_full_month_when_no_attendance: Optional[bool] = False
 
     class Config:
         from_attributes = True
@@ -727,6 +729,7 @@ class PayrollSettingsUpdate(BaseModel):
     tds_monthly: Optional[float] = Field(None, ge=0)
     is_esi_applicable: Optional[bool] = None
     pf_wage_ceiling: Optional[float] = Field(None, ge=0)
+    assume_full_month_when_no_attendance: Optional[bool] = None
     confirm_changes: bool = False
 
 
@@ -742,7 +745,13 @@ def _get_or_create_payroll_settings(company_id: uuid.UUID, db: Session):
 
 @router.get("/payroll/{company_id}", response_model=PayrollSettingsResponse)
 def get_payroll_settings(company_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_company_access)):
-    return _get_or_create_payroll_settings(company_id, db)
+    row = _get_or_create_payroll_settings(company_id, db)
+    comp = db.query(models.Company).filter(models.Company.id == company_id).first()
+    res = PayrollSettingsResponse.model_validate(row)
+    res.assume_full_month_when_no_attendance = bool(comp.assume_full_month_when_no_attendance) if comp else False
+    if res.pf_wage_ceiling is None:
+        res.pf_wage_ceiling = float(comp.pf_wage_ceiling) if comp and comp.pf_wage_ceiling else 15000.0
+    return res
 
 
 @router.put("/payroll/{company_id}", response_model=PayrollSettingsResponse)
@@ -753,11 +762,25 @@ def update_payroll_settings(company_id: uuid.UUID, payload: PayrollSettingsUpdat
     if changes and not payload.confirm_changes:
         raise HTTPException(status_code=400, detail="confirm_changes must be true to modify statutory payroll rates")
     row = _get_or_create_payroll_settings(company_id, db)
+    assume_full = changes.pop("assume_full_month_when_no_attendance", None)
+    if assume_full is not None:
+        comp = db.query(models.Company).filter(models.Company.id == company_id).first()
+        if comp:
+            comp.assume_full_month_when_no_attendance = assume_full
     for field, val in changes.items():
         setattr(row, field, val)
+    if "pf_wage_ceiling" in changes and changes["pf_wage_ceiling"] is not None:
+        comp = db.query(models.Company).filter(models.Company.id == company_id).first()
+        if comp:
+            comp.pf_wage_ceiling = Decimal(str(changes["pf_wage_ceiling"]))
     db.commit()
     db.refresh(row)
-    return row
+    comp = db.query(models.Company).filter(models.Company.id == company_id).first()
+    res = PayrollSettingsResponse.model_validate(row)
+    res.assume_full_month_when_no_attendance = bool(comp.assume_full_month_when_no_attendance) if comp else False
+    if res.pf_wage_ceiling is None:
+        res.pf_wage_ceiling = float(comp.pf_wage_ceiling) if comp and comp.pf_wage_ceiling else 15000.0
+    return res
 
 
 # ─── Salary Templates (reusable named salary breakup cascade) ────────────────
@@ -967,6 +990,35 @@ def get_company_file(company_id: uuid.UUID, asset_type: str, db: Session = Depen
         )
 
     raise HTTPException(status_code=404, detail="Not found")
+
+
+@router.delete("/company-file/{company_id}/{asset_type}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_company_file(
+    company_id: uuid.UUID,
+    asset_type: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    _: None = Depends(verify_company_access),
+):
+    require_permission(db, current_user, company_id, "settings:manage")
+    if asset_type not in ALLOWED_ASSET_TYPES:
+        raise HTTPException(status_code=400, detail="Invalid asset type")
+    cf = (
+        db.query(CompanyFile)
+        .filter(CompanyFile.company_id == company_id, CompanyFile.asset_type == asset_type)
+        .first()
+    )
+    if not cf:
+        raise HTTPException(status_code=404, detail="Company file not found")
+
+    if cf.storage_path and supabase_storage.is_storage_configured():
+        try:
+            supabase_storage.delete_file(supabase_storage.BUCKET_COMPANY_FILES, cf.storage_path)
+        except Exception:
+            pass
+
+    db.delete(cf)
+    db.commit()
 
 
 # ─── Company Terms & Conditions (5 documents; central source of default T&C) ───

@@ -59,6 +59,14 @@ class ToolboxTalkCreate(BaseModel):
     notes: Optional[str] = None
 
 
+class ToolboxTalkUpdate(BaseModel):
+    topic: Optional[str] = None
+    conducted_by: Optional[str] = None
+    conducted_at: Optional[datetime] = None
+    attendee_count: Optional[int] = Field(None, ge=0)
+    notes: Optional[str] = None
+
+
 class PPECheckCreate(BaseModel):
     project_id: uuid.UUID
     checked_by: str
@@ -66,6 +74,14 @@ class PPECheckCreate(BaseModel):
     total_workers: int = Field(..., ge=0)       # R2-530: a headcount cannot be negative
     compliant_workers: int = Field(..., ge=0)   # and neither can the compliant subset
     non_compliant_items: List[str] = []
+
+
+class PPECheckUpdate(BaseModel):
+    checked_by: Optional[str] = None
+    check_date: Optional[datetime] = None
+    total_workers: Optional[int] = Field(None, ge=0)
+    compliant_workers: Optional[int] = Field(None, ge=0)
+    non_compliant_items: Optional[List[str]] = None
 
 
 # ─── Incidents ───────────────────────────────────────────────────────────────
@@ -309,6 +325,66 @@ def list_toolbox_talks(
     ]
 
 
+@router.put("/toolbox-talks/{talk_id}")
+def update_toolbox_talk(talk_id: uuid.UUID, payload: ToolboxTalkUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Update an existing toolbox talk session."""
+    talk = db.query(ToolboxTalk).filter(ToolboxTalk.id == talk_id).first()
+    if not talk:
+        raise HTTPException(status_code=404, detail="Toolbox talk not found")
+    project = db.query(Project).filter(Project.id == talk.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "safety:edit")
+
+    if payload.topic is not None:
+        talk.topic = payload.topic
+    if payload.conducted_by is not None:
+        talk.conducted_by = payload.conducted_by
+    if payload.conducted_at is not None:
+        talk.conducted_at = payload.conducted_at
+    if payload.attendee_count is not None:
+        talk.attendee_count = payload.attendee_count
+    if payload.notes is not None:
+        talk.notes = payload.notes
+
+    db.commit()
+    db.refresh(talk)
+    return {
+        "id": str(talk.id),
+        "topic": talk.topic,
+        "conducted_by": talk.conducted_by,
+        "conducted_at": talk.conducted_at.isoformat() if talk.conducted_at else None,
+        "attendee_count": talk.attendee_count,
+        "notes": talk.notes,
+        "message": "Toolbox talk updated successfully."
+    }
+
+
+@router.delete("/toolbox-talks/{talk_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_toolbox_talk(talk_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Delete a toolbox talk session with audit log."""
+    talk = db.query(ToolboxTalk).filter(ToolboxTalk.id == talk_id).first()
+    if not talk:
+        raise HTTPException(status_code=404, detail="Toolbox talk not found")
+    project = db.query(Project).filter(Project.id == talk.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "safety:edit")
+
+    log_deletion(
+        db,
+        company_id=project.company_id,
+        entity_type="toolbox_talk",
+        entity_id=talk.id,
+        summary=f"Toolbox talk: {talk.topic} (by {talk.conducted_by})",
+        deleted_by=current_user.name or current_user.email or "Unknown",
+    )
+    db.delete(talk)
+    db.commit()
+
+
 # ─── PPE Checks ──────────────────────────────────────────────────────────────
 
 @router.post("/ppe-checks")
@@ -344,6 +420,71 @@ def log_ppe_check(payload: PPECheckCreate, db: Session = Depends(get_db), curren
         "non_compliant_items": check.non_compliant_items,
         "message": "PPE check recorded successfully."
     }
+
+
+@router.put("/ppe-checks/{check_id}")
+def update_ppe_check(check_id: uuid.UUID, payload: PPECheckUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Update an existing PPE compliance check."""
+    check = db.query(PPECheck).filter(PPECheck.id == check_id).first()
+    if not check:
+        raise HTTPException(status_code=404, detail="PPE check not found")
+    project = db.query(Project).filter(Project.id == check.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "safety:edit")
+
+    tot = payload.total_workers if payload.total_workers is not None else check.total_workers
+    comp = payload.compliant_workers if payload.compliant_workers is not None else check.compliant_workers
+    if comp > tot:
+        raise HTTPException(status_code=400, detail="Compliant workers cannot exceed total workers.")
+
+    if payload.checked_by is not None:
+        check.checked_by = payload.checked_by
+    if payload.check_date is not None:
+        check.check_date = payload.check_date
+    if payload.total_workers is not None:
+        check.total_workers = payload.total_workers
+    if payload.compliant_workers is not None:
+        check.compliant_workers = payload.compliant_workers
+    if payload.non_compliant_items is not None:
+        check.non_compliant_items = payload.non_compliant_items
+
+    db.commit()
+    db.refresh(check)
+    pct = round((check.compliant_workers / check.total_workers) * 100, 1) if check.total_workers > 0 else 0.0
+    return {
+        "id": str(check.id),
+        "total_workers": check.total_workers,
+        "compliant_workers": check.compliant_workers,
+        "compliance_pct": pct,
+        "non_compliant_items": check.non_compliant_items,
+        "message": "PPE check updated successfully."
+    }
+
+
+@router.delete("/ppe-checks/{check_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_ppe_check(check_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Delete a PPE compliance check with audit log."""
+    check = db.query(PPECheck).filter(PPECheck.id == check_id).first()
+    if not check:
+        raise HTTPException(status_code=404, detail="PPE check not found")
+    project = db.query(Project).filter(Project.id == check.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "safety:edit")
+
+    log_deletion(
+        db,
+        company_id=project.company_id,
+        entity_type="ppe_check",
+        entity_id=check.id,
+        summary=f"PPE check on {check.check_date} ({check.compliant_workers}/{check.total_workers} compliant)",
+        deleted_by=current_user.name or current_user.email or "Unknown",
+    )
+    db.delete(check)
+    db.commit()
 
 
 @router.get("/ppe-checks/{project_id}")
