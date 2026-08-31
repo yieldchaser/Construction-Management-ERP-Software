@@ -71,6 +71,7 @@ interface GRN {
   receivedBy: string;
   items: GRNItem[];
   isBilled: boolean;
+  isCancelled?: boolean;
   gatePhotoUrl?: string;
 }
 
@@ -149,7 +150,7 @@ export default function ProcurementPage() {
     if (!projectId) return;
     try {
       const apiHost = getApiHost();
-      const [teamRes, indentsRes, posRes, grnsRes, invRes, vendorsRes, materialsRes, matchesRes] = await Promise.all([
+      const [teamRes, indentsRes, posRes, grnsRes, invRes, vendorsRes, materialsRes, matchesRes, txnsRes] = await Promise.all([
         fetch(`${apiHost}/apis/v3/crm/team-members/${companyId}`, { headers: authHeaders() }),
         fetch(indentScope === "company" ? `${apiHost}/apis/v3/procurement/indents/company/${companyId}` : `${apiHost}/apis/v3/procurement/indents?project_id=${projectId}`, { headers: authHeaders() }),
         fetch(`${apiHost}/apis/v3/procurement/pos?project_id=${projectId}`, { headers: authHeaders() }),
@@ -158,7 +159,28 @@ export default function ProcurementPage() {
         fetch(`${apiHost}/apis/v3/billing/subcontractors?company_id=${companyId}`, { headers: authHeaders() }),
         fetch(`${apiHost}/apis/v3/library/materials/${companyId}`, { headers: authHeaders() }),
         fetch(`${apiHost}/apis/v3/three-way/${companyId}`, { headers: authHeaders() }),
+        fetch(`${apiHost}/apis/v3/procurement/transactions?project_id=${projectId}`, { headers: authHeaders() }),
       ]);
+
+      const cancelledGrnIds = new Set<string>();
+      if (txnsRes.ok) {
+        const txData = await txnsRes.json();
+        const txArr = Array.isArray(txData) ? txData : [];
+        txArr.forEach((t: any) => {
+          if (t.type === "grn_cancellation" && t.source_ref_id) {
+            cancelledGrnIds.add(String(t.source_ref_id));
+          }
+        });
+        setTransactions(txArr.map((t: any) => ({
+          id: t.id,
+          materialName: t.material_name,
+          qty: t.qty,
+          unit: t.unit || "Unit",
+          type: t.type,
+          sourceRef: t.source_ref_id || "",
+          date: t.created_at ? t.created_at.split("T")[0] : "",
+        })));
+      }
 
       const billedGrnIds = new Set<string>();
       if (matchesRes.ok) {
@@ -242,6 +264,7 @@ export default function ProcurementPage() {
           receivedBy: grn.received_by ? (teamById[String(grn.received_by)] || "Store Incharge") : "Auto-synced",
           items: (grn.items || []).map((item: any) => ({ name: "", qty: item.received_qty, unit: "", rate: 0 })),
           isBilled: billedGrnIds.has(String(grn.id)),
+          isCancelled: cancelledGrnIds.has(String(grn.id)),
         }));
         setGrns(mapped);
       }
@@ -705,6 +728,35 @@ export default function ProcurementPage() {
   // Mark GRN as billed (Unbilled Materials tracker action)
   const handleMarkAsBilled = (_grnId: string) => {
     alert("GRN billing is reconciled server-side via 3-Way Matching against an invoice; this tracker now reflects matched GRNs and there is no manual mark-billed endpoint, so this action cannot persist.");
+  };
+
+  const [cancellingGrnId, setCancellingGrnId] = useState<string | null>(null);
+
+  const handleCancelGRN = async (grn: GRN) => {
+    const grnLabel = grn.grnNumber || "this GRN";
+    const ok = window.confirm(
+      `Are you sure you want to cancel ${grnLabel}? Received material quantities will be deducted back out of warehouse inventory.`
+    );
+    if (!ok) return;
+
+    setCancellingGrnId(grn.id);
+    try {
+      const apiHost = getApiHost();
+      const res = await fetch(`${apiHost}/apis/v3/procurement/grns/${grn.id}/cancel`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+      });
+      if (res.ok) {
+        fetchProcurementData();
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || "Failed to cancel GRN");
+      }
+    } catch (e: any) {
+      alert(e?.message || "Failed to cancel GRN. Check your connection.");
+    } finally {
+      setCancellingGrnId(null);
+    }
   };
 
   // 3-way matching check helper
@@ -1221,12 +1273,28 @@ export default function ProcurementPage() {
                               </td>
                               <td className="px-5 py-3 text-right font-sans font-bold text-warning">₹{grnValue.toLocaleString("en-IN")}</td>
                               <td className="px-5 py-3 text-right">
-                                <button
-                                  onClick={() => handleMarkAsBilled(grn.id)}
-                                  className="px-3 py-1.5 text-[10px] font-bold bg-success/10 hover:bg-success/20 border border-success/20 text-success rounded-lg transition-all inline-flex items-center gap-1 cursor-pointer"
-                                >
-                                  <Icon name="check" className="w-3 h-3" /> Mark as Billed
-                                </button>
+                                <div className="flex items-center justify-end gap-2">
+                                  {grn.isCancelled ? (
+                                    <Badge tone="danger" className="font-bold">CANCELLED</Badge>
+                                  ) : (
+                                    <>
+                                      <button
+                                        onClick={() => handleMarkAsBilled(grn.id)}
+                                        className="px-3 py-1.5 text-[10px] font-bold bg-success/10 hover:bg-success/20 border border-success/20 text-success rounded-lg transition-all inline-flex items-center gap-1 cursor-pointer"
+                                      >
+                                        <Icon name="check" className="w-3 h-3" /> Mark as Billed
+                                      </button>
+                                      <button
+                                        onClick={() => handleCancelGRN(grn)}
+                                        disabled={cancellingGrnId === grn.id}
+                                        className="px-2.5 py-1.5 text-[10px] font-bold bg-danger/10 hover:bg-danger/20 border border-danger/20 text-danger rounded-lg transition-all inline-flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                                        title="Cancel GRN and reverse received stock"
+                                      >
+                                        <Icon name="trash" className="w-3 h-3" /> {cancellingGrnId === grn.id ? "Cancelling..." : "Cancel GRN"}
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
                               </td>
                             </tr>
                           );
@@ -1252,7 +1320,11 @@ export default function ProcurementPage() {
                             <td className="px-5 py-3 text-muted">{grn.vendor}</td>
                             <td className="px-5 py-3 text-muted">{grn.receivedDate}</td>
                             <td className="px-5 py-3 text-right">
-                              <Badge tone="success" className="font-bold">BILLED</Badge>
+                              {grn.isCancelled ? (
+                                <Badge tone="danger" className="font-bold">CANCELLED</Badge>
+                              ) : (
+                                <Badge tone="success" className="font-bold">BILLED</Badge>
+                              )}
                             </td>
                           </tr>
                         ))}

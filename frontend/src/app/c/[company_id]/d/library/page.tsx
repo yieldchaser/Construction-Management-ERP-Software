@@ -616,7 +616,7 @@ export default function LibraryHubPage() {
         item.ifsc_code,
         item.tax_no,
         item.date_of_joining,
-        item.aadhaar_number,
+        maskAadhaar(item.aadhaar_number),
         item.pan_number,
         item.esi_number,
         item.pf_number,

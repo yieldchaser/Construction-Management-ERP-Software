@@ -328,6 +328,16 @@ def _clean(v):
     return v
 
 
+def _mask_aadhaar(v: Optional[str]) -> str:
+    """Mask Aadhaar numbers to 'XXXX XXXX 1234' format for exports & reports."""
+    if not v:
+        return ""
+    clean = "".join(str(v).split())
+    if len(clean) < 4:
+        return f"XXXX XXXX {clean}" if clean else ""
+    return f"XXXX XXXX {clean[-4:]}"
+
+
 def _project_ids_for_company(db: Session, cid: uuid.UUID):
     # R2-324: this used to swallow every failure to [], which builders read
     # as "company has no projects", rendering a database error as a genuinely
@@ -1570,7 +1580,7 @@ def _rep_party_library(db: Session, cid: uuid.UUID, pid: Optional[uuid.UUID]):
                 "IFSC Code": p.ifsc_code or "",
                 "Tax No.": p.tax_no or "",
                 "Billing Address": p.address or "",
-                "Aadhar Card Number": p.aadhaar_number or "",
+                "Aadhar Card Number": _mask_aadhaar(p.aadhaar_number),
                 "PAN Card Number": p.pan_number or "",
                 "ESI Number": p.esi_number or "",
                 "PF Number": p.pf_number or "",
