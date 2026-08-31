@@ -421,3 +421,46 @@ def test_negative_writeoff_adjustment_releases_and_positive_does_not(client, db,
     db.refresh(inv)
     assert float(inv.on_hand_qty) == 110.0
     assert float(inv.reserved_qty) == 20.0  # Still 20.0, not increased
+
+
+def test_dpr_delete_reversal_restores_reservations(client, db, make_tenant, auth_headers):
+    """Approve an indent to reserve stock, consume part of it via DPR, then DELETE the DPR.
+    Assert DELETE response is not 5xx, and WarehouseInventory.reserved_qty and
+    MaterialIndentItem.reserved_qty both return to their pre-DPR values."""
+    comp, user, _ = make_tenant(company_name="DPRRev Co", user_name="DPRRev User")
+    hdr = auth_headers(user, comp)
+    proj = _mk_project(db, comp, "DPRRev Proj")
+
+    inv = _mk_inventory(db, proj, "Gravel", on_hand=100.0, reserved=0.0, unit="tons")
+
+    indent = _mk_indent(client, comp, proj, hdr, [("Gravel", 60.0, "tons")])
+    _approve_indent(client, hdr, indent["id"])
+
+    db.refresh(inv)
+    item = db.query(models.MaterialIndentItem).filter(models.MaterialIndentItem.indent_id == indent["id"]).first()
+    assert float(inv.reserved_qty) == 60.0
+    assert float(item.reserved_qty) == 60.0
+
+    # Post DPR consuming 25 tons
+    r_dpr = _mk_dpr(client, proj, hdr, [("Gravel", 25.0, "tons")])
+    assert r_dpr.status_code == 201
+    dpr_data = r_dpr.json()
+    dpr_id = dpr_data["id"]
+
+    db.refresh(inv)
+    db.refresh(item)
+    assert float(inv.on_hand_qty) == 75.0
+    assert float(inv.reserved_qty) == 35.0
+    assert float(item.reserved_qty) == 35.0
+
+    # Delete DPR
+    r_del = client.delete(f"/apis/v3/dpr/{dpr_id}", headers=hdr)
+    assert r_del.status_code < 500
+    assert r_del.status_code in (200, 204)
+
+    db.refresh(inv)
+    db.refresh(item)
+    assert float(inv.on_hand_qty) == 100.0
+    assert float(inv.reserved_qty) == 60.0
+    assert float(item.reserved_qty) == 60.0
+

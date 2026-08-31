@@ -25,7 +25,7 @@ interface Indent {
   id: string;
   indentNumber: string;
   items: IndentItem[];
-  status: "pending" | "approved" | "ordered" | "rejected";
+  status: "pending" | "approved" | "ordered" | "rejected" | "cancelled";
   requestedBy: string;
   date: string;
 }
@@ -665,7 +665,11 @@ export default function ProcurementPage() {
                     <div className="flex justify-between items-center text-xs">
                       <strong className="text-foreground font-extrabold">{ind.indentNumber}</strong>
                       <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
-                        ind.status === "approved" ? "bg-success/10 text-success border border-success/20" : "bg-warning/10 text-warning border border-warning/20"
+                        ind.status === "approved"
+                          ? "bg-success/10 text-success border border-success/20"
+                          : ind.status === "cancelled" || ind.status === "rejected"
+                          ? "bg-muted/10 text-muted border border-border-custom"
+                          : "bg-warning/10 text-warning border border-warning/20"
                       }`}>{ind.status}</span>
                     </div>
 

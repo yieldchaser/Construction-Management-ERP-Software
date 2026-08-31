@@ -120,4 +120,4 @@ def rereserve_reservation(db: Session, project_id: uuid.UUID, material_name: str
             remaining_to_restore -= add
             db.add(item)
 
-    return actually_added
+    return to_rereserve
