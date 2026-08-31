@@ -11,6 +11,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton, TableSkeleton } from "@/components/ui/Skeleton";
 import SegmentedTabs from "@/components/ui/Tabs";
 import Icon from "@/components/marketing/Icon";
+import FieldHint from "@/components/ui/FieldHint";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -344,8 +345,8 @@ function SalaryBreakupModal({
 
   return (
     <Modal title="Salary Breakup" onClose={onClose} wide>
-      {templates.length > 0 && (
-        <Field label="Load Template">
+      <Field label="Load Template">
+        {templates.length > 0 ? (
           <select
             className={inputCls}
             value=""
@@ -356,8 +357,10 @@ function SalaryBreakupModal({
               <option key={t.id} value={t.id}>{t.name}</option>
             ))}
           </select>
-        </Field>
-      )}
+        ) : (
+          <FieldHint text="No salary templates yet. Create templates in Settings." href={`/c/${companyId}/settings`} linkLabel="Go to Settings" />
+        )}
+      </Field>
       <Field label="Monthly CTC">
         <div className="flex gap-2">
           <input
@@ -888,6 +891,9 @@ function PayrollDetailsDrawer({
             </option>
           ))}
         </select>
+        {costCodes.length === 0 && (
+          <FieldHint text="No cost codes yet. Define cost codes in Cost Codes." href={`/c/${companyId}/cost-codes`} linkLabel="Go to Cost Codes" />
+        )}
       </Field>
 
       <div className="mt-4 flex justify-end gap-2">

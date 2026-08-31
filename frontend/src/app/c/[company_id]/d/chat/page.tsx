@@ -11,6 +11,7 @@ import Icon from "@/components/marketing/Icon";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
+import FieldHint from "@/components/ui/FieldHint";
 
 interface ChatGroup {
   id: string;
@@ -909,6 +910,9 @@ export default function ChatPage() {
                     <option key={m.id} value={m.id}>{m.name}</option>
                   ))}
                 </select>
+                {teamOptions.length === 0 && (
+                  <FieldHint text="No team members available. Invite members in Settings." href={`/c/${companyId}/settings`} linkLabel="Go to Settings" />
+                )}
               </div>
 
               <div>

@@ -12,6 +12,7 @@ import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { TableSkeleton } from "@/components/ui/Skeleton";
+import FieldHint from "@/components/ui/FieldHint";
 
 interface WorkOrder {
   id: string;
@@ -360,6 +361,9 @@ export default function SubconPage() {
                       <option key={s.id} value={s.id}>{s.name}</option>
                     ))}
                   </select>
+                  {subcontractors.length === 0 && (
+                    <FieldHint text="No subcontractors yet." onAction={() => setShowAddPartyDrawer(true)} actionLabel="Add a subcontractor" />
+                  )}
 
                   <button
                     type="button"

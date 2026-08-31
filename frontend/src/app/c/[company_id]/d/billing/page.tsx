@@ -12,6 +12,7 @@ import SegmentedTabs from "@/components/ui/Tabs";
 import { EmptyState } from "@/components/ui/EmptyState";
 import Icon from "@/components/marketing/Icon";
 import Badge from "@/components/ui/Badge";
+import FieldHint from "@/components/ui/FieldHint";
 
 // Types
 interface Deduction {
@@ -682,7 +683,7 @@ export default function SubcontractorBillingPage() {
                                 {bill.matchStatus === "approved" ? "Re-link Match" : "Link Match"}
                               </button>
                               {linkingBillId === bill.id && (
-                                <div className="mt-2 flex items-center gap-2">
+                                <div className="mt-2 flex flex-col gap-2">
                                   <select
                                     value={bill.matchId || ""}
                                     onChange={(e) => linkBillMatch(bill.id, e.target.value || null)}
@@ -695,6 +696,9 @@ export default function SubcontractorBillingPage() {
                                       </option>
                                     ))}
                                   </select>
+                                  {matchOptions.length === 0 && (
+                                    <FieldHint text="No approved matches yet. Create matches in Three-Way Matching." href={`/c/${companyId}/d/three-way`} linkLabel="Go to Three-Way Matching" />
+                                  )}
                                   <button
                                     onClick={() => { setLinkingBillId(null); setMatchOptions([]); }}
                                     className="text-muted hover:text-foreground text-[10px] px-1.5 cursor-pointer"
@@ -910,6 +914,9 @@ export default function SubcontractorBillingPage() {
                       <option key={s.company_team_id} value={s.company_team_id}>{s.name}</option>
                     ))}
                   </select>
+                  {subcontractors.length === 0 && (
+                    <FieldHint text="No subcontractors yet. Add one in Subcontractors." href={`/c/${companyId}/d/subcon`} linkLabel="Go to Subcontractors" />
+                  )}
                 </div>
               </div>
 
@@ -978,6 +985,9 @@ export default function SubcontractorBillingPage() {
                         <option key={s.company_team_id} value={s.company_team_id}>{s.name}</option>
                       ))}
                     </select>
+                    {subcontractors.length === 0 && (
+                      <FieldHint text="No subcontractors yet. Add one in Subcontractors." href={`/c/${companyId}/d/subcon`} linkLabel="Go to Subcontractors" />
+                    )}
                   </div>
                 </div>
 

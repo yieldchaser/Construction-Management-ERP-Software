@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { CardSkeleton } from "@/components/ui/Skeleton";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
+import FieldHint from "@/components/ui/FieldHint";
 // R2-755: shared CSV guard. Quote-doubling protects the delimiter, not the
 // formula — a leading = + - @ executes when the export opens in Excel/Sheets.
 import { buildCsv } from "@/lib/csv";
@@ -1100,6 +1101,9 @@ ${tasksXml}
                     </option>
                   ))}
                 </select>
+                {projects.length === 0 && (
+                  <FieldHint text="No projects found. Create a project in Projects." href={`/c/${companyId}/projects`} linkLabel="Go to Projects" />
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

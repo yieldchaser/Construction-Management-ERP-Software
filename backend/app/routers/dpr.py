@@ -188,22 +188,76 @@ def create_dpr(req: DPRCreateRequest, db: Session = Depends(get_db), current_use
     db.refresh(dpr)
     return dpr
 
+def resolve_dpr_authors(db: Session, reports: List[DailyProgressReport]) -> dict[str, str]:
+    """Resolve raw reported_by strings (names or legacy UUIDs) to display names in a batch."""
+    author_uuids = set()
+    raw_keys = set()
+    for d in reports:
+        val = d.reported_by if isinstance(d, DailyProgressReport) else str(d)
+        if not val:
+            continue
+        raw_keys.add(val)
+        try:
+            author_uuids.add(uuid.UUID(val))
+        except (ValueError, AttributeError):
+            pass
+
+    users_by_id = {}
+    if author_uuids:
+        users = db.query(User).filter(User.id.in_(author_uuids)).all()
+        for u in users:
+            if u.name:
+                users_by_id[str(u.id)] = u.name
+
+    mapping = {}
+    for k in raw_keys:
+        try:
+            u_id_str = str(uuid.UUID(str(k)))
+            mapping[k] = users_by_id.get(u_id_str, "Unknown")
+        except (ValueError, AttributeError):
+            mapping[k] = str(k)
+    return mapping
+
+
 @router.get("", response_model=List[DPRResponse])
 def get_dprs(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     project_uuid = uuid.UUID(str(project_id))
-    return db.query(DailyProgressReport).filter(
+    dprs = db.query(DailyProgressReport).filter(
         DailyProgressReport.project_id == project_uuid
     ).order_by(DailyProgressReport.dpr_date.desc()).all()
+    author_map = resolve_dpr_authors(db, dprs)
+    result = []
+    for d in dprs:
+        result.append(
+            DPRResponse(
+                id=d.id,
+                project_id=d.project_id,
+                task_id=d.task_id,
+                reported_by=author_map.get(d.reported_by, d.reported_by or "Unknown"),
+                dpr_date=d.dpr_date,
+                weather=d.weather,
+                executed_qty=float(d.executed_qty or 0),
+                workers_deployed=d.workers_deployed or 0,
+                materials_consumed=d.materials_consumed or [],
+                photos=d.photos or [],
+                notes=d.notes,
+                issues=d.issues,
+                status=d.status,
+                created_at=d.created_at,
+            )
+        )
+    return result
 
 @router.get("/summary")
 def get_dpr_summary(project_id: uuid.UUID, db: Session = Depends(get_db), _: None = Depends(verify_project_access)):
     project_uuid = uuid.UUID(str(project_id))
     dprs = db.query(DailyProgressReport).filter(DailyProgressReport.project_id == project_uuid).all()
+    author_map = resolve_dpr_authors(db, dprs)
     
     total_workers = sum(d.workers_deployed for d in dprs)
     activities_count = len(dprs)
     flagged_issues = [
-        {"date": d.dpr_date.isoformat() if hasattr(d.dpr_date, 'isoformat') else str(d.dpr_date), "reporter": d.reported_by, "issue": d.issues}
+        {"date": d.dpr_date.isoformat() if hasattr(d.dpr_date, 'isoformat') else str(d.dpr_date), "reporter": author_map.get(d.reported_by, d.reported_by or "Unknown"), "issue": d.issues}
         for d in dprs if d.issues and d.issues.strip()
     ]
     
@@ -305,15 +359,7 @@ def export_dpr_csv(
 
     p_ids = list({d.project_id for d in reports if d.project_id})
     projs_by_id = {p.id: p for p in db.query(Project).filter(Project.id.in_(p_ids)).all()} if p_ids else {}
-
-    author_uuids = []
-    for d in reports:
-        if d.reported_by:
-            try:
-                author_uuids.append(uuid.UUID(d.reported_by))
-            except ValueError:
-                pass
-    users_by_id = {u.id: u.name for u in db.query(User).filter(User.id.in_(set(author_uuids))).all()} if author_uuids else {}
+    author_map = resolve_dpr_authors(db, reports)
 
     for d in reports:
         project = projs_by_id.get(d.project_id)
@@ -322,13 +368,7 @@ def export_dpr_csv(
             f"{m.get('material_name')} {m.get('quantity')} {m.get('unit') or ''}".strip()
             for m in mats
         )
-        author = "Unknown"
-        if d.reported_by:
-            try:
-                auid = uuid.UUID(d.reported_by)
-                author = users_by_id.get(auid, "Unknown")
-            except ValueError:
-                author = d.reported_by or "Unknown"
+        author = author_map.get(d.reported_by, d.reported_by or "Unknown")
 
         writer.writerow([
             _csv_safe_cell(d.dpr_date.strftime("%Y-%m-%d") if d.dpr_date else ""),

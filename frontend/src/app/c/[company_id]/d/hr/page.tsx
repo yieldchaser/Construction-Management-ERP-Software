@@ -12,6 +12,7 @@ import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { CardSkeleton } from "@/components/ui/Skeleton";
+import FieldHint from "@/components/ui/FieldHint";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -1240,6 +1241,9 @@ export default function HRPayrollPage() {
                               <option key={e.id} value={e.id}>{e.name} ({e.designation})</option>
                             ))}
                           </select>
+                          {employees.length === 0 && (
+                            <FieldHint text="No employees yet." onAction={() => setShowWorkforceDrawer(true)} actionLabel="Add workforce" />
+                          )}
                         </div>
 
                         <div className="space-y-1.5">
@@ -1301,6 +1305,9 @@ export default function HRPayrollPage() {
                               <option key={t.id} value={t.id}>{t.name}</option>
                             ))}
                           </select>
+                          {projectTasks.length === 0 && (
+                            <FieldHint text="No project tasks yet. Create tasks in Planning." href={`/c/${companyId}/d/planning/gantt`} linkLabel="Go to Planning" />
+                          )}
                         </div>
 
                         <div className="space-y-1.5">
@@ -1778,6 +1785,9 @@ export default function HRPayrollPage() {
                     <option key={emp.id} value={emp.id}>{emp.name} ({emp.code})</option>
                   ))}
                 </select>
+                {employees.length === 0 && (
+                  <FieldHint text="No employees yet." onAction={() => { setShowApplyLeaveModal(false); setShowWorkforceDrawer(true); }} actionLabel="Add workforce" />
+                )}
               </div>
 
               <div className="space-y-1">
@@ -1989,6 +1999,9 @@ export default function HRPayrollPage() {
                       <option key={cc.id} value={cc.id}>{cc.code} ({cc.name})</option>
                     ))}
                   </select>
+                  {costCodes.length === 0 && (
+                    <FieldHint text="No cost codes yet. Define cost codes in Cost Codes." href={`/c/${companyId}/cost-codes`} linkLabel="Go to Cost Codes" />
+                  )}
                 </div>
               </div>
             </div>
@@ -2147,6 +2160,9 @@ export default function HRPayrollPage() {
                       <option key={cc.id}>{cc.code} ({cc.name})</option>
                     ))}
                   </select>
+                  {costCodes.length === 0 && (
+                    <FieldHint text="No cost codes yet. Define cost codes in Cost Codes." href={`/c/${companyId}/cost-codes`} linkLabel="Go to Cost Codes" />
+                  )}
                 </div>
               </div>
             </div>

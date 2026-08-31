@@ -8,6 +8,7 @@ import SegmentedTabs from "@/components/ui/Tabs";
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
+import FieldHint from "@/components/ui/FieldHint";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -928,6 +929,9 @@ isCode: cl.is_code_reference || "—",
                     <option key={cl.id} value={cl.id} className="bg-card text-foreground">{cl.title} ({cl.isCode})</option>
                   ))}
                 </select>
+                {checklists.length === 0 && (
+                  <FieldHint text="No checklist templates yet. Create templates in Quality." href={`/c/${companyId}/d/quality`} linkLabel="Go to Quality" />
+                )}
               </div>
               <div>
                 <label className="text-[10px] uppercase font-bold text-muted block mb-1">Location Zone</label>

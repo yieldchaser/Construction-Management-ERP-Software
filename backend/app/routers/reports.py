@@ -3195,8 +3195,25 @@ def _rep_company_user_activity_leaderboard(db: Session, cid: uuid.UUID, pid: Opt
         rows = []
         for ct in q.all():
             user_name = _team_user_name(db, ct.id)
-            dpr_cnt = db.query(DailyProgressReport).filter(DailyProgressReport.reported_by == user_name).count()
-            todo_cnt = db.query(Todo).filter(Todo.company_id == cid, Todo.created_by == ct.id).count()
+            dpr_q = (
+                db.query(DailyProgressReport)
+                .join(Project, DailyProgressReport.project_id == Project.id)
+                .filter(Project.company_id == cid)
+            )
+            if pid:
+                dpr_q = dpr_q.filter(DailyProgressReport.project_id == pid)
+
+            author_matchers = [k for k in [user_name, str(ct.user_id) if ct.user_id else None, str(ct.id) if ct.id else None] if k]
+            if author_matchers:
+                dpr_q = dpr_q.filter(DailyProgressReport.reported_by.in_(author_matchers))
+            else:
+                dpr_q = dpr_q.filter(DailyProgressReport.reported_by == user_name)
+
+            dpr_cnt = dpr_q.count()
+            todo_q = db.query(Todo).filter(Todo.company_id == cid, Todo.created_by == ct.id)
+            if pid:
+                todo_q = todo_q.filter(Todo.project_id == pid)
+            todo_cnt = todo_q.count()
             total_act = dpr_cnt + todo_cnt
             rows.append({
                 "Creator Name": user_name,

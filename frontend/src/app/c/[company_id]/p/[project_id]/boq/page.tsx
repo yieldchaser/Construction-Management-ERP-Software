@@ -10,6 +10,7 @@ import PageHeader from "@/components/PageHeader";
 import { TableSkeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import Icon from "@/components/marketing/Icon";
+import FieldHint from "@/components/ui/FieldHint";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type BOQDocument = {
@@ -726,6 +727,9 @@ export default function BoqTab() {
                         </option>
                       ))}
                     </select>
+                    {filteredClients.length === 0 && (
+                      <FieldHint text="No clients registered yet." onAction={() => setShowParty(true)} actionLabel="Add a party" />
+                    )}
                     <button
                       type="button"
                       onClick={() => setShowParty(true)}

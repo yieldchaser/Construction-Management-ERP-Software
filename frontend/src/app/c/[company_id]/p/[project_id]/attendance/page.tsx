@@ -10,6 +10,7 @@ import SegmentedTabs from "@/components/ui/Tabs";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
+import FieldHint from "@/components/ui/FieldHint";
 const STATUS_MAP: Record<string, string> = {
   Present: "bg-success/10 text-success border-success/20",
   present: "bg-success/10 text-success border-success/20",
@@ -1435,6 +1436,9 @@ export default function AttendancePage() {
                           </option>
                         ))}
                       </select>
+                      {teamMembers.length === 0 && (
+                        <FieldHint text="No team members available. Invite team members in Settings." href={`/c/${companyId}/settings`} linkLabel="Go to Settings" />
+                      )}
                       <button
                         onClick={handleAddMember}
                         disabled={!selectedTeamMemberId || addingMember}

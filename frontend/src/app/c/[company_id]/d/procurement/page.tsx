@@ -12,6 +12,7 @@ import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import SegmentedTabs from "@/components/ui/Tabs";
 import { EmptyState } from "@/components/ui/EmptyState";
+import FieldHint from "@/components/ui/FieldHint";
 
 // Types
 interface IndentItem {
@@ -1060,6 +1061,9 @@ export default function ProcurementPage() {
                     <option key={m.id} value={m.name}>{m.name}</option>
                   ))}
                 </select>
+                {materials.length === 0 && (
+                  <FieldHint text="No materials yet. Add one in Library." href={`/c/${companyId}/d/library`} linkLabel="Go to Library" />
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -1169,6 +1173,9 @@ export default function ProcurementPage() {
                     <option key={m.id} value={m.name}>{m.name}</option>
                   ))}
                 </select>
+                {materials.length === 0 && (
+                  <FieldHint text="No materials yet. Add one in Library." href={`/c/${companyId}/d/library`} linkLabel="Go to Library" />
+                )}
               </div>
 
               <div className="space-y-1">
@@ -1213,6 +1220,9 @@ export default function ProcurementPage() {
                     <option key={v.id} value={v.id}>{v.name}</option>
                   ))}
                 </select>
+                {vendorOptions.length === 0 && (
+                  <FieldHint text="No vendors yet. Add one in Subcontractors." href={`/c/${companyId}/d/subcon`} linkLabel="Go to Subcontractors" />
+                )}
               </div>
 
               {/* Multi-item list form */}
@@ -1241,6 +1251,9 @@ export default function ProcurementPage() {
                           <option key={m.id} value={m.name}>{m.name}</option>
                         ))}
                       </select>
+                      {materials.length === 0 && (
+                        <FieldHint text="No materials yet. Add one in Library." href={`/c/${companyId}/d/library`} linkLabel="Go to Library" />
+                      )}
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       <div className="space-y-1">

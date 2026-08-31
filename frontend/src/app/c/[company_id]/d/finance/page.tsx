@@ -15,6 +15,7 @@ import PageHeader from "@/components/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
 import SegmentedTabs from "@/components/ui/Tabs";
 import { EmptyState } from "@/components/ui/EmptyState";
+import FieldHint from "@/components/ui/FieldHint";
 
 interface Transaction {
   id: string;
@@ -3415,6 +3416,9 @@ export default function FinancePage() {
                         <option key={u.id} value={u.id}>{u.name} ({u.role || "—"})</option>
                       ))}
                     </select>
+                    {usersList.length === 0 && (
+                      <FieldHint text="No parties registered yet." onAction={() => setShowAddPartyModal(true)} actionLabel="Add a party" />
+                    )}
                   </div>
 
                   <div>
@@ -3430,6 +3434,9 @@ export default function FinancePage() {
                         <option key={u.id} value={u.id}>{u.name} ({u.role || "—"})</option>
                       ))}
                     </select>
+                    {usersList.length === 0 && (
+                      <FieldHint text="No parties registered yet." onAction={() => setShowAddPartyModal(true)} actionLabel="Add a party" />
+                    )}
                   </div>
 
                   <div>
@@ -3980,6 +3987,9 @@ export default function FinancePage() {
                         <option value="" disabled>No parties registered yet</option>
                       )}
                     </select>
+                    {usersList.length === 0 && (
+                      <FieldHint text="No parties registered yet." onAction={() => setShowAddPartyModal(true)} actionLabel="Add a party" />
+                    )}
                   </div>
 
                   {prType?.extraLabel && (

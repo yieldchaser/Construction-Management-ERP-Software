@@ -11,6 +11,7 @@ import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import SegmentedTabs from "@/components/ui/Tabs";
 import { EmptyState } from "@/components/ui/EmptyState";
+import FieldHint from "@/components/ui/FieldHint";
 
 interface Task {
   id: string;
@@ -864,6 +865,9 @@ export default function GanttSchedulerPage() {
                       <option key={t.id} value={t.id}>{t.name}</option>
                     ))}
                   </select>
+                  {tasks.length === 0 && (
+                    <FieldHint text="No tasks created yet. Create a task in the form above." />
+                  )}
                 </div>
                 <div className="space-y-1">
                   <label className="text-muted font-semibold">Requires Completion of Predecessor</label>

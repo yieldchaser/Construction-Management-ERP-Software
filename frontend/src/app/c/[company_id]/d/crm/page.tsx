@@ -10,6 +10,7 @@ import SegmentedTabs from "@/components/ui/Tabs";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { TableSkeleton } from "@/components/ui/Skeleton";
 import Icon from "@/components/marketing/Icon";
+import FieldHint from "@/components/ui/FieldHint";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -991,6 +992,9 @@ export default function CRMPage() {
                 </option>
               ))}
             </select>
+            {leads.length === 0 && (
+              <FieldHint text="No leads yet." onAction={() => setTab("leads")} actionLabel="Add a lead in CRM" />
+            )}
           </div>
 
           {/* Quotations list */}
@@ -1086,6 +1090,9 @@ export default function CRMPage() {
                       <option key={b.id} value={b.id}>{b.bank_name} — {b.account_number}</option>
                     ))}
                   </select>
+                  {banks.length === 0 && (
+                    <FieldHint text="No bank accounts yet. Add one in Settings." href={`/c/${companyId}/settings`} linkLabel="Go to Settings" />
+                  )}
                 </Field>
               </div>
 

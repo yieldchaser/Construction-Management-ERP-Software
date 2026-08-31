@@ -9,6 +9,7 @@ import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
+import FieldHint from "@/components/ui/FieldHint";
 
 interface Match {
   id: string;
@@ -265,6 +266,9 @@ export default function ThreeWayPage() {
                     <option value="">Select PO</option>
                     {pos.map((p) => <option key={p.id} value={p.id}>{p.po_number} — {fmtINR(p.total_amount)}</option>)}
                   </select>
+                  {pos.length === 0 && (
+                    <FieldHint text="No purchase orders yet. Create one in Procurement." href={`/c/${companyId}/d/procurement`} linkLabel="Go to Procurement" />
+                  )}
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-muted mb-1">Goods Receipt Note</label>
@@ -272,6 +276,9 @@ export default function ThreeWayPage() {
                     <option value="">Select GRN</option>
                     {grns.map((g) => <option key={g.id} value={g.id}>{g.grn_number}</option>)}
                   </select>
+                  {grns.length === 0 && (
+                    <FieldHint text="No goods receipt notes yet. Record one in Procurement." href={`/c/${companyId}/d/procurement`} linkLabel="Go to Procurement" />
+                  )}
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-muted mb-1">Vendor Bill</label>
@@ -279,6 +286,9 @@ export default function ThreeWayPage() {
                     <option value="">Select bill</option>
                     {bills.map((b) => <option key={b.id} value={b.id}>{b.invoice_number} — {fmtINR(b.total_payable)}</option>)}
                   </select>
+                  {bills.length === 0 && (
+                    <FieldHint text="No vendor bills yet. Add one in Billing." href={`/c/${companyId}/d/billing`} linkLabel="Go to Billing" />
+                  )}
                   {selectedBill && selectedPo && (
                     <p className="text-xs text-muted mt-1">Bill Amount: {fmtINR(selectedBill.total_payable)} • PO Amount: {fmtINR(selectedPo.total_amount)} • Variance: <span className={autoVariance < 0 ? "text-danger" : autoVariance > 0 ? "text-warning" : "text-success"}>{fmtINR(autoVariance)}</span></p>
                   )}

@@ -13,6 +13,7 @@ import PageHeader from "@/components/PageHeader";
 import { TableSkeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import Icon from "@/components/marketing/Icon";
+import FieldHint from "@/components/ui/FieldHint";
 
 // ── Transaction taxonomy (exact list from build spec) ────────────────────────
 type Endpoint = "bill" | "debit" | "credit" | "request";
@@ -707,6 +708,9 @@ function NewTransactionModal({
               <option key={m.company_team_id} value={m.company_team_id}>{m.name}{m.role ? ` (${m.role})` : ""}</option>
             ))}
           </select>
+          {members.length === 0 && (
+            <FieldHint text="No parties available. Invite members in Settings." href={`/c/${companyId}/settings`} linkLabel="Go to Settings" />
+          )}
         </div>
 
         {cfg.endpoint === "bill" && (
