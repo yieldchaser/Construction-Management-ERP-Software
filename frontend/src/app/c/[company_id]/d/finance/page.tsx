@@ -38,6 +38,21 @@ interface Transaction {
   due_date?: string;
 }
 
+interface LedgerEntry {
+  id: string;
+  date: string;
+  type: string;
+  category: string;
+  description: string;
+  amount: number;
+  party: string;
+  ref: string;
+  ledger: string;
+  debit: number;
+  credit: number;
+  balance: number;
+}
+
 interface PLItem {
   head: string;
   budget: number;
@@ -115,9 +130,13 @@ export default function FinancePage() {
   const { activeProjectId } = useProject();
   const projectId = activeProjectId;
 
-  const [tab, setTab] = useState<"ledger" | "party" | "cashbook" | "pl" | "tally" | "costvar" | "payment_requests" | "accounts">("ledger");
+  const [tab, setTab] = useState<"ledger" | "general_ledger" | "party" | "cashbook" | "pl" | "tally" | "costvar" | "payment_requests" | "accounts">("ledger");
   
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [projectLedger, setProjectLedger] = useState<LedgerEntry[]>([]);
+  const [ledgerLoading, setLedgerLoading] = useState(false);
+  const [ledgerDateFilter, setLedgerDateFilter] = useState("");
+  const [ledgerSearchQuery, setLedgerSearchQuery] = useState("");
   const [plData, setPlData] = useState<PLItem[]>([]);
   const [tallyConn, setTallyConn] = useState<TallyConnection | null>(null);
 
@@ -376,6 +395,7 @@ export default function FinancePage() {
         if (empRes.ok) {
           setUsersList(await empRes.json());
         }
+        await fetchGeneralLedger();
       }
     } catch (e) {
       console.error("Failed to load finance data", e);
@@ -383,11 +403,52 @@ export default function FinancePage() {
     }
   };
 
+  const fetchGeneralLedger = async () => {
+    if (!projectId) return;
+    try {
+      setLedgerLoading(true);
+      const res = await fetch(`${getApiHost()}/apis/v3/finance/ledger?project_id=${projectId}`, { headers: authHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        setProjectLedger(Array.isArray(data) ? data : []);
+      } else {
+        setProjectLedger([]);
+      }
+    } catch (e) {
+      console.error("Failed to load project general ledger", e);
+      setProjectLedger([]);
+    } finally {
+      setLedgerLoading(false);
+    }
+  };
+
+  const handleDeletePayment = async (paymentId: string) => {
+    if (!confirm("Are you sure you want to delete this payment voucher? This will reverse any linked bill settlements and bank postings.")) return;
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/finance/payments/${paymentId}`, {
+        method: "DELETE",
+        headers: authHeaders(),
+      });
+      if (res.ok) {
+        alert("Payment deleted successfully");
+        setSelectedVoucher(null);
+        fetchData();
+        fetchGeneralLedger();
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || "Failed to delete payment");
+      }
+    } catch (err) {
+      console.error("Delete payment error:", err);
+      alert("Failed to delete payment. Check your connection.");
+    }
+  };
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       const queryParams = new URLSearchParams(window.location.search);
       const queryTab = queryParams.get("tab");
-      if (queryTab && ["ledger", "party", "cashbook", "pl", "tally", "costvar", "payment_requests", "accounts"].includes(queryTab)) {
+      if (queryTab && ["ledger", "general_ledger", "party", "cashbook", "pl", "tally", "costvar", "payment_requests", "accounts"].includes(queryTab)) {
         setTab(queryTab as any);
       }
     }
@@ -1112,19 +1173,23 @@ export default function FinancePage() {
           tabs={[
             { id: "party", label: "Party", icon: <Icon name="group" className="w-3.5 h-3.5" /> },
             { id: "ledger", label: "Transaction", icon: <Icon name="ledger" className="w-3.5 h-3.5" /> },
+            { id: "general_ledger", label: "General Ledger", icon: <Icon name="payments" className="w-3.5 h-3.5" /> },
             { id: "payment_requests", label: "Payment Requests", icon: <Icon name="envelope" className="w-3.5 h-3.5" /> },
             { id: "accounts", label: "Accounts", icon: <Icon name="bank" className="w-3.5 h-3.5" /> },
             { id: "tally", label: "Tally Sync", icon: <Icon name="refresh" className="w-3.5 h-3.5" /> },
           ]}
           activeTab={tab}
-          onChange={(t) => setTab(t as any)}
+          onChange={(t) => {
+            setTab(t as any);
+            if (t === "general_ledger") fetchGeneralLedger();
+          }}
         />
       </div>
 
       {/* ── Main content area ── */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <PageHeader
-          title={tab === "ledger" ? "Dashboard" : tab === "party" ? "Party-wise Ledgers" : tab === "payment_requests" ? "Payment Requests Ledger" : tab === "accounts" ? "Company Cash & Bank Accounts" : tab === "cashbook" ? "Cash Book (Bank Ledger)" : tab === "pl" ? "Project P&L" : tab === "tally" ? "Tally Sync Gateway" : "Cost Variance Report"}
+          title={tab === "ledger" ? "Dashboard" : tab === "general_ledger" ? "Project General Ledger" : tab === "party" ? "Party-wise Ledgers" : tab === "payment_requests" ? "Payment Requests Ledger" : tab === "accounts" ? "Company Cash & Bank Accounts" : tab === "cashbook" ? "Cash Book (Bank Ledger)" : tab === "pl" ? "Project P&L" : tab === "tally" ? "Tally Sync Gateway" : "Cost Variance Report"}
           subtitle="Real-time sequential approval tracking & running balance ledger"
         >
           <div className="flex items-center gap-4 relative">
@@ -1313,6 +1378,165 @@ export default function FinancePage() {
                 </table>
               </div>
             </div>
+            );
+          })()}
+
+          {/* ── PROJECT GENERAL LEDGER TAB ── */}
+          {tab === "general_ledger" && (() => {
+            const filteredLedger = projectLedger.filter((entry) => {
+              const q = ledgerSearchQuery.toLowerCase();
+              const matchQ = !q || (entry.party || "").toLowerCase().includes(q) || (entry.description || "").toLowerCase().includes(q) || (entry.ref || "").toLowerCase().includes(q) || (entry.category || "").toLowerCase().includes(q);
+              const matchD = !ledgerDateFilter || (entry.date || "").startsWith(ledgerDateFilter);
+              return matchQ && matchD;
+            });
+            const totalDebit = filteredLedger.reduce((sum, e) => sum + (e.debit || 0), 0);
+            const totalCredit = filteredLedger.reduce((sum, e) => sum + (e.credit || 0), 0);
+            const latestBalance = filteredLedger.length > 0 ? filteredLedger[filteredLedger.length - 1].balance : 0;
+
+            const handleExportCsv = () => {
+              const csv = buildCsv(
+                ["Date", "Description", "Ref / Voucher", "Party", "Category", "Debit", "Credit", "Balance"],
+                filteredLedger.map(e => [
+                  e.date || "",
+                  e.description || "",
+                  e.ref || "",
+                  e.party || "",
+                  e.category || "",
+                  String(e.debit || 0),
+                  String(e.credit || 0),
+                  String(e.balance || 0),
+                ])
+              );
+              const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement("a");
+              link.href = url;
+              link.setAttribute("download", `General_Ledger_${new Date().toISOString().split("T")[0]}.csv`);
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            };
+
+            return (
+              <div className="space-y-4">
+                {/* Summary Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-card border border-border-custom rounded-lg p-4">
+                    <div className="text-[10px] font-bold text-muted uppercase tracking-wider">Total Debits (Receipts)</div>
+                    <div className="text-xl font-extrabold text-foreground mt-1 font-sans">₹{totalDebit.toLocaleString("en-IN")}</div>
+                    <div className="text-[10px] text-muted mt-1">{filteredLedger.filter(e => e.debit > 0).length} debit entries</div>
+                  </div>
+                  <div className="bg-card border border-border-custom rounded-lg p-4">
+                    <div className="text-[10px] font-bold text-muted uppercase tracking-wider">Total Credits (Payments/Bills)</div>
+                    <div className="text-xl font-extrabold text-foreground mt-1 font-sans">₹{totalCredit.toLocaleString("en-IN")}</div>
+                    <div className="text-[10px] text-muted mt-1">{filteredLedger.filter(e => e.credit > 0).length} credit entries</div>
+                  </div>
+                  <div className="bg-card border border-border-custom rounded-lg p-4">
+                    <div className="text-[10px] font-bold text-muted uppercase tracking-wider">Net Running Balance</div>
+                    <div className={`text-xl font-extrabold mt-1 font-sans ${latestBalance >= 0 ? "text-success" : "text-danger"}`}>
+                      ₹{latestBalance.toLocaleString("en-IN")}
+                    </div>
+                    <div className="text-[10px] text-muted mt-1">Double-entry project balance</div>
+                  </div>
+                </div>
+
+                {/* Toolbar */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <input
+                    type="date"
+                    value={ledgerDateFilter}
+                    onChange={(e) => setLedgerDateFilter(e.target.value)}
+                    className="py-1 px-2 border border-border-custom bg-card hover:bg-elevated rounded text-[11px] text-foreground focus:outline-none"
+                  />
+                  <button
+                    onClick={handleExportCsv}
+                    className="py-1 px-3 border border-border-custom bg-elevated hover:bg-card rounded text-[11px] font-semibold text-foreground flex items-center gap-1 cursor-pointer"
+                  >
+                    <Icon name="cloud_drive" className="w-3.5 h-3.5" /> Export CSV
+                  </button>
+                  <button
+                    onClick={fetchGeneralLedger}
+                    className="py-1 px-3 border border-border-custom bg-elevated hover:bg-card rounded text-[11px] font-semibold text-muted hover:text-foreground flex items-center gap-1 cursor-pointer"
+                  >
+                    <Icon name="refresh" className="w-3.5 h-3.5" /> Refresh
+                  </button>
+                  <div className="flex-1" />
+                  <input
+                    type="text"
+                    placeholder="Search ledger entries..."
+                    value={ledgerSearchQuery}
+                    onChange={(e) => setLedgerSearchQuery(e.target.value)}
+                    className="bg-input border border-border-custom rounded-md px-3 py-1.5 text-xs text-foreground placeholder-muted focus:outline-none focus:border-primary"
+                  />
+                </div>
+
+                {/* General Ledger Table */}
+                <div className="bg-card border border-border-custom rounded-lg overflow-hidden">
+                  <table className="w-full text-xs text-left">
+                    <thead className="bg-input/60 text-muted uppercase text-[10px] tracking-wider">
+                      <tr>
+                        <th className="p-3 font-semibold">Date</th>
+                        <th className="p-3 font-semibold">Description</th>
+                        <th className="p-3 font-semibold">Ref / Voucher</th>
+                        <th className="p-3 font-semibold">Party</th>
+                        <th className="p-3 font-semibold">Category</th>
+                        <th className="p-3 font-semibold text-right">Debit (₹)</th>
+                        <th className="p-3 font-semibold text-right">Credit (₹)</th>
+                        <th className="p-3 font-semibold text-right">Balance (₹)</th>
+                        <th className="p-3 font-semibold text-center">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border-custom/40">
+                      {ledgerLoading ? (
+                        <tr>
+                          <td colSpan={9} className="p-6 text-center text-muted">
+                            Loading project general ledger...
+                          </td>
+                        </tr>
+                      ) : filteredLedger.length === 0 ? (
+                        <tr>
+                          <td colSpan={9} className="p-6 text-center text-muted">
+                            No ledger entries found for this project.
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredLedger.map((entry, idx) => (
+                          <tr key={entry.id || idx} className="hover:bg-elevated/40 transition-all">
+                            <td className="p-3 text-muted whitespace-nowrap">{formatDmy(entry.date)}</td>
+                            <td className="p-3 text-foreground font-medium">{entry.description}</td>
+                            <td className="p-3 text-muted font-sans font-semibold">{entry.ref || "—"}</td>
+                            <td className="p-3 text-foreground font-semibold">{entry.party || "—"}</td>
+                            <td className="p-3 text-muted">
+                              <span className="bg-elevated px-2 py-0.5 rounded text-[10px] font-semibold">{entry.category || entry.type}</span>
+                            </td>
+                            <td className="p-3 text-right font-sans font-bold text-success">
+                              {entry.debit > 0 ? `₹${entry.debit.toLocaleString("en-IN")}` : "—"}
+                            </td>
+                            <td className="p-3 text-right font-sans font-bold text-danger">
+                              {entry.credit > 0 ? `₹${entry.credit.toLocaleString("en-IN")}` : "—"}
+                            </td>
+                            <td className="p-3 text-right font-sans font-bold text-foreground">
+                              ₹{entry.balance.toLocaleString("en-IN")}
+                            </td>
+                            <td className="p-3 text-center whitespace-nowrap">
+                              {entry.id && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeletePayment(entry.id)}
+                                  className="px-2 py-1 bg-elevated hover:bg-danger/10 border border-border-custom text-muted hover:text-danger rounded text-[10px] font-semibold cursor-pointer"
+                                  title="Delete payment voucher"
+                                >
+                                  Delete
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             );
           })()}
 
@@ -2330,14 +2554,23 @@ export default function FinancePage() {
               )}
             </div>
 
-            {selectedVoucher.status === "Pending" && (
-              <div className="px-6 py-4 border-t border-border-custom bg-background flex items-center justify-end gap-2">
-                <button onClick={() => setSelectedVoucher(null)} className="px-4 py-2 text-xs font-bold text-muted hover:text-foreground">Cancel</button>
-                <button onClick={() => handleApproveVoucher(selectedVoucher.id)} className="px-5 py-2.5 bg-success text-black font-extrabold rounded-md hover:opacity-90 inline-flex items-center gap-1.5">
-                  Approve Voucher <Icon name="thumbs_up" className="w-3.5 h-3.5" />
-                </button>
+            <div className="px-6 py-4 border-t border-border-custom bg-background flex items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => handleDeletePayment(selectedVoucher.id)}
+                className="px-3.5 py-2 bg-danger/10 hover:bg-danger/20 border border-danger/20 text-danger rounded-md text-xs font-bold cursor-pointer inline-flex items-center gap-1.5"
+              >
+                <Icon name="trash" className="w-3.5 h-3.5" /> Delete Payment
+              </button>
+              <div className="flex items-center gap-2">
+                <button onClick={() => setSelectedVoucher(null)} className="px-4 py-2 text-xs font-bold text-muted hover:text-foreground cursor-pointer">Close</button>
+                {selectedVoucher.status === "Pending" && (
+                  <button onClick={() => handleApproveVoucher(selectedVoucher.id)} className="px-5 py-2.5 bg-success text-black font-extrabold rounded-md hover:opacity-90 inline-flex items-center gap-1.5 cursor-pointer">
+                    Approve Voucher <Icon name="thumbs_up" className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
-            )}
+            </div>
           </div>
         </div>
       )}
