@@ -118,23 +118,34 @@ Also previously deferred. The two questions it was deferred on both have answers
 
 **Who may read them follows the existing permission.** Gate upload and read behind the same permission that governs editing a party, exactly as the sibling handler does.
 
-## Build
+## Build it end to end. Identity documents get handled properly, not deferred.
 
-**5B.1** Add PAN and Aadhaar document upload to the party forms in `d/library/page.tsx` and the finance party modal, following the `files.py` upload pattern. Store the returned path in `pan_file` and `aadhaar_file`.
+The founder has decided this ships. That decision carries an obligation: identity documents are the most sensitive data in the product, so the handling below is part of the feature, not optional hardening to add later.
 
-**5B.2** Serve them back only through `create_signed_url` with a **short expiry, 15 minutes**. Never make the bucket public, never render a raw storage path into the page, and never put the path in a link that survives being copied.
+**5B.1 A dedicated private bucket.** Do not put KYC documents in the general company or project buckets. Add a separate bucket alongside those in `ensure_buckets`, created with `public=False` like its siblings. A distinct bucket means the access policy for identity documents can never be widened by a change aimed at ordinary file sharing.
 
-**5B.3** When a party is deleted, delete its stored objects with `delete_object`. An identity document that outlives the record it belonged to is the worst version of this feature.
+**5B.2 Upload.** Add PAN and Aadhaar document upload to the party forms in `d/library/page.tsx` and the finance party modal, following the `files.py:268` pattern: check `is_storage_configured()`, upload with `upload_bytes`, store the returned path in `pan_file` and `aadhaar_file`.
 
-## 5B.4 Mask the Aadhaar number, which is a defect that exists today
+Validate before upload, server side, not only in the browser:
+- Accept only `image/jpeg`, `image/png` and `application/pdf`. Reject anything else with a clear message.
+- Cap the size at 5 MB.
+- Never trust the client-supplied filename for the storage path. Build the path from the party id and a generated id, exactly as `files.py` does.
 
-`aadhaar_number` is already collected in both party forms and stored. It is currently rendered in full in the parties table at `d/library/page.tsx:682` and written in full into the CSV export at `:502`.
+**5B.3 Read.** Serve documents only through `create_signed_url` with a **15 minute** expiry, generated per request. Never make the bucket public, never render a raw storage path into the page, and never place the signed URL anywhere it persists: not in an `href` that survives a copy, not in a query string, not in `localStorage`.
 
-**Mask it to the last four digits everywhere it is displayed or exported**, in the shape `XXXX XXXX 1234`. Keep the stored value intact. This is independent of the upload work and should be done even if the upload is not.
+**5B.4 Permission.** Gate upload, read and delete behind the same permission that governs editing a party. Do not invent a new permission key and do not weaken the existing one.
 
-**One thing stays with the founder, and it is a legal question rather than an engineering one.** Storing images of Aadhaar cards by a private entity in India is restricted, and the usual guidance is to hold masked Aadhaar only. The number is already being stored today, so this is an increase in exposure rather than a new one. Build the upload as specified, and **write a short note in your report flagging that the Aadhaar document feature should be reviewed by an advisor before launch.** Do not make that call yourself and do not skip the build over it.
+**5B.5 Delete with the party.** When a party is deleted, delete its stored objects with `delete_object`. An identity document that outlives the record it belonged to is the worst version of this feature. If party deletion is soft rather than hard, delete the objects at the point the party becomes inactive and null the two columns.
 
----
+**5B.6 Access logging.** Every generation of a signed URL for a KYC document writes an entry recording who requested it, which party, which document, and when. Use the existing deletion or audit log helper if one fits; `log_deletion` in `delete_logs.py` is the nearest pattern, so follow its shape rather than inventing a new table if you can. **If no suitable audit surface exists, say so in your report and do not silently skip this.** For identity documents, an unlogged read is the gap that matters.
+
+**5B.7 Mask the number, with a deliberate reveal.** `aadhaar_number` is collected today and rendered **in full** in the parties table at `d/library/page.tsx:682` and written **in full** into the CSV export at `:502`.
+
+- Mask it to the last four digits everywhere it is displayed or exported, in the shape `XXXX XXXX 1234`. Keep the stored value intact.
+- Where a user genuinely needs the full number, put it behind an explicit reveal action gated on the same permission, and log that reveal the same way as 5B.6.
+- The CSV export stays masked with no reveal. A spreadsheet leaves the product entirely and cannot be recalled.
+
+**5B.8 Never log the values.** No `console.log`, no server log line, and no error message may contain an Aadhaar number, a PAN, a storage path or a signed URL. Check the error paths you add in this part specifically, since `readErrorDetail` surfaces server text straight into the UI.
 
 # PART 6: still correct as they are, and still not to be touched
 
@@ -171,9 +182,14 @@ Command, exit code, one sentence. Nothing pasted.
 - [ ] `project_avatar` handled or explicitly skipped with a reason. `source_ref_id` investigated and reported, changed only if genuinely needed.
 - [ ] Statutory payroll settings can be saved. The confirmation dialog names what is changing and the request carries `confirm_changes: true`. The 400 message is surfaced on failure.
 - [ ] `pf_wage_ceiling` and `assume_full_month_when_no_attendance` exposed, defaults unchanged at 15000.0 and false.
-- [ ] PAN and Aadhaar upload work, stored via the `files.py` pattern, read only through a 15 minute signed URL, deleted with the party.
-- [ ] `aadhaar_number` masked to the last four digits in the parties table and the CSV export.
-- [ ] A note in the report flagging the Aadhaar document legal review.
+- [ ] KYC documents live in their own bucket, created `public=False`, separate from the company and project buckets.
+- [ ] Upload validates type and size server side, and builds the storage path itself rather than trusting the filename.
+- [ ] Read is only ever a 15 minute signed URL, generated per request, never persisted anywhere.
+- [ ] Upload, read and delete all carry the same permission as editing a party.
+- [ ] Objects are deleted when the party is deleted or deactivated, and the columns nulled.
+- [ ] Every signed URL generation is logged with who, which party, which document, when. If no audit surface fits, that is reported rather than skipped.
+- [ ] `aadhaar_number` masked to the last four digits in the parties table and in the CSV export. Reveal is permission gated and logged. The CSV has no reveal.
+- [ ] No Aadhaar number, PAN, storage path or signed URL appears in any log line or error message.
 - [ ] Part 6 untouched. Confirm `labour/muster-roll` still has no update endpoint.
 - [ ] `python scripts/verification/check_route_reachability.py` reports **0 unreachable** and the exemption file is still 30 entries.
 - [ ] `cd backend && PYTHONPATH=. pytest tests/coverage -n 4` passes. It is **1140 passed, 4 skipped** today and must only go up.
