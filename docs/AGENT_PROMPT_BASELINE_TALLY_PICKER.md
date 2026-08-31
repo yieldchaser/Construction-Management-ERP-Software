@@ -1,6 +1,6 @@
-# AGENT PROMPT: nine defects from a fresh sweep
+# AGENT PROMPT: eleven defects from a fresh sweep
 
-Nine items against `f257a64`. Three came from re-running the static sweeps. Six came from loading **all 53 company-scoped console routes** in a browser against production, and none of those six could have been found any other way.
+Eleven items against `f257a64`. Three came from re-running the static sweeps. Eight came from driving the live app against production: **all 53 company-scoped routes**, then the project-scoped routes against a real project in the founder's second company. None of those eight was visible to any static check.
 
 Report as before: for each item, the command, its exit code, and one sentence. No pasted output. "Not run" is an acceptable answer.
 
@@ -235,6 +235,57 @@ This matters more than it looks. The backend cold starts on the free tier (`D-02
 
 ---
 
+# PART 10: the file upload allowlist fails open
+
+`backend/app/routers/files.py:250-265`:
+
+```python
+sniffed = _sniff_content_type(contents)
+if sniffed and sniffed not in ALLOWED_CONTENT_TYPES:
+    raise HTTPException(415, ...)
+
+if declared_type in ALLOWED_CONTENT_TYPES:
+    content_type = declared_type
+elif sniffed in ALLOWED_CONTENT_TYPES:
+    content_type = sniffed
+else:
+    raise HTTPException(415, ...)
+```
+
+`_sniff_content_type` recognises PDF, PNG, JPEG, GIF, WEBP, ZIP, RAR, 7z, GZIP and BMP by magic bytes. **Anything it does not recognise returns `None`**, which makes the first guard fall through, and then the **client-declared MIME type is trusted**.
+
+So a file whose bytes are not in that signature list is accepted purely on the say-so of the uploader. A Windows executable is not in the list. **This is demonstrated, not theoretical: `probe.exe` is sitting in the project file repository right now**, visible in the browser on the project files page.
+
+The stored object is then labelled with the declared type, so it will be served back to another user as whatever the uploader claimed it was.
+
+## The fix
+
+Make the allowlist **fail closed**: require a positive identification.
+
+- If `_sniff_content_type` returns `None`, reject. Do not fall through to the declared type.
+- When it does return a type, that sniffed type is authoritative. Store it, and use it as the served `content_type`. **Never store or serve a client-supplied MIME type.**
+- Keep the 50 MB cap as it is.
+- Extend the signature table only as far as the formats the allowlist genuinely needs. A CAD or Office file that cannot be identified should be rejected with a clear message rather than waved through.
+
+This will reject some files that are accepted today, which is the point. Say in your report which formats in `ALLOWED_CONTENT_TYPES` have no signature in the sniffer, because those become unuploadable and the founder needs to know which.
+
+**Do not delete `probe.exe`.** It is the founder's own test artefact and evidence.
+
+---
+
+# PART 11: two more pages that never finish loading, and raw values on screen
+
+**11.1** Checked against a real project in the founder's second company, AK Construction:
+
+- `p/[project_id]/subcon/scorecards` renders a **completely empty main region**, with a project selected and data present. It is blank regardless of project, so it is worse than the Part 6 pages.
+- `p/[project_id]/finance` sits on **"Loading transactions..." permanently**, still there after 12 seconds, while `GET /finance/transactions/{company_id}` returns 200 with real totals. The same loading state is never cleared. I reached it by direct URL into a second company, so confirm the exact trigger before fixing, but the rule is the same as Part 6: **a fetch that fails or never fires must still clear the loading state.**
+
+**11.2 Raw internal values are rendered to users.** `p/[project_id]/task` displays a task status as `not_started`. Delete Logs lists `Approval_rule`, `Asset_type`, `Chat_group_member`. A sweep finds **70 places** that render a `status`, `type`, `state`, `priority` or `entity_type` straight into JSX with no label mapping.
+
+Add one shared label formatter and use it wherever such a value is displayed. The visible damage is anywhere the value contains an underscore, so fix those first and apply the helper broadly. **Single-word values like `approved` or `pending` are acceptable as they are** if title-cased; do not invent new vocabulary for them.
+
+---
+
 ## Confirmed working. Do not change these.
 
 Checked live in the browser during this sweep, so they need no attention:
@@ -275,6 +326,9 @@ Command, exit code, one sentence.
 - [ ] The `fmtINR` note is gone from settings.
 - [ ] Em dashes inside sentences: 22 to 0. The standalone `"—"` null placeholders are **unchanged**; report both counts.
 - [ ] The four offline banners say loading failed and offer a retry, and no demo dataset was added.
+- [ ] File upload fails closed: an unidentifiable file is rejected, the sniffed type is authoritative, and no client-supplied MIME type is stored or served. Report which allowed formats now lack a signature.
+- [ ] `p/[project_id]/subcon/scorecards` renders content, and `p/[project_id]/finance` no longer sits on "Loading transactions...". Checked in a browser.
+- [ ] A shared label formatter is applied wherever a status or type is rendered. Report the count of underscored values still reaching the screen; it must be 0.
 - [ ] `python scripts/verification/check_route_reachability.py` reports **0 unreachable**, exemption file still 30 entries.
 - [ ] `cd backend && PYTHONPATH=. pytest tests/coverage -n 4` passes. It is **1148 passed, 4 skipped** today and must only go up.
 - [ ] `cd frontend && npx tsc --noEmit` and `cd frontend && npm run build` both run and both clean.
