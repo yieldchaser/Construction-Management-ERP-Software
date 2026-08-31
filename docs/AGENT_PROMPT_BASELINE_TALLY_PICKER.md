@@ -1,6 +1,6 @@
-# AGENT PROMPT: seven defects from a fresh sweep
+# AGENT PROMPT: nine defects from a fresh sweep
 
-Seven items against `f257a64`. Three came from re-running the static sweeps. Four came from driving the live app in a browser against production, and none of those four could have been found any other way.
+Nine items against `f257a64`. Three came from re-running the static sweeps. Six came from loading **all 53 company-scoped console routes** in a browser against production, and none of those six could have been found any other way.
 
 Report as before: for each item, the command, its exit code, and one sentence. No pasted output. "Not run" is an acceptable answer.
 
@@ -191,6 +191,50 @@ Do not sweep the whole console for this in the same run. Fix the two quality pag
 
 ---
 
+# PART 8: copy defects found by walking every console page
+
+All 53 company-scoped routes were loaded in a browser against production. These are what that turned up beyond Part 6.
+
+**8.1 Page titles interpolate a lowercase slug.** Two files build a title from a tab id:
+
+```
+d/library/page.tsx:656            title={`${activeTab.replace("-", " ")} Library`}
+d/reports/calculators/page.tsx:356 title={`${activeCalc.replace(/_/g, " ")} Quantity Estimator`}
+```
+
+Which renders, live: `party Library`, `material Library`, `cost code Library`, `steel column Quantity Estimator`. Title-case the interpolated word, or map each id to a proper label. A label map is better, because `boq` should read `BOQ` and not `Boq`.
+
+**8.2 Delete Logs shows raw entity names.** The entity type filter lists `Approval_rule`, `Asset_type`, `Chat_group_member`, `Cost_code`, `Crm_lead` and the rest, straight from the internal vocabulary, underscores and all. Map them to human labels: "Approval rule", "Asset type", "Chat group member", "Cost code", "CRM lead".
+
+**8.3 An HTTP endpoint is printed on screen.** `d/budgeting/boq/page.tsx:428` and `p/[project_id]/boq/page.tsx:593` render `POST /boq-documents/{doc_id}/items` as help text next to the import control. Replace with a sentence about what the import accepts. No user has ever needed to read a method and a path.
+
+**8.4 A third internal note as user copy.** `settings/page.tsx:2232` begins "Partially wired: the shared currency formatter (fmtINR) now accepts an optional decimal-places argument". That is a commit message, not help text. Rewrite it as what the setting does, or delete it.
+
+**8.5 Em dashes in prose.** 22 user-facing strings contain an em dash inside a sentence, against the standing rule. Examples: `d/budget/page.tsx:156`, `d/mom/page.tsx:234`, `d/planning/gantt/page.tsx:696`, `p/[project_id]/task/page.tsx:139`.
+
+**Do not touch the roughly 300 standalone `"—"` values.** Those are null placeholders in tables and are correct typography. Only change em dashes sitting between words in a sentence. JSX comments do not count either.
+
+---
+
+# PART 9: the offline banner claims demo data that does not exist
+
+Four pages render this when a fetch fails:
+
+```
+d/procurement/page.tsx:822        Using demo procurement data, backend connection unavailable
+d/quality/page.tsx:552            Using demo quality data, backend connection unavailable
+d/reports/page.tsx:158            Using demo reports, backend connection unavailable
+p/[project_id]/quality/page.tsx:527  same as quality
+```
+
+`setIsOffline(true)` is called in the `catch`, and **that is all it does**. There is no mock dataset anywhere in these files; grepping for one finds nothing. So the list stays empty and the banner tells the user the empty screen is demo data.
+
+This matters more than it looks. The backend cold starts on the free tier (`D-024`), so a failed first fetch is a realistic event, and the message a customer gets in that moment is false.
+
+**Fix it by telling the truth:** say the data could not be loaded and offer a retry. Keep the warning styling. Do not add demo data to make the message true.
+
+---
+
 ## Confirmed working. Do not change these.
 
 Checked live in the browser during this sweep, so they need no attention:
@@ -225,6 +269,12 @@ Command, exit code, one sentence.
 - [ ] A cold console page load with no project selected produces **zero** failing `/apis/v3` requests. Report the count you measured.
 - [ ] All seven pages in Part 6 render a real empty state instead of a permanent skeleton. **Say what each of the seven shows now, checked in a browser.** `d/reports` and `d/labour` untouched.
 - [ ] `d/quality` and `p/[project_id]/quality` distinguish an empty register from a filtered one.
+- [ ] Page titles read correctly: Library and Quantity Estimator no longer show a lowercase slug.
+- [ ] Delete Logs entity filter shows human labels, not underscored internal names.
+- [ ] No HTTP method or path is rendered anywhere in the UI.
+- [ ] The `fmtINR` note is gone from settings.
+- [ ] Em dashes inside sentences: 22 to 0. The standalone `"—"` null placeholders are **unchanged**; report both counts.
+- [ ] The four offline banners say loading failed and offer a retry, and no demo dataset was added.
 - [ ] `python scripts/verification/check_route_reachability.py` reports **0 unreachable**, exemption file still 30 entries.
 - [ ] `cd backend && PYTHONPATH=. pytest tests/coverage -n 4` passes. It is **1148 passed, 4 skipped** today and must only go up.
 - [ ] `cd frontend && npx tsc --noEmit` and `cd frontend && npm run build` both run and both clean.
