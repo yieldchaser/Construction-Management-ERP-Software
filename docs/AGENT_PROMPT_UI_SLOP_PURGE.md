@@ -11,7 +11,7 @@ Everything below is measured against commit `4ce3517`, not estimated. The number
 | Family | Count in console | Rule it breaks |
 |---|---|---|
 | Shadows on inline elements | **92** | "Cards, panels, table containers: drop the shadow. Only modals, drawers, popovers and the flyout keep one." |
-| Unicode glyphs used as controls or status | **129** | "No unicode arrows as controls." |
+| Unicode glyphs used as controls or status | **~174** | "No unicode arrows as controls." |
 | Raw Tailwind palette classes | **101** | "No new hardcoded hex, rgba(), or raw Tailwind palette classes." |
 | Decorative gradients | **17** | Same rule, plus gradients were never part of the design system |
 | Hand-rolled status pills, no shared component | **101 sites, 44 files, 3 competing styles** | Nothing enforced it, which is why it drifted |
@@ -83,9 +83,11 @@ After this part, `grep -rn "bg-gradient-to-" frontend/src/app/c frontend/src/com
 
 ---
 
-# PART 4: replace the 129 unicode glyphs with real icons
+# PART 4: replace the unicode glyphs used as controls with real icons
 
-The console has an `Icon` component backed by Material Symbols, and it is already used correctly in most places. Then 43 files draw controls and status markers with bare unicode characters instead. A `✕` typed into a button is the single clearest tell of generated UI, and there are 83 glyphs sitting inside a `<button>` or an `onClick` handler.
+The console has an `Icon` component and uses it correctly in most places. Then 43 files draw controls and status markers with bare unicode characters instead. A `✕` typed into a button is the single clearest tell of generated UI.
+
+**Corrected count.** An earlier draft of this prompt said 129. That was measured with too narrow a character set and it was wrong. A full sweep of every non-ASCII symbol character finds **301 glyphs across 27 distinct characters**, of which roughly **174 are controls or status markers that must be converted** and the rest are correct typography listed under the exclusions below. Do not stop at any number; convert by the table and report what you actually changed.
 
 Convert:
 
@@ -97,6 +99,13 @@ Convert:
 | `→` as a "go" affordance inside a button, for example `Log Daily Crew Size →` | `<Icon name="arrow_forward" />` |
 | `●` as a live or status dot, for example `● Real-time Logs` | a `<span>` with `h-1.5 w-1.5 rounded-full bg-success` |
 | `⚠` as a warning marker | `<Icon name="warning" />` |
+| `↓` as a downward indicator | `<Icon name="arrow_down" />` |
+| `←` as a back control | `<Icon name="arrow_left" />` |
+| `★` / `☆` as a pin or favourite toggle, `projects/page.tsx:405` | `<Icon name="star" />` |
+| `⌕` as the search affordance, `d/crm/page.tsx:691` | `<Icon name="search" />` |
+| `›` as a chevron, `d/payroll-attendance/page.tsx:1236` | `<Icon name="chevron_right" />` |
+| `↗` / `↙` as trend arrows, `d/finance/page.tsx:1354` and `:1375` | `<Icon name="trending_up" />` / `trending_down` |
+| `◌` as a status marker, `d/drawings/page.tsx:62` | the same `<span>` dot treatment as `●` |
 
 Match the surrounding icon sizing, usually `className="w-3.5 h-3.5"` or `w-4 h-4`, and keep the existing text label exactly as it reads today.
 
@@ -106,7 +115,9 @@ Match the surrounding icon sizing, usually `className="w-3.5 h-3.5"` or `w-4 h-4
 
 I checked each of these against its surrounding code. Converting them would be a regression.
 
-1. **`×` as a multiplication sign** in `components/resources/CalculatorTools.tsx` (38 instances, for example `suffix="× 21 sqft"`). That is arithmetic notation, and an icon there would be nonsense.
+1. **`×` as a multiplication sign** in `components/resources/CalculatorTools.tsx` (38) and `app/c/[company_id]/d/reports/calculators/page.tsx` (9). **47 of the 87 `×` characters in the console are arithmetic and must stay.** The other 40, spread across `settings` (6), `d/attendance` (4), `d/drawings` (4), `d/library` (4), `p/[project_id]/attendance` (4), `d/crm` (3) and others, are close controls and do convert. Read each one; do not run a blanket replace on this character.
+1b. **`•` (42), `−` (21) and `÷` (3)** are a separator bullet, a minus sign and a division sign. All 66 are correct typography. Leave every one of them.
+1c. **Five glyphs have no icon in the 120-name union: `ⓘ` info (1), `⋮` overflow menu (2), `▽` and `▾` dropdown carets (4), `↔` in the Three Way Match subtitle (2).** Leave all nine where they are and list them in your report. Do not author a new SVG path, and do not substitute a loosely similar icon.
 2. **`→` as a range separator between two values**, for example `{ts.weekStart} → {ts.weekEnd}` at `d/hr/page.tsx:1114` and the equipment run times at `d/equipment/page.tsx:575`. It joins two dates; it is not a control.
 3. **`→ Zoho`** at `d/finance/page.tsx:1292`, which reads as a direction of data flow in a push action label. Leave the label wording alone.
 4. **Box-drawing characters in comment banners** (`// ─── Tab 1 ───`). Comments, not UI.
@@ -188,7 +199,7 @@ Report each number, measured with the command that produced it, not asserted:
 - [ ] Console inline shadows: **92 to 0**. Floating shadows still **101**, each one named with the reason it floats.
 - [ ] Console raw palette classes: **101 to 0**. BOQ categories still render in as many distinct colours as before.
 - [ ] Console gradients: **17 to 0**.
-- [ ] Console control and status glyphs: **129 to 0**, with the four excluded groups above untouched and their counts unchanged (`CalculatorTools.tsx` still has its 38 multiplication signs).
+- [ ] Console control and status glyphs converted per the table, roughly **174** of them. Report the per-character before and after. The excluded groups must be unchanged: 47 arithmetic `×`, 42 `•`, 21 `−`, 3 `÷`, the range-separator arrows, and the nine glyphs with no matching icon.
 - [ ] `components/ui/Badge.tsx` exists and all **101 pill sites across 44 files** use it. No solid-fill-with-white-text badge remains.
 - [ ] `TYPE_COLOR` and the severity lookup resolve legacy spellings, and an unknown type falls back to `neutral`, not `primary`. State what a row typed `Fatality` now renders as.
 - [ ] The severity stripe is gone from the incident card.

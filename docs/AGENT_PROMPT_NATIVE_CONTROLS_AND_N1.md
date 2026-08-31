@@ -1,6 +1,6 @@
 # AGENT PROMPT: unreadable native dropdowns, and the work order N+1
 
-Execute all three parts in one run. Do not stop between parts. **Dispatch this only after the UI slop purge run has landed and been pushed**, because Part 1 touches `globals.css` and Part 2 touches a router the other run does not.
+Execute all six parts in one run. Do not stop between parts. **Dispatch this only after the UI slop purge run has landed and been pushed**, because Part 1 touches `globals.css` and Part 2 touches a router the other run does not.
 
 ---
 
@@ -174,6 +174,59 @@ The backend returns a useful `detail` string on these paths, including the reser
 
 ---
 
+# PART 5: the primary action is in the wrong place on 8 pages
+
+## What the founder saw
+
+On CRM and Quotations the `New Lead +` button sits at the end of the filter row. There are seven filters, each `min-w-[140px]`, inside a `flex flex-wrap items-center gap-2` container at `d/crm/page.tsx:683`. The filters fill the first line, the button wraps onto a second line, and `ml-auto` on the column picker shoves both to the far right. The result is a primary action floating in dead space between the filters and the table, which is what he described as flowing downwards from the table.
+
+Nudging the widths would only move the wrap point. The real problem is that the button is in the toolbar at all.
+
+## The pattern the rest of the console already uses
+
+`PageHeader` accepts `children` as an action slot, rendered top right beside the title. **63 pages use `PageHeader` and 49 of them pass their primary action into it**, which is why Wastage shows `+ Record Wastage` and Subcontractors shows `+ Sub Con Work Order` up in the header. `d/wastage/page.tsx:114-124` is the reference implementation.
+
+Fourteen pages pass no action. Six of those genuinely have no primary action and are correct as they are: `d/delete-logs`, `d/help`, `d/payment-approval`, `d/services`, `enterprise`, `p/[project_id]/task`. **Leave those six alone.**
+
+The other eight have a primary action buried in the page body. Move each into the `PageHeader` action slot, matching the Wastage implementation:
+
+| Page | Action to move |
+|---|---|
+| `d/crm/page.tsx` | `New Lead +` |
+| `d/chat/page.tsx` | `Create Group` |
+| `d/home/page.tsx` | `+ New Project` |
+| `d/payroll-attendance/page.tsx` | `+ New Allowance` |
+| `d/planning/gantt/page.tsx` | `Add Milestone` and `Create WBS Task` |
+| `d/safety/page.tsx` | `+ Report Incident` and `+ Add Talk` |
+| `p/[project_id]/dashboard/page.tsx` | `Add Cost Code` |
+| `p/[project_id]/party/page.tsx` | `+ Add Party` |
+
+**Where a page is tabbed, the header action follows the active tab.** CRM, Safety and Gantt each have more than one action because each belongs to a different tab. Render the action for the active tab only, so the Leads tab offers `New Lead` and the Quotation tab offers its own. Do not render several actions at once, and do not show an action on a tab that has none.
+
+After the move, the CRM toolbar row holds only the seven filters and the column picker. Because the row is now shorter than the wrap point, the stranding disappears on its own; do not add fixed widths or a grid to force it.
+
+## While you are in the CRM toolbar
+
+The column picker button at `d/crm/page.tsx:724` is a bare `+` with `title="Columns"`. A plus sign means add, not configure, so it reads as a second create button next to the real one. Give it the label `Columns` alongside its icon, and keep it right aligned in the filter row.
+
+## Do not
+
+Do not restyle `PageHeader` itself, do not change the six pages that correctly have no action, and do not touch the 49 pages that already do this properly.
+
+---
+
+# PART 6: hover feedback disappears in the light theme
+
+15 sites use `hover:bg-white/5` or similar. In the dark theme a white overlay at low opacity is a visible lift. In the light theme `--card` is `#FFFFFF`, so a white overlay on a white surface is **nothing at all** and the element simply does not respond to the pointer.
+
+Replace every `hover:bg-white/N` in the console with `hover:bg-elevated`, which is the token that already means "one surface step up" and is defined correctly in both themes.
+
+**Leave `bg-black/N` alone. All 90 uses are modal scrims** (`bg-black/60 backdrop-blur-sm` on a `fixed inset-0` overlay), and a scrim should be black in both themes. That is correct code.
+
+Plain non-hover `bg-white/N` on input fills is also out of scope for this run; those elements carry a visible border in both themes. Only the hover states change.
+
+---
+
 # Definition of done
 
 - [ ] `color-scheme` declared once per theme in `globals.css`; token values otherwise unchanged.
@@ -185,6 +238,9 @@ The backend returns a useful `detail` string on these paths, including the reser
 - [ ] Four dead buttons removed (`Sort`, `Fullscreen`, `More options`, `View`), with wrappers cleaned up.
 - [ ] `PermissionGate.tsx:42` and `Sidebar.tsx:613` untouched.
 - [ ] All 52 silent write handlers surface the API `detail` on failure, using each page's existing message mechanism. Report the count before and after.
+- [ ] Eight pages move their primary action into the `PageHeader` slot; tabbed pages show only the active tab's action. The six action-less pages and the 49 correct pages are untouched.
+- [ ] The CRM filter row no longer strands a button on its own line, achieved by moving the action rather than by fixing widths.
+- [ ] `hover:bg-white/N` in the console: 15 to 0, all replaced with `hover:bg-elevated`. `bg-black/N` still 90.
 - [ ] `cd backend && PYTHONPATH=. pytest tests/coverage -n 4` passes with the new test included.
 - [ ] `cd frontend && npx tsc --noEmit` clean, `npm run build` completes.
 - [ ] `python scripts/verification/verify_help_claims.py` still prints `[PASS]` with its four coverage counts unchanged.
