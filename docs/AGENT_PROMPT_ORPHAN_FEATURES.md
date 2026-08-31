@@ -72,7 +72,7 @@ This is the founder's own example and the clearest case in the product.
 
 **1.4 Delete.** `DELETE /rfq/{rfq_id}` exists and is unreachable. Add it with a confirmation.
 
-**1.5 Surface the comparison properly.** The table currently renders only when `comparison.length > 0`. Once items exist but no quotes have arrived, show an `EmptyState` explaining that quotes have not been entered yet, with the Enter Quote action. Show `lowest_rate`, `highest_rate`, `price_spread` and mark `recommended_vendor_name` — the backend computes all four and the UI ignores them today.
+**1.5 Surface the comparison properly.** The table currently renders only when `comparison.length > 0`. Once items exist but no quotes have arrived, show an `EmptyState` explaining that quotes have not been entered yet, with the Enter Quote action. Show `lowest_rate`, `highest_rate`, `price_spread` and mark `recommended_vendor_name`. The backend computes all four and the UI ignores them today.
 
 ---
 
