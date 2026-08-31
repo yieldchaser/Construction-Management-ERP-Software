@@ -5,7 +5,7 @@ import React, { useState, useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
-import { getApiHost } from "@/lib/api";
+import { getApiHost, readErrorDetail } from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 import Icon, { type IconName } from "@/components/marketing/Icon";
 
@@ -78,6 +78,9 @@ export default function DrawingsPage() {
   const [filterCat, setFilterCat] = useState<string>("All");
   const [imgLoaded, setImgLoaded] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
+
+  const [backingUpId, setBackingUpId] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState("");
 
   // Add pin modal
   const [showPinModal, setShowPinModal] = useState(false);
@@ -257,6 +260,29 @@ export default function DrawingsPage() {
     }
   };
 
+  const handleBackupFileToDrive = async (fileId: string, fileType: "project" | "company" = "project") => {
+    if (!companyId || !fileId) return;
+    setBackingUpId(fileId);
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/integrations/google-drive/companies/${companyId}/backup-file/${fileId}?file_type=${fileType}`, {
+        method: "POST",
+        headers: authHeaders(),
+      });
+      if (res.ok) {
+        setToastMessage("File successfully backed up to Google Drive!");
+        setTimeout(() => setToastMessage(""), 3500);
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || "Failed to backup file to Google Drive. Check if Google Drive is connected.");
+      }
+    } catch (e) {
+      console.error("Backup to Google Drive error", e);
+      alert("Failed to backup file to Google Drive. Please check your connection.");
+    } finally {
+      setBackingUpId(null);
+    }
+  };
+
   const handlePublishRevision = async () => {
     if (!newRevCode.trim() || !newRevFile || !projectId) return;
     let targetDrawingId = activeDrawingId;
@@ -415,6 +441,13 @@ export default function DrawingsPage() {
           onChange={(t) => setTab(t as any)}
         />
       </div>
+
+      {toastMessage && (
+        <div className="mx-6 mt-4 p-3 bg-success/10 border border-success/20 text-success text-xs rounded-lg font-semibold flex items-center justify-between">
+          <span>{toastMessage}</span>
+          <button onClick={() => setToastMessage("")}><Icon name="close" className="w-4 h-4" /></button>
+        </div>
+      )}
 
       {isOffline && (
         <div className="fixed top-4 right-4 z-50 p-4 bg-warning/10 border border-warning/20 text-warning rounded-lg text-xs max-w-md">
@@ -583,6 +616,17 @@ export default function DrawingsPage() {
                               )}
                             </button>
                           )}
+                          {/* Backup to Google Drive */}
+                          <button
+                            type="button"
+                            onClick={() => handleBackupFileToDrive(rev.id)}
+                            disabled={backingUpId === rev.id}
+                            className="mt-1.5 w-full text-[9px] font-bold px-2 py-1 rounded border border-border-custom bg-elevated/30 hover:bg-card text-foreground transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                            title="Backup drawing revision to company Google Drive"
+                          >
+                            <Icon name="cloud_drive" className="w-3 h-3 text-primary" />
+                            {backingUpId === rev.id ? "Backing up..." : "Backup to Drive"}
+                          </button>
                         </div>
                       </div>
                     );
