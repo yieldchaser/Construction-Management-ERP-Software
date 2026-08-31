@@ -136,6 +136,24 @@ export default function FilesTab() {
     }
   };
 
+  const deleteFolder = async (folderId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm("Are you sure you want to delete this folder?")) return;
+    try {
+      const res = await fetch(getApi(`/files/folders/${folderId}`), {
+        method: "DELETE",
+        headers: authHeaders(),
+      });
+      if (!res.ok) {
+        const t = await res.text();
+        throw new Error(t || `Error ${res.status}`);
+      }
+      await load();
+    } catch (err: any) {
+      setError(err?.message || "Failed to delete folder");
+    }
+  };
+
   const isPdf = (f: FileMeta) => (f.content_type || "").includes("pdf");
   const previewSrc = useMemo(
     () => (preview ? getApi(`/files/file/${preview.id}`) : ""),
@@ -199,9 +217,19 @@ export default function FilesTab() {
               <button
                 key={f.id}
                 onClick={() => navigate(f)}
-                className="group rounded-lg border border-border-custom bg-card p-3 text-left hover:border-primary/50 transition-colors"
+                className="group relative rounded-lg border border-border-custom bg-card p-3 text-left hover:border-primary/50 transition-colors"
               >
-                <div className="text-2xl mb-2 inline-flex"><Icon name="folder" className="w-6 h-6" /></div>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-2xl inline-flex"><Icon name="folder" className="w-6 h-6" /></div>
+                  <button
+                    type="button"
+                    onClick={(e) => deleteFolder(f.id, e)}
+                    className="opacity-0 group-hover:opacity-100 p-1 hover:text-danger text-muted transition-opacity cursor-pointer"
+                    title="Delete Folder"
+                  >
+                    <Icon name="trash" className="w-3.5 h-3.5" />
+                  </button>
+                </div>
                 <div className="text-xs text-foreground font-medium truncate">{f.name}</div>
                 <div className="text-[9px] text-muted mt-0.5">Folder</div>
               </button>

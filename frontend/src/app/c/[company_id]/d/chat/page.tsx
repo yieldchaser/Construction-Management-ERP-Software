@@ -177,6 +177,12 @@ export default function ChatPage() {
     fetchMessages(activeGroup.id);
     fetchMembers(activeGroup.id);
     
+    // Mark group as read on open
+    fetch(`${getApiHost()}/apis/v3/chat/groups/${activeGroup.id}/read`, {
+      method: "POST",
+      headers: authHeaders(),
+    }).catch((e) => console.error("Failed to mark group as read", e));
+    
     interval = setInterval(() => {
       fetchMessages(activeGroup.id, lastMessageIdRef.current || undefined);
     }, 4000);
@@ -265,6 +271,24 @@ export default function ChatPage() {
       }
     } catch (e) {
       console.error("Failed to remove member", e);
+    }
+  };
+
+  const handleUpdateMemberRole = async (userId: string, newRole: "admin" | "member") => {
+    if (!activeGroup) return;
+    try {
+      const res = await fetch(
+        `${getApiHost()}/apis/v3/chat/groups/${activeGroup.id}/members/${userId}/role?role=${newRole}`,
+        { method: "PATCH", headers: authHeaders() }
+      );
+      if (res.ok) {
+        fetchMembers(activeGroup.id);
+      } else {
+        const err = await readErrorDetail(res);
+        alert(err || "Failed to update member role");
+      }
+    } catch (e) {
+      console.error("Failed to update member role", e);
     }
   };
 
@@ -861,15 +885,25 @@ export default function ChatPage() {
                             <div className="text-[9px] text-muted capitalize font-medium">{m.role === "admin" ? "Group Admin" : "Member"}</div>
                           </div>
                         </div>
-                        {m.role !== "admin" && (
-                          <button
-                            onClick={() => handleRemoveMember(m.user_id)}
-                            className="p-1 text-muted hover:text-danger transition-colors cursor-pointer"
-                            title="Remove Member"
+                        <div className="flex items-center gap-2">
+                          <select
+                            value={m.role}
+                            onChange={(e) => handleUpdateMemberRole(m.user_id, e.target.value as "admin" | "member")}
+                            className="bg-elevated border border-border-custom text-[10px] rounded px-1.5 py-0.5 text-foreground cursor-pointer"
                           >
-                            <Icon name="trash" className="w-3.5 h-3.5" />
-                          </button>
-                        )}
+                            <option value="member">Member</option>
+                            <option value="admin">Admin</option>
+                          </select>
+                          {m.role !== "admin" && (
+                            <button
+                              onClick={() => handleRemoveMember(m.user_id)}
+                              className="p-1 text-muted hover:text-danger transition-colors cursor-pointer"
+                              title="Remove Member"
+                            >
+                              <Icon name="trash" className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
                       </div>
                     ))
                   ) : (

@@ -19,6 +19,7 @@ type Stage =
   | "verify"       // verify email OTP after register
   | "forgot"       // request reset code
   | "reset"        // enter reset code + new password
+  | "invite"       // accept team invite with OTP code + password
   | "pick";        // choose a company (multi-membership)
 
 interface AuthCompany {
@@ -74,6 +75,19 @@ export default function LoginPage() {
     const id = setInterval(() => setTimer((t) => t - 1), 1000);
     return () => clearInterval(id);
   }, [timer]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const inviteCode = params.get("code") || params.get("invite");
+      const inviteEmail = params.get("email");
+      if (inviteCode || params.get("mode") === "invite") {
+        setStage("invite");
+        if (inviteEmail) setEmail(inviteEmail);
+        if (inviteCode && inviteCode !== "true") setOtp(inviteCode);
+      }
+    }
+  }, []);
 
   const reset = (m: Method) => {
     setMethod(m);
@@ -329,6 +343,33 @@ export default function LoginPage() {
     }
   };
 
+  const handleAcceptInvite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !otp || !password) {
+      setError("Please enter your email, invite code, and password.");
+      return;
+    }
+    guard();
+    try {
+      const { res, data } = await call("/auth/team/invite/accept", {
+        email,
+        code: otp,
+        password,
+      });
+      if (res.ok && data.access_token) {
+        setMessage("Invitation accepted. Redirecting...");
+        await finishLogin(data);
+      } else {
+        setError(data.detail || "Could not accept invitation.");
+      }
+    } catch (err: any) {
+      console.error("accept invite failed", err);
+      setError("Could not reach the server.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
@@ -471,6 +512,7 @@ export default function LoginPage() {
 
   const heading = () => {
     if (stage === "pick") return "Choose a company";
+    if (stage === "invite") return "Accept Team Invitation";
     if (stage === "otp" || stage === "verify") return "Enter verification code";
     if (stage === "forgot") return "Reset your password";
     if (stage === "reset") return "Set a new password";
@@ -568,6 +610,7 @@ export default function LoginPage() {
               {(stage === "otp" || stage === "verify") && "Enter the 6-digit code we sent you."}
               {stage === "forgot" && "We will email you a code to reset your password."}
               {stage === "reset" && "Enter the code and choose a new password."}
+              {stage === "invite" && "Enter your invitation code and create a password to join the team."}
               {stage === "pick" && "You belong to more than one company."}
             </p>
           </div>
@@ -793,6 +836,52 @@ export default function LoginPage() {
                 <span className="relative z-10">{loading ? "Updating..." : "Update password"}</span>
               </button>
               <button type="button" onClick={() => { setStage("input"); setError(""); setMessage(""); }} className="w-full text-xs font-medium text-alx-on-surface-variant hover:text-alx-on-surface">
+                Back to login
+              </button>
+            </form>
+          )}
+
+          {/* Accept Team Invite */}
+          {stage === "invite" && (
+            <form onSubmit={handleAcceptInvite} className="space-y-4">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@company.com"
+                required
+                disabled={loading}
+                className="w-full px-4 py-3 text-sm rounded-md bg-alx-surface-container-lowest border border-alx-outline-variant/40 text-alx-on-surface placeholder-alx-on-surface-variant/60 focus:outline-none focus:border-alx-primary"
+              />
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                placeholder="6-digit Invite Code"
+                required
+                disabled={loading}
+                className="w-full px-4 py-3 text-center text-xl font-bold tracking-widest rounded-md bg-alx-surface-container-lowest border border-alx-outline-variant/40 text-alx-on-surface placeholder-alx-on-surface-variant/60 focus:outline-none focus:border-alx-primary"
+              />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Create password (min 8 characters)"
+                required
+                disabled={loading}
+                className="w-full px-4 py-3 text-sm rounded-md bg-alx-surface-container-lowest border border-alx-outline-variant/40 text-alx-on-surface placeholder-alx-on-surface-variant/60 focus:outline-none focus:border-alx-primary"
+              />
+              <button type="submit" disabled={loading} className={SUBMIT_CLASS}>
+                {SUBMIT_SHIMMER}
+                <span className="relative z-10">{loading ? "Claiming account..." : "Accept & Join Team"}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => { setStage("input"); setError(""); setMessage(""); }}
+                className="w-full text-xs font-medium text-alx-on-surface-variant hover:text-alx-on-surface"
+              >
                 Back to login
               </button>
             </form>
