@@ -20,11 +20,15 @@ interface WorkOrder {
   woNumber: string;
   sNo: number;
   subContractor: string;
+  subcontractorId?: string;
+  woDate?: string;
   progress: string;
   progressPct?: number | null;
   woValue: number;
   billedValue: number;
   status: string;
+  terms?: string | null;
+  items?: any[];
 }
 
 interface BOQItemOption {
@@ -134,6 +138,7 @@ export default function SubconPage() {
 
   // Modals & Drawers
   const [showWOModal, setShowWOModal] = useState(false);
+  const [editingWoId, setEditingWoId] = useState<string | null>(null);
   const [showAddPartyDrawer, setShowAddPartyDrawer] = useState(false);
 
   // Scope & Terms state
@@ -143,11 +148,13 @@ export default function SubconPage() {
 
   // Form states
   const [woForm, setWoForm] = useState<{
+    woNumber: string;
     partyId: string;
     date: string;
     terms: string;
     items: WOFormItem[];
   }>({
+    woNumber: "",
     partyId: "",
     date: new Date().toISOString().split("T")[0],
     terms: "",
@@ -216,11 +223,15 @@ export default function SubconPage() {
             woNumber: wo.wo_number || `WO-${i + 1}`,
             sNo: i + 1,
             subContractor: wo.subcontractor_name || "Unknown",
+            subcontractorId: wo.subcontractor_id || undefined,
+            woDate: wo.wo_date || undefined,
             progress: wo.progress_pct !== null && wo.progress_pct !== undefined ? `${Math.min(100, Math.max(0, wo.progress_pct))}%` : "—",
             progressPct: wo.progress_pct !== null && wo.progress_pct !== undefined ? Number(wo.progress_pct) : null,
             woValue: Number(wo.estimated_work_amount) || 0,
             billedValue: Number(wo.billed_amount) || 0,
             status: wo.status || "—",
+            terms: wo.terms ?? null,
+            items: wo.items ?? [],
           }))
         );
       }
@@ -421,7 +432,41 @@ export default function SubconPage() {
     }
   };
 
-  const handleCreateWorkorder = async () => {
+  const handleOpenCreateWO = () => {
+    setEditingWoId(null);
+    setWoForm({
+      woNumber: `WO-${Date.now().toString().slice(-6)}`,
+      partyId: "",
+      date: new Date().toISOString().split("T")[0],
+      terms: defaultSubconTerms,
+      items: [{ referenceType: "boq", boq_item_id: "", task_id: "", quantity: 1, rate: 0 }],
+    });
+    setShowWOModal(true);
+  };
+
+  const handleOpenEditWO = (wo: WorkOrder) => {
+    setEditingWoId(wo.id);
+    const items: WOFormItem[] = (wo.items && wo.items.length > 0)
+      ? wo.items.map((it: any) => ({
+          referenceType: it.boq_item_id ? "boq" : "task",
+          boq_item_id: it.boq_item_id || "",
+          task_id: it.task_id || "",
+          quantity: Number(it.quantity) || 1,
+          rate: Number(it.rate) || 0,
+        }))
+      : [{ referenceType: "boq", boq_item_id: "", task_id: "", quantity: 1, rate: 0 }];
+
+    setWoForm({
+      woNumber: wo.woNumber,
+      partyId: wo.subcontractorId || "",
+      date: wo.woDate ? new Date(wo.woDate).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+      terms: wo.terms ?? defaultSubconTerms,
+      items,
+    });
+    setShowWOModal(true);
+  };
+
+  const handleSaveWorkorder = async () => {
     if (!woForm.partyId) {
       alert("Please select a subcontractor!");
       return;
@@ -452,40 +497,52 @@ export default function SubconPage() {
     }
 
     try {
-      const res = await fetch(`${getApiHost()}/apis/v3/billing/work-orders`, {
-        method: "POST",
+      const isEdit = Boolean(editingWoId);
+      const url = isEdit
+        ? `${getApiHost()}/apis/v3/billing/work-orders/${editingWoId}`
+        : `${getApiHost()}/apis/v3/billing/work-orders`;
+      const method = isEdit ? "PUT" : "POST";
+
+      const payload: any = {
+        subcontractor_id: woForm.partyId,
+        wo_number: woForm.woNumber || `WO-${Date.now().toString().slice(-6)}`,
+        wo_date: new Date(woForm.date).toISOString(),
+        terms: woForm.terms || null,
+        items: woForm.items.map((it) => ({
+          boq_item_id: it.referenceType === "boq" ? it.boq_item_id : null,
+          task_id: it.referenceType === "task" ? it.task_id : null,
+          quantity: Number(it.quantity),
+          rate: Number(it.rate),
+        })),
+      };
+      if (!isEdit) {
+        payload.company_id = companyId;
+        payload.project_id = projectId;
+      }
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
-        body: JSON.stringify({
-          company_id: companyId,
-          project_id: projectId,
-          subcontractor_id: woForm.partyId,
-          wo_number: `WO-${Date.now().toString().slice(-6)}`,
-          wo_date: new Date(woForm.date).toISOString(),
-          terms: woForm.terms || null,
-          items: woForm.items.map((it) => ({
-            boq_item_id: it.referenceType === "boq" ? it.boq_item_id : null,
-            task_id: it.referenceType === "task" ? it.task_id : null,
-            quantity: Number(it.quantity),
-            rate: Number(it.rate),
-          })),
-        }),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) {
         const err = await readErrorDetail(res);
-        alert(err || "Failed to create work order");
+        alert(err || (isEdit ? "Failed to update work order" : "Failed to create work order"));
         return;
       }
       await fetchSubconData();
       setShowWOModal(false);
+      setEditingWoId(null);
       setWoForm({
+        woNumber: "",
         partyId: "",
         date: new Date().toISOString().split("T")[0],
         terms: defaultSubconTerms,
         items: [{ referenceType: "boq", boq_item_id: "", task_id: "", quantity: 1, rate: 0 }],
       });
-      showToast("Subcontractor Work Order created successfully!");
+      showToast(isEdit ? "Work Order updated successfully!" : "Subcontractor Work Order created successfully!");
     } catch (err: any) {
-      alert(err?.message || "Error creating work order");
+      alert(err?.message || "Error saving work order");
     }
   };
 
@@ -545,7 +602,7 @@ export default function SubconPage() {
         <div className="flex items-center gap-2">
           {activeTab === "work_orders" && (
             <button
-              onClick={() => setShowWOModal(true)}
+              onClick={handleOpenCreateWO}
               className="flex items-center gap-1.5 px-3.5 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary/95 transition-all cursor-pointer"
             >
               + Sub Con Work Order
@@ -622,7 +679,7 @@ export default function SubconPage() {
                           <EmptyState
                             title="No subcontractor work orders found"
                             description={searchQuery ? "No work orders match your search query." : "Create subcontractor work orders to track billed value and approvals."}
-                            action={!searchQuery ? { label: "+ New Work Order", onClick: () => setShowWOModal(true) } : undefined}
+                            action={!searchQuery ? { label: "+ New Work Order", onClick: handleOpenCreateWO } : undefined}
                           />
                         </td>
                       </tr>
@@ -653,13 +710,22 @@ export default function SubconPage() {
                           </td>
                           <td className="px-4 py-3 text-right">
                             {wo.status !== "cancelled" ? (
-                              <button
-                                onClick={() => handleCancelWorkOrder(wo.id, wo.woNumber)}
-                                className="p-1 text-muted hover:text-danger rounded hover:bg-elevated transition-colors cursor-pointer"
-                                title="Cancel Work Order"
-                              >
-                                <Icon name="close" className="w-4 h-4" />
-                              </button>
+                              <div className="flex items-center justify-end gap-1">
+                                <button
+                                  onClick={() => handleOpenEditWO(wo)}
+                                  className="p-1 text-muted hover:text-foreground rounded hover:bg-elevated transition-colors cursor-pointer"
+                                  title="Edit Work Order"
+                                >
+                                  <Icon name="pencil" className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleCancelWorkOrder(wo.id, wo.woNumber)}
+                                  className="p-1 text-muted hover:text-danger rounded hover:bg-elevated transition-colors cursor-pointer"
+                                  title="Cancel Work Order"
+                                >
+                                  <Icon name="close" className="w-4 h-4" />
+                                </button>
+                              </div>
                             ) : (
                               <span className="text-[10px] text-muted">—</span>
                             )}
@@ -1014,9 +1080,13 @@ export default function SubconPage() {
             <div className="bg-card border border-border-custom rounded-xl w-full max-w-2xl p-6 relative shadow-2xl max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
               <div className="flex justify-between items-start border-b border-border-custom pb-3 mb-4">
                 <div>
-                  <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">Create Subcontractor Work Order</h3>
+                  <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
+                    {editingWoId ? "Edit Subcontractor Work Order" : "Create Subcontractor Work Order"}
+                  </h3>
                   <div className="flex items-center gap-1 mt-0.5">
-                    <span className="text-[11px] text-muted font-sans">Scope contract with itemised BOQ lines and tasks</span>
+                    <span className="text-[11px] text-muted font-sans">
+                      {editingWoId ? `Updating work order ${woForm.woNumber}` : "Scope contract with itemised BOQ lines and tasks"}
+                    </span>
                   </div>
                 </div>
                 <button onClick={() => setShowWOModal(false)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
@@ -1240,10 +1310,10 @@ export default function SubconPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={handleCreateWorkorder}
+                  onClick={handleSaveWorkorder}
                   className="px-5 py-2 bg-primary hover:bg-primary/95 text-white text-xs font-bold rounded-lg transition-all cursor-pointer"
                 >
-                  Create Workorder
+                  {editingWoId ? "Save Changes" : "Create Workorder"}
                 </button>
               </div>
             </div>

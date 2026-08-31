@@ -58,6 +58,17 @@ class WOCreateRequest(BaseModel):
     items: List[WOItemSchema]
     terms: Optional[str] = None
 
+class WOUpdateRequest(BaseModel):
+    subcontractor_id: UUID
+    wo_number: str
+    wo_date: datetime
+    items: List[WOItemSchema]
+    terms: Optional[str] = None
+
+
+def _compute_estimated_work_amount(items: List[WOItemSchema]) -> float:
+    return sum(item.quantity * item.rate for item in items)
+
 class WOResponseItem(BaseModel):
     id: UUID
     boq_item_id: Optional[UUID] = None
@@ -401,7 +412,7 @@ def create_work_order(req: WOCreateRequest, db: Session = Depends(get_db), curre
     if existing:
         raise HTTPException(status_code=400, detail="Work Order number already exists for this company")
 
-    estimated_amount = sum(item.quantity * item.rate for item in req.items)
+    estimated_amount = _compute_estimated_work_amount(req.items)
 
     wo = WorkOrder(
         company_id=req.company_id,
@@ -431,6 +442,101 @@ def create_work_order(req: WOCreateRequest, db: Session = Depends(get_db), curre
         db.add(db_item)
         db.flush()
         
+        item_schemas.append(
+            WOResponseItem(
+                id=db_item.id,
+                boq_item_id=db_item.boq_item_id,
+                task_id=db_item.task_id,
+                quantity=float(db_item.quantity),
+                rate=float(db_item.rate),
+                amount=float(db_item.amount)
+            )
+        )
+
+    db.commit()
+    db.refresh(wo)
+
+    billed_amt, prog_pct = _compute_wo_billing(db, wo.id, float(wo.estimated_work_amount))
+    return WOResponse(
+        id=wo.id,
+        company_id=wo.company_id,
+        project_id=wo.project_id,
+        subcontractor_id=wo.subcontractor_id,
+        wo_number=wo.wo_number,
+        wo_date=wo.wo_date,
+        status=wo.status,
+        estimated_work_amount=float(wo.estimated_work_amount),
+        billed_amount=billed_amt,
+        progress_pct=prog_pct,
+        terms=wo.terms,
+        created_at=wo.created_at,
+        items=item_schemas
+    )
+
+@router.put("/work-orders/{wo_id}", response_model=WOResponse)
+def update_work_order(wo_id: UUID, req: WOUpdateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    wo = db.query(WorkOrder).filter(WorkOrder.id == wo_id).first()
+    if not wo:
+        raise HTTPException(status_code=404, detail="Work order not found")
+    get_company_membership(db, current_user, wo.company_id)
+    require_permission(db, current_user, wo.company_id, "billing:edit")
+
+    if wo.status == "cancelled":
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Cannot edit a cancelled work order")
+
+    # Guard: block edits once any non-cancelled bill references this work order
+    billed_count = (
+        db.query(Bill)
+        .filter(
+            Bill.wo_id == wo.id,
+            Bill.status != "Cancelled",
+        )
+        .count()
+    )
+    if billed_count > 0:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Work order has been billed against and cannot be edited. Please issue a new work order or variation instead.",
+        )
+
+    if req.subcontractor_id:
+        sub = db.query(models.CompanyTeam).filter(models.CompanyTeam.id == req.subcontractor_id).first()
+        if not sub or sub.company_id != wo.company_id:
+            raise HTTPException(status_code=403, detail="Subcontractor does not belong to this company")
+
+    if req.wo_number != wo.wo_number:
+        existing = db.query(WorkOrder).filter(
+            WorkOrder.company_id == wo.company_id,
+            WorkOrder.wo_number == req.wo_number,
+            WorkOrder.id != wo.id
+        ).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Work Order number already exists for this company")
+
+    # Wholesale replace line items
+    db.query(WorkOrderItem).filter(WorkOrderItem.wo_id == wo.id).delete()
+
+    wo.subcontractor_id = req.subcontractor_id
+    wo.wo_number = req.wo_number
+    wo.wo_date = req.wo_date
+    wo.terms = req.terms
+    wo.estimated_work_amount = _compute_estimated_work_amount(req.items)
+    db.add(wo)
+    db.flush()
+
+    item_schemas = []
+    for item in req.items:
+        db_item = WorkOrderItem(
+            wo_id=wo.id,
+            boq_item_id=item.boq_item_id,
+            task_id=item.task_id,
+            quantity=item.quantity,
+            rate=item.rate,
+            amount=item.quantity * item.rate
+        )
+        db.add(db_item)
+        db.flush()
+
         item_schemas.append(
             WOResponseItem(
                 id=db_item.id,
