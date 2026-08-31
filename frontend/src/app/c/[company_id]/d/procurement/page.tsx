@@ -110,18 +110,45 @@ export default function ProcurementPage() {
 
   // State managers
   const [indents, setIndents] = useState<Indent[]>([]);
+  const [indentScope, setIndentScope] = useState<"project" | "company">("project");
   const [pos, setPos] = useState<PO[]>([]);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [grns, setGrns] = useState<GRN[]>([]);
   const [isOffline, setIsOffline] = useState(false);
 
+  const fetchIndentsByScope = async (scope: "project" | "company" = indentScope) => {
+    try {
+      const apiHost = getApiHost();
+      const url = scope === "company"
+        ? `${apiHost}/apis/v3/procurement/indents/company/${companyId}`
+        : `${apiHost}/apis/v3/procurement/indents?project_id=${projectId}`;
+      const indentsRes = await fetch(url, { headers: authHeaders() });
+      if (indentsRes.ok) {
+        const data = await indentsRes.json();
+        const mapped = (Array.isArray(data) ? data : []).map((ind: any) => ({
+          id: ind.id,
+          indentNumber: ind.indent_number,
+          projectId: ind.project_id,
+          projectName: ind.project_id === projectId ? "Active Project" : `Project ${String(ind.project_id).slice(0, 8)}`,
+          items: (ind.items || []).map((item: any) => ({ name: item.material_name, qty: item.quantity, unit: item.unit })),
+          status: ind.status,
+          requestedBy: "Auto-synced",
+          date: ind.created_at ? ind.created_at.split("T")[0] : "",
+        }));
+        setIndents(mapped);
+      }
+    } catch (e) {
+      console.error("Failed to fetch indents by scope", e);
+    }
+  };
+
   const fetchProcurementData = async () => {
     if (!projectId) return;
     try {
       const apiHost = getApiHost();
       const [indentsRes, posRes, grnsRes, invRes, vendorsRes, materialsRes, matchesRes] = await Promise.all([
-        fetch(`${apiHost}/apis/v3/procurement/indents?project_id=${projectId}`, { headers: authHeaders() }),
+        fetch(indentScope === "company" ? `${apiHost}/apis/v3/procurement/indents/company/${companyId}` : `${apiHost}/apis/v3/procurement/indents?project_id=${projectId}`, { headers: authHeaders() }),
         fetch(`${apiHost}/apis/v3/procurement/pos?project_id=${projectId}`, { headers: authHeaders() }),
         fetch(`${apiHost}/apis/v3/procurement/grns?project_id=${projectId}`, { headers: authHeaders() }),
         fetch(`${apiHost}/apis/v3/procurement/inventory?project_id=${projectId}`, { headers: authHeaders() }),
@@ -157,6 +184,8 @@ export default function ProcurementPage() {
         const mapped = data.map((ind: any) => ({
           id: ind.id,
           indentNumber: ind.indent_number,
+          projectId: ind.project_id,
+          projectName: ind.project_id === projectId ? "Active Project" : `Project ${String(ind.project_id).slice(0, 8)}`,
           items: (ind.items || []).map((item: any) => ({ name: item.material_name, qty: item.quantity, unit: item.unit })),
           status: ind.status,
           requestedBy: "Auto-synced",
@@ -719,11 +748,44 @@ export default function ProcurementPage() {
           {/* TAB 1: INDENTS / REQUISITIONS */}
           {tab === "indent" && (
             <div className="space-y-4">
-              <h2 className="text-xs font-bold text-muted uppercase tracking-wider">Indent & Requisitions</h2>
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <div>
+                  <h2 className="text-xs font-bold text-muted uppercase tracking-wider">Indent & Requisitions</h2>
+                  <p className="text-[10px] text-muted mt-0.5">
+                    {indentScope === "company" ? "Showing all indents across all company projects" : "Showing indents for currently active project"}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5 bg-card border border-border-custom p-1 rounded-lg">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIndentScope("project");
+                      fetchIndentsByScope("project");
+                    }}
+                    className={`px-3 py-1 text-xs font-bold rounded cursor-pointer transition-all ${
+                      indentScope === "project" ? "bg-primary text-white" : "text-muted hover:text-foreground"
+                    }`}
+                  >
+                    Project Indents
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIndentScope("company");
+                      fetchIndentsByScope("company");
+                    }}
+                    className={`px-3 py-1 text-xs font-bold rounded cursor-pointer transition-all ${
+                      indentScope === "company" ? "bg-primary text-white" : "text-muted hover:text-foreground"
+                    }`}
+                  >
+                    Company All Indents
+                  </button>
+                </div>
+              </div>
               {indents.length === 0 ? (
                 <EmptyState
-                  title="No indents found"
-                  description="Create your first material requisition to request site materials from procurement."
+                  title={indentScope === "company" ? "No company indents found" : "No project indents found"}
+                  description={indentScope === "company" ? "No requisitions have been raised across any company projects." : "Create your first material requisition to request site materials from procurement."}
                   action={{
                     label: "+ Material Indent",
                     onClick: () => setShowIndentModal(true),
@@ -734,7 +796,14 @@ export default function ProcurementPage() {
                 {indents.map((ind) => (
                   <div key={ind.id} className="bg-card border border-border-custom rounded-lg p-5 space-y-4">
                     <div className="flex justify-between items-center text-xs">
-                      <strong className="text-foreground font-extrabold">{ind.indentNumber}</strong>
+                      <div className="flex items-center gap-2">
+                        <strong className="text-foreground font-extrabold">{ind.indentNumber}</strong>
+                        {indentScope === "company" && (
+                          <span className="text-[10px] bg-elevated text-muted px-2 py-0.5 rounded font-semibold border border-border-custom">
+                            {(ind as any).projectName || "Project"}
+                          </span>
+                        )}
+                      </div>
                       <Badge tone={ind.status === "approved" ? "success" : (ind.status === "cancelled" || ind.status === "rejected") ? "neutral" : "warning"} className="uppercase font-bold">{ind.status}</Badge>
                     </div>
 

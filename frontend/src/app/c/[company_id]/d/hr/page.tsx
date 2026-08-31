@@ -172,6 +172,9 @@ export default function HRPayrollPage() {
   });
   const [timesheets, setTimesheets] = useState<Timesheet[]>([]);
   const [timesheetLogs, setTimesheetLogs] = useState<any[]>([]);
+  const [timesheetScope, setTimesheetScope] = useState<"project" | "company">("project");
+  const [companyTimesheetEntries, setCompanyTimesheetEntries] = useState<any[]>([]);
+  const [companyTimesheetLoading, setCompanyTimesheetLoading] = useState(false);
   const [projectTasks, setProjectTasks] = useState<any[]>([]);
   const [showNewTimesheetDrawer, setShowNewTimesheetDrawer] = useState(false);
   const [timesheetForm, setTimesheetForm] = useState({
@@ -195,6 +198,25 @@ export default function HRPayrollPage() {
       document.documentElement.classList.add("light-theme");
     } else {
       document.documentElement.classList.remove("light-theme");
+    }
+  };
+
+  const fetchCompanyTimesheets = async () => {
+    if (!companyId) return;
+    setCompanyTimesheetLoading(true);
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/hr/timesheets/company/${companyId}`, { headers: authHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        setCompanyTimesheetEntries(Array.isArray(data) ? data : []);
+      } else {
+        setCompanyTimesheetEntries([]);
+      }
+    } catch (e) {
+      console.error("Failed to fetch company timesheets", e);
+      setCompanyTimesheetEntries([]);
+    } finally {
+      setCompanyTimesheetLoading(false);
     }
   };
 
@@ -476,12 +498,16 @@ export default function HRPayrollPage() {
   }, [projectId, selectedDate, employees.length]);
 
   useEffect(() => {
-    if (projectId && tab === "timesheets") {
-      fetchTimesheetLogs();
-      fetchTimesheets();
-      fetchProjectTasks();
+    if (tab === "timesheets") {
+      if (timesheetScope === "company") {
+        fetchCompanyTimesheets();
+      } else if (projectId) {
+        fetchTimesheetLogs();
+        fetchTimesheets();
+        fetchProjectTasks();
+      }
     }
-  }, [projectId, tab]);
+  }, [projectId, companyId, tab, timesheetScope]);
 
   const handleSaveEmployee = async () => {
     const dup = employees.find((e) => e.name.trim().toLowerCase() === empForm.name.trim().toLowerCase());
@@ -1094,22 +1120,97 @@ export default function HRPayrollPage() {
           {/* ── TIMESHEETS ── */}
           {tab === "timesheets" && (
             <div className="space-y-8">
-              {/* Weekly Summary */}
-              <div className="bg-card border border-border-custom rounded-md overflow-hidden">
-                <div className="px-4 py-3 border-b border-border-custom flex items-center justify-between">
-                  <span className="text-xs font-bold text-foreground uppercase tracking-wider">Weekly Timesheet Approvals</span>
+              {/* Scope Selector */}
+              <div className="flex items-center justify-between flex-wrap gap-3 bg-card border border-border-custom p-4 rounded-xl">
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Timesheet Scope</h3>
+                  <p className="text-[10px] text-muted mt-0.5">
+                    {timesheetScope === "company" ? "Viewing cross-project timesheet logs across the entire company" : "Viewing weekly timesheet approvals for the active project"}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5 bg-background border border-border-custom p-1 rounded-lg">
                   <button
-                    onClick={() => {
-                      if (employees.length > 0) {
-                        setTimesheetForm(prev => ({ ...prev, employeeId: employees[0].id }));
-                      }
-                      setShowNewTimesheetDrawer(true);
-                    }}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-bold border border-primary/20 hover:bg-primary/20 transition-all"
+                    type="button"
+                    onClick={() => setTimesheetScope("project")}
+                    className={`px-3 py-1 text-xs font-bold rounded cursor-pointer transition-all ${
+                      timesheetScope === "project" ? "bg-primary text-white" : "text-muted hover:text-foreground"
+                    }`}
                   >
-                    <Icon name="bolt" className="w-3.5 h-3.5" /> Log Daily Activity
+                    Active Project
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTimesheetScope("company");
+                      fetchCompanyTimesheets();
+                    }}
+                    className={`px-3 py-1 text-xs font-bold rounded cursor-pointer transition-all ${
+                      timesheetScope === "company" ? "bg-primary text-white" : "text-muted hover:text-foreground"
+                    }`}
+                  >
+                    All Company Projects
                   </button>
                 </div>
+              </div>
+
+              {timesheetScope === "company" ? (
+                <div className="bg-card border border-border-custom rounded-md overflow-hidden">
+                  <div className="px-4 py-3 border-b border-border-custom flex items-center justify-between">
+                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-foreground uppercase tracking-wider">
+                      <Icon name="worker" className="w-4 h-4" /> Company-Wide Timesheet Logs ({companyTimesheetEntries.length})
+                    </span>
+                    <button
+                      onClick={fetchCompanyTimesheets}
+                      className="px-2.5 py-1 text-xs font-bold border border-border-custom rounded hover:bg-elevated text-muted hover:text-foreground inline-flex items-center gap-1 cursor-pointer"
+                    >
+                      <Icon name="refresh" className="w-3.5 h-3.5" /> Refresh
+                    </button>
+                  </div>
+                  {companyTimesheetLoading ? (
+                    <div className="p-8 text-center text-muted text-xs">Loading company timesheet entries...</div>
+                  ) : companyTimesheetEntries.length === 0 ? (
+                    <div className="p-8 text-center text-muted text-xs">No company timesheet entries found across any project.</div>
+                  ) : (
+                    <table className="w-full text-xs">
+                      <thead className="bg-elevated border-b border-border-custom">
+                        <tr>
+                          {["Project", "Date", "Employee", "Hours", "Activity / Task"].map(h => (
+                            <th key={h} className="text-left px-4 py-2.5 text-[10px] font-bold text-muted uppercase tracking-wider">{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border-custom">
+                        {companyTimesheetEntries.map((entry) => (
+                          <tr key={entry.id} className="hover:bg-elevated transition-colors">
+                            <td className="px-4 py-3 font-semibold text-primary">{entry.project_name || "—"}</td>
+                            <td className="px-4 py-3 text-muted">{entry.entry_date ? entry.entry_date.split("T")[0] : "—"}</td>
+                            <td className="px-4 py-3 font-semibold text-foreground">{entry.employee_name || "—"}</td>
+                            <td className="px-4 py-3 font-bold font-sans text-info">{entry.hours}h</td>
+                            <td className="px-4 py-3 text-muted">{entry.activity_description || "—"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              ) : (
+                <>
+                  {/* Weekly Summary */}
+                  <div className="bg-card border border-border-custom rounded-md overflow-hidden">
+                    <div className="px-4 py-3 border-b border-border-custom flex items-center justify-between">
+                      <span className="text-xs font-bold text-foreground uppercase tracking-wider">Weekly Timesheet Approvals</span>
+                      <button
+                        onClick={() => {
+                          if (employees.length > 0) {
+                            setTimesheetForm(prev => ({ ...prev, employeeId: employees[0].id }));
+                          }
+                          setShowNewTimesheetDrawer(true);
+                        }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-bold border border-primary/20 hover:bg-primary/20 transition-all cursor-pointer"
+                      >
+                        <Icon name="bolt" className="w-3.5 h-3.5" /> Log Daily Activity
+                      </button>
+                    </div>
                 <table className="w-full text-xs">
                   <thead className="bg-elevated border-b border-border-custom">
                     <tr>
@@ -1344,8 +1445,10 @@ export default function HRPayrollPage() {
                   </div>
                 </div>
               )}
-            </div>
+            </>
           )}
+        </div>
+      )}
 
           {/* ── PAYROLL ── */}
           {tab === "payroll" && (
