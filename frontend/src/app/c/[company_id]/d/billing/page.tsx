@@ -16,10 +16,14 @@ import FieldHint from "@/components/ui/FieldHint";
 
 // Types
 interface Deduction {
-  type: "TDS" | "Retention" | "Advance Recovery" | "Material Recovery" | "Security Deposit";
-  rate?: number; // percentage
+  id?: string;
+  type: string;
+  rate?: number | null; // percentage
   amount: number;
   notes?: string;
+  released_amount?: number | null;
+  released_at?: string | null;
+  release_due_date?: string | null;
 }
 
 interface Bill {
@@ -35,7 +39,7 @@ interface Bill {
   totalPayable: number;
   deductions: Deduction[];
   preTax: boolean;
-  status: "approved" | "pending" | "rejected";
+  status: string;
   // R2-214: audit-approval lifecycle straight from the server's approval_flag,
   // independent of the payment status above.
   approvalFlag: string;
@@ -98,6 +102,15 @@ export default function SubcontractorBillingPage() {
   // Theme B (soft flag): per-row match linker state.
   const [matchOptions, setMatchOptions] = useState<ThreeWayMatchOption[]>([]);
   const [linkingBillId, setLinkingBillId] = useState<string | null>(null);
+
+  // Bill Detail Drawer & Retention Release state
+  const [selectedBillForDetail, setSelectedBillForDetail] = useState<Bill | null>(null);
+  const [retentionModal, setRetentionModal] = useState<{
+    bill: Bill;
+    deduction: Deduction;
+    mode: "full" | "partial";
+    partialAmount: number;
+  } | null>(null);
 
   // Real subcontractors (no hardcoded demo vendors)
   const [subcontractors, setSubcontractors] = useState<Array<{ company_team_id: string; name: string }>>([]);
@@ -171,20 +184,28 @@ export default function SubcontractorBillingPage() {
             igstAmount: 0,
             totalPayable: parseFloat(bill.total_payable || 0),
             preTax: bill.is_milestone_fixed_amount,
-            status: bill.status === "Unpaid" ? "pending" : (bill.status === "Paid" ? "approved" : "rejected"),
+            status: bill.status || "Unpaid",
             approvalFlag: bill.approval_flag || "pending",
             invoiceType: bill.invoice_type || null,
             matchId: bill.match_id || null,
             matchStatus: bill.match_status || "unmatched",
             deductions: (bill.deductions || []).map((d: any) => ({
+              id: d.id,
               type: d.deduction_type,
               amount: parseFloat(d.amount || 0),
               rate: d.percentage,
-              notes: d.notes
+              notes: d.notes,
+              released_amount: d.released_amount !== null && d.released_amount !== undefined ? parseFloat(d.released_amount) : 0,
+              released_at: d.released_at || null,
+              release_due_date: d.release_due_date || null,
             }))
           };
         });
         setBills(mapped);
+        if (selectedBillForDetail) {
+          const updatedSelected = mapped.find((b: Bill) => b.id === selectedBillForDetail.id);
+          if (updatedSelected) setSelectedBillForDetail(updatedSelected);
+        }
       } else {
         console.error("Failed to fetch bills", res.status);
       }
@@ -295,10 +316,93 @@ export default function SubcontractorBillingPage() {
   const [newBillTerms, setNewBillTerms] = useState("");
   const [invoiceDefaultTerms, setInvoiceDefaultTerms] = useState("");
 
+  const fetchNextInvoiceNumber = async (docType: string = "subcon") => {
+    if (!companyId || companyId === "demo-company") return;
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/billing/next-number/${companyId}?invoice_type=${encodeURIComponent(docType)}`, {
+        headers: authHeaders(),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.invoice_number) {
+          setNewBillNum(data.invoice_number);
+        }
+      }
+    } catch {
+      /* ignore: keep default/typed number on failure */
+    }
+  };
+
   useEffect(() => {
-    if (showBillModal && !newBillTerms) setNewBillTerms(invoiceDefaultTerms);
+    if (showBillModal) {
+      if (!newBillTerms) setNewBillTerms(invoiceDefaultTerms);
+      fetchNextInvoiceNumber("subcon");
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showBillModal]);
+
+  const handleCancelBill = async (bill: Bill) => {
+    if (!confirm(`Are you sure you want to cancel Bill #${bill.invoiceNumber} (₹${bill.totalPayable.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })})? This will un-commit billed amounts from its PO/Work Order.`)) {
+      return;
+    }
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/billing/bills/${bill.id}/cancel`, {
+        method: "POST",
+        headers: authHeaders(),
+      });
+      if (!res.ok) {
+        const err = await readErrorDetail(res);
+        alert(err || "Failed to cancel bill");
+        return;
+      }
+      alert(`Bill #${bill.invoiceNumber} cancelled successfully.`);
+      if (selectedBillForDetail?.id === bill.id) {
+        setSelectedBillForDetail(null);
+      }
+      fetchBills(subconNameMap);
+    } catch (err: any) {
+      console.error("Cancel bill error:", err);
+      alert(err?.message || "Failed to cancel bill");
+    }
+  };
+
+  const handleReleaseRetention = async () => {
+    if (!retentionModal) return;
+    const { bill, deduction, mode, partialAmount } = retentionModal;
+    const already = Number(deduction.released_amount || 0);
+    const outstanding = Math.max(0, deduction.amount - already);
+    const releaseAmount = mode === "full" ? outstanding : Number(partialAmount);
+
+    if (releaseAmount <= 0) {
+      alert("Release amount must be greater than 0.");
+      return;
+    }
+    if (releaseAmount > outstanding) {
+      alert(`Release amount cannot exceed the remaining outstanding retention of ₹${outstanding.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`);
+      return;
+    }
+
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/billing/bills/${bill.id}/deductions/${deduction.id}/release`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+        body: JSON.stringify({
+          released_amount: releaseAmount,
+        }),
+      });
+      if (!res.ok) {
+        const err = await readErrorDetail(res);
+        alert(err || "Failed to release retention");
+        return;
+      }
+      alert(`Retention of ₹${releaseAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} released successfully.`);
+      setRetentionModal(null);
+      fetchBills(subconNameMap);
+    } catch (err: any) {
+      console.error("Release retention error:", err);
+      alert(err?.message || "Failed to release retention");
+    }
+  };
 
   // Live Bill Calculation Preview
   const calculateBillPreview = (
@@ -615,38 +719,78 @@ export default function SubcontractorBillingPage() {
                     <tbody>
                       {bills.map((bill) => (
                         <tr key={bill.id} className="border-b border-border-custom hover:bg-elevated transition-all">
-                          <td className="px-5 py-3.5 font-sans text-primary font-bold">{bill.invoiceNumber}</td>
+                          <td className="px-5 py-3.5">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedBillForDetail(bill)}
+                              className="font-sans text-primary hover:underline font-bold text-left cursor-pointer"
+                              title="Click to view bill deductions and details"
+                            >
+                              {bill.invoiceNumber}
+                            </button>
+                          </td>
                           <td className="px-5 py-3.5 text-foreground font-semibold">{bill.subcontractor}</td>
-                          <td className="px-5 py-3.5 font-bold text-muted">₹{bill.subtotal.toLocaleString()}</td>
+                          <td className="px-5 py-3.5 font-bold text-muted">₹{bill.subtotal.toLocaleString("en-IN")}</td>
                           <td className="px-5 py-3.5 text-muted">
                             <div className="flex flex-col">
-                              <span className="text-[10px] text-muted">Total: ₹{bill.gstAmount.toLocaleString()}</span>
+                              <span className="text-[10px] text-muted">Total: ₹{bill.gstAmount.toLocaleString("en-IN")}</span>
                               {bill.cgstAmount > 0 && <>
-                                <span className="text-[10px] text-success">CGST {bill.cgstAmount.toLocaleString()}</span>
-                                <span className="text-[10px] text-success">SGST {bill.sgstAmount.toLocaleString()}</span>
+                                <span className="text-[10px] text-success">CGST {bill.cgstAmount.toLocaleString("en-IN")}</span>
+                                <span className="text-[10px] text-success">SGST {bill.sgstAmount.toLocaleString("en-IN")}</span>
                               </>}
-                              {bill.igstAmount > 0 && <span className="text-[10px] text-warning">IGST {bill.igstAmount.toLocaleString()}</span>}
+                              {bill.igstAmount > 0 && <span className="text-[10px] text-warning">IGST {bill.igstAmount.toLocaleString("en-IN")}</span>}
                             </div>
                           </td>
-                          <td className="px-5 py-3.5 text-muted max-w-[200px]">
-                            <div className="flex flex-wrap gap-1">
-                              {bill.deductions.map((d, idx) => (
-                                <span key={idx} className="bg-elevated border border-border-custom text-[9px] px-1.5 py-0.5 rounded text-muted">
-                                  {d.type}: ₹{d.amount.toLocaleString()}
-                                </span>
-                              ))}
-                            </div>
+                          <td className="px-5 py-3.5 text-muted max-w-[220px]">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedBillForDetail(bill)}
+                              className="flex flex-wrap gap-1 text-left cursor-pointer"
+                              title="Click to view / release retentions"
+                            >
+                              {bill.deductions.map((d, idx) => {
+                                const isRetention = d.type === "Retention";
+                                const released = Number(d.released_amount || 0);
+                                const outstanding = Math.max(0, Number(d.amount) - released);
+                                return (
+                                  <span
+                                    key={idx}
+                                    className={`border text-[9px] px-1.5 py-0.5 rounded font-sans ${
+                                      isRetention
+                                        ? outstanding > 0
+                                          ? "bg-primary/10 border-primary/30 text-primary font-bold"
+                                          : "bg-success/10 border-success/30 text-success font-bold"
+                                        : "bg-elevated border-border-custom text-muted"
+                                    }`}
+                                  >
+                                    {d.type}: ₹{d.amount.toLocaleString("en-IN")}
+                                    {isRetention && released > 0 && ` (Rel: ₹${released.toLocaleString("en-IN")})`}
+                                  </span>
+                                );
+                              })}
+                            </button>
                           </td>
                           <td className="px-5 py-3.5">
                             <span className="text-muted font-bold uppercase text-[10px]">{bill.preTax ? "Pre-Tax" : "Post-Tax"}</span>
                           </td>
-                          <td className="px-5 py-3.5 font-extrabold text-foreground">₹{bill.totalPayable.toLocaleString()}</td>
+                          <td className="px-5 py-3.5 font-extrabold text-foreground">₹{bill.totalPayable.toLocaleString("en-IN")}</td>
                           <td className="px-5 py-3.5">
                             <div className="flex flex-col gap-1">
-                              <Badge tone={isAuditApproved(bill) ? "success" : "warning"} className="uppercase font-bold">
-                                {isAuditApproved(bill) ? "approved" : bill.approvalFlag}
+                              <Badge
+                                tone={
+                                  bill.status === "Cancelled"
+                                    ? "danger"
+                                    : bill.status === "Paid"
+                                    ? "success"
+                                    : isAuditApproved(bill)
+                                    ? "success"
+                                    : "warning"
+                                }
+                                className="uppercase font-bold"
+                              >
+                                {bill.status === "Cancelled" ? "Cancelled" : (isAuditApproved(bill) ? "approved" : bill.approvalFlag)}
                               </Badge>
-                              {bill.invoiceType !== "sale" && bill.matchStatus !== "approved" && (
+                              {bill.invoiceType !== "sale" && bill.matchStatus !== "approved" && bill.status !== "Cancelled" && (
                                 <Badge tone="danger" className="uppercase font-bold w-fit">
                                   Unmatched
                                 </Badge>
@@ -654,7 +798,14 @@ export default function SubcontractorBillingPage() {
                             </div>
                           </td>
                           <td className="px-5 py-3.5 text-right">
-                            <div className="flex items-center justify-end gap-2">
+                            <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                              <button
+                                type="button"
+                                onClick={() => setSelectedBillForDetail(bill)}
+                                className="bg-primary/10 border border-primary/20 text-primary rounded-lg px-2.5 py-1 text-[10px] font-bold hover:bg-primary/20 transition-all cursor-pointer"
+                              >
+                                View
+                              </button>
                               <button
                                 type="button"
                                 onClick={async () => {
@@ -664,26 +815,40 @@ export default function SubcontractorBillingPage() {
                                     alert(`Download failed (${e instanceof Error ? e.message : "unknown error"}).`);
                                   }
                                 }}
-                                className="bg-elevated border border-border-custom text-muted rounded-lg px-2.5 py-1 text-[10px] font-bold hover:bg-elevated/70 transition-all cursor-pointer"
+                                className="bg-elevated border border-border-custom text-muted rounded-lg px-2 py-1 text-[10px] font-bold hover:bg-elevated/70 transition-all cursor-pointer"
                               >
                                 PDF
                               </button>
-                              {!isAuditApproved(bill) && (
+                              {!isAuditApproved(bill) && bill.status !== "Cancelled" && (
                                 <button
+                                  type="button"
                                   onClick={() => handleApproveBill(bill.id)}
-                                  className="bg-success hover:bg-success text-white rounded-lg px-2.5 py-1 text-[10px] font-bold transition-all cursor-pointer inline-flex items-center gap-1"
+                                  className="bg-success hover:bg-success text-white rounded-lg px-2 py-1 text-[10px] font-bold transition-all cursor-pointer inline-flex items-center gap-1"
                                 >
-                                  <Icon name="check" className="w-3 h-3" /> Auditor Approve
+                                  <Icon name="check" className="w-3 h-3" /> Approve
                                 </button>
                               )}
-                              <button
-                                onClick={() => openMatchPicker(bill.id)}
-                                className="bg-secondary/10 border border-secondary/20 text-secondary rounded-lg px-2.5 py-1 text-[10px] font-bold hover:bg-secondary/20 transition-all cursor-pointer"
-                              >
-                                {bill.matchStatus === "approved" ? "Re-link Match" : "Link Match"}
-                              </button>
+                              {bill.status !== "Cancelled" && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleCancelBill(bill)}
+                                  className="bg-danger/10 border border-danger/20 text-danger hover:bg-danger/20 rounded-lg px-2 py-1 text-[10px] font-bold transition-all cursor-pointer"
+                                  title="Cancel Bill"
+                                >
+                                  Cancel
+                                </button>
+                              )}
+                              {bill.status !== "Cancelled" && (
+                                <button
+                                  type="button"
+                                  onClick={() => openMatchPicker(bill.id)}
+                                  className="bg-secondary/10 border border-secondary/20 text-secondary rounded-lg px-2 py-1 text-[10px] font-bold hover:bg-secondary/20 transition-all cursor-pointer"
+                                >
+                                  {bill.matchStatus === "approved" ? "Match" : "Link"}
+                                </button>
+                              )}
                               {linkingBillId === bill.id && (
-                                <div className="mt-2 flex flex-col gap-2">
+                                <div className="mt-2 flex flex-col gap-2 w-full text-left">
                                   <select
                                     value={bill.matchId || ""}
                                     onChange={(e) => linkBillMatch(bill.id, e.target.value || null)}
@@ -1217,6 +1382,250 @@ export default function SubcontractorBillingPage() {
               </div>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* Bill Detail Drawer */}
+      {selectedBillForDetail && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex justify-end" onClick={() => setSelectedBillForDetail(null)}>
+          <div className="bg-card w-full max-w-xl h-full border-l border-border-custom shadow-2xl p-6 flex flex-col justify-between overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="space-y-6">
+              <div className="flex items-center justify-between pb-4 border-b border-border-custom">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-base font-bold text-foreground uppercase tracking-wider font-sans">
+                      Bill #{selectedBillForDetail.invoiceNumber}
+                    </h2>
+                    <Badge tone={selectedBillForDetail.status === "Cancelled" ? "danger" : selectedBillForDetail.status === "Paid" ? "success" : "warning"} className="font-bold uppercase text-[9px]">
+                      {selectedBillForDetail.status}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted mt-0.5 font-sans">
+                    {selectedBillForDetail.subcontractor} · {selectedBillForDetail.invoiceDate}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {selectedBillForDetail.status !== "Cancelled" && (
+                    <button
+                      type="button"
+                      onClick={() => handleCancelBill(selectedBillForDetail)}
+                      className="px-2.5 py-1 bg-danger/10 border border-danger/20 text-danger hover:bg-danger/20 text-xs font-bold rounded-lg transition-all cursor-pointer inline-flex items-center gap-1"
+                    >
+                      <Icon name="close" className="w-3.5 h-3.5" /> Cancel Bill
+                    </button>
+                  )}
+                  <button onClick={() => setSelectedBillForDetail(null)} className="text-muted hover:text-foreground cursor-pointer p-1">
+                    <Icon name="close" className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Financial Metrics Summary */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="bg-elevated/40 border border-border-custom p-3 rounded-lg">
+                  <span className="text-[9px] uppercase font-bold text-muted block">Billed Subtotal</span>
+                  <span className="text-xs font-bold text-foreground mt-0.5 block">₹{selectedBillForDetail.subtotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                </div>
+                <div className="bg-elevated/40 border border-border-custom p-3 rounded-lg">
+                  <span className="text-[9px] uppercase font-bold text-muted block">GST Total</span>
+                  <span className="text-xs font-bold text-foreground mt-0.5 block">₹{selectedBillForDetail.gstAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                </div>
+                <div className="bg-elevated/40 border border-border-custom p-3 rounded-lg">
+                  <span className="text-[9px] uppercase font-bold text-muted block">Deductions Mode</span>
+                  <span className="text-xs font-bold text-muted mt-0.5 block">{selectedBillForDetail.preTax ? "Pre-Tax" : "Post-Tax"}</span>
+                </div>
+                <div className="bg-primary/10 border border-primary/20 p-3 rounded-lg">
+                  <span className="text-[9px] uppercase font-bold text-primary block">Net Payable</span>
+                  <span className="text-xs font-extrabold text-primary mt-0.5 block">₹{selectedBillForDetail.totalPayable.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                </div>
+              </div>
+
+              {/* Deductions Breakdown & Retention Release */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Withheld Deductions & Retentions</h3>
+                  <span className="text-[11px] text-muted">
+                    Total: ₹{selectedBillForDetail.deductions.reduce((s, d) => s + Number(d.amount), 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+
+                {selectedBillForDetail.deductions.length === 0 ? (
+                  <div className="bg-elevated/20 border border-border-custom rounded-lg p-4 text-center text-muted text-xs">
+                    No deductions recorded against this bill.
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {selectedBillForDetail.deductions.map((d, idx) => {
+                      const isRetention = d.type === "Retention";
+                      const released = Number(d.released_amount || 0);
+                      const outstanding = Math.max(0, Number(d.amount) - released);
+                      return (
+                        <div key={d.id || idx} className="bg-card border border-border-custom rounded-lg p-3 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Badge tone={isRetention ? "info" : "neutral"} className="font-bold text-[10px]">
+                                {d.type}
+                              </Badge>
+                              {d.rate && <span className="text-[11px] text-muted font-sans font-semibold">({d.rate}%)</span>}
+                            </div>
+                            <span className="text-xs font-bold text-foreground font-sans">
+                              ₹{Number(d.amount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                            </span>
+                          </div>
+
+                          {d.notes && <p className="text-[11px] text-muted">{d.notes}</p>}
+
+                          {isRetention && (
+                            <div className="pt-2 border-t border-border-custom flex items-center justify-between flex-wrap gap-2 text-[11px]">
+                              <div className="flex items-center gap-3 text-muted">
+                                <span>Released: <strong className="text-foreground">₹{released.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</strong></span>
+                                <span>Remaining: <strong className="text-foreground">₹{outstanding.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</strong></span>
+                              </div>
+                              {selectedBillForDetail.status !== "Cancelled" && (
+                                outstanding > 0 ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => setRetentionModal({
+                                      bill: selectedBillForDetail,
+                                      deduction: d,
+                                      mode: "full",
+                                      partialAmount: outstanding,
+                                    })}
+                                    className="px-2.5 py-1 bg-primary hover:bg-primary/95 text-white font-bold rounded text-xs transition-all cursor-pointer"
+                                  >
+                                    Release Retention
+                                  </button>
+                                ) : (
+                                  <Badge tone="success" className="font-bold text-[9px]">Fully Released</Badge>
+                                )
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-border-custom flex justify-end">
+              <button
+                type="button"
+                onClick={() => setSelectedBillForDetail(null)}
+                className="px-4 py-2 bg-elevated hover:bg-card border border-border-custom text-foreground text-xs font-semibold rounded-lg transition-all cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Retention Release Dialog */}
+      {retentionModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setRetentionModal(null)}>
+          <div className="bg-card border border-border-custom rounded-xl w-full max-w-md p-6 relative shadow-2xl space-y-4" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-border-custom pb-3">
+              <div>
+                <h3 className="text-sm font-bold text-foreground uppercase tracking-wider font-sans">Release Retention</h3>
+                <p className="text-[11px] text-muted mt-0.5">
+                  {retentionModal.bill.subcontractor} · Bill #{retentionModal.bill.invoiceNumber}
+                </p>
+              </div>
+              <button onClick={() => setRetentionModal(null)} className="text-muted hover:text-foreground cursor-pointer">
+                <Icon name="close" className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Retention Status Card */}
+            {(() => {
+              const released = Number(retentionModal.deduction.released_amount || 0);
+              const outstanding = Math.max(0, Number(retentionModal.deduction.amount) - released);
+              return (
+                <div className="space-y-4 text-xs">
+                  <div className="grid grid-cols-3 gap-2 bg-elevated/40 border border-border-custom p-3 rounded-lg text-center">
+                    <div>
+                      <span className="text-[9px] uppercase font-bold text-muted block">Withheld</span>
+                      <span className="text-xs font-bold text-foreground mt-0.5 block">₹{Number(retentionModal.deduction.amount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                    </div>
+                    <div>
+                      <span className="text-[9px] uppercase font-bold text-muted block">Released</span>
+                      <span className="text-xs font-bold text-muted mt-0.5 block">₹{released.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                    </div>
+                    <div>
+                      <span className="text-[9px] uppercase font-bold text-primary block">Remaining</span>
+                      <span className="text-xs font-extrabold text-primary mt-0.5 block">₹{outstanding.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-bold text-muted block">Release Mode</label>
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-2 p-2.5 rounded-lg border border-border-custom hover:bg-elevated/40 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="releaseMode"
+                          checked={retentionModal.mode === "full"}
+                          onChange={() => setRetentionModal({ ...retentionModal, mode: "full" })}
+                          className="text-primary"
+                        />
+                        <span className="text-xs font-semibold text-foreground">
+                          Release full remaining (₹{outstanding.toLocaleString("en-IN", { minimumFractionDigits: 2 })})
+                        </span>
+                      </label>
+
+                      <label className="flex items-center gap-2 p-2.5 rounded-lg border border-border-custom hover:bg-elevated/40 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="releaseMode"
+                          checked={retentionModal.mode === "partial"}
+                          onChange={() => setRetentionModal({ ...retentionModal, mode: "partial", partialAmount: Math.min(outstanding, outstanding / 2) })}
+                          className="text-primary"
+                        />
+                        <span className="text-xs font-semibold text-foreground">
+                          Release partial amount
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {retentionModal.mode === "partial" && (
+                    <div className="space-y-1">
+                      <label className="text-[10px] uppercase font-bold text-muted block">Partial Release Amount (₹)*</label>
+                      <input
+                        type="number"
+                        min="0.01"
+                        max={outstanding}
+                        step="any"
+                        value={retentionModal.partialAmount}
+                        onChange={(e) => setRetentionModal({ ...retentionModal, partialAmount: parseFloat(e.target.value) || 0 })}
+                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground text-xs focus:outline-none focus:border-primary font-sans font-bold"
+                      />
+                      <span className="text-[10px] text-muted">Maximum releasable: ₹{outstanding.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-end gap-2 pt-3 border-t border-border-custom">
+                    <button
+                      type="button"
+                      onClick={() => setRetentionModal(null)}
+                      className="px-4 py-2 bg-elevated hover:bg-card border border-border-custom text-muted hover:text-foreground text-xs font-semibold rounded-lg transition-all cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleReleaseRetention}
+                      className="px-5 py-2 bg-primary hover:bg-primary/95 text-white text-xs font-bold rounded-lg transition-all cursor-pointer"
+                    >
+                      Confirm Release
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
