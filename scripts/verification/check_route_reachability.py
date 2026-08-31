@@ -156,10 +156,6 @@ def check_reachability(routes, frontend_contents, exemptions):
             unreachable.append(r)
             continue
 
-        if not matcher.search(all_content):
-            unreachable.append(r)
-            continue
-
         matched_file = None
         for fname, content in frontend_contents:
             if first_static and first_static not in content:

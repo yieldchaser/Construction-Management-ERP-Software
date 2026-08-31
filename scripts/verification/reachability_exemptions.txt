@@ -26,3 +26,6 @@ POST /calculators/waterproofing               client-side calculation in Calcula
 POST /calculators/billing                     client-side calculation in CalculatorTools.tsx (parity test in test_calculator_parity.py)
 POST /calculators/split-rate                  client-side calculation in CalculatorTools.tsx (parity test in test_calculator_parity.py)
 POST /calculators/house-cost                  client-side calculation in CalculatorTools.tsx (parity test in test_calculator_parity.py)
+POST /face/punch                              biometric kiosk device endpoint (hardware kiosk device, not a web UI view)
+GET  /face/employees/{company_id}             biometric kiosk enrolment list (kiosk sync, not a web UI view)
+GET  /admin/pos-would-change/{company_id}     operator dry-run (administrative operator diagnostic script)
