@@ -1,0 +1,26 @@
+# Method  Path                                           Reason
+GET  /auth/google/callback                    OAuth redirect target, browser navigates here
+GET  /integrations/google-drive/callback      OAuth redirect target
+GET  /integrations/google-sheets/callback     OAuth redirect target
+GET  /integrations/zoho-books/callback        OAuth redirect target
+POST /admin/migrations/backfill-files-to-storage        one-off operator endpoint
+POST /admin/migrations/backfill-rbac                    one-off operator endpoint
+POST /admin/migrations/backfill-company-team-party-links one-off operator endpoint
+POST /admin/migrations/backfill-role-permissions        one-off operator endpoint
+GET  /admin/migrations/rbac-fail-closed/{company_id}    one-off operator endpoint
+PUT  /admin/migrations/rbac-fail-closed/{company_id}    one-off operator endpoint
+GET  /integrations/bi/feed/{company_id}/budget-variance external BI feed consumed via API key
+GET  /integrations/bi/feed/{company_id}/labour-productivity external BI feed consumed via API key
+POST /calculators/steel                       client-side calculation in CalculatorTools.tsx (parity test in test_calculator_parity.py)
+POST /calculators/concrete                    client-side calculation in CalculatorTools.tsx (parity test in test_calculator_parity.py)
+POST /calculators/rmc                         client-side calculation in CalculatorTools.tsx (parity test in test_calculator_parity.py)
+POST /calculators/brick                       client-side calculation in CalculatorTools.tsx (parity test in test_calculator_parity.py)
+POST /calculators/brickwork                   client-side calculation in CalculatorTools.tsx (parity test in test_calculator_parity.py)
+POST /calculators/paint                       client-side calculation in CalculatorTools.tsx (parity test in test_calculator_parity.py)
+POST /calculators/tile                        client-side calculation in CalculatorTools.tsx (parity test in test_calculator_parity.py)
+POST /calculators/flooring                    client-side calculation in CalculatorTools.tsx (parity test in test_calculator_parity.py)
+POST /calculators/plaster                     client-side calculation in CalculatorTools.tsx (parity test in test_calculator_parity.py)
+POST /calculators/plastering                  client-side calculation in CalculatorTools.tsx (parity test in test_calculator_parity.py)
+POST /calculators/waterproofing               client-side calculation in CalculatorTools.tsx (parity test in test_calculator_parity.py)
+POST /calculators/billing                     client-side calculation in CalculatorTools.tsx (parity test in test_calculator_parity.py)
+POST /calculators/split-rate                  client-side calculation in CalculatorTools.tsx (parity test in test_calculator_parity.py)
