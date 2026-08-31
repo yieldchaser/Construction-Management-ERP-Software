@@ -48,7 +48,7 @@ interface PO {
   grossAmount: number;
   taxAmount: number;
   totalAmount: number;
-  status: "draft" | "approved" | "sent" | "partial" | "received" | "closed";
+  status: "draft" | "approved" | "sent" | "partial" | "received" | "closed" | "cancelled";
   approvalFlag: "pending" | "approved" | "rejected";
   date: string;
 }
@@ -453,14 +453,77 @@ export default function ProcurementPage() {
         headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
       });
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        alert(`Approval failed: ${typeof err.detail === "string" ? err.detail : `HTTP ${res.status}`}`);
+        const err = await readErrorDetail(res);
+        alert(err || "Failed to approve purchase order");
         return;
       }
       fetchProcurementData();
     } catch (err) {
       console.error("PO approve error:", err);
       alert("Approval failed. Check your connection.");
+    }
+  };
+
+  // Reject PO
+  const handleRejectPO = async (id: string) => {
+    if (!confirm("Are you sure you want to reject this purchase order?")) return;
+    try {
+      const apiHost = getApiHost();
+      const res = await fetch(`${apiHost}/apis/v3/procurement/pos/${id}/reject`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+      });
+      if (!res.ok) {
+        const err = await readErrorDetail(res);
+        alert(err || "Failed to reject purchase order");
+        return;
+      }
+      fetchProcurementData();
+    } catch (err) {
+      console.error("PO reject error:", err);
+      alert("Failed to reject purchase order. Check your connection.");
+    }
+  };
+
+  // Cancel PO
+  const handleCancelPO = async (id: string) => {
+    if (!confirm("Are you sure you want to cancel this purchase order?")) return;
+    try {
+      const apiHost = getApiHost();
+      const res = await fetch(`${apiHost}/apis/v3/procurement/pos/${id}/cancel`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+      });
+      if (!res.ok) {
+        const err = await readErrorDetail(res);
+        alert(err || "Failed to cancel purchase order");
+        return;
+      }
+      fetchProcurementData();
+    } catch (err) {
+      console.error("PO cancel error:", err);
+      alert("Failed to cancel purchase order. Check your connection.");
+    }
+  };
+
+  // Close PO
+  const handleClosePO = async (id: string) => {
+    if (!confirm("Are you sure you want to mark this purchase order as closed / completed?")) return;
+    try {
+      const apiHost = getApiHost();
+      const res = await fetch(`${apiHost}/apis/v3/procurement/pos/${id}/close`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+      });
+      if (!res.ok) {
+        const err = await readErrorDetail(res);
+        alert(err || "Failed to close purchase order");
+        return;
+      }
+      fetchProcurementData();
+    } catch (err) {
+      console.error("PO close error:", err);
+      alert("Failed to close purchase order. Check your connection.");
     }
   };
 
@@ -783,16 +846,48 @@ export default function ProcurementPage() {
                                 >
                                   PDF
                                 </button>
-                                {po.approvalFlag === "pending" && (
-                                  <button onClick={() => handleApprovePO(po.id)} className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary rounded-lg text-[10px] font-bold">
-                                    Approve PO
-                                  </button>
-                                )}
-                                {po.status === "sent" && po.approvalFlag === "approved" && (
-                                  <button onClick={() => handleOpenGRNModal(po)} className="px-3 py-1.5 bg-success/10 hover:bg-success/10 border border-success/20 text-success rounded-lg text-[10px] font-bold inline-flex items-center gap-1.5">
-                                    <Icon name="truck" className="w-3 h-3" />Record GRN
-                                  </button>
-                                )}
+                                {po.approvalFlag === "pending" && po.status !== "cancelled" && po.status !== "closed" && (
+                                    <>
+                                      <button
+                                        onClick={() => handleApprovePO(po.id)}
+                                        className="px-2.5 py-1.5 bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary rounded-lg text-[10px] font-bold cursor-pointer"
+                                      >
+                                        Approve
+                                      </button>
+                                      <button
+                                        onClick={() => handleRejectPO(po.id)}
+                                        className="px-2.5 py-1.5 bg-danger/10 hover:bg-danger/20 border border-danger/20 text-danger rounded-lg text-[10px] font-bold cursor-pointer"
+                                      >
+                                        Reject
+                                      </button>
+                                    </>
+                                  )}
+                                  {po.status === "sent" && po.approvalFlag === "approved" && (
+                                    <button
+                                      onClick={() => handleOpenGRNModal(po)}
+                                      className="px-2.5 py-1.5 bg-success/10 hover:bg-success/20 border border-success/20 text-success rounded-lg text-[10px] font-bold inline-flex items-center gap-1.5 cursor-pointer"
+                                    >
+                                      <Icon name="truck" className="w-3 h-3" />Record GRN
+                                    </button>
+                                  )}
+                                  {po.status !== "cancelled" && po.status !== "closed" && (
+                                    <>
+                                      <button
+                                        onClick={() => handleClosePO(po.id)}
+                                        className="px-2.5 py-1.5 bg-elevated hover:bg-card border border-border-custom text-foreground rounded-lg text-[10px] font-bold cursor-pointer"
+                                        title="Close PO"
+                                      >
+                                        Close
+                                      </button>
+                                      <button
+                                        onClick={() => handleCancelPO(po.id)}
+                                        className="px-2.5 py-1.5 bg-elevated hover:bg-danger/10 border border-border-custom text-muted hover:text-danger rounded-lg text-[10px] font-bold cursor-pointer"
+                                        title="Cancel PO"
+                                      >
+                                        Cancel
+                                      </button>
+                                    </>
+                                  )}
                               </div>
                             </td>
                           </tr>
