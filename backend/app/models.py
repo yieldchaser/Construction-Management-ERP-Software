@@ -1516,6 +1516,7 @@ class LeaveRequest(Base):
     days_count = Column(Float, nullable=False)
     status = Column(String(50), default="Pending", nullable=False) # Pending, Approved, Rejected
     applied_on = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+    reason = Column(Text, nullable=True)
 
 
 class ApprovalRule(Base):
@@ -2120,6 +2121,10 @@ class LibraryWorkforce(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
     name = Column(String(255), nullable=False)
+    rate_type = Column(String(50), nullable=True)
+    salary_per_shift = Column(Numeric(12, 2), nullable=True)
+    shift_hours = Column(Numeric(6, 2), nullable=True)
+    cost_code = Column(String(100), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 class LibraryMaterial(Base):

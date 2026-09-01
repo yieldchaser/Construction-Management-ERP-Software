@@ -1410,6 +1410,7 @@ function MyLeavesTab({
   const [from, setFrom] = useState(todayStr());
   const [to, setTo] = useState(todayStr());
   const [days, setDays] = useState(1);
+  const [reason, setReason] = useState("");
 
   const me = employees.find((e) => e.name === userName);
 
@@ -1439,20 +1440,35 @@ function MyLeavesTab({
   }, [me, leaveTemplates]);
 
   const apply = async () => {
+    if (!me?.id) {
+      alert("No linked employee staff record found for your user account. Please contact HR to link your profile before applying for leave.");
+      return;
+    }
     await jpost(`/hr/leaves/${companyId}`, {
-      employee_name: userName,
+      employee_id: me.id,
+      employee_name: me.name || userName,
       leave_type: type,
       start_date: isoDateTime(from),
       end_date: isoDateTime(to),
       days_count: days,
+      reason: reason.trim() || null,
     });
+    setReason("");
     load();
   };
+
+  if (!me) {
+    return (
+      <div className="rounded-md border border-warning/40 bg-warning/10 p-4 text-sm text-warning">
+        No employee staff record linked to your user account ({userName || "current user"}). Please register in Employee Directory first.
+      </div>
+    );
+  }
 
   if (!assignedTemplate) {
     return (
       <div className="rounded-md border border-warning/40 bg-warning/10 p-4 text-sm text-warning">
-        !! No leave template assigned for your account this year.
+        No leave template assigned for your account this year.
       </div>
     );
   }
@@ -1464,7 +1480,7 @@ function MyLeavesTab({
         Template: {assignedTemplate.name} · Casual {assignedTemplate.casual_leave_days} · Sick{" "}
         {assignedTemplate.sick_leave_days} · Earned {assignedTemplate.earned_leave_days}
       </p>
-      <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 rounded-md border border-border-custom p-3">
+      <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2 rounded-md border border-border-custom p-3">
         <Field label="Leave Type">
           <select className={inputCls} value={type} onChange={(e) => setType(e.target.value)}>
             <option>Casual</option>
@@ -1480,6 +1496,9 @@ function MyLeavesTab({
         </Field>
         <Field label="Days">
           <input type="number" className={inputCls} value={days} onChange={(e) => setDays(parseFloat(e.target.value) || 0)} />
+        </Field>
+        <Field label="Reason">
+          <input type="text" placeholder="Reason for leave" className={inputCls} value={reason} onChange={(e) => setReason(e.target.value)} />
         </Field>
       </div>
       <button className={btnPrimary} onClick={apply}>

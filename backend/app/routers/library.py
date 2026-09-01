@@ -87,9 +87,17 @@ class ProgressUpdate(BaseModel):
 class WorkforceCreate(BaseModel):
     company_id: uuid.UUID
     name: str = Field(..., max_length=255)
+    rate_type: Optional[str] = Field(None, max_length=50)
+    salary_per_shift: Optional[float] = Field(None, ge=0)
+    shift_hours: Optional[float] = Field(None, ge=0)
+    cost_code: Optional[str] = Field(None, max_length=100)
 
 class WorkforceUpdate(BaseModel):
-    name: str = Field(..., max_length=255)
+    name: Optional[str] = Field(None, max_length=255)
+    rate_type: Optional[str] = Field(None, max_length=50)
+    salary_per_shift: Optional[float] = Field(None, ge=0)
+    shift_hours: Optional[float] = Field(None, ge=0)
+    cost_code: Optional[str] = Field(None, max_length=100)
 
 class MaterialCreate(BaseModel):
     company_id: uuid.UUID
@@ -741,7 +749,14 @@ def get_library_workforces(company_id: uuid.UUID, db: Session = Depends(get_db),
 def create_library_workforce(payload: WorkforceCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     get_company_membership(db, current_user, payload.company_id)
     require_permission(db, current_user, payload.company_id, "library:edit")
-    item = models.LibraryWorkforce(company_id=payload.company_id, name=payload.name)
+    item = models.LibraryWorkforce(
+        company_id=payload.company_id,
+        name=payload.name,
+        rate_type=payload.rate_type,
+        salary_per_shift=payload.salary_per_shift,
+        shift_hours=payload.shift_hours,
+        cost_code=payload.cost_code,
+    )
     db.add(item)
     db.commit()
     db.refresh(item)
@@ -754,7 +769,16 @@ def update_library_workforce(item_id: uuid.UUID, payload: WorkforceUpdate, db: S
         raise HTTPException(status_code=404, detail="Workforce not found")
     get_company_membership(db, current_user, item.company_id)
     require_permission(db, current_user, item.company_id, "library:edit")
-    item.name = payload.name
+    if payload.name is not None:
+        item.name = payload.name
+    if payload.rate_type is not None:
+        item.rate_type = payload.rate_type
+    if payload.salary_per_shift is not None:
+        item.salary_per_shift = payload.salary_per_shift
+    if payload.shift_hours is not None:
+        item.shift_hours = payload.shift_hours
+    if payload.cost_code is not None:
+        item.cost_code = payload.cost_code
     db.commit()
     db.refresh(item)
     return item

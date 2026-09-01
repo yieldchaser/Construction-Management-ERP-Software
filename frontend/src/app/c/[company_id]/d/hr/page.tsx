@@ -422,7 +422,7 @@ export default function HRPayrollPage() {
           startDate: l.start_date.split("T")[0],
           endDate: l.end_date.split("T")[0],
           days: l.days_count,
-          reason: "Request submitted via Central HRPortal",
+          reason: l.reason || "—",
           status: l.status
         }));
         setLeaves(mapped);
@@ -596,7 +596,14 @@ export default function HRPayrollPage() {
       const res = await fetch(`${getApiHost()}/apis/v3/library/workforces`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
-        body: JSON.stringify({ company_id: companyId, name: workforceForm.workerType }),
+        body: JSON.stringify({
+          company_id: companyId,
+          name: workforceForm.workerType,
+          rate_type: workforceForm.rateType || null,
+          salary_per_shift: workforceForm.salaryPerShift ? parseFloat(workforceForm.salaryPerShift) : null,
+          shift_hours: workforceForm.shiftHours ? parseFloat(workforceForm.shiftHours) : null,
+          cost_code: workforceForm.costCode || null,
+        }),
       });
       if (res.ok) {
         setShowWorkforceDrawer(false);
@@ -1992,11 +1999,13 @@ export default function HRPayrollPage() {
                       headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
                       body: JSON.stringify({
                         project_id: projectId || null,
+                        employee_id: leaveForm.employeeId,
                         employee_name: emp.name,
                         leave_type: leaveForm.leaveType,
                         start_date: new Date(leaveForm.startDate).toISOString(),
                         end_date: new Date(leaveForm.endDate).toISOString(),
-                        days_count: isNaN(diff) ? 1.0 : parseFloat(diff.toString())
+                        days_count: isNaN(diff) ? 1.0 : parseFloat(diff.toString()),
+                        reason: leaveForm.reason || null,
                       })
                     });
                     if (res.ok) {

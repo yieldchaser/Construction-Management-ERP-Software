@@ -137,6 +137,10 @@ export default function LibraryHubPage() {
   const [simpleName, setSimpleName] = useState("");
   const [simpleCode, setSimpleCode] = useState(""); // used for Cost Code
   const [simpleSubCode, setSimpleSubCode] = useState("");
+  const [wfRateType, setWfRateType] = useState("Per Shift");
+  const [wfSalary, setWfSalary] = useState("");
+  const [wfShiftHours, setWfShiftHours] = useState("");
+  const [wfCostCode, setWfCostCode] = useState("");
 
   const apiHost = getApiHost();
   const getStoredCreatorName = () => {
@@ -517,6 +521,12 @@ export default function LibraryHubPage() {
         payload.code = simpleCode;
         payload.sub_cost_code = simpleSubCode || null;
       }
+      if (activeTab === "workforce") {
+        payload.rate_type = wfRateType || null;
+        payload.salary_per_shift = wfSalary ? parseFloat(wfSalary) : null;
+        payload.shift_hours = wfShiftHours ? parseFloat(wfShiftHours) : null;
+        payload.cost_code = wfCostCode || null;
+      }
 
       const url = editingId ? `${apiHost}/apis/v3/library/${endpoint}/${editingId}` : `${apiHost}/apis/v3/library/${endpoint}`;
       const res = await fetch(url, {
@@ -533,6 +543,10 @@ export default function LibraryHubPage() {
         setSimpleName("");
         setSimpleCode("");
         setSimpleSubCode("");
+        setWfRateType("Per Shift");
+        setWfSalary("");
+        setWfShiftHours("");
+        setWfCostCode("");
         setToastMessage("Library item created!");
         setTimeout(() => setToastMessage(""), 3000);
         fetchLibraryData();
@@ -608,6 +622,10 @@ export default function LibraryHubPage() {
     setSimpleName(item.name || "");
     setSimpleCode(item.code || "");
     setSimpleSubCode(item.sub_cost_code || "");
+    setWfRateType(item.rate_type || "Per Shift");
+    setWfSalary(item.salary_per_shift != null ? String(item.salary_per_shift) : "");
+    setWfShiftHours(item.shift_hours != null ? String(item.shift_hours) : "");
+    setWfCostCode(item.cost_code || "");
     setIsSimpleDrawerOpen(true);
   };
 
@@ -802,7 +820,7 @@ export default function LibraryHubPage() {
                         title="No parties registered"
                         description="Add vendors, clients, contractors, and suppliers to your central party directory."
                         action={{
-                          label: "+ Add Party",
+                          label: "Add Party",
                           onClick: () => openNewItemDrawer("party"),
                         }}
                       />
@@ -902,7 +920,7 @@ export default function LibraryHubPage() {
                             : "Create recurring checklist templates and task presets for project teams."
                         }
                         action={{
-                          label: activeTab === "todo" ? "+ Add To Do" : activeTab === "material-category" ? "+ Add Category" : `+ Add ${TAB_TITLES[activeTab] || "Item"}`,
+                          label: activeTab === "todo" ? "Add To Do" : activeTab === "material-category" ? "Add Category" : `Add ${TAB_TITLES[activeTab] || "Item"}`,
                           onClick: () => openNewItemDrawer(activeTab),
                         }}
                       />
@@ -958,7 +976,7 @@ export default function LibraryHubPage() {
                         title="No workforces registered"
                         description="Add standard workforce categories, shift durations, and shift salary rates."
                         action={{
-                          label: "+ Add Workforce",
+                          label: "Add Workforce",
                           onClick: () => openNewItemDrawer("workforce"),
                         }}
                       />
@@ -1013,7 +1031,7 @@ export default function LibraryHubPage() {
                         title="No cost codes registered"
                         description="Add standard cost codes and sub cost codes to track project expenditures."
                         action={{
-                          label: "+ Add Cost Code",
+                          label: "Add Cost Code",
                           onClick: () => openNewItemDrawer("cost-code"),
                         }}
                       />
@@ -1073,7 +1091,7 @@ export default function LibraryHubPage() {
                         title="No materials registered"
                         description="Add standard materials with units, categories, and HSN codes to your central library."
                         action={{
-                          label: "+ Add Material",
+                          label: "Add Material",
                           onClick: () => setIsMaterialDrawerOpen(true),
                         }}
                       />
@@ -1153,7 +1171,7 @@ export default function LibraryHubPage() {
                         title="No rate card items found"
                         description="Build your central rate card library with standardized rates, units, and markup configurations."
                         action={{
-                          label: "+ Add Item",
+                          label: "Add Item",
                           onClick: () => setIsRateDrawerOpen(true),
                         }}
                       />
@@ -1245,7 +1263,7 @@ export default function LibraryHubPage() {
                           title="No party balances recorded"
                           description="Track advance payments and pending balances across all registered parties."
                           action={{
-                            label: "+ Add Party",
+                            label: "Add Party",
                             onClick: () => openNewItemDrawer("party"),
                           }}
                         />
@@ -1322,14 +1340,55 @@ export default function LibraryHubPage() {
                 </div>
               )}
 
+              {activeTab === "workforce" && (
+                <>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Cost Code</label>
+                    <input
+                      type="text"
+                      value={wfCostCode}
+                      onChange={(e) => setWfCostCode(e.target.value)}
+                      placeholder="e.g. LAB-01"
+                      className="input-field w-full px-3 py-2 text-xs focus:outline-none font-sans"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Salary Per Shift (₹)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        value={wfSalary}
+                        onChange={(e) => setWfSalary(e.target.value)}
+                        placeholder="e.g. 850"
+                        className="input-field w-full px-3 py-2 text-xs focus:outline-none font-sans"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Shift Hours</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        value={wfShiftHours}
+                        onChange={(e) => setWfShiftHours(e.target.value)}
+                        placeholder="e.g. 8"
+                        className="input-field w-full px-3 py-2 text-xs focus:outline-none font-sans"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
               <div className="space-y-1">
-                <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Item Description / Name *</label>
+                <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">{activeTab === "workforce" ? "Workforce Category Name *" : "Item Description / Name *"}</label>
                 <input
                   type="text"
                   required
                   value={simpleName}
                   onChange={(e) => setSimpleName(e.target.value)}
-                  placeholder="e.g. Earthworks excavation"
+                  placeholder={activeTab === "workforce" ? "e.g. Mason / Carpenter" : "e.g. Earthworks excavation"}
                   className="input-field w-full px-3 py-2 text-xs focus:outline-none"
                 />
               </div>

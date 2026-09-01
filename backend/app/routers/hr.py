@@ -1170,6 +1170,7 @@ class LeaveRequestCreate(BaseModel):
     start_date: datetime
     end_date: datetime
     days_count: float = Field(..., ge=0)
+    reason: Optional[str] = None
 
 class LeaveRequestResponse(BaseModel):
     id: uuid.UUID
@@ -1183,6 +1184,7 @@ class LeaveRequestResponse(BaseModel):
     days_count: float
     status: str
     applied_on: datetime
+    reason: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -1212,7 +1214,8 @@ def create_leave_request(company_id: uuid.UUID, data: LeaveRequestCreate, db: Se
         leave_type=data.leave_type,
         start_date=data.start_date,
         end_date=data.end_date,
-        days_count=data.days_count
+        days_count=data.days_count,
+        reason=data.reason
     )
     db.add(new_leave)
     db.commit()
