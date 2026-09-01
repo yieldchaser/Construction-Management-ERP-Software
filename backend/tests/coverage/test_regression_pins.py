@@ -160,7 +160,11 @@ def test_pin_R2_014_flush_queue_honest_counts():
 
 def test_pin_R2_107_dates_default_to_today():
     src = _read_frontend("src/app/c/[company_id]/d/attendance/page.tsx")
-    assert 'useState(todayLocalISO())' in src or 'useState(new Date().toISOString().split("T")[0])' in src, "R2-107 today default regressed"
+    # The default must be the LOCAL calendar day. toISOString() is UTC, so from
+    # midnight until 05:30 IST it returns yesterday; this pin must reject that
+    # form outright rather than tolerate it as an alternative.
+    assert 'useState(todayLocalISO())' in src, "R2-107 today default regressed"
+    assert 'new Date().toISOString().split("T")[0]' not in src, "R2-107 UTC date default reintroduced"
 
 
 def test_pin_R2_107_no_frozen_dates_in_project_attendance():
