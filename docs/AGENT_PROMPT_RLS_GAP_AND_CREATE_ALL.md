@@ -1,3 +1,8 @@
+> **DONE, not by an agent. Do not run this file.** Fixed directly at `397cb89`:
+> migration `20260902_000001_kyc_access_logs_rls.sql`, `create_all` gated to SQLite,
+> and `test_rls_covers_every_model_table.py` as the permanent guard.
+> The migration still needs applying to Supabase.
+
 # AGENT PROMPT: one table has no RLS, and the mechanism that will keep making more
 
 Supabase raised `rls_disabled_in_public` on the production project. It is correct.
