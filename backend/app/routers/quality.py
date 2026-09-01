@@ -129,7 +129,7 @@ class BulkRespondRequest(BaseModel):
 class NCRCreate(BaseModel):
     project_id: uuid.UUID
     inspection_id: Optional[uuid.UUID] = None
-    ncr_number: str
+    ncr_number: Optional[str] = None  # omit to auto-generate a sequential number
     title: str
     description: Optional[str] = None
     severity: str = Field("Major", pattern="^(Minor|Major|Critical)$")
@@ -442,6 +442,24 @@ def submit_inspection_responses(
 
 # ─── NCR ──────────────────────────────────────────────────────────────────────
 
+def _generate_ncr_number(db: Session, project_id: uuid.UUID) -> str:
+    """Return the next sequential NCR number for the project.
+
+    Produces NCR-NNNN where NNNN is the next integer past the current count.
+    Bumps past any collision from concurrent creates, mirroring
+    _generate_grn_number in procurement.py.
+    """
+    count = db.query(NCR).filter(NCR.project_id == project_id).count()
+    candidate = f"NCR-{count + 1:04d}"
+    while db.query(NCR).filter(
+        NCR.project_id == project_id,
+        NCR.ncr_number == candidate,
+    ).first():
+        count += 1
+        candidate = f"NCR-{count + 1:04d}"
+    return candidate
+
+
 @router.post("/ncr", response_model=NCRResponse, status_code=status.HTTP_201_CREATED)
 def raise_ncr(payload: NCRCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     project = db.query(Project).filter(Project.id == payload.project_id).first()
@@ -449,18 +467,22 @@ def raise_ncr(payload: NCRCreate, db: Session = Depends(get_db), current_user: U
         raise HTTPException(status_code=404, detail="Project not found")
     get_company_membership(db, current_user, project.company_id)
     require_permission(db, current_user, project.company_id, "quality:edit")
+    # Auto-assign a sequential number when the caller omits it.
+    ncr_number = payload.ncr_number or _generate_ncr_number(db, payload.project_id)
     # R2-386: ncr_number is unique per project. Answer a friendly conflict
     # before the database constraint (uq_ncrs_project_id_ncr_number) does.
     dup = db.query(NCR).filter(
         NCR.project_id == payload.project_id,
-        NCR.ncr_number == payload.ncr_number
+        NCR.ncr_number == ncr_number,
     ).first()
     if dup:
         raise HTTPException(
             status_code=409,
-            detail=f"An NCR with number '{payload.ncr_number}' already exists for this project. Use a unique NCR number."
+            detail=f"An NCR with number '{ncr_number}' already exists for this project. Use a unique NCR number.",
         )
-    ncr = NCR(**payload.model_dump(), raised_by=current_user.id, assigned_to=current_user.id)
+    data = payload.model_dump()
+    data["ncr_number"] = ncr_number
+    ncr = NCR(**data, raised_by=current_user.id, assigned_to=current_user.id)
     db.add(ncr)
     db.commit()
     db.refresh(ncr)

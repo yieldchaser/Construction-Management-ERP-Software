@@ -225,7 +225,7 @@ export default function SubconPage() {
   const handleOpenCreateWO = () => {
     setEditingWoId(null);
     setWoForm({
-      woNumber: `WO-${Date.now().toString().slice(-6)}`,
+      woNumber: "",
       partyId: "",
       date: new Date().toISOString().split("T")[0],
       terms: defaultSubconTerms,
@@ -295,7 +295,6 @@ export default function SubconPage() {
 
       const payload: any = {
         subcontractor_id: woForm.partyId,
-        wo_number: woForm.woNumber || `WO-${Date.now().toString().slice(-6)}`,
         wo_date: new Date(woForm.date).toISOString(),
         terms: woForm.terms || null,
         items: woForm.items.map((it) => ({
@@ -305,6 +304,11 @@ export default function SubconPage() {
           rate: Number(it.rate),
         })),
       };
+      // On create, omit wo_number when blank so the backend assigns the next sequential number.
+      // On edit, always send the current wo_number (required by WOUpdateRequest).
+      if (isEdit || woForm.woNumber.trim()) {
+        payload.wo_number = woForm.woNumber.trim();
+      }
       if (!isEdit) {
         payload.company_id = companyId;
         payload.project_id = projectId;
@@ -551,6 +555,17 @@ export default function SubconPage() {
 
               <div className="space-y-4 text-xs">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">WO Number (leave blank for automatic)</label>
+                    <input
+                      type="text"
+                      value={woForm.woNumber}
+                      onChange={e => setWoForm({ ...woForm, woNumber: e.target.value })}
+                      placeholder="Auto-assigned sequentially"
+                      className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground text-xs focus:outline-none focus:border-primary"
+                    />
+                  </div>
+
                   <div>
                     <label className="text-[10px] text-muted uppercase font-bold block mb-1">Date*</label>
                     <input type="date" value={woForm.date} onChange={e => setWoForm({ ...woForm, date: e.target.value })} className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground text-xs focus:outline-none focus:border-primary" />

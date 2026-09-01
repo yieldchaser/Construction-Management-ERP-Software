@@ -134,13 +134,31 @@ export default function ReportsDashboard() {
   const [toastMessage, setToastMessage] = useState("");
   const [selectedReport, setSelectedReport] = useState<ReportItem | null>(null);
   const [showModal, setShowModal] = useState(false);
-  
-  // Modal state fields
-  const [selectedMonth, setSelectedMonth] = useState("Jul 2026");
+
+  // Month picker: derive a rolling 24-month window from the current date so
+  // the list is never stale.  Default to the last closed month (one month back)
+  // matching the statutory page convention.
+  const _buildMonths = (): string[] => {
+    const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const now = new Date();
+    const result: string[] = [];
+    // 12 months back through 11 months ahead (24 total)
+    for (let delta = -12; delta <= 11; delta++) {
+      const d = new Date(now.getFullYear(), now.getMonth() + delta, 1);
+      result.push(`${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`);
+    }
+    return result;
+  };
+  const _closedMonth = (): string => {
+    const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const d = new Date();
+    d.setMonth(d.getMonth() - 1);
+    return `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`;
+  };
+  const months = _buildMonths();
+  const [selectedMonth, setSelectedMonth] = useState(_closedMonth());
   const [partyNameFilter, setPartyNameFilter] = useState("");
   const [isExporting, setIsExporting] = useState(false);
-
-  const months = ["Jan 2026", "Feb 2026", "Mar 2026", "Apr 2026", "May 2026", "Jun 2026", "Jul 2026", "Aug 2026", "Sep 2026", "Oct 2026", "Nov 2026", "Dec 2026"];
 
   const showToast = (msg: string) => {
     setToastMessage(msg);

@@ -136,6 +136,7 @@ export default function QualityPage() {
 
   const [showNCRForm, setShowNCRForm] = useState(false);
   const [ncrForm, setNcrForm] = useState({
+    ncrNumber: "",
     title: "",
     description: "",
     severity: "Major" as "Minor" | "Major" | "Critical",
@@ -343,7 +344,7 @@ isCode: cl.is_code_reference || "—",
         body: JSON.stringify({
           project_id: projectId,
           inspection_id: ncrForm.inspectionId || null,
-          ncr_number: `NCR-2026-${Math.floor(100 + Math.random() * 900)}`,
+          ...(ncrForm.ncrNumber.trim() ? { ncr_number: ncrForm.ncrNumber.trim() } : {}),
           title: ncrForm.title,
           description: ncrForm.description,
           severity: ncrForm.severity,
@@ -354,6 +355,7 @@ isCode: cl.is_code_reference || "—",
         fetchNcrs();
         setShowNCRForm(false);
         setNcrForm({
+          ncrNumber: "",
           title: "",
           description: "",
           severity: "Major",
@@ -668,6 +670,7 @@ isCode: cl.is_code_reference || "—",
                                     <button
                                       onClick={() => {
                                         setNcrForm({
+                                          ncrNumber: "",
                                           title: `NCR: Failed Inspection - ${insp.checklist}`,
                                           description: `Quality non-conformance logged from inspection with ${insp.failCount} failed checkpoints.`,
                                           severity: insp.failCount > 2 ? "Critical" : "Major",
@@ -1086,6 +1089,16 @@ isCode: cl.is_code_reference || "—",
                     </option>
                   ))}
                 </select>
+              </div>
+              <div>
+                <label className="text-[10px] uppercase font-bold text-muted block mb-1">NCR Number (leave blank for automatic)</label>
+                <input
+                  type="text"
+                  placeholder="Auto-assigned sequentially"
+                  value={ncrForm.ncrNumber}
+                  onChange={(e) => setNcrForm(prev => ({ ...prev, ncrNumber: e.target.value }))}
+                  className="w-full bg-card border border-border-custom rounded-md px-3 py-2 text-xs text-foreground outline-none focus:border-secondary"
+                />
               </div>
               <div>
                 <label className="text-[10px] uppercase font-bold text-muted block mb-1">Deviation Title</label>

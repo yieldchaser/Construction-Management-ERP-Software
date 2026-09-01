@@ -482,7 +482,7 @@ export default function SubcontractorBillingPage() {
         fetchWorkOrders(subconNameMap);
         setShowWOModal(false);
         setNewWOItem("");
-        setNewWONum(`WO-2026-${Math.floor(1000 + Math.random() * 9000)}`);
+        setNewWONum(`WO-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`);
       } else {
         const err = await readErrorDetail(res);
         alert(err || 'Action failed');

@@ -25,13 +25,11 @@ export default function DashboardPage() {
     to_pay: 0.0,
     to_receive: 0.0,
     advance_received: 0.0,
-    chart_months: ["Jun 2026"],
+    chart_months: [(() => { const d = new Date(); return ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getMonth()] + " " + d.getFullYear(); })()],
     sales_series: [0.0],
-    expense_series: [-1000.0],
-    margin_series: [1000.0],
-    expense_by_type: [
-      { name: "Debit Note", value: -1000.0 }
-    ],
+    expense_series: [0.0],
+    margin_series: [0.0],
+    expense_by_type: [],
     party_balances: [],
     project_summaries: [
       {
@@ -39,10 +37,10 @@ export default function DashboardPage() {
         project_status: "Ongoing",
         project_health: "-",
         project_budget: 0,
-        total_expense: -1000,
-        budget_remaining: 1000,
+        total_expense: 0,
+        budget_remaining: 0,
         total_sales: 0,
-        project_margin: 1000,
+        project_margin: 0,
         payment_in: 0,
         payment_out: 0,
         cash_balance: 0
@@ -1002,13 +1000,7 @@ export default function DashboardPage() {
                           ))}
                         </select>
                       </div>
-                      <div className="space-y-1">
-                        <label className="text-[9px] text-muted uppercase tracking-wider font-bold block">Txn Date</label>
-                        <div className="flex items-center gap-2 bg-input border border-border-custom rounded-lg px-3 py-1.5 text-xs text-muted transition-all">
-                          <Icon name="calendar" className="w-3.5 h-3.5" />
-                          <span>01 Jan 2026 to 31 Jul 2026</span>
-                        </div>
-                      </div>
+
                     </div>
                   </div>
 
@@ -1872,7 +1864,7 @@ export default function DashboardPage() {
                       status: "Ongoing",
                       health: "Healthy",
                       startDate: new Date().toISOString().split('T')[0],
-                      endDate: "2027-12-31"
+                      endDate: undefined
                     };
                     
                     try {

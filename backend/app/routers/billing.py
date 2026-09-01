@@ -53,7 +53,7 @@ class WOCreateRequest(BaseModel):
     company_id: UUID
     project_id: UUID
     subcontractor_id: UUID
-    wo_number: str
+    wo_number: Optional[str] = None  # omit to auto-generate a sequential number
     wo_date: datetime
     items: List[WOItemSchema]
     terms: Optional[str] = None
@@ -393,6 +393,26 @@ def get_work_orders(project_id: UUID, db: Session = Depends(get_db), _: None = D
         )
     return res
 
+
+def _generate_wo_number(db: Session, company_id: UUID) -> str:
+    """Return the next sequential work order number for the company.
+
+    Produces WO-NNNN where NNNN is the next integer past the current company-wide
+    count. Bumps past any collision from concurrent creates, mirroring
+    _generate_grn_number in procurement.py. Scoped to the company because the
+    uniqueness constraint (billing.py duplicate check) is company-wide.
+    """
+    count = db.query(WorkOrder).filter(WorkOrder.company_id == company_id).count()
+    candidate = f"WO-{count + 1:04d}"
+    while db.query(WorkOrder).filter(
+        WorkOrder.company_id == company_id,
+        WorkOrder.wo_number == candidate,
+    ).first():
+        count += 1
+        candidate = f"WO-{count + 1:04d}"
+    return candidate
+
+
 @router.post("/work-orders", response_model=WOResponse, status_code=201)
 def create_work_order(req: WOCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     # Tenant check: the caller must be a member of the company this work order belongs to.
@@ -405,9 +425,10 @@ def create_work_order(req: WOCreateRequest, db: Session = Depends(get_db), curre
             raise HTTPException(status_code=403, detail="Subcontractor does not belong to this company")
 
     # Check if WO number already exists for company
+    wo_number = req.wo_number or _generate_wo_number(db, req.company_id)
     existing = db.query(WorkOrder).filter(
         WorkOrder.company_id == req.company_id,
-        WorkOrder.wo_number == req.wo_number
+        WorkOrder.wo_number == wo_number
     ).first()
     if existing:
         raise HTTPException(status_code=400, detail="Work Order number already exists for this company")
@@ -418,7 +439,7 @@ def create_work_order(req: WOCreateRequest, db: Session = Depends(get_db), curre
         company_id=req.company_id,
         project_id=req.project_id,
         subcontractor_id=req.subcontractor_id,
-        wo_number=req.wo_number,
+        wo_number=wo_number,
         wo_date=req.wo_date,
         status="active",
         estimated_work_amount=estimated_amount,

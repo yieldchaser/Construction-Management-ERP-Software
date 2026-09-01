@@ -342,7 +342,7 @@ export default function ProcurementPage() {
 
   // GRN form state
   const [selectedPOForGRN, setSelectedPOForGRN] = useState<PO | null>(null);
-  const [grnNum, setGrnNum] = useState("GRN-2026-010");
+  const [grnNum, setGrnNum] = useState("");
   const [grnReceivedBy, setGrnReceivedBy] = useState("");
   const [grnItemsChecked, setGrnItemsChecked] = useState<Record<string, boolean>>({});
   const [grnReceivedQtys, setGrnReceivedQtys] = useState<Record<string, string>>({});
@@ -669,7 +669,7 @@ export default function ProcurementPage() {
           company_id: companyId,
           project_id: projectId,
           po_id: selectedPOForGRN.id,
-          grn_number: grnNum,
+          ...(grnNum.trim() ? { grn_number: grnNum.trim() } : {}),
           received_date: new Date().toISOString().split("T")[0],
           received_by: grnReceivedBy || null,
           items: receivedItems.map((item) => ({ po_item_id: item.id, received_qty: item.qty })),
@@ -1427,8 +1427,8 @@ export default function ProcurementPage() {
 
             <div className="space-y-3">
               <div className="space-y-1">
-                <label className="text-muted">GRN Serial Number</label>
-                <input type="text" value={grnNum} onChange={(e) => setGrnNum(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" />
+                <label className="text-muted">GRN Number (leave blank for automatic)</label>
+                <input type="text" value={grnNum} onChange={(e) => setGrnNum(e.target.value)} placeholder="Auto-assigned from GRN Numbering setting" className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" />
               </div>
 
               <div className="space-y-1">
