@@ -1,8 +1,12 @@
 # AGENT PROMPT: stuck skeletons, a date that is a day behind, an unreadable dropdown
 
-Four items, all found by driving the app on a company that has **zero projects**.
-That is the state every new customer is in on day one, and it is not the state
-most of the earlier sweeps tested.
+Five items, found by driving **all 53 company-scoped console routes** signed in
+against production, on a company that has **zero projects**. That is the state
+every new customer is in on day one, and it is not the state most of the earlier
+sweeps tested.
+
+The good news first: fifty of the fifty three render a correct empty state. The
+console is in better shape than this list makes it sound.
 
 Item 3 is the serious one. It is wrong for the first five and a half hours of
 every day, on 29 call sites, and nothing on screen says so.
@@ -14,10 +18,29 @@ Report as before: command, exit code, one sentence. No pasted output.
 
 # PART 1: three pages show a loading skeleton forever
 
-`d/labour`, `d/production` and `d/reports` render their skeleton permanently on a
-company with no projects. Confirmed live on `ZZ R8 Throwaway`: Labour Management
-shows a five row skeleton above the empty state on all three of its tabs, at the
-same time, so the page claims to be both loading and empty.
+`d/labour`, `d/production` and `d/reports` never finish loading on a company
+with no projects. I drove **all 53 company-scoped console routes** signed in
+against production on `ZZ R8 Throwaway`, and these three are the only ones. The
+other fifty render a correct empty state.
+
+Each shows it differently, which is why one probe will not catch all three.
+Verify each by its own symptom:
+
+```
+d/labour       27 pulsing skeleton bars, on all three tabs, sitting above the
+               empty state, so the page claims to be loading and empty at once
+d/production   four stat tiles reading "…" forever: PLANNED OUTPUT,
+               ACTUAL OUTPUT, and two more. No skeleton element at all
+d/reports      4 pulsing bars in the REPORT LOGS side panel. The main pane
+               correctly shows "No Report Selected", so only the panel is stuck
+```
+
+I want to be straight about `d/production`, because it nearly got dropped from
+this prompt. My browser probe counted `.animate-pulse` elements and returned 0
+for it, which looked like a pass. It renders `loading ? "…"` instead of a
+skeleton, so the probe was blind to it. The static read had been right. **Do not
+verify these with a single selector.** Check for a stuck skeleton, a stuck
+placeholder string, and a stat that never resolves.
 
 The cause is the same in all three. The loading flag starts `true`, and the only
 thing that clears it sits inside a fetch that a guard prevents from running:
@@ -36,7 +59,8 @@ useEffect(() => { if (projectId) fetchData(); }, [projectId]);
 
 No project means no `projectId`, so `fetchData` never runs, so `loading` is never
 false. `d/production` and `d/reports` have the identical shape with a braced
-`if (projectId) { ... }` and no else.
+`if (projectId) { ... }` and no else. In `d/production` the flag is consumed at
+`:363, 369, 375, 381`; in `d/reports` at `:172`.
 
 **The fix already exists in this codebase.** `d/towers` and `d/subcon/scorecards`
 do it correctly:
@@ -51,11 +75,13 @@ useEffect(() => {
 }, [projectId]);
 ```
 
-Apply that shape to the three. Then sweep the console for any other page where a
-loading flag initialised `true` can only be cleared inside a guarded call, and
-report how many you found and fixed. My sweep found these three; treat that as a
-floor, not a total, because my pattern matching was crude and I would rather you
-found more than fewer.
+Apply that shape to the three.
+
+You do not need to re-sweep the company-scoped console for more of these. I
+drove all 53 routes and there are no others. **The project-scoped routes under
+`p/[project_id]/` were not covered**, because a company with no projects cannot
+reach them, so check those separately against a company that has projects and
+report what you find.
 
 Note `d/subcon/scorecards` has a second copy of the same trap: `fetchData` opens
 with `if (!projectId) return;` **before** `setLoading(true)`. It happens to be
@@ -153,6 +179,25 @@ To be explicit, since you asked the right question about this last time: **this
 is not intended design.** It is the residue of the tabs being built at different
 times. Make them consistent.
 
+# PART 5: two smaller things the same sweep turned up
+
+**A table with headers and nothing else.** `d/hr` on an empty company renders
+its header row, `DEPARTMENT / BASIC / HRA / ALLOWANCES / GROSS/MO / PF% / ESI /
+TDS/MO / STATUS`, and then stops. No row, no message, no button. It reads as
+though the page failed rather than that there is nothing yet. Give it an empty
+state like its neighbours have.
+
+**A budget summary for a project that does not exist.** `d/budgeting/boq` on a
+company with no projects renders:
+
+```
+PROJECT TOTAL   ₹0   ₹0   +₹0(0.0%)   ON TRACK
+```
+
+A green "ON TRACK" verdict on a portfolio with nothing in it. It is not wrong
+arithmetic, it is a judgement about nothing. Suppress the summary row when there
+is no project, or show the same "No active projects" state the other pages use.
+
 ---
 
 # Rules
@@ -189,6 +234,9 @@ to static analysis. State what you observed for each:
       **0** as a date default. Report before and after, plus how many submit-path
       `toISOString()` calls you correctly left alone.
 - [ ] All eleven library tabs use `EmptyState` when empty.
+- [ ] `d/hr` shows an empty state rather than a bare header row.
+- [ ] `d/budgeting/boq` does not render an "ON TRACK" summary when there is no
+      project.
 - [ ] The five browser checks above, each with what you saw.
 - [ ] `python scripts/verification/check_route_reachability.py` reports
       **0 unreachable**, 544 routes, exemptions still 30.
