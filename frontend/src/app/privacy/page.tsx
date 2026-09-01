@@ -2,7 +2,14 @@
    controller/brand name "SiteFlow", contact + grievance email
    puwork09@gmail.com, effective date 01-01-2026. A formal registered
    legal entity name can be substituted for "SiteFlow" once incorporated. */
+import type { Metadata } from "next";
 import MarketingShell from "@/components/marketing/MarketingShell";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy - SiteFlow Construction Platform",
+  description:
+    "Read SiteFlow's Privacy Policy and understand how we collect, handle, protect, and secure your personal and project data under DPDP standards.",
+};
 
 const SECTIONS = [
   {

@@ -3,7 +3,14 @@
    jurisdiction New Delhi, India, effective date 01-01-2026. A formal
    registered legal entity name and address can be substituted for
    "SiteFlow" here once incorporated. */
+import type { Metadata } from "next";
 import MarketingShell from "@/components/marketing/MarketingShell";
+
+export const metadata: Metadata = {
+  title: "Terms of Service - SiteFlow Construction Platform",
+  description:
+    "Review the terms and conditions governing the use of the SiteFlow construction operations platform and software services.",
+};
 
 const SECTIONS = [
   {

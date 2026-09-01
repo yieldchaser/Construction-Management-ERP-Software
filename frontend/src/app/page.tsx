@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import MarketingShell from "@/components/marketing/MarketingShell";
 import MockupFrame from "@/components/marketing/MockupFrame";
@@ -6,6 +7,12 @@ import TypewriterText from "@/components/marketing/TypewriterText";
 import CountUp from "@/components/marketing/CountUp";
 import Aurora from "@/components/marketing/Aurora";
 import EmberSparks from "@/components/marketing/EmberSparks";
+
+export const metadata: Metadata = {
+  title: "SiteFlow - Real-Time Construction Management & ERP Software",
+  description:
+    "Run projects, site execution, GPS attendance, material procurement, subcontractor billing, and financial ledgers from one unified construction operations platform.",
+};
 
 export default function LandingPage() {
   return (

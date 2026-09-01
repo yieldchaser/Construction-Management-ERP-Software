@@ -1,10 +1,17 @@
 import React from "react";
 import Image from "next/image";
 import { getContentItems, ContentItem } from "@/lib/content";
+import { Metadata } from "next";
 import { HelpSearchClient } from "./HelpSearchClient";
 import MarketingShell from "@/components/marketing/MarketingShell";
 import Icon from "@/components/marketing/Icon";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "SiteFlow Help Center - Guides, Tutorials & Knowledge Base",
+  description:
+    "Browse step-by-step guides, operational workflows, troubleshooting tips, and documentation for every SiteFlow module.",
+};
 
 const CATEGORY_META: Record<string, { title: string; desc: string; icon: string }> = {
   "getting-started": {

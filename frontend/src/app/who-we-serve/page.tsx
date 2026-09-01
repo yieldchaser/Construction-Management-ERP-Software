@@ -1,9 +1,16 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import MarketingShell from "@/components/marketing/MarketingShell";
 import MockupFrame from "@/components/marketing/MockupFrame";
 import CountUp from "@/components/marketing/CountUp";
 import Icon from "@/components/marketing/Icon";
 import FaqAccordion from "@/components/marketing/product/FaqAccordion";
+
+export const metadata: Metadata = {
+  title: "Who We Serve - Construction ERP for Developers, EPC & Subcontractors",
+  description:
+    "Discover how SiteFlow powers real estate developers, general contractors, EPC firms, and specialized trade subcontractors.",
+};
 
 const STATS = [
   { value: "16", label: "Operational Modules" },

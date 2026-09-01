@@ -1,7 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import MarketingShell from "@/components/marketing/MarketingShell";
 import Icon from "@/components/marketing/Icon";
 import CountUp from "@/components/marketing/CountUp";
+
+export const metadata: Metadata = {
+  title: "About SiteFlow - Modern Engineering & Construction Software",
+  description:
+    "Learn about SiteFlow's mission to bring operational clarity, ledger synchronization, and real-time site coordination to the construction industry.",
+};
 
 const IS_CHIPS = [
   { label: "IS 456", term: "Concrete" },
