@@ -1,3 +1,6 @@
+> **SUPERSEDED. Do not run this file.** Everything in it is in
+> `docs/AGENT_PROMPT_SCREEN_AND_FORMS.md`. Run that instead.
+
 # AGENT PROMPT: stuck skeletons, a date that is a day behind, an unreadable dropdown
 
 Seven items, found by driving **all 53 company-scoped routes** on a company with

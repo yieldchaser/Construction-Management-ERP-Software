@@ -1,3 +1,6 @@
+> **SUPERSEDED. Do not run this file.** Everything in it is in
+> `docs/AGENT_PROMPT_SCREEN_AND_FORMS.md`. Run that instead.
+
 # AGENT PROMPT: a form that cannot submit, and two that throw input away
 
 An interaction-level sweep: not "does the page render" but "does the form on it
