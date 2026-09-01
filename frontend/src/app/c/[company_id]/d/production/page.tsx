@@ -10,6 +10,7 @@ import PageHeader from "@/components/PageHeader";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
+import { useCompanySettings } from "@/context/CompanySettingsContext";
 
 type RecipeMaterial = {
   id: string;
@@ -116,6 +117,14 @@ export default function ProductionPage() {
   const companyId = params?.company_id as string;
   const { activeProjectId } = useProject();
   const projectId = activeProjectId;
+  const { quantityDecimalPlaces } = useCompanySettings();
+
+  const formatQty = (value: number, digits = quantityDecimalPlaces) => {
+    return new Intl.NumberFormat("en-IN", {
+      maximumFractionDigits: digits,
+    }).format(value);
+  };
+
   const [tab, setTab] = useState<"overview" | "batches" | "recipes" | "inventory">("overview");
   const [data, setData] = useState<ProductionSummary | null>(null);
   const [loading, setLoading] = useState(true);

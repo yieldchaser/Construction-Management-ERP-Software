@@ -2190,9 +2190,7 @@ export default function CompanySettingsPage() {
                   <WfToggleRow label="Restrict Subcontractor Material Issue" desc="Block issuing material to subcontractors" value={wf.restrict_subcon_material_issue} onChange={(v) => setWf({ ...wf, restrict_subcon_material_issue: v })} />
                   <WfToggleRow label="Restrict Material Transfer" desc="Block inter-location / project material transfers" value={wf.restrict_material_transfer} onChange={(v) => setWf({ ...wf, restrict_material_transfer: v })} />
                   <WfToggleRow label="Restrict Production Material" desc="Block material consumption in production" value={wf.restrict_production_material} onChange={(v) => setWf({ ...wf, restrict_production_material: v })} />
-                  <WfToggleRow label="Material Request Restriction" desc="Restrict the Material Request flow" value={wf.material_request_restriction} onChange={(v) => setWf({ ...wf, material_request_restriction: v })} />
                   <WfToggleRow label="Material Purchase Order Restriction" desc="Restrict Purchase Order creation" value={wf.po_restriction} onChange={(v) => setWf({ ...wf, po_restriction: v })} />
-                  <WfToggleRow label="Restrict BOM Material" desc="Restrict edits to Bills of Material" value={wf.bom_restriction} onChange={(v) => setWf({ ...wf, bom_restriction: v })} />
                   <div className="flex items-center justify-between bg-elevated border border-border-custom rounded-lg px-4 py-3">
                     <div>
                       <div className="text-xs font-bold text-foreground">GRN Numbering</div>
@@ -2549,12 +2547,9 @@ export default function CompanySettingsPage() {
               <h2 className="text-sm font-bold text-foreground uppercase tracking-wider text-muted border-b border-border-custom pb-3">Integrations</h2>
 
               <div className="bg-card border border-border-custom rounded-lg p-6 space-y-5">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-sm font-bold text-foreground">Google Sheets</div>
-                    <div className="text-[10px] text-muted">Enable the Google Sheets integration for this company.</div>
-                  </div>
-                  <WfSwitch checked={gsEnabled} onChange={(v) => { setGsEnabled(v); saveGs({ google_sheets_enabled: v }); }} />
+                <div>
+                  <div className="text-sm font-bold text-foreground">Google Sheets</div>
+                  <div className="text-[10px] text-muted">Authorize specific team member mobile numbers to connect and sync Google Sheets.</div>
                 </div>
 
                 <div className="space-y-2">

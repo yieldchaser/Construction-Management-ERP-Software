@@ -5,6 +5,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
+import { useCompanySettings } from "@/context/CompanySettingsContext";
 import { getApiHost, readErrorDetail } from "@/lib/api";
 import { authHeaders, downloadWithAuth, formatDate, formatLabel } from "@/lib/siteflow";
 import Icon, { type IconName } from "@/components/marketing/Icon";
@@ -98,6 +99,15 @@ export default function ProcurementPage() {
   const companyId = company_id || "demo-company";
   const { activeProjectId } = useProject();
   const projectId = activeProjectId;
+  const { quantityDecimalPlaces } = useCompanySettings();
+
+  const fmtQty = (val: number | string | null | undefined) => {
+    const num = Number(val) || 0;
+    return new Intl.NumberFormat("en-IN", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: quantityDecimalPlaces,
+    }).format(num);
+  };
 
   const [tab, setTab] = useState<"po" | "indent" | "inventory" | "ledger" | "unbilled">("po");
 
@@ -1125,16 +1135,16 @@ export default function ProcurementPage() {
                           <td className="px-5 py-3 font-bold text-foreground">{inv.name}</td>
                           <td className="px-5 py-3 text-muted font-sans uppercase">{inv.unit}</td>
                           <td className={`px-5 py-3 font-sans font-bold ${inv.onHand < 0 ? "text-danger font-extrabold" : "text-foreground"}`}>
-                            {inv.onHand} {inv.unit}
+                            {fmtQty(inv.onHand)} {inv.unit}
                           </td>
-                          <td className="px-5 py-3 text-muted font-sans">{inv.reserved} {inv.unit}</td>
+                          <td className="px-5 py-3 text-muted font-sans">{fmtQty(inv.reserved)} {inv.unit}</td>
                           <td className={`px-5 py-3 font-sans font-semibold ${netAvail < 0 ? "text-danger font-extrabold" : "text-foreground"}`}>
-                            {netAvail.toFixed(2)} {inv.unit}
+                            {fmtQty(netAvail)} {inv.unit}
                             {netAvail < 0 && (
                               <span className="block text-[10px] text-danger font-normal">Negative stock (needs reconciling)</span>
                             )}
                           </td>
-                          <td className="px-5 py-3 text-muted font-sans">{inv.minAlertThreshold} {inv.unit}</td>
+                          <td className="px-5 py-3 text-muted font-sans">{fmtQty(inv.minAlertThreshold)} {inv.unit}</td>
                           <td className="px-5 py-3">
                             {inv.onHand < 0 || netAvail < 0 ? (
                               <span className="px-2 py-0.5 rounded bg-danger/10 border border-danger/20 text-danger font-bold uppercase text-[9px]">Negative stock</span>
@@ -1184,7 +1194,7 @@ export default function ProcurementPage() {
                       <tr key={idx} className="border-b border-border-custom hover:bg-elevated transition-all">
                         <td className="px-5 py-3 font-bold text-foreground">{txn.materialName}</td>
                         <td className={`px-5 py-3 font-sans font-bold ${txn.type === "used" ? "text-warning" : "text-success"}`}>
-                          {txn.type === "used" ? "-" : "+"}{txn.qty} {txn.unit}
+                          {txn.type === "used" ? "-" : "+"}{fmtQty(txn.qty)} {txn.unit}
                         </td>
                         <td className="px-5 py-3 capitalize">{txn.type}</td>
                         <td className="px-5 py-3 text-muted font-sans">{txn.sourceRef}</td>

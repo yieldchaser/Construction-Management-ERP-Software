@@ -5,6 +5,7 @@ import { authHeaders, formatDate, formatLabel } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
+import { useCompanySettings } from "@/context/CompanySettingsContext";
 import Icon, { type IconName } from "@/components/marketing/Icon";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
@@ -74,6 +75,14 @@ export default function DPRPage() {
   const companyId = params?.company_id as string;
   const { activeProjectId } = useProject();
   const projectId = activeProjectId;
+  const { quantityDecimalPlaces } = useCompanySettings();
+
+  const fmtQty = (val: number | string | null | undefined) => {
+    const num = Number(val) || 0;
+    return new Intl.NumberFormat("en-IN", {
+      maximumFractionDigits: quantityDecimalPlaces,
+    }).format(num);
+  };
 
   const [tasks, setTasks] = useState<Task[]>([]);
   const [materials, setMaterials] = useState<MaterialOption[]>([]);
@@ -257,8 +266,8 @@ export default function DPRPage() {
               { label: "Site Staff Present", value: summary.total_workers_deployed || "—", desc: "Clocked via geofence", color: "border-primary/20 bg-primary/5 text-primary" },
               { label: "Equipment Used", value: logs.length > 0 ? `${logs.length} Reports` : "0 Active", desc: "DPR reports logged", color: "border-secondary/20 bg-secondary/5 text-secondary" },
               { label: "Subcon Updates", value: logs.filter((l: any) => l.subcon_name).length > 0 ? `${logs.filter((l: any) => l.subcon_name).length} Updates` : "0 Tasks updated", desc: "Logged by subcontractors", color: "border-success/20 bg-success/5 text-success" },
-              { label: "Material Received", value: (summary.material_received_today || 0) > 0 ? `${summary.material_received_today} Units` : "No GRNs today", desc: "Material inward logged", color: "border-warning/20 bg-warning/5 text-warning" },
-              { label: "Material Used Today", value: (summary.material_used_today || 0) > 0 ? `${summary.material_used_today} Units` : "No consumption logged", desc: "On-site consumption", color: "border-primary/20 bg-primary/5 text-primary" }
+              { label: "Material Received", value: (summary.material_received_today || 0) > 0 ? `${fmtQty(summary.material_received_today)} Units` : "No GRNs today", desc: "Material inward logged", color: "border-warning/20 bg-warning/5 text-warning" },
+              { label: "Material Used Today", value: (summary.material_used_today || 0) > 0 ? `${fmtQty(summary.material_used_today)} Units` : "No consumption logged", desc: "On-site consumption", color: "border-primary/20 bg-primary/5 text-primary" }
             ].map((card, idx) => (
               <div key={idx} className={`p-4 rounded-lg border ${card.color} flex flex-col justify-between h-28`}>
                 <span className="text-[10px] uppercase font-bold tracking-wider opacity-70">{card.label}</span>
@@ -293,12 +302,12 @@ export default function DPRPage() {
                       <span>Weather: <strong className="text-muted">{log.weather}</strong> · {formatDate(log.dpr_date)}</span>
                     </div>
                     <div className="border-l-2 border-border-custom pl-3 my-2 space-y-1">
-                      <p className="text-foreground text-xs font-semibold">Qty Executed: {log.executed_qty}</p>
+                      <p className="text-foreground text-xs font-semibold">Qty Executed: {fmtQty(log.executed_qty)}</p>
                       {log.materials_consumed && log.materials_consumed.length > 0 && (
                         <div className="flex flex-wrap gap-1.5 pt-1">
                           {log.materials_consumed.map((m, mi) => (
                             <span key={mi} className="px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 text-[10px] font-bold">
-                              {m.quantity} {m.unit} {m.material_name}
+                              {fmtQty(m.quantity)} {m.unit} {m.material_name}
                             </span>
                           ))}
                         </div>
@@ -487,12 +496,12 @@ export default function DPRPage() {
                               <span>
                                 Available Stock:{" "}
                                 <strong className={avail !== null && avail <= 0 ? "text-danger" : "text-success"}>
-                                  {avail !== null ? `${avail.toLocaleString()} ${invItem?.unit || matRow.unit}` : "0 (No stock recorded)"}
+                                  {avail !== null ? `${fmtQty(avail)} ${invItem?.unit || matRow.unit}` : "0 (No stock recorded)"}
                                 </strong>
                               </span>
                               {invItem && (
                                 <span className="text-[9px] opacity-75">
-                                  (On-hand: {invItem.on_hand_qty}, Reserved: {invItem.reserved_qty})
+                                  (On-hand: {fmtQty(invItem.on_hand_qty)}, Reserved: {fmtQty(invItem.reserved_qty)})
                                 </span>
                               )}
                             </div>
@@ -632,7 +641,7 @@ export default function DPRPage() {
                           />
                         </td>
                         <td className="px-4 py-2 text-right font-sans text-muted">
-                          {rowQty.toFixed(3)}
+                          {fmtQty(rowQty)}
                         </td>
                         <td className="px-4 py-2 text-center">
                           <button
@@ -662,7 +671,7 @@ export default function DPRPage() {
                 <div className="text-right text-xs">
                   <span className="text-muted block uppercase text-[9px] tracking-wider">Total Takeoff Sum</span>
                   <strong className="text-lg font-black text-success font-sans">
-                    {mbRows.reduce((acc, r) => acc + (r.nos * r.l * r.w * r.h), 0).toFixed(3)} m³
+                    {fmtQty(mbRows.reduce((acc, r) => acc + (r.nos * r.l * r.w * r.h), 0))} m³
                   </strong>
                 </div>
               </div>
