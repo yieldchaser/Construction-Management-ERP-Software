@@ -1,3 +1,6 @@
+> **SUPERSEDED. Do not run this file.** Everything in it is in
+> `docs/AGENT_PROMPT_NUMBERING_DEFAULTS_AND_SETTINGS.md`. Run that instead.
+
 # AGENT PROMPT: defaults frozen to 2026
 
 A sweep for the same class of defect as the statutory year list: a value that

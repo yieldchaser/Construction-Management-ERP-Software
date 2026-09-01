@@ -1,3 +1,6 @@
+> **SUPERSEDED. Do not run this file.** Everything in it is in
+> `docs/AGENT_PROMPT_NUMBERING_DEFAULTS_AND_SETTINGS.md`. Run that instead.
+
 # AGENT PROMPT: settings that save but never do anything
 
 A different class from the frozen defaults. These are controls the customer can
