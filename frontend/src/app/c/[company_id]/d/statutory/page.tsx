@@ -185,12 +185,26 @@ export default function StatutoryPage() {
   const defaultTab: GeneratorTab = canFinance ? "gstr1" : canPayroll ? "pf-ecr" : "gstr1";
   const [activeGeneratorTab, setActiveGeneratorTab] = useState<GeneratorTab>(defaultTab);
 
-  const [genMonth, setGenMonth] = useState<number>(new Date().getMonth() + 1);
-  const [genYear, setGenYear] = useState<number>(() => {
+  const [genMonth, setGenMonth] = useState<number>(() => {
+    const now = new Date();
+    const m = now.getMonth(); // 0 is Jan, 8 is Sep
+    return m === 0 ? 12 : m;
+  });
+  const [genCalendarYear, setGenCalendarYear] = useState<number>(() => {
+    const now = new Date();
+    return now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+  });
+  const [genFinancialYear, setGenFinancialYear] = useState<number>(() => {
     const now = new Date();
     return now.getMonth() < 3 ? now.getFullYear() - 1 : now.getFullYear();
   });
-  const [genQuarter, setGenQuarter] = useState<string>("Q1");
+  const [genQuarter, setGenQuarter] = useState<string>(() => {
+    const m = new Date().getMonth();
+    if (m >= 3 && m <= 5) return "Q1";
+    if (m >= 6 && m <= 8) return "Q2";
+    if (m >= 9 && m <= 11) return "Q3";
+    return "Q4";
+  });
   const [isGenerating, setIsGenerating] = useState(false);
 
   // Return Data State
@@ -235,13 +249,13 @@ export default function StatutoryPage() {
     setMessage(null);
     try {
       const res = await fetch(
-        `${getApiHost()}/apis/v3/statutory/${companyId}/gstr1?month=${genMonth}&year=${genYear}`,
+        `${getApiHost()}/apis/v3/statutory/${companyId}/gstr1?month=${genMonth}&year=${genCalendarYear}`,
         { headers: authHeaders() }
       );
       if (res.ok) {
         const data = await res.json();
         setGstr1Result(data);
-        setMessage({ text: `GSTR-1 return for ${genYear}-${String(genMonth).padStart(2, "0")} generated successfully.`, type: "success" });
+        setMessage({ text: `GSTR-1 return for ${genCalendarYear}-${String(genMonth).padStart(2, "0")} generated successfully.`, type: "success" });
       } else {
         const err = await readErrorDetail(res);
         setMessage({ text: err || "Failed to generate GSTR-1 return", type: "error" });
@@ -257,13 +271,13 @@ export default function StatutoryPage() {
     setMessage(null);
     try {
       const res = await fetch(
-        `${getApiHost()}/apis/v3/statutory/${companyId}/pf-ecr?month=${genMonth}&year=${genYear}`,
+        `${getApiHost()}/apis/v3/statutory/${companyId}/pf-ecr?month=${genMonth}&year=${genCalendarYear}`,
         { headers: authHeaders() }
       );
       if (res.ok) {
         const data = await res.json();
         setPfEcrResult(data);
-        setMessage({ text: `PF ECR return for ${genYear}-${String(genMonth).padStart(2, "0")} generated successfully.`, type: "success" });
+        setMessage({ text: `PF ECR return for ${genCalendarYear}-${String(genMonth).padStart(2, "0")} generated successfully.`, type: "success" });
       } else {
         const err = await readErrorDetail(res);
         setMessage({ text: err || "Failed to generate PF ECR return", type: "error" });
@@ -279,13 +293,13 @@ export default function StatutoryPage() {
     setMessage(null);
     try {
       const res = await fetch(
-        `${getApiHost()}/apis/v3/statutory/${companyId}/tds-26q?quarter=${genQuarter}&year=${genYear}`,
+        `${getApiHost()}/apis/v3/statutory/${companyId}/tds-26q?quarter=${genQuarter}&year=${genFinancialYear}`,
         { headers: authHeaders() }
       );
       if (res.ok) {
         const data = await res.json();
         setTdsResult(data);
-        setMessage({ text: `TDS-26Q return for ${genQuarter} FY ${genYear} generated successfully.`, type: "success" });
+        setMessage({ text: `TDS-26Q return for ${genQuarter} FY ${genFinancialYear} generated successfully.`, type: "success" });
       } else {
         const err = await readErrorDetail(res);
         setMessage({ text: err || "Failed to generate TDS-26Q return", type: "error" });
@@ -593,51 +607,70 @@ export default function StatutoryPage() {
               {/* Period Selector & Action Bar */}
               <div className="flex flex-wrap items-end gap-3 pt-1">
                 {activeGeneratorTab !== "tds-26q" ? (
-                  <div>
-                    <label className="text-[10px] uppercase font-bold text-muted block mb-1">Month</label>
-                    <select
-                      value={genMonth}
-                      onChange={(e) => setGenMonth(parseInt(e.target.value))}
-                      className="bg-input border border-border-custom rounded-md px-3 py-1.5 text-xs text-foreground outline-none"
-                    >
-                      {MONTHS.map((m) => (
-                        <option key={m.value} value={m.value}>
-                          {m.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                ) : (
-                  <div>
-                    <label className="text-[10px] uppercase font-bold text-muted block mb-1">Quarter</label>
-                    <select
-                      value={genQuarter}
-                      onChange={(e) => setGenQuarter(e.target.value)}
-                      className="bg-input border border-border-custom rounded-md px-3 py-1.5 text-xs text-foreground outline-none"
-                    >
-                      {QUARTERS.map((q) => (
-                        <option key={q.value} value={q.value}>
-                          {q.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
+                  <>
+                    <div>
+                      <label className="text-[10px] uppercase font-bold text-muted block mb-1">Month</label>
+                      <select
+                        value={genMonth}
+                        onChange={(e) => setGenMonth(parseInt(e.target.value))}
+                        className="bg-input border border-border-custom rounded-md px-3 py-1.5 text-xs text-foreground outline-none"
+                      >
+                        {MONTHS.map((m) => (
+                          <option key={m.value} value={m.value}>
+                            {m.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
-                <div>
-                  <label className="text-[10px] uppercase font-bold text-muted block mb-1">Financial Year</label>
-                  <select
-                    value={genYear}
-                    onChange={(e) => setGenYear(parseInt(e.target.value))}
-                    className="bg-input border border-border-custom rounded-md px-3 py-1.5 text-xs text-foreground outline-none"
-                  >
-                    {YEARS.map((y) => (
-                      <option key={y} value={y}>
-                        {y}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                    <div>
+                      <label className="text-[10px] uppercase font-bold text-muted block mb-1">Year</label>
+                      <select
+                        value={genCalendarYear}
+                        onChange={(e) => setGenCalendarYear(parseInt(e.target.value))}
+                        className="bg-input border border-border-custom rounded-md px-3 py-1.5 text-xs text-foreground outline-none"
+                      >
+                        {YEARS.map((y) => (
+                          <option key={y} value={y}>
+                            {y}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <label className="text-[10px] uppercase font-bold text-muted block mb-1">Quarter</label>
+                      <select
+                        value={genQuarter}
+                        onChange={(e) => setGenQuarter(e.target.value)}
+                        className="bg-input border border-border-custom rounded-md px-3 py-1.5 text-xs text-foreground outline-none"
+                      >
+                        {QUARTERS.map((q) => (
+                          <option key={q.value} value={q.value}>
+                            {q.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] uppercase font-bold text-muted block mb-1">Financial Year</label>
+                      <select
+                        value={genFinancialYear}
+                        onChange={(e) => setGenFinancialYear(parseInt(e.target.value))}
+                        className="bg-input border border-border-custom rounded-md px-3 py-1.5 text-xs text-foreground outline-none"
+                      >
+                        {YEARS.map((y) => (
+                          <option key={y} value={y}>
+                            {y} to {String(y + 1).slice(2)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </>
+                )}
 
                 <div className="flex items-center gap-2">
                   {activeGeneratorTab === "gstr1" && (

@@ -271,7 +271,7 @@ def _party_tax_identity(db: Session, party_team_id) -> tuple:
 def export_gstr1(
     company_id: uuid.UUID,
     month: int = Query(..., ge=1, le=12, description="Month (1-12)"),
-    year: int = Query(..., ge=2020, description="Financial year (e.g. 2026)"),
+    year: int = Query(..., ge=2020, description="Calendar year (e.g. 2026)"),
     db: Session = Depends(get_db),
     _: None = Depends(verify_company_access),
     current_user: User = Depends(get_current_user),
@@ -339,7 +339,7 @@ def export_gstr1(
 def export_pf_ecr(
     company_id: uuid.UUID,
     month: int = Query(..., ge=1, le=12, description="Month (1-12)"),
-    year: int = Query(..., ge=2020, description="Financial year"),
+    year: int = Query(..., ge=2020, description="Calendar year (e.g. 2026)"),
     db: Session = Depends(get_db),
     _: None = Depends(verify_company_access),
     current_user: User = Depends(get_current_user),
