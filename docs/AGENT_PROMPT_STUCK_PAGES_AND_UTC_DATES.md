@@ -1,12 +1,14 @@
 # AGENT PROMPT: stuck skeletons, a date that is a day behind, an unreadable dropdown
 
-Five items, found by driving **all 53 company-scoped console routes** signed in
-against production, on a company that has **zero projects**. That is the state
+Seven items, found by driving **all 53 company-scoped routes** on a company with
+**zero projects**, and then **all 40 project-scoped routes** on `AK Construction`,
+which has real data. Both sweeps signed in against production. That is the state
 every new customer is in on day one, and it is not the state most of the earlier
 sweeps tested.
 
-The good news first: fifty of the fifty three render a correct empty state. The
-console is in better shape than this list makes it sound.
+The good news first: fifty of the fifty three empty-tenant routes render a
+correct empty state, and **no project-scoped route is stuck at all**. The console
+is in better shape than this list makes it sound.
 
 Item 3 is the serious one. It is wrong for the first five and a half hours of
 every day, on 29 call sites, and nothing on screen says so.
@@ -78,10 +80,10 @@ useEffect(() => {
 Apply that shape to the three.
 
 You do not need to re-sweep the company-scoped console for more of these. I
-drove all 53 routes and there are no others. **The project-scoped routes under
-`p/[project_id]/` were not covered**, because a company with no projects cannot
-reach them, so check those separately against a company that has projects and
-report what you find.
+drove all 53 routes and there are no others. I have since driven all 40 project-scoped routes on a company with data and
+**none of them is stuck**. `p/finance`, `p/transaction` and `p/equipment` sit on
+a skeleton for several seconds and then resolve; they are slow, not hung, and
+that is out of scope here.
 
 Note `d/subcon/scorecards` has a second copy of the same trap: `fetchData` opens
 with `if (!projectId) return;` **before** `setLoading(true)`. It happens to be
@@ -200,6 +202,83 @@ is no project, or show the same "No active projects" state the other pages use.
 
 ---
 
+# PART 6: the same plus sign twice on seven buttons
+
+`d/towers/page.tsx:170`:
+
+```jsx
+action={{
+  label: "+ New Project",
+  href: `/c/${companyId}/projects`,
+  icon: "add",
+}}
+```
+
+`EmptyState` renders the `add` icon **and** the label, and the label already
+begins with a literal `+`. Confirmed in the DOM: the button holds one plus SVG
+and the text "+ New Project", so it reads as two plus signs side by side.
+
+Seven sites, all identical:
+
+```
+d/budget/page.tsx:148                          d/subcon/scorecards/page.tsx:110
+d/equipment/page.tsx:408                       d/towers/page.tsx:170
+d/procurement/rfq/page.tsx:407                 p/[project_id]/equipment/page.tsx:391
+d/procurement/vendor-performance/page.tsx:112
+```
+
+Drop the `+` from the label and keep the icon, since the icon is the house style
+elsewhere. Then check every other `EmptyState` action and `PageHeader` action for
+the same doubling, and report the count.
+
+# PART 7: raw ISO dates on six screens
+
+Group A of an earlier run took bare `toLocaleDateString()` to zero, but it only
+looked for that one call. A second idiom slipped through: slicing the ISO string
+directly. These render `2026-07-01` where every other screen renders
+`01 Jul 2026`.
+
+Seen live on `AK Construction`:
+
+```
+p/[project_id]/task            "2026-07-01 → 2026-07-06" and "2026-09-22"
+p/[project_id]/quality         "2026-07-27"
+p/[project_id]/transaction     "2026-07-01"
+d/subcon/scorecards            "2026-08-31 to 2026-09-30"
+```
+
+The code sites, by mechanism rather than by count, because my grep undercounts
+the ones wrapped in a ternary:
+
+```
+d/labour/page.tsx:196                     period_start?.split("T")[0]
+d/payroll-attendance/page.tsx:1363,1364,1366,1504,1505,1584   .slice(0, 10)
+d/subcon/scorecards/page.tsx:192          period_start?.split("T")[0]
+d/subcon/work-orders/amendments/page.tsx:120
+p/[project_id]/transaction/page.tsx:426   r.date.slice(0, 10) inside a ternary
+p/[project_id]/quality/page.tsx:646,861,895,1088   renders a value that was
+                                          sliced to ISO when parsed at :216,244,245,265
+p/[project_id]/task/page.tsx:25           its own fmtDate returning YYYY-MM-DD
+```
+
+Sweep for **both** idioms, `.split("T")[0]` and `.slice(0, 10)`, anywhere the
+result is rendered rather than fed to an `<input type="date">`, and route them
+through the shared date formatter. Report the count before and after.
+
+**One useful thing in there.** `p/[project_id]/task/page.tsx:25` already contains
+exactly the local-date implementation Part 3 asks you to write:
+
+```js
+const fmtDate = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+```
+
+It is built from the local getters, so it has none of the UTC problem. Lift that
+into `lib/siteflow.ts` as the shared local-day helper for Part 3, and separately
+fix this page to *display* through the `DD Mon YYYY` formatter.
+
+---
+
 # Rules
 
 - No authoring scripts.
@@ -237,6 +316,9 @@ to static analysis. State what you observed for each:
 - [ ] `d/hr` shows an empty state rather than a bare header row.
 - [ ] `d/budgeting/boq` does not render an "ON TRACK" summary when there is no
       project.
+- [ ] No button renders two plus signs. Report how many you fixed.
+- [ ] Raw ISO dates reach 0 on screen. Report before and after, covering both
+      `.split("T")[0]` and `.slice(0, 10)`.
 - [ ] The five browser checks above, each with what you saw.
 - [ ] `python scripts/verification/check_route_reachability.py` reports
       **0 unreachable**, 544 routes, exemptions still 30.
