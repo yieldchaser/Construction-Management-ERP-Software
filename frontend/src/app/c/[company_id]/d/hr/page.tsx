@@ -1,7 +1,7 @@
 "use client";
 import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import {  getApiHost , readErrorDetail } from "@/lib/api";
-import { getApi, authHeaders, resolveCompanyId, formatDate } from "@/lib/siteflow";
+import { getApi, authHeaders, resolveCompanyId, formatDate, formatLabel } from "@/lib/siteflow";
 
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
@@ -1059,7 +1059,7 @@ export default function HRPayrollPage() {
                         </td>
                         <td className="px-3 py-2.5 text-muted">{emp.tdsMonthly > 0 ? fmt(emp.tdsMonthly) : "—"}</td>
                         <td className="px-3 py-2.5">
-                          <span className={statusBadge(emp.status)}>{emp.status}</span>
+                          <span className={statusBadge(emp.status)}>{formatLabel(emp.status)}</span>
                         </td>
                       </tr>
                     ))}
@@ -1116,7 +1116,7 @@ export default function HRPayrollPage() {
                               ? <span className="flex items-center gap-1 text-success font-bold"><span className="h-1.5 w-1.5 rounded-full bg-success inline-block" />Inside</span>
                               : <span className="flex items-center gap-1 text-warning font-bold"><span className="h-1.5 w-1.5 rounded-full bg-warning inline-block" />Outside</span>}
                           </td>
-                          <td className="px-3 py-3"><span className={statusBadge(rec.status)}>{rec.status}</span></td>
+                          <td className="px-3 py-3"><span className={statusBadge(rec.status)}>{formatLabel(rec.status)}</span></td>
                         </tr>
                       );
                     })}
@@ -1246,7 +1246,7 @@ export default function HRPayrollPage() {
                         <td className="px-4 py-3 font-semibold text-foreground">{ts.employeeName}</td>
                         <td className="px-4 py-3 text-muted">{ts.weekStart} → {ts.weekEnd}</td>
                         <td className="px-4 py-3 font-bold text-info">{ts.totalHours}h</td>
-                        <td className="px-4 py-3"><span className={statusBadge(ts.status)}>{ts.status}</span></td>
+                        <td className="px-4 py-3"><span className={statusBadge(ts.status)}>{formatLabel(ts.status)}</span></td>
                         <td className="px-4 py-3">
                           <div className="flex gap-2">
                             {ts.status === "draft" && (
@@ -1546,7 +1546,7 @@ export default function HRPayrollPage() {
                             Connect Google Sheets
                           </button>
                         )}
-                        <span className={statusBadge("finalized")}>{payrollRun.status}</span>
+                        <span className={statusBadge("finalized")}>{formatLabel(payrollRun.status)}</span>
                       </div>
                     </div>
                     <table className="w-full text-xs">
@@ -1700,7 +1700,7 @@ export default function HRPayrollPage() {
                         </td>
                         <td className="px-4 py-3 text-muted max-w-xs truncate">{leave.reason}</td>
                         <td className="px-4 py-3">
-                          <Badge tone={leave.status === "Approved" ? "success" : leave.status === "Rejected" ? "danger" : "warning"} className="font-bold">{leave.status}</Badge>
+                          <Badge tone={leave.status === "Approved" ? "success" : leave.status === "Rejected" ? "danger" : "warning"} className="font-bold">{formatLabel(leave.status)}</Badge>
                         </td>
                         <td className="px-4 py-3 text-right">
                           {leave.status === "Pending" && (

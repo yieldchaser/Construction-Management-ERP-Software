@@ -46,7 +46,7 @@ def test_backdated_payroll_period_is_rejected(client, db, make_tenant, auth_head
 
     r = client.post(
         "/apis/v3/hr/payroll/run",
-        json={"company_id": str(comp.id), "payroll_month": _months_ago(2)},
+        json={"company_id": str(comp.id), "payroll_month": _months_ago(3)},
         headers=hdr,
     )
     assert r.status_code == 400

@@ -59,7 +59,6 @@ class UpdateProfileRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=255, example="Jane Doe")
 
 @router.get("/me")
-@router.get("")
 def get_my_profile(
     current_user: models.User = Depends(get_current_user),
 ):
@@ -71,9 +70,6 @@ def get_my_profile(
     }
 
 @router.patch("/me")
-@router.put("/me")
-@router.patch("")
-@router.put("")
 def update_my_profile(
     request: UpdateProfileRequest,
     db: Session = Depends(get_db),

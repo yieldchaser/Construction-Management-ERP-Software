@@ -1,7 +1,7 @@
 "use client";
 import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import {  getApiHost , readErrorDetail } from "@/lib/api";
-import { authHeaders, formatDate } from "@/lib/siteflow";
+import { authHeaders, formatDate, formatLabel } from "@/lib/siteflow";
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -1516,7 +1516,7 @@ export default function FinancePage() {
                         <td className="p-3 text-right font-bold text-foreground">₹{(t.amount || 0).toLocaleString("en-IN")}</td>
                         <td className="p-3">
                           <div className="flex items-center gap-2">
-                            <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${statusClass(t.status)}`}>{t.status}</span>
+                            <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${statusClass(t.status)}`}>{formatLabel(t.status)}</span>
                             {zohoConnected && (t.type === "Material Purchase" || t.type === "Subcon Bill") && (
                               <button
                                 onClick={(e) => { e.stopPropagation(); pushToZoho(t.id); }}
@@ -1858,7 +1858,7 @@ export default function FinancePage() {
                         </td>
                         <td className="p-3">
                           <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${statusChip(p.status)}`}>
-                            {p.status}
+                            {formatLabel(p.status)}
                           </span>
                         </td>
                       </tr>
@@ -4506,7 +4506,7 @@ export default function FinancePage() {
                         ? "bg-danger/10 border-danger/20 text-danger"
                         : "bg-warning/10 border-warning/20 text-warning"
                     }`}>{selectedPR.status.toUpperCase()}</span>
-                    <span className="ml-2 text-[8px] text-muted uppercase">Appr: {selectedPR.approval_status}</span>
+                    <span className="ml-2 text-[8px] text-muted uppercase">Appr: {formatLabel(selectedPR.approval_status)}</span>
                   </p>
                 </div>
               </div>

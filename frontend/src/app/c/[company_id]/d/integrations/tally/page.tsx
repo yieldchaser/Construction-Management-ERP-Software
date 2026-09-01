@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
 import { getApiHost, readErrorDetail } from "@/lib/api";
-import { authHeaders } from "@/lib/siteflow";
+import { authHeaders, formatLabel } from "@/lib/siteflow";
 import { isMissingOrDemoTenant, redirectToLogin } from "@/lib/company-guard";
 import Icon from "@/components/marketing/Icon";
 import PageShell from "@/components/layout/PageShell";
@@ -527,7 +527,7 @@ export default function TallyIntegrationPage() {
                           <td className="px-4 py-3 font-mono text-muted text-[11px]">{ag.auth_key}</td>
                           <td className="px-4 py-3">
                             <Badge tone={ag.status === "active" ? "success" : "neutral"} className="font-bold">
-                              {ag.status}
+                              {formatLabel(ag.status)}
                             </Badge>
                           </td>
                           <td className="px-4 py-3 text-muted">

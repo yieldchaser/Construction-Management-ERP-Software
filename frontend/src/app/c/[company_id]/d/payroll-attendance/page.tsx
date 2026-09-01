@@ -1289,7 +1289,7 @@ function AttendanceTab({
                             : "text-danger"
                         }
                       >
-                        {r.status}
+                        {formatLabel(r.status)}
                       </span>
                     </td>
                   </tr>

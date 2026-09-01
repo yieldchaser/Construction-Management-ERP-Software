@@ -1,7 +1,7 @@
 "use client";
 import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import { getApiHost } from "@/lib/api";
-import { authHeaders } from "@/lib/siteflow";
+import { authHeaders, formatLabel } from "@/lib/siteflow";
 
 import React, { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
@@ -802,7 +802,7 @@ export default function AttendancePage() {
                                   </td>
                                   <td className="px-5 py-3 text-muted font-sans">{log.distance_from_site_m ? `${log.distance_from_site_m}m` : "0m (Inside)"}</td>
                                   <td className="px-5 py-3">
-                                    <Badge tone={STATUS_TONES[log.status] || "success"}>{log.status}</Badge>
+                                    <Badge tone={STATUS_TONES[log.status] || "success"}>{formatLabel(log.status)}</Badge>
                                   </td>
                                 </tr>
                               )

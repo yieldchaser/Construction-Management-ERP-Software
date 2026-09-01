@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
 import { getApiHost, readErrorDetail } from "@/lib/api";
-import { authHeaders, formatDate } from "@/lib/siteflow";
+import { authHeaders, formatDate, formatLabel } from "@/lib/siteflow";
 import Icon, { type IconName } from "@/components/marketing/Icon";
 
 import PageShell from "@/components/layout/PageShell";
@@ -531,7 +531,7 @@ export default function DrawingsPage() {
                   )}
                   {!isEditable && (
                     <div className="absolute top-3 left-3 text-[10px] text-muted bg-black/60 px-2.5 py-1 rounded-full pointer-events-none">
-                      Viewing {activeRev?.version} ({activeRev?.status}): switch to Current revision to add pins
+                      Viewing {activeRev?.version} ({formatLabel(activeRev?.status)}): switch to Current revision to add pins
                     </div>
                   )}
 

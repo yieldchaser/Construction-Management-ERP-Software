@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { getApi, authHeaders, resolveCompanyId, fmtINR, formatDate } from "@/lib/siteflow";
+import { getApi, authHeaders, resolveCompanyId, fmtINR, formatDate, formatLabel } from "@/lib/siteflow";
 import { readErrorDetail } from "@/lib/api";
 import { useCompanySettings } from "@/context/CompanySettingsContext";
 import PageShell from "@/components/layout/PageShell";
@@ -1140,7 +1140,7 @@ export default function CRMPage() {
                         }
                         className="uppercase font-bold text-[9px]"
                       >
-                        {q.status}
+                        {formatLabel(q.status)}
                       </Badge>
                     </td>
                     <td className="px-3 py-2 text-right">
@@ -1289,7 +1289,7 @@ export default function CRMPage() {
                 <div className="flex items-center gap-2">
                   <span className="text-muted">Status: </span>
                   <Badge tone={qDetail.status === "converted" ? "success" : qDetail.status === "accepted" ? "success" : "neutral"} className="uppercase font-bold text-[9px]">
-                    {qDetail.status}
+                    {formatLabel(qDetail.status)}
                   </Badge>
                 </div>
                 <div><span className="text-muted">Tax: </span>{qDetail.gst_pct}% ({qDetail.tax_type})</div>

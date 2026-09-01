@@ -1184,7 +1184,7 @@ export default function DashboardPage() {
                               <tr key={idx} className="border-t border-border-custom hover:bg-elevated transition-all text-foreground">
                                 <td className="px-3 py-3 text-center border-r border-border-custom text-muted font-sans font-bold">{idx + 1}</td>
                                 <td className="px-4 py-3 border-r border-border-custom font-bold text-foreground">{p.project_name}</td>
-                                <td className="px-4 py-3 border-r border-border-custom text-muted">{p.project_status}</td>
+                                <td className="px-4 py-3 border-r border-border-custom text-muted">{formatLabel(p.project_status)}</td>
                                 <td className="px-4 py-3 text-center border-r border-border-custom">
                                   {p.project_health === "-" ? (
                                     <span className="text-muted font-bold font-sans">-</span>

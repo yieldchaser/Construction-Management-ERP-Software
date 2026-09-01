@@ -5,7 +5,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
-import { authHeaders, downloadWithAuth } from "@/lib/siteflow";
+import { authHeaders, downloadWithAuth, formatLabel } from "@/lib/siteflow";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import SegmentedTabs from "@/components/ui/Tabs";
@@ -981,7 +981,7 @@ export default function SubcontractorBillingPage() {
                           <td className="px-5 py-3.5 text-muted">{wo.date}</td>
                           <td className="px-5 py-3.5">
                             <Badge tone={wo.status === "Completed" ? "success" : "info"} className="uppercase font-bold">
-                              {wo.status}
+                              {formatLabel(wo.status)}
                             </Badge>
                           </td>
                         </tr>
@@ -1430,7 +1430,7 @@ export default function SubcontractorBillingPage() {
                       Bill #{selectedBillForDetail.invoiceNumber}
                     </h2>
                     <Badge tone={selectedBillForDetail.status === "Cancelled" ? "danger" : selectedBillForDetail.status === "Paid" ? "success" : "warning"} className="font-bold uppercase text-[9px]">
-                      {selectedBillForDetail.status}
+                      {formatLabel(selectedBillForDetail.status)}
                     </Badge>
                   </div>
                   <p className="text-xs text-muted mt-0.5 font-sans">

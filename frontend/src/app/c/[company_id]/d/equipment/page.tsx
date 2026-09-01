@@ -1,7 +1,7 @@
 "use client";
 import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import {  getApiHost , readErrorDetail } from "@/lib/api";
-import { authHeaders, downloadWithAuth, formatDate } from "@/lib/siteflow";
+import { authHeaders, downloadWithAuth, formatDate, formatLabel } from "@/lib/siteflow";
 
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
@@ -723,7 +723,7 @@ export default function EquipmentTrackingPage() {
                                       ? "bg-danger/10 border-danger/20 text-danger font-bold"
                                       : "bg-warning/10 border-warning/20 text-warning"
                                 }`}>
-                                  {log.completed_date ? "Completed" : isOverdue ? "Overdue" : log.status}
+                                  {log.completed_date ? "Completed" : isOverdue ? "Overdue" : formatLabel(log.status)}
                                 </span>
                               </td>
                               <td className="px-5 py-3 text-muted italic max-w-xs truncate" title={log.remarks || ""}>

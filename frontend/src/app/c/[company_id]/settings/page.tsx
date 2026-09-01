@@ -280,7 +280,7 @@ export default function CompanySettingsPage() {
     setProfileSaving(true);
     setProfileMsg(null);
     try {
-      const res = await fetch(`${apiHost}/apis/v3/profile`, {
+      const res = await fetch(`${apiHost}/apis/v3/profile/me`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({ name: profileData.name.trim() }),

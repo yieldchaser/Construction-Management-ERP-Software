@@ -186,7 +186,10 @@ export default function StatutoryPage() {
   const [activeGeneratorTab, setActiveGeneratorTab] = useState<GeneratorTab>(defaultTab);
 
   const [genMonth, setGenMonth] = useState<number>(new Date().getMonth() + 1);
-  const [genYear, setGenYear] = useState<number>(() => new Date().getFullYear());
+  const [genYear, setGenYear] = useState<number>(() => {
+    const now = new Date();
+    return now.getMonth() < 3 ? now.getFullYear() - 1 : now.getFullYear();
+  });
   const [genQuarter, setGenQuarter] = useState<string>("Q1");
   const [isGenerating, setIsGenerating] = useState(false);
 

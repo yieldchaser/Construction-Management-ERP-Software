@@ -1,6 +1,6 @@
 "use client";
 import { getApiHost, readErrorDetail } from "@/lib/api";
-import { authHeaders, formatDate } from "@/lib/siteflow";
+import { authHeaders, formatDate, formatLabel } from "@/lib/siteflow";
 
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
@@ -346,7 +346,7 @@ export default function DPRPage() {
                   className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground"
                 >
                   {tasks.map(t => (
-                    <option key={t.id} value={t.id}>{t.name} ({t.status})</option>
+                    <option key={t.id} value={t.id}>{t.name} ({formatLabel(t.status)})</option>
                   ))}
                 </select>
               </div>

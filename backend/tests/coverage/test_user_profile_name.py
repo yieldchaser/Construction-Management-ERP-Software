@@ -38,7 +38,7 @@ def test_get_and_update_my_profile_name(client, db):
     assert data["email"] == user.email
 
     # 2. Update name
-    r2 = client.patch("/apis/v3/profile", json={"name": "Prateek Upadhyay"}, headers=hdr)
+    r2 = client.patch("/apis/v3/profile/me", json={"name": "Prateek Upadhyay"}, headers=hdr)
     assert r2.status_code == 200, r2.text
     data2 = r2.json()
     assert data2["success"] is True
@@ -49,5 +49,5 @@ def test_get_and_update_my_profile_name(client, db):
     assert user.name == "Prateek Upadhyay"
 
     # 4. Empty name rejected
-    r3 = client.patch("/apis/v3/profile", json={"name": "   "}, headers=hdr)
+    r3 = client.patch("/apis/v3/profile/me", json={"name": "   "}, headers=hdr)
     assert r3.status_code == 400

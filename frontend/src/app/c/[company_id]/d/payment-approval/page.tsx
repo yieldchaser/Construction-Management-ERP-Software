@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
-import { formatDate } from "@/lib/siteflow";
+import { formatDate, formatLabel } from "@/lib/siteflow";
 import Icon from "@/components/marketing/Icon";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
@@ -217,7 +217,7 @@ export default function PaymentApprovalPage() {
                       : r.status === "Rejected"
                       ? "bg-danger/10 text-danger"
                       : "bg-warning/10 text-warning"
-                  }`}>{r.status}</span>
+                  }`}>{formatLabel(r.status)}</span>
                   <span className="text-[10px] px-2 py-0.5 rounded border border-border-custom bg-elevated text-muted font-medium">
                     Project: {getProjectLabel(r.project_id ? projectMap.get(r.project_id) : undefined)}
                   </span>

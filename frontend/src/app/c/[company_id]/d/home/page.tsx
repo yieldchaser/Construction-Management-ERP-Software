@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { getApiHost, readErrorDetail } from "@/lib/api";
-import { formatDate } from "@/lib/siteflow";
+import { formatDate, formatLabel } from "@/lib/siteflow";
 import { useProject } from "@/context/ProjectContext";
 import Icon from "@/components/marketing/Icon";
 import PageShell from "@/components/layout/PageShell";
@@ -632,7 +632,7 @@ export default function ProjectsHomePage() {
                         <span className="font-semibold text-foreground text-sm">{l.employee_name}</span>
                         <span className={`text-[10px] px-2 py-0.5 rounded font-medium uppercase tracking-wider ${
                           l.status === "Approved" ? "bg-success/10 text-success" : l.status === "Rejected" ? "bg-danger/10 text-danger" : "bg-warning/10 text-warning"
-                        }`}>{l.status}</span>
+                        }`}>{formatLabel(l.status)}</span>
                       </div>
                       <p className="text-xs text-muted">
                         Type: <span className="text-foreground font-medium">{l.leave_type}</span> • Duration: <span className="text-foreground font-medium">{l.days_count} Days</span>
@@ -835,7 +835,7 @@ export default function ProjectsHomePage() {
                               </td>
                               <td className="px-6 py-4">
                                 <Badge tone="neutral" className="uppercase tracking-wider">
-                                  {ind.status}
+                                  {formatLabel(ind.status)}
                                 </Badge>
                               </td>
                               <td className="px-6 py-4 text-right">

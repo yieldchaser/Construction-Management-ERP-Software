@@ -58,15 +58,19 @@ def test_month_with_no_bills_leaves_series_flat(client, db, make_tenant, auth_he
     project = _mk_project(db, comp, "A")
     _mk_budget(db, project, 10000.0)
 
-    # All spend is dated July; a revenue invoice in August stretches the chart
+    now = datetime.datetime.utcnow()
+    m1_date = (now.replace(day=1) - datetime.timedelta(days=1)).replace(day=15)
+    m2_date = now.replace(day=1) + datetime.timedelta(days=1)
+
+    # All spend is dated month 1; a revenue invoice in month 2 stretches the chart
     # window into a bill-free month without adding expense.
-    _mk_bill(db, comp, project, team, 1000.0, datetime.datetime(2026, 7, 15))
-    _mk_bill(db, comp, project, team, 999.0, datetime.datetime(2026, 8, 20), invoice_type="sale")
+    _mk_bill(db, comp, project, team, 1000.0, m1_date)
+    _mk_bill(db, comp, project, team, 999.0, m2_date, invoice_type="sale")
 
     series = _series_for(client, hdr, comp)
     labels = [label for label, _, _ in series]
-    assert labels == ["Jul 2026", "Aug 2026"], series
-    # August books no expense: the curve must hold flat at July's figure,
+    assert labels == [m1_date.strftime("%b %Y"), m2_date.strftime("%b %Y")], series
+    # Month 2 books no expense: the curve must hold flat at month 1's figure,
     # never double it.
     assert series[0][1] == 1000.0, series
     assert series[1][1] == 1000.0, series
@@ -79,10 +83,14 @@ def test_each_month_adds_only_its_own_bills(client, db, make_tenant, auth_header
     project = _mk_project(db, comp, "B")
     _mk_budget(db, project, 10000.0)
 
-    _mk_bill(db, comp, project, team, 300.0, datetime.datetime(2026, 7, 5))
-    _mk_bill(db, comp, project, team, 500.0, datetime.datetime(2026, 8, 25))
+    now = datetime.datetime.utcnow()
+    m1_date = (now.replace(day=1) - datetime.timedelta(days=1)).replace(day=5)
+    m2_date = now.replace(day=1) + datetime.timedelta(days=1)
+
+    _mk_bill(db, comp, project, team, 300.0, m1_date)
+    _mk_bill(db, comp, project, team, 500.0, m2_date)
 
     series = _series_for(client, hdr, comp)
     # Cumulative grows by exactly each month's own delta: 300 then 800.
-    # The old accumulator reported 300 then 1100 (July counted twice).
+    # The old accumulator reported 300 then 1100 (month 1 counted twice).
     assert [spend for _, spend, _ in series] == [300.0, 800.0], series
