@@ -482,7 +482,19 @@ else:
 async def lifespan(app: FastAPI):
     # SQLite dev schema sync (local/SQLite auto-fallback only; in production
     # schema changes run via Supabase SQL migrations).
-    Base.metadata.create_all(bind=engine)
+    #
+    # This guard is load-bearing, not tidiness. Until 2026-09-02 the call ran
+    # against whatever DATABASE_URL pointed at, so a model added without a
+    # hand-written migration was created in production silently, with no row
+    # level security and no policy. That is how kyc_access_logs, the audit trail
+    # for identity-document access, ended up as the only table of 140 without
+    # RLS, and nothing caught it until Supabase emailed. A missing table now
+    # fails loudly on first query, which is the safer failure.
+    #
+    # Production column drift is handled separately by
+    # ensure_postgres_schema_sync() at the end of this function.
+    if engine.url.drivername.startswith("sqlite"):
+        Base.metadata.create_all(bind=engine)
     ensure_sqlite_library_party_columns()
     ensure_sqlite_company_team_party_link()
     _seed_db = SessionLocal()
