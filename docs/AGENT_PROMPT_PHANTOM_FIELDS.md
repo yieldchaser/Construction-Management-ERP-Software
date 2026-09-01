@@ -1,3 +1,6 @@
+> **SUPERSEDED. Do not run this file.** Everything in it is in
+> `docs/AGENT_PROMPT_SCREEN_AND_FORMS.md` as Group C. Run that instead.
+
 # AGENT PROMPT: three screens reading fields the API never sends
 
 A sweep for the mechanism behind the workforce library defect: a screen reading a
