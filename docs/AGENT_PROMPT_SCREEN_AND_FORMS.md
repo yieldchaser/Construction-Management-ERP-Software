@@ -1,26 +1,31 @@
 # AGENT PROMPT: presentation defects, empty-tenant bugs, and forms that discard input
 
-**This file supersedes `AGENT_PROMPT_STUCK_PAGES_AND_UTC_DATES.md` and
-`AGENT_PROMPT_FORMS_THAT_DISCARD_INPUT.md`.** Everything in both is here.
+**This file supersedes `AGENT_PROMPT_STUCK_PAGES_AND_UTC_DATES.md`,
+`AGENT_PROMPT_FORMS_THAT_DISCARD_INPUT.md` and `AGENT_PROMPT_PHANTOM_FIELDS.md`.**
+Everything in all three is here.
 
 **If you have already started the stuck-pages file, keep that work.** Commit it,
 pull, then continue from this file and skip whatever you have already done. Say
 in your report which parts you had already finished.
 
-Two groups, **Group A then Group B, separate commits.**
+Three groups, **A then B then C, separate commits.**
 
 Group A is what the screen shows: pages that never finish loading, a date that is
 a day behind, an unreadable dropdown, inconsistent empty states, a doubled plus
 sign, raw ISO dates. Group B is what the forms do: one that cannot submit at all
-and two that quietly throw away what you typed.
+and two that quietly throw away what you typed. Group C is what the screen reads:
+three places asking the API for a field name it does not have.
 
 Everything here was found by driving the app signed in against production, on
 **all 53 company-scoped routes** against a company with zero projects and **all
-40 project-scoped routes** against one with real data, plus a static sweep of
-every POST body against the fields its endpoint declares required.
+40 project-scoped routes** against one with real data, plus static sweeps of every POST, PUT and PATCH body
+against the fields its endpoint declares required, and of every field the
+frontend reads against every field the backend can send.
 
-Group B Part 1 is the most serious item in the file: a feature that has never
-worked.
+**Group B Part 1 is the most serious item in the file**: a feature that has never
+worked. Group A Part 3 is next, wrong for five and a half hours of every day.
+Group C Part 1 is the cheapest real win: one wrong field name is hiding data the
+backend already computes.
 
 Report as before: command, exit code, one sentence. No pasted output.
 "Not run" is acceptable.
@@ -422,7 +427,99 @@ than either option.
 
 ---
 
-# What both sweeps found nothing of
+# GROUP C: what the screen reads
+
+A sweep for the mechanism behind the workforce library defect in Group B: a
+screen reading a field off an API response that no backend model can carry. The
+read is always undefined, so the column, the badge or the count is blank or zero
+forever, and nothing errors.
+
+I compared every snake_case property read in the frontend against every field
+name the backend could put in a response: **2,523 reads against 1,698 known
+backend names.** Seven came back unknown, three are real and are below. One of
+the others is the workforce field already covered in Group B.
+
+# PART 1: the geofence distance is measured, returned, and never shown
+
+This is the one worth doing first, because the data already exists.
+
+`p/[project_id]/attendance/page.tsx:839`:
+
+```jsx
+<td>{log.distance_meters != null ? `${log.distance_meters.toFixed(0)}m` : …}</td>
+```
+
+There is no `distance_meters` anywhere in the backend. The field is called
+**`distance_from_site_m`**:
+
+```
+backend/app/models.py:786   distance_from_site_m = Column(Numeric(10, 2), nullable=True)
+backend/app/routers/hr.py:182   distance_from_site_m: Optional[float]
+backend/app/routers/hr.py:439   distance_from_site_m=Decimal(str(distance_m)) if distance_m is not None else None
+```
+
+So the backend computes how far from the site a punch was made, stores it,
+and returns it in the response. The attendance table asks for the wrong name and
+renders the fallback on every row.
+
+**On this product that matters.** The whole point of a geofenced punch is
+knowing whether the worker was actually at site. The number that answers it is
+being fetched and thrown away at the last step.
+
+Fix the read to `distance_from_site_m`. Then check the other attendance surfaces
+for the same mistake, and check whether anything filters or flags on distance,
+since a filter reading the wrong name would silently match nothing.
+
+# PART 2: the DPR "Subcon Updates" card always counts zero
+
+`d/dpr/page.tsx:268`:
+
+```js
+{ label: "Subcon Updates",
+  value: logs.filter((l: any) => l.subcon_name).length > 0 ? … : … }
+```
+
+`subcon_name` does not exist anywhere in the backend, and `DPRLogResponse` at
+`dpr.py:43` has no subcontractor field of any name: it carries
+`reported_by`, `dpr_date`, `weather`, `executed_qty`, `workers_deployed`,
+`materials_consumed`, `photos`, `notes`, `issues`, `status`.
+
+So the filter matches nothing, always, and the card is a permanent zero next to
+three cards that show real numbers. A site manager reads it as "no subcontractor
+worked today", which is a statement about the world, not a missing feature.
+
+**Decide and say which you chose.** Either:
+
+- **Remove the card**, if a daily progress report is not meant to carry a
+  subcontractor. Three honest cards beat four with one lying.
+- **Add the link**, if it is. A DPR that records who did the work is normal on
+  this kind of product, and the subcontractor is already a first-class entity.
+  That is a feature, so if you pick it, say so plainly and do it end to end
+  rather than half.
+
+I lean to removing it in this run and letting the founder decide whether the
+link is wanted, because inventing a data model on a stat card is the wrong place
+to start.
+
+# PART 3: the rate library shows a components column that cannot fill
+
+`d/library/page.tsx:1138`:
+
+```jsx
+<td className="px-6 py-4 text-center text-muted">{formatLibraryCell(item.component_count)}</td>
+```
+
+No backend field of that name. The column header sits above a row of dashes on
+every rate card item, forever.
+
+Either count the components server side and return it, or drop the column. If
+rate card items genuinely have components in this product, returning the count
+is a small query and the column becomes useful; if they do not, the column is
+noise. Say which you found and which you did.
+
+---
+
+# What these sweeps found nothing of
 
 So you know where not to spend time, and so you do not re-derive these.
 
@@ -444,6 +541,15 @@ zero is a real result, not a broken tool.
 POST body in the frontend against the fields its endpoint's model declares
 required: **121 endpoints, 133 frontend POST calls, one real mismatch**, which is
 Group B Part 1. Everything else sends what the API demands.
+
+**Edit forms are sound too.** The same comparison against `PUT` and `PATCH`:
+**11 update endpoints with required fields, 50 frontend update calls, zero
+mismatches.**
+
+**The creator-name fallback chain is fine.** `d/library/page.tsx:1044` reads
+`item.creator_name || item.creatorName || item.created_by_name || …` through
+seven names. Only the first two resolve; the rest are defensive dead ends, not
+defects. Leave that chain alone, it tripped my sweep and is not a bug.
 
 That sweep took four attempts to become trustworthy, and the failures are worth
 knowing because they are the same traps you will hit:
@@ -487,6 +593,35 @@ December.
 `.animate-pulse` and returned 0 for `d/production`, which renders `loading ? "…"`
 instead. I nearly dropped a real defect because of it.
 
+# Verify in a browser, because a grep cannot see most of this
+
+Every item in Groups A and C was found by driving the app, and most are invisible
+to static analysis. State what you observed for each.
+
+**On a company with no projects:**
+
+- [ ] `d/labour`, `d/production` and `d/reports` show their empty state and
+      **no skeleton, no permanent "…"**.
+- [ ] The wastage Type dropdown is readable when opened, and so are the three on
+      `d/three-way`.
+- [ ] Two library tabs picked at random look like each other when empty.
+- [ ] No button shows two plus signs.
+
+**On `AK Construction`, which has real data:**
+
+- [ ] Those same three pages still load their data as before. Do not fix the
+      empty case by breaking the populated one.
+- [ ] An attendance punch with a recorded distance shows the distance, not the
+      fallback.
+- [ ] The DPR stat cards no longer include one that is structurally always zero.
+- [ ] No screen renders a raw `2026-07-01`.
+
+**Either:**
+
+- [ ] A date field defaulted before 05:30 local shows **today**. You can test
+      this without waiting for 5am by evaluating the old and new expressions
+      against a fixed early-morning local time and comparing.
+
 # Definition of done
 
 ## Group A
@@ -517,7 +652,18 @@ instead. I nearly dropped a real defect because of it.
 - [ ] A test that **fails against the current tree** for the leave 422, at the
       assertion. Report that it failed first and what it said.
 
-## Both
+## Group C
+
+- [ ] `distance_meters` reads 0 in the frontend; the attendance table shows the
+      real value. Report whether any filter or flag also read the wrong name.
+- [ ] The DPR subcon card removed or backed by real data, with your reasoning.
+- [ ] The rate library components column removed or populated, with your
+      reasoning.
+- [ ] Re-run the phantom-field comparison yourself and report the remaining
+      count. **Self-test it first**: `salary_per_shift` must come back unknown
+      and `company_id` must not.
+
+## All three
 
 - [ ] `python scripts/verification/check_route_reachability.py` reports
       **0 unreachable**, exemptions still 30. Report the route total.
@@ -528,4 +674,4 @@ instead. I nearly dropped a real defect because of it.
       37 / 38 / 73 / 116.
 - [ ] Design counts unchanged: gradients, `hover:bg-white/N` and inline shadows,
       with one command covering all three.
-- [ ] **Commit and push to `origin/main`**, Group A and Group B separate commits.
+- [ ] **Commit and push to `origin/main`**, Groups A, B and C as separate commits.
