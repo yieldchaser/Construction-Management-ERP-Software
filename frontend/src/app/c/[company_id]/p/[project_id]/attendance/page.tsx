@@ -836,7 +836,7 @@ export default function AttendancePage() {
                                   <td className="px-5 py-3">
                                     <Badge tone="success" className="uppercase font-bold">{log.verified ? "verified" : "logged"}</Badge>
                                   </td>
-                                  <td className="px-5 py-3 text-muted font-mono">{log.distance_meters != null ? `${log.distance_meters.toFixed(0)}m` : "—"}</td>
+                                  <td className="px-5 py-3 text-muted font-mono">{log.distance_from_site_m != null ? `${log.distance_from_site_m.toFixed(0)}m` : log.distance_meters != null ? `${log.distance_meters.toFixed(0)}m` : "—"}</td>
                                   <td className="px-5 py-3">
                                     <Badge tone={(log.punch_type === "in" || log.punch_type === "Present") ? "success" : log.punch_type === "out" ? "info" : "neutral"} className="uppercase font-bold">{log.punch_type || "Present"}</Badge>
                                   </td>

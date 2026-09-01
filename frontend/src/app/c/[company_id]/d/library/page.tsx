@@ -1158,7 +1158,6 @@ export default function LibraryHubPage() {
                   <th className="px-5 py-3 text-right">Markup %</th>
                   <th className="px-5 py-3 text-right">Selling Price</th>
                   <th className="px-5 py-3">Created Date</th>
-                  <th className="px-5 py-3">Component Count</th>
                   <th className="px-5 py-3">HSN/SAC</th>
                   <th className="px-6 py-4 text-center">Action</th>
                 </tr>
@@ -1166,7 +1165,7 @@ export default function LibraryHubPage() {
               <tbody className="divide-y divide-border-custom">
                 {filteredData.length === 0 ? (
                   <tr>
-                    <td colSpan={13} className="p-8">
+                    <td colSpan={12} className="p-8">
                       <EmptyState
                         title="No rate card items found"
                         description="Build your central rate card library with standardized rates, units, and markup configurations."
@@ -1204,7 +1203,6 @@ export default function LibraryHubPage() {
                         <td className="px-6 py-4 text-muted">
                           {formatDate(item.created_at, "-")}
                         </td>
-                        <td className="px-6 py-4 text-center text-muted">{formatLibraryCell(item.component_count)}</td>
                         <td className="px-6 py-4 text-muted">{formatLibraryCell(item.hsn_sac)}</td>
                         <td className="px-6 py-4 text-center">
                           <div className="flex items-center justify-center gap-1.5">

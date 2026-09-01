@@ -261,11 +261,10 @@ export default function DPRPage() {
           <PageShell width="wide">
           
           {/* Dashboard Quick Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
               { label: "Site Staff Present", value: summary.total_workers_deployed || "—", desc: "Clocked via geofence", color: "border-primary/20 bg-primary/5 text-primary" },
               { label: "Equipment Used", value: logs.length > 0 ? `${logs.length} Reports` : "0 Active", desc: "DPR reports logged", color: "border-secondary/20 bg-secondary/5 text-secondary" },
-              { label: "Subcon Updates", value: logs.filter((l: any) => l.subcon_name).length > 0 ? `${logs.filter((l: any) => l.subcon_name).length} Updates` : "0 Tasks updated", desc: "Logged by subcontractors", color: "border-success/20 bg-success/5 text-success" },
               { label: "Material Received", value: (summary.material_received_today || 0) > 0 ? `${fmtQty(summary.material_received_today)} Units` : "No GRNs today", desc: "Material inward logged", color: "border-warning/20 bg-warning/5 text-warning" },
               { label: "Material Used Today", value: (summary.material_used_today || 0) > 0 ? `${fmtQty(summary.material_used_today)} Units` : "No consumption logged", desc: "On-site consumption", color: "border-primary/20 bg-primary/5 text-primary" }
             ].map((card, idx) => (
