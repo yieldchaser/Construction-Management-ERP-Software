@@ -4,7 +4,7 @@ import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
-import { authHeaders, formatDate, formatLabel } from "@/lib/siteflow";
+import { authHeaders, formatDate, formatLabel, todayLocalISO } from "@/lib/siteflow";
 import Icon from "@/components/marketing/Icon";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
@@ -1863,7 +1863,7 @@ export default function DashboardPage() {
                       attendance_radius_meters: wizardData.attendance_radius_meters ?? 500,
                       status: "Ongoing",
                       health: "Healthy",
-                      startDate: new Date().toISOString().split('T')[0],
+                      startDate: todayLocalISO(),
                       endDate: undefined
                     };
                     

@@ -7,7 +7,7 @@ import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
 import { useCompanySettings } from "@/context/CompanySettingsContext";
 import { getApiHost, readErrorDetail } from "@/lib/api";
-import { authHeaders, downloadWithAuth, formatDate, formatLabel } from "@/lib/siteflow";
+import { authHeaders, downloadWithAuth, formatDate, formatLabel, todayLocalISO } from "@/lib/siteflow";
 import Icon, { type IconName } from "@/components/marketing/Icon";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
@@ -376,7 +376,7 @@ export default function ProcurementPage() {
       }],
       status: "pending",
       requestedBy: requestedName,
-      date: new Date().toISOString().split("T")[0]
+      date: todayLocalISO()
     };
 
     try {
@@ -497,7 +497,7 @@ export default function ProcurementPage() {
       totalAmount: total,
       status: "draft",
       approvalFlag: "pending",
-      date: new Date().toISOString().split("T")[0],
+      date: todayLocalISO(),
       expectedDeliveryDate: newPOExpectedDeliveryDate || null,
     };
 
@@ -680,7 +680,7 @@ export default function ProcurementPage() {
           project_id: projectId,
           po_id: selectedPOForGRN.id,
           ...(grnNum.trim() ? { grn_number: grnNum.trim() } : {}),
-          received_date: new Date().toISOString().split("T")[0],
+          received_date: todayLocalISO(),
           received_by: grnReceivedBy || null,
           items: receivedItems.map((item) => ({ po_item_id: item.id, received_qty: item.qty })),
         }),

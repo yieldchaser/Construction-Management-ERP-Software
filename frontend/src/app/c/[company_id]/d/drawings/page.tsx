@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
 import { getApiHost, readErrorDetail } from "@/lib/api";
-import { authHeaders, formatDate, formatLabel } from "@/lib/siteflow";
+import { authHeaders, formatDate, formatLabel, todayLocalISO } from "@/lib/siteflow";
 import Icon, { type IconName } from "@/components/marketing/Icon";
 
 import PageShell from "@/components/layout/PageShell";
@@ -340,7 +340,7 @@ export default function DrawingsPage() {
           id: targetDrawingId,
           name: newDrawingName.trim(),
           category: newDrawingCategory,
-          createdAt: new Date().toISOString().split("T")[0],
+          createdAt: todayLocalISO(),
           revisions: [],
         };
       }
@@ -368,7 +368,7 @@ export default function DrawingsPage() {
         status: saved.approval_status === "approved" ? "current" : (saved.approval_status === "rejected" ? "locked" : "superseded"),
         approvalStatus: saved.approval_status || "pending",
         comments: saved.comments || "",
-        date: saved.created_at ? saved.created_at.split("T")[0] : new Date().toISOString().split("T")[0],
+        date: saved.created_at ? saved.created_at.split("T")[0] : todayLocalISO(),
         uploadedBy: "Current User",
         pins: [],
       };

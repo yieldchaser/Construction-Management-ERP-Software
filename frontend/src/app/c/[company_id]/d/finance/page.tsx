@@ -1,7 +1,7 @@
 "use client";
 import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import {  getApiHost , readErrorDetail } from "@/lib/api";
-import { authHeaders, formatDate, formatLabel } from "@/lib/siteflow";
+import { authHeaders, formatDate, formatLabel, todayLocalISO } from "@/lib/siteflow";
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -183,7 +183,7 @@ export default function FinancePage() {
   const [refNum, setRefNum] = useState("");
   const [refInvoice, setRefInvoice] = useState("");
   const [desc, setDesc] = useState("");
-  const [txnDate, setTxnDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [txnDate, setTxnDate] = useState(() => todayLocalISO());
   const [costCode, setCostCode] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("Cash");
   const [submitting, setSubmitting] = useState(false);
@@ -992,7 +992,7 @@ export default function FinancePage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `siteflow-tally-${new Date().toISOString().slice(0, 10)}.xml`;
+      a.download = `siteflow-tally-${todayLocalISO()}.xml`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -1568,7 +1568,7 @@ export default function FinancePage() {
               const url = URL.createObjectURL(blob);
               const link = document.createElement("a");
               link.href = url;
-              link.setAttribute("download", `General_Ledger_${new Date().toISOString().split("T")[0]}.csv`);
+              link.setAttribute("download", `General_Ledger_${todayLocalISO()}.csv`);
               document.body.appendChild(link);
               link.click();
               document.body.removeChild(link);
@@ -4381,7 +4381,7 @@ export default function FinancePage() {
                       <label className="text-[10px] text-muted uppercase font-bold block mb-1">Date*</label>
                       <input
                         type="date"
-                        value={new Date().toISOString().slice(0, 10)}
+                        value={todayLocalISO()}
                         disabled
                         className="w-full bg-background/50 border border-border-custom rounded-lg px-3 py-2 text-muted focus:outline-none text-xs"
                       />
@@ -4576,7 +4576,7 @@ export default function FinancePage() {
                 >Mark as Paid</button>
               </div>
               <button
-                onClick={() => { setPrPayment({ date: new Date().toISOString().slice(0, 10), mode: "Cash", paidAmount: String(selectedPR.amount || ""), deduction: "0", tds: "0", remarks: "", referenceNo: "", attachmentName: "" }); setShowRecordPaymentModal(true); }}
+                onClick={() => { setPrPayment({ date: todayLocalISO(), mode: "Cash", paidAmount: String(selectedPR.amount || ""), deduction: "0", tds: "0", remarks: "", referenceNo: "", attachmentName: "" }); setShowRecordPaymentModal(true); }}
                 disabled={selectedPR.status === "Paid"}
                 className="w-full py-2.5 bg-elevated text-foreground font-bold rounded-lg hover:bg-elevated text-xs transition-all disabled:opacity-40"
               >Record Payment</button>

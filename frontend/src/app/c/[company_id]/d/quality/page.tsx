@@ -1,6 +1,6 @@
 "use client";
 import {  getApiHost , readErrorDetail } from "@/lib/api";
-import { authHeaders, formatLabel } from "@/lib/siteflow";
+import { authHeaders, formatLabel, toLocalISODate } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
@@ -148,7 +148,7 @@ export default function QualityPage() {
     severity: "Major" as "Minor" | "Major" | "Critical",
     zone: "",
     inspectionId: "",
-    dueDate: new Date(Date.now() + 86400000).toISOString().split("T")[0]
+    dueDate: toLocalISODate(new Date(Date.now() + 86400000))
   });
 
   const [showTestForm, setShowTestForm] = useState(false);
@@ -386,7 +386,7 @@ isCode: cl.is_code_reference || "—",
           severity: "Major",
           zone: "",
           inspectionId: "",
-          dueDate: new Date(Date.now() + 86400000).toISOString().split("T")[0]
+          dueDate: toLocalISODate(new Date(Date.now() + 86400000))
         });
       } else {
         const err = await readErrorDetail(res);
@@ -707,7 +707,7 @@ isCode: cl.is_code_reference || "—",
                                         severity: insp.failCount > 2 ? "Critical" : "Major",
                                         zone: insp.zone || "",
                                         inspectionId: insp.id,
-                                        dueDate: new Date(Date.now() + 86400000).toISOString().split("T")[0]
+                                        dueDate: toLocalISODate(new Date(Date.now() + 86400000))
                                       });
                                       setShowNCRForm(true);
                                     }}

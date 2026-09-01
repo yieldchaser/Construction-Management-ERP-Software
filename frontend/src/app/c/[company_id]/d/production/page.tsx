@@ -175,6 +175,8 @@ export default function ProductionPage() {
   useEffect(() => {
     if (projectId) {
       void fetchSummary();
+    } else {
+      setLoading(false);
     }
   }, [projectId]);
 

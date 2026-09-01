@@ -63,7 +63,14 @@ export default function WOAmendmentsPage({ params }: { params: { wo_id: string }
     } catch (e) { console.error(e); }
   };
 
-  useEffect(() => { if (woId) { fetchAmendments(); fetchWO(); } }, [woId]);
+  useEffect(() => {
+    if (woId) {
+      fetchAmendments();
+      fetchWO();
+    } else {
+      setLoading(false);
+    }
+  }, [woId]);
 
   const handleCreateAmendment = async () => {
     try {

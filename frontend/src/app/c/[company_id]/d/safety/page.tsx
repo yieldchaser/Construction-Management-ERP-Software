@@ -1,7 +1,7 @@
 'use client';
 import { useProject } from '@/context/ProjectContext';
 import { getApiHost, readErrorDetail } from '@/lib/api';
-import { authHeaders, formatDate } from '@/lib/siteflow';
+import { authHeaders, formatDate, todayLocalISO, nowLocalISO } from '@/lib/siteflow';
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
@@ -166,15 +166,15 @@ export default function SafetyPage() {
   const [incidentForm, setIncidentForm] = useState({
     incident_type: 'Near Miss', severity: 'Low', description: '',
     location: '', injured_person: '', lost_time_days: 0, reported_by: '',
-    reported_at: new Date().toISOString().slice(0, 16),
+    reported_at: nowLocalISO(),
   });
   const [closeForm, setCloseForm] = useState({ root_cause: '', corrective_action: '' });
   const [talkForm, setTalkForm] = useState({
-    topic: '', conducted_by: '', conducted_at: new Date().toISOString().slice(0, 16),
+    topic: '', conducted_by: '', conducted_at: nowLocalISO(),
     attendee_count: 0, notes: '',
   });
   const [ppeForm, setPpeForm] = useState({
-    checked_by: '', check_date: new Date().toISOString().slice(0, 10),
+    checked_by: '', check_date: todayLocalISO(),
     total_workers: 0, compliant_workers: 0, non_compliant_items: '',
   });
 

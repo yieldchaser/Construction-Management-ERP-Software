@@ -5,7 +5,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
-import { authHeaders } from "@/lib/siteflow";
+import { authHeaders, toLocalISODate } from "@/lib/siteflow";
 import Icon from "@/components/marketing/Icon";
 import { isMissingOrDemoTenant, redirectToLogin } from "@/lib/company-guard";
 import PageShell from "@/components/layout/PageShell";
@@ -55,7 +55,7 @@ export default function DPRReportPage() {
       const q = new URLSearchParams();
       q.set("company_id", companyId);
       const now = new Date();
-      const fmt = (d: Date) => d.toISOString().slice(0, 10);
+      const fmt = (d: Date) => toLocalISODate(d);
       if (selectedDateFilter === "Today") {
         q.set("from_date", fmt(now));
         q.set("to_date", fmt(now));

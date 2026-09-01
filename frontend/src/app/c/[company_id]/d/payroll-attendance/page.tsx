@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import { getApi, authHeaders, resolveCompanyId, fmtINR, formatLabel } from "@/lib/siteflow";
+import { getApi, authHeaders, resolveCompanyId, fmtINR, formatLabel, toLocalISODate, todayLocalISO } from "@/lib/siteflow";
 import { useProject } from "@/context/ProjectContext";
 import { useCompanySettings } from "@/context/CompanySettingsContext";
 import PageShell from "@/components/layout/PageShell";
@@ -129,7 +129,7 @@ const jdel = async (p: string) => {
 };
 
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-const todayStr = () => new Date().toISOString().slice(0, 10);
+const todayStr = () => todayLocalISO();
 const dayName = (d: string) => WEEKDAYS[new Date(d + "T00:00:00").getDay()];
 const isoDateTime = (d: string) => d.includes("T") ? d : `${d}T00:00:00Z`;
 
@@ -1214,7 +1214,7 @@ function AttendanceTab({
   const shift = (n: number) => {
     const d = new Date(date + "T00:00:00");
     d.setDate(d.getDate() + n);
-    setDate(d.toISOString().slice(0, 10));
+    setDate(toLocalISODate(d));
   };
 
   const filtered = rows.filter((r) => statusFilter === "All" || r.status === statusFilter);

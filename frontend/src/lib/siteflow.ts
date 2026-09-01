@@ -95,6 +95,30 @@ export const initials = (name: string): string =>
     .map((w) => w[0]?.toUpperCase() || "")
     .join("");
 
+export const toLocalISODate = (date: string | number | Date = new Date()): string => {
+  const d = typeof date === "object" && date instanceof Date ? date : new Date(date);
+  if (isNaN(d.getTime())) return "";
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+export const todayLocalISO = (): string => toLocalISODate(new Date());
+
+export const toLocalISODateTime = (date: string | number | Date = new Date()): string => {
+  const d = typeof date === "object" && date instanceof Date ? date : new Date(date);
+  if (isNaN(d.getTime())) return "";
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const hours = String(d.getHours()).padStart(2, "0");
+  const minutes = String(d.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
+
+export const nowLocalISO = (): string => toLocalISODateTime(new Date());
+
 export const formatDate = (
   date: string | number | Date | null | undefined,
   fallback: string = "—"

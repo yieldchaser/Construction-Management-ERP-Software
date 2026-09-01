@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
 import {  getApiHost , readErrorDetail } from "@/lib/api";
-import { authHeaders } from "@/lib/siteflow";
+import { authHeaders, todayLocalISO } from "@/lib/siteflow";
 import SegmentedTabs from "@/components/ui/Tabs";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
@@ -62,7 +62,7 @@ export default function LabourPage() {
   const [loading, setLoading] = useState(true);
 
   const [showMusterModal, setShowMusterModal] = useState(false);
-  const [musterDate, setMusterDate] = useState(new Date().toISOString().split("T")[0]);
+  const [musterDate, setMusterDate] = useState(todayLocalISO());
   const [musterRole, setMusterRole] = useState("Mason");
   const [musterPresent, setMusterPresent] = useState(20);
   const [musterAbsent, setMusterAbsent] = useState(2);
@@ -72,7 +72,7 @@ export default function LabourPage() {
 
   const [showBocwModal, setShowBocwModal] = useState(false);
   const [bocwContractor, setBocwContractor] = useState("");
-  const [bocwMonth, setBocwMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [bocwMonth, setBocwMonth] = useState(todayLocalISO().slice(0, 7));
   const [bocwWorkers, setBocwWorkers] = useState(0);
   const [bocwWages, setBocwWages] = useState(0);
   const [bocwContribution, setBocwContribution] = useState(0);
@@ -94,7 +94,13 @@ export default function LabourPage() {
     setLoading(false);
   };
 
-  useEffect(() => { if (projectId) fetchData(); }, [projectId]);
+  useEffect(() => {
+    if (projectId) {
+      fetchData();
+    } else {
+      setLoading(false);
+    }
+  }, [projectId]);
 
   const handleMusterSubmit = async () => {
     try {

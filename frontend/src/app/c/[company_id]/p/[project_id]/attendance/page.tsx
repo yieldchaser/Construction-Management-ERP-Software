@@ -1,7 +1,7 @@
 "use client";
 import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import { getApiHost } from "@/lib/api";
-import { authHeaders } from "@/lib/siteflow";
+import { authHeaders, todayLocalISO } from "@/lib/siteflow";
 
 import React, { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
@@ -164,7 +164,7 @@ export default function AttendancePage() {
   const [lang, setLang] = useState<string>("English");
   const [showLanguageDrawer, setShowLanguageDrawer] = useState(false);
   
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [date, setDate] = useState(todayLocalISO());
   const [isOnline, setIsOnline] = useState(true);
   useEffect(() => {
     const updateOnline = () => setIsOnline(navigator.onLine);
@@ -193,7 +193,7 @@ export default function AttendancePage() {
     attendance_radius_meters: 500,
     stage: "Ongoing",
     category: "Residential",
-    start_date: new Date().toISOString().split("T")[0],
+    start_date: todayLocalISO(),
     end_date: "",
     company_branch: "",
     value: 0,

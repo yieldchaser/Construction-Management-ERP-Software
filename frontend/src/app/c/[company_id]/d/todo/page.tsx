@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
-import { authHeaders, formatDate, formatLabel } from "@/lib/siteflow";
+import { authHeaders, formatDate, formatLabel, todayLocalISO } from "@/lib/siteflow";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import SegmentedTabs from "@/components/ui/Tabs";
@@ -46,7 +46,7 @@ export default function ToDoPage() {
   // New To Do drawer state
   const [isNewTodoOpen, setIsNewTodoOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
-  const [newDueDate, setNewDueDate] = useState(new Date().toISOString().split("T")[0]);
+  const [newDueDate, setNewDueDate] = useState(todayLocalISO());
   const [newAssignedId, setNewAssignedId] = useState("");
   const [newProjectId, setNewProjectId] = useState("");
   const [newType, setNewType] = useState("General");

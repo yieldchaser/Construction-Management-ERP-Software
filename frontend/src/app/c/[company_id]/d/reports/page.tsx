@@ -73,6 +73,8 @@ export default function ClientReportsPage() {
   useEffect(() => {
     if (projectId) {
       fetchReports();
+    } else {
+      setLoading(false);
     }
   }, [projectId]);
 

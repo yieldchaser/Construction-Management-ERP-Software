@@ -3,7 +3,7 @@ import { readErrorDetail } from "@/lib/api";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import { getApi, authHeaders, formatDate } from "@/lib/siteflow";
+import { getApi, authHeaders, formatDate, todayLocalISO } from "@/lib/siteflow";
 import Icon from "@/components/marketing/Icon";
 import SegmentedTabs from "@/components/ui/Tabs";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -220,7 +220,7 @@ export default function TeamSchedulePage() {
   const [tsDrawerOpen, setTsDrawerOpen] = useState(false);
 
   // ── New Timesheet form ──
-  const [tsDate, setTsDate] = useState(new Date().toISOString().split("T")[0]);
+  const [tsDate, setTsDate] = useState(todayLocalISO());
   const [tsPartyQuery, setTsPartyQuery] = useState("");
   const [tsPartyId, setTsPartyId] = useState<string | null>(null);
   const [tsPartyName, setTsPartyName] = useState("");
@@ -925,7 +925,7 @@ ${tasksXml}
 
             <button
               onClick={() => {
-                setTsDate(new Date().toISOString().split("T")[0]);
+                setTsDate(todayLocalISO());
                 setTsProjectId(projects[0]?.id || "");
                 setTsPartyQuery("");
                 setTsPartyId(null);

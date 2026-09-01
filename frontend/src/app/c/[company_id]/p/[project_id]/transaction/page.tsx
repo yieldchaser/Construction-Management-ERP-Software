@@ -3,7 +3,7 @@ import Badge, { type BadgeTone } from "@/components/ui/Badge";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import { getApi, authHeaders, fmtINR, formatLabel } from "@/lib/siteflow";
+import { getApi, authHeaders, fmtINR, formatLabel, todayLocalISO } from "@/lib/siteflow";
 import { readErrorDetail } from "@/lib/api";
 import { useCompanySettings } from "@/context/CompanySettingsContext";
 import ZatcaInvoicePanel from "@/components/ZatcaInvoicePanel";
@@ -539,7 +539,7 @@ function NewTransactionModal({
 
   const [partyId, setPartyId] = useState("");
   const [invoiceNumber, setInvoiceNumber] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(todayLocalISO());
   const [dueDate, setDueDate] = useState("");
   const [gstPct, setGstPct] = useState("18");
   const [preTax, setPreTax] = useState(false);

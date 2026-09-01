@@ -5,7 +5,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
 import { getApiHost, readErrorDetail } from "@/lib/api";
-import { authHeaders, formatLabel } from "@/lib/siteflow";
+import { authHeaders, formatLabel, todayLocalISO, toLocalISODate } from "@/lib/siteflow";
 import Icon from "@/components/marketing/Icon";
 import { isMissingOrDemoTenant, redirectToLogin } from "@/lib/company-guard";
 import PageShell from "@/components/layout/PageShell";
@@ -114,7 +114,7 @@ export default function SubconPage() {
   const [loading, setLoading] = useState(false);
 
   // Attendance state
-  const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split("T")[0]);
+  const [attendanceDate, setAttendanceDate] = useState(todayLocalISO());
   const [attendanceLogs, setAttendanceLogs] = useState<AttendanceLog[]>([]);
   const [attendanceLoading, setAttendanceLoading] = useState(false);
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
@@ -156,7 +156,7 @@ export default function SubconPage() {
   }>({
     woNumber: "",
     partyId: "",
-    date: new Date().toISOString().split("T")[0],
+    date: todayLocalISO(),
     terms: "",
     items: [{ referenceType: "boq", boq_item_id: "", task_id: "", quantity: 1, rate: 0 }],
   });
@@ -437,7 +437,7 @@ export default function SubconPage() {
     setWoForm({
       woNumber: "",
       partyId: "",
-      date: new Date().toISOString().split("T")[0],
+      date: todayLocalISO(),
       terms: defaultSubconTerms,
       items: [{ referenceType: "boq", boq_item_id: "", task_id: "", quantity: 1, rate: 0 }],
     });
@@ -459,7 +459,7 @@ export default function SubconPage() {
     setWoForm({
       woNumber: wo.woNumber,
       partyId: wo.subcontractorId || "",
-      date: wo.woDate ? new Date(wo.woDate).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+      date: wo.woDate ? toLocalISODate(wo.woDate) : todayLocalISO(),
       terms: wo.terms ?? defaultSubconTerms,
       items,
     });
@@ -540,7 +540,7 @@ export default function SubconPage() {
       setWoForm({
         woNumber: "",
         partyId: "",
-        date: new Date().toISOString().split("T")[0],
+        date: todayLocalISO(),
         terms: defaultSubconTerms,
         items: [{ referenceType: "boq", boq_item_id: "", task_id: "", quantity: 1, rate: 0 }],
       });

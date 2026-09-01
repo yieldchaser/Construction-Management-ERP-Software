@@ -262,7 +262,7 @@ export default function ThreeWayPage() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-xs font-medium text-muted mb-1">Purchase Order</label>
-                  <select required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.po_id} onChange={(e) => setForm({...form, po_id: e.target.value})}>
+                  <select required className="w-full bg-input border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.po_id} onChange={(e) => setForm({...form, po_id: e.target.value})}>
                     <option value="">Select PO</option>
                     {pos.map((p) => <option key={p.id} value={p.id}>{p.po_number} — {fmtINR(p.total_amount)}</option>)}
                   </select>
@@ -272,7 +272,7 @@ export default function ThreeWayPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-muted mb-1">Goods Receipt Note</label>
-                  <select required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.grn_id} onChange={(e) => setForm({...form, grn_id: e.target.value})}>
+                  <select required className="w-full bg-input border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.grn_id} onChange={(e) => setForm({...form, grn_id: e.target.value})}>
                     <option value="">Select GRN</option>
                     {grns.map((g) => <option key={g.id} value={g.id}>{g.grn_number}</option>)}
                   </select>
@@ -282,7 +282,7 @@ export default function ThreeWayPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-muted mb-1">Vendor Bill</label>
-                  <select required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.invoice_id} onChange={(e) => setForm({...form, invoice_id: e.target.value})}>
+                  <select required className="w-full bg-input border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.invoice_id} onChange={(e) => setForm({...form, invoice_id: e.target.value})}>
                     <option value="">Select bill</option>
                     {bills.map((b) => <option key={b.id} value={b.id}>{b.invoice_number} — {fmtINR(b.total_payable)}</option>)}
                   </select>
@@ -295,11 +295,11 @@ export default function ThreeWayPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-muted mb-1">Variance Reason (if any)</label>
-                  <textarea className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.variance_reason} onChange={(e) => setForm({...form, variance_reason: e.target.value})} />
+                  <textarea className="w-full bg-input border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.variance_reason} onChange={(e) => setForm({...form, variance_reason: e.target.value})} />
                 </div>
                 <div className="flex gap-3 pt-2">
                   <button type="submit" className="flex-1 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-md text-sm font-semibold">Create Match</button>
-                  <button type="button" onClick={() => { setShowModal(false); setMessage(""); }} className="px-4 py-2 bg-white/10 hover:bg-elevated text-foreground rounded-md text-sm font-semibold">Cancel</button>
+                  <button type="button" onClick={() => { setShowModal(false); setMessage(""); }} className="px-4 py-2 bg-elevated border border-border-custom hover:bg-card text-foreground rounded-md text-sm font-semibold">Cancel</button>
                 </div>
               </form>
             </div>

@@ -1,6 +1,6 @@
 "use client";
 import {  getApiHost , readErrorDetail } from "@/lib/api";
-import { authHeaders, formatLabel } from "@/lib/siteflow";
+import { authHeaders, formatLabel, toLocalISODate } from "@/lib/siteflow";
 
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
@@ -839,7 +839,7 @@ export default function GanttSchedulerPage() {
                         <input
                           type="date"
                           required
-                          value={editingMilestone.milestone_date ? new Date(editingMilestone.milestone_date).toISOString().split("T")[0] : ""}
+                          value={editingMilestone.milestone_date ? toLocalISODate(editingMilestone.milestone_date) : ""}
                           onChange={(e) => setEditingMilestone({ ...editingMilestone, milestone_date: e.target.value })}
                           className="w-full bg-elevated border border-border-custom rounded-lg p-2 text-foreground focus:outline-none"
                         />

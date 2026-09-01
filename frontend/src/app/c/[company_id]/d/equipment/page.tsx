@@ -1,7 +1,7 @@
 "use client";
 import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import {  getApiHost , readErrorDetail } from "@/lib/api";
-import { authHeaders, downloadWithAuth, formatDate, formatLabel } from "@/lib/siteflow";
+import { authHeaders, downloadWithAuth, formatDate, formatLabel, toLocalISODate } from "@/lib/siteflow";
 
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
@@ -573,7 +573,7 @@ export default function EquipmentTrackingPage() {
                     const durationHrs = (endDt.getTime() - startDt.getTime()) / 3600000;
                     const costForRun  = eq ? durationHrs * eq.hourly_rate : null;
                     // Grab matching fuel log for that day
-                    const dayStr = startDt.toISOString().split('T')[0];
+                    const dayStr = toLocalISODate(startDt);
                     const fuelForRun = fuelLogs
                       .filter(f => f.equipment_id === d.equipment_id && f.logged_date.startsWith(dayStr))
                       .reduce((s, f) => s + f.liters, 0);

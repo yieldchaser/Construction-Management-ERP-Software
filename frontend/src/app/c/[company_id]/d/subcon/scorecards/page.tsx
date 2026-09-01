@@ -49,7 +49,10 @@ export default function SubconScorecardsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = async () => {
-    if (!projectId) return;
+    if (!projectId) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {

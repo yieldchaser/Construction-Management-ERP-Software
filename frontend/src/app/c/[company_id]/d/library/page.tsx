@@ -666,6 +666,34 @@ export default function LibraryHubPage() {
     return formatDate(parsedDate, "-");
   };
 
+  const openNewItemDrawer = (tab?: LibraryType) => {
+    const targetTab = tab || activeTab;
+    setEditingId(null);
+    if (targetTab === "party" || targetTab === "party-balances") {
+      resetPartyForm();
+      setIsPartyDrawerOpen(true);
+    } else if (targetTab === "material") {
+      setMatName("");
+      setMatHsn("");
+      setMatCode("");
+      setMatSpecs("");
+      setMatAltUnit("");
+      setIsMaterialDrawerOpen(true);
+    } else if (targetTab === "rate") {
+      setRateName("");
+      setRateCode("");
+      setRateNote("");
+      setRateCostCode("");
+      setRateHsn("");
+      setIsRateDrawerOpen(true);
+    } else {
+      setSimpleName("");
+      setSimpleCode("");
+      setSimpleSubCode("");
+      setIsSimpleDrawerOpen(true);
+    }
+  };
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <PageHeader
@@ -673,32 +701,7 @@ export default function LibraryHubPage() {
         subtitle="Manage global templates and codes shared across all project locations."
       >
         <button
-          onClick={() => {
-            setEditingId(null);
-            if (activeTab === "party") {
-              resetPartyForm();
-              setIsPartyDrawerOpen(true);
-            } else if (activeTab === "material") {
-              setMatName("");
-              setMatHsn("");
-              setMatCode("");
-              setMatSpecs("");
-              setMatAltUnit("");
-              setIsMaterialDrawerOpen(true);
-            } else if (activeTab === "rate") {
-              setRateName("");
-              setRateCode("");
-              setRateNote("");
-              setRateCostCode("");
-              setRateHsn("");
-              setIsRateDrawerOpen(true);
-            } else {
-              setSimpleName("");
-              setSimpleCode("");
-              setSimpleSubCode("");
-              setIsSimpleDrawerOpen(true);
-            }
-          }}
+          onClick={() => openNewItemDrawer()}
           className="px-3.5 py-1.5 bg-primary hover:bg-primary/95 text-white rounded-lg text-xs font-bold transition-all cursor-pointer"
         >
           {activeTab === "todo" ? "+ Add To Do" : "+ Add to Library"}
@@ -794,7 +797,16 @@ export default function LibraryHubPage() {
               <tbody className="divide-y divide-border-custom">
                 {filteredData.length === 0 ? (
                   <tr>
-                    <td colSpan={20} className="px-6 py-12 text-center text-muted font-semibold">No parties registered in library.</td>
+                    <td colSpan={20} className="p-8">
+                      <EmptyState
+                        title="No parties registered"
+                        description="Add vendors, clients, contractors, and suppliers to your central party directory."
+                        action={{
+                          label: "+ Add Party",
+                          onClick: () => openNewItemDrawer("party"),
+                        }}
+                      />
+                    </td>
                   </tr>
                 ) : (
                   filteredData.map((item) => (
@@ -873,7 +885,28 @@ export default function LibraryHubPage() {
               <tbody className="divide-y divide-border-custom">
                 {filteredData.length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="px-6 py-12 text-center text-muted font-semibold">No items registered in library.</td>
+                    <td colSpan={3} className="p-8">
+                      <EmptyState
+                        title={`No ${activeTab === "todo" ? "to-dos" : activeTab === "asset-type" ? "asset types" : activeTab === "material-category" ? "material categories" : `${activeTab}s`} registered`}
+                        description={
+                          activeTab === "asset-type"
+                            ? "Define equipment and asset categories to organize company assets."
+                            : activeTab === "deduction"
+                            ? "Configure standard deduction types applicable to subcontractor and client billing."
+                            : activeTab === "progress"
+                            ? "Set up milestone progress tracking categories for your projects."
+                            : activeTab === "retention"
+                            ? "Configure retention percentages and release conditions for contracts."
+                            : activeTab === "material-category"
+                            ? "Group materials into structured categories for streamlined procurement."
+                            : "Create recurring checklist templates and task presets for project teams."
+                        }
+                        action={{
+                          label: activeTab === "todo" ? "+ Add To Do" : activeTab === "material-category" ? "+ Add Category" : `+ Add ${TAB_TITLES[activeTab] || "Item"}`,
+                          onClick: () => openNewItemDrawer(activeTab),
+                        }}
+                      />
+                    </td>
                   </tr>
                 ) : (
                   filteredData.map((item) => (
@@ -920,7 +953,16 @@ export default function LibraryHubPage() {
               <tbody className="divide-y divide-border-custom">
                 {filteredData.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-muted font-semibold">No workforces registered in library.</td>
+                    <td colSpan={5} className="p-8">
+                      <EmptyState
+                        title="No workforces registered"
+                        description="Add standard workforce categories, shift durations, and shift salary rates."
+                        action={{
+                          label: "+ Add Workforce",
+                          onClick: () => openNewItemDrawer("workforce"),
+                        }}
+                      />
+                    </td>
                   </tr>
                 ) : (
                   filteredData.map((item) => (
@@ -966,7 +1008,16 @@ export default function LibraryHubPage() {
               <tbody className="divide-y divide-border-custom">
                 {filteredData.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-muted font-semibold">No cost codes registered in library.</td>
+                    <td colSpan={5} className="p-8">
+                      <EmptyState
+                        title="No cost codes registered"
+                        description="Add standard cost codes and sub cost codes to track project expenditures."
+                        action={{
+                          label: "+ Add Cost Code",
+                          onClick: () => openNewItemDrawer("cost-code"),
+                        }}
+                      />
+                    </td>
                   </tr>
                 ) : (
                   filteredData.map((item) => (
@@ -1189,7 +1240,16 @@ export default function LibraryHubPage() {
                 <tbody className="divide-y divide-border-custom">
                   {filteredData.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-6 py-12 text-center text-muted font-semibold">No party balances recorded.</td>
+                      <td colSpan={5} className="p-8">
+                        <EmptyState
+                          title="No party balances recorded"
+                          description="Track advance payments and pending balances across all registered parties."
+                          action={{
+                            label: "+ Add Party",
+                            onClick: () => openNewItemDrawer("party"),
+                          }}
+                        />
+                      </td>
                     </tr>
                   ) : (
                     filteredData.map((item) => (

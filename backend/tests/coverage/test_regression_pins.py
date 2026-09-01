@@ -160,7 +160,7 @@ def test_pin_R2_014_flush_queue_honest_counts():
 
 def test_pin_R2_107_dates_default_to_today():
     src = _read_frontend("src/app/c/[company_id]/d/attendance/page.tsx")
-    assert 'useState(new Date().toISOString().split("T")[0])' in src, "R2-107 today default regressed"
+    assert 'useState(todayLocalISO())' in src or 'useState(new Date().toISOString().split("T")[0])' in src, "R2-107 today default regressed"
 
 
 def test_pin_R2_107_no_frozen_dates_in_project_attendance():

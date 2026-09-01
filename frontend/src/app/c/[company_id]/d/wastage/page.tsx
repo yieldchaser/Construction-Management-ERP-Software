@@ -201,12 +201,12 @@ export default function WastagePage() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-xs font-medium text-muted mb-1">Material Name</label>
-                  <input type="text" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.material_name} onChange={(e) => setForm({...form, material_name: e.target.value})} />
+                  <input type="text" required className="w-full bg-input border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.material_name} onChange={(e) => setForm({...form, material_name: e.target.value})} />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-muted mb-1">Type</label>
-                    <select className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.wastage_type} onChange={(e) => setForm({...form, wastage_type: e.target.value})}>
+                    <select className="w-full bg-input border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.wastage_type} onChange={(e) => setForm({...form, wastage_type: e.target.value})}>
                       <option value="scrap">Scrap</option>
                       <option value="offcut">Offcut</option>
                       <option value="damaged">Damaged</option>
@@ -216,26 +216,26 @@ export default function WastagePage() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-muted mb-1">Quantity</label>
-                    <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.quantity} onChange={(e) => setForm({...form, quantity: parseFloat(e.target.value)})} />
+                    <input type="number" required className="w-full bg-input border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.quantity} onChange={(e) => setForm({...form, quantity: parseFloat(e.target.value)})} />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-muted mb-1">Unit</label>
-                    <input type="text" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.unit} onChange={(e) => setForm({...form, unit: e.target.value})} />
+                    <input type="text" required className="w-full bg-input border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.unit} onChange={(e) => setForm({...form, unit: e.target.value})} />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-muted mb-1">Est. Value (₹)</label>
-                    <input type="number" required className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.estimated_value} onChange={(e) => setForm({...form, estimated_value: parseFloat(e.target.value)})} />
+                    <input type="number" required className="w-full bg-input border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.estimated_value} onChange={(e) => setForm({...form, estimated_value: parseFloat(e.target.value)})} />
                   </div>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-muted mb-1">Reason</label>
-                  <textarea className="w-full bg-white/5 border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.reason} onChange={(e) => setForm({...form, reason: e.target.value})} />
+                  <textarea className="w-full bg-input border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.reason} onChange={(e) => setForm({...form, reason: e.target.value})} />
                 </div>
                 <div className="flex gap-3 pt-2">
                   <button type="submit" className="flex-1 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-md text-sm font-semibold">Record Wastage</button>
-                  <button type="button" onClick={() => { setShowModal(false); setMessage(""); }} className="px-4 py-2 bg-white/10 hover:bg-elevated text-foreground rounded-md text-sm font-semibold">Cancel</button>
+                  <button type="button" onClick={() => { setShowModal(false); setMessage(""); }} className="px-4 py-2 bg-elevated border border-border-custom hover:bg-card text-foreground rounded-md text-sm font-semibold">Cancel</button>
                 </div>
               </form>
             </div>

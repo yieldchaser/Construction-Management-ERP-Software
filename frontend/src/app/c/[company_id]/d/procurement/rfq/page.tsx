@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
 import { getApiHost, readErrorDetail } from "@/lib/api";
-import { authHeaders, formatDate, formatLabel } from "@/lib/siteflow";
+import { authHeaders, formatDate, formatLabel, toLocalISODate } from "@/lib/siteflow";
 import { UNITS } from "@/lib/units";
 import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import FieldHint from "@/components/ui/FieldHint";
@@ -103,7 +103,7 @@ export default function RFQPage() {
   // Form State: Create RFQ
   const [newRfqNum, setNewRfqNum] = useState("");
   const [newValidUntil, setNewValidUntil] = useState(
-    new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
+    toLocalISODate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000))
   );
   const [newNotes, setNewNotes] = useState("");
   const [newItems, setNewItems] = useState<NewRFQItemForm[]>([

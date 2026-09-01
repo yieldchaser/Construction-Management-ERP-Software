@@ -1,7 +1,7 @@
 "use client";
 import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import { getApiHost } from "@/lib/api";
-import { authHeaders } from "@/lib/siteflow";
+import { authHeaders, todayLocalISO } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
@@ -44,7 +44,7 @@ export default function FaceRecognitionPage() {
   const [logs, setLogs] = useState<FaceLog[]>([]);
   const [summary, setSummary] = useState<DailySummary[]>([]);
   const [loadError, setLoadError] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
+  const [selectedDate, setSelectedDate] = useState(todayLocalISO());
   const [view, setView] = useState<"logs" | "summary">("logs");
 
   const fetchLogs = async () => {

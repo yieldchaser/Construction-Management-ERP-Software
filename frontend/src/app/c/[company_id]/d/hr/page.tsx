@@ -1,7 +1,7 @@
 "use client";
 import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import {  getApiHost , readErrorDetail } from "@/lib/api";
-import { getApi, authHeaders, resolveCompanyId, formatDate, formatLabel } from "@/lib/siteflow";
+import { getApi, authHeaders, resolveCompanyId, formatDate, formatLabel, todayLocalISO, toLocalISODate } from "@/lib/siteflow";
 
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
@@ -179,7 +179,7 @@ export default function HRPayrollPage() {
   const [showNewTimesheetDrawer, setShowNewTimesheetDrawer] = useState(false);
   const [timesheetForm, setTimesheetForm] = useState({
     employeeId: "",
-    date: new Date().toISOString().split("T")[0],
+    date: todayLocalISO(),
     startTime: "09:00",
     endTime: "17:00",
     taskId: "",
@@ -278,8 +278,8 @@ export default function HRPayrollPage() {
       console.error("Failed to fetch project tasks", e);
     }
   };
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
-  const [payrollMonth, setPayrollMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [selectedDate, setSelectedDate] = useState(todayLocalISO());
+  const [payrollMonth, setPayrollMonth] = useState(todayLocalISO().slice(0, 7));
   const [daysInMonth, setDaysInMonth] = useState(26);
   const [payrollRun, setPayrollRun] = useState<PayrollRun | null>(null);
   const [showAddEmp, setShowAddEmp] = useState(false);
@@ -301,7 +301,7 @@ export default function HRPayrollPage() {
     hra: "3600",
     allowances: "1800",
     tds: "0",
-    joined: new Date().toISOString().split("T")[0]
+    joined: todayLocalISO()
   });
 
   const fetchEmployees = async () => {
@@ -554,7 +554,7 @@ export default function HRPayrollPage() {
           hra: "3600",
           allowances: "1800",
           tds: "0",
-          joined: new Date().toISOString().split("T")[0]
+          joined: todayLocalISO()
         });
       } else {
         const err = await readErrorDetail(res);
@@ -714,8 +714,8 @@ export default function HRPayrollPage() {
       const sunday = new Date(monday);
       sunday.setDate(monday.getDate() + 6);
       
-      const weekStartStr = monday.toISOString().split("T")[0] + "T00:00:00Z";
-      const weekEndStr = sunday.toISOString().split("T")[0] + "T23:59:59Z";
+      const weekStartStr = toLocalISODate(monday) + "T00:00:00Z";
+      const weekEndStr = toLocalISODate(sunday) + "T23:59:59Z";
       
       // Post Timesheet Header
       const tsHeaderRes = await fetch(`${getApiHost()}/apis/v3/hr/timesheets`, {
