@@ -5,7 +5,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
 import { getApiHost, readErrorDetail } from "@/lib/api";
-import { authHeaders, formatLabel, todayLocalISO, toLocalISODate } from "@/lib/siteflow";
+import { authHeaders, formatLabel, todayLocalISO, toLocalISODate, formatDate } from "@/lib/siteflow";
 import Icon from "@/components/marketing/Icon";
 import { isMissingOrDemoTenant, redirectToLogin } from "@/lib/company-guard";
 import PageShell from "@/components/layout/PageShell";
@@ -952,7 +952,7 @@ export default function SubconPage() {
                       <tr key={sc.id} className="hover:bg-elevated/40 transition-colors">
                         <td className="px-4 py-3 font-semibold text-foreground">{sc.subcontractor_name || "Subcontractor"}</td>
                         <td className="px-4 py-3 text-muted">
-                          {sc.period_start ? sc.period_start.split("T")[0] : ""} → {sc.period_end ? sc.period_end.split("T")[0] : ""}
+                          {sc.period_start ? formatDate(sc.period_start) : ""} → {sc.period_end ? formatDate(sc.period_end) : ""}
                         </td>
                         <td className="px-4 py-3 text-right font-sans font-bold text-foreground">
                           <span className="bg-primary/10 border border-primary/20 text-primary px-2 py-0.5 rounded">

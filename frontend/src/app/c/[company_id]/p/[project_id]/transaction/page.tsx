@@ -3,7 +3,7 @@ import Badge, { type BadgeTone } from "@/components/ui/Badge";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import { getApi, authHeaders, fmtINR, formatLabel, todayLocalISO } from "@/lib/siteflow";
+import { getApi, authHeaders, fmtINR, formatLabel, todayLocalISO, formatDate } from "@/lib/siteflow";
 import { readErrorDetail } from "@/lib/api";
 import { useCompanySettings } from "@/context/CompanySettingsContext";
 import ZatcaInvoicePanel from "@/components/ZatcaInvoicePanel";
@@ -423,7 +423,7 @@ export default function TransactionPage() {
             )}
             {!loading && filtered.map((r) => (
               <tr key={`${r.kind}-${r.id}`} className="border-t border-border-custom hover:bg-elevated/50">
-                <td className="px-4 py-3 text-muted whitespace-nowrap">{r.date ? r.date.slice(0, 10) : "—"}</td>
+                <td className="px-4 py-3 text-muted whitespace-nowrap">{r.date ? formatDate(r.date) : "—"}</td>
                 <td className="px-4 py-3">
                   <Badge tone="primary">{r.type.replace(/_/g, " ")}</Badge>
                 </td>

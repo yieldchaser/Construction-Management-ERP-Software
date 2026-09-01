@@ -1,6 +1,6 @@
 "use client";
 import {  getApiHost , readErrorDetail } from "@/lib/api";
-import { authHeaders, formatLabel, toLocalISODate } from "@/lib/siteflow";
+import { authHeaders, formatLabel, toLocalISODate, formatDate } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Icon, { type IconName } from "@/components/marketing/Icon";
@@ -643,7 +643,7 @@ isCode: cl.is_code_reference || "—",
                             <tr key={insp.id} className="border-b border-border-custom hover:bg-elevated transition-all">
                               <td className="px-5 py-3 font-bold text-foreground">{insp.zone}</td>
                               <td className="px-5 py-3 text-muted">{insp.checklist}</td>
-                              <td className="px-5 py-3 text-muted">{insp.date}</td>
+                              <td className="px-5 py-3 text-muted">{formatDate(insp.date)}</td>
                               <td className="px-5 py-3 text-muted">{insp.inspector}</td>
                               <td className="px-5 py-3">
                                 <div className="flex items-center gap-3">
@@ -858,7 +858,7 @@ isCode: cl.is_code_reference || "—",
                         <td className="px-4 py-3 font-semibold text-foreground">{t.type}</td>
                         <td className="px-4 py-3 text-muted">{t.material}</td>
                         <td className="px-4 py-3 font-sans text-muted text-[10px]">{t.sampleRef}</td>
-                        <td className="px-4 py-3 text-muted">{t.date}</td>
+                        <td className="px-4 py-3 text-muted">{formatDate(t.date)}</td>
                         <td className="px-4 py-3">
                           <span className={`font-bold text-sm ${t.pass == null ? "text-muted" : t.pass ? "text-success" : "text-danger"}`}>
                             {t.value} {t.unit}
@@ -892,7 +892,7 @@ isCode: cl.is_code_reference || "—",
             <div className="flex items-center justify-between mb-5">
               <div>
                 <h2 className="font-bold text-foreground">{selectedInspection.zone}</h2>
-                <p className="text-xs text-muted">{selectedInspection.checklist} · {selectedInspection.date}</p>
+                <p className="text-xs text-muted">{selectedInspection.checklist} · {formatDate(selectedInspection.date)}</p>
               </div>
               <button onClick={() => setSelectedInspection(null)} className="text-muted hover:text-foreground cursor-pointer"><Icon name="close" className="w-5 h-5" /></button>
             </div>
@@ -1085,7 +1085,7 @@ isCode: cl.is_code_reference || "—",
                   <option value="">General NCR / Not Linked to Inspection</option>
                   {inspections.map((insp) => (
                     <option key={insp.id} value={insp.id}>
-                      {insp.checklist} ({insp.zone || "No Zone"}) - {insp.status.toUpperCase()} ({insp.date})
+                      {insp.checklist} ({insp.zone || "No Zone"}) - {insp.status.toUpperCase()} ({formatDate(insp.date)})
                     </option>
                   ))}
                 </select>

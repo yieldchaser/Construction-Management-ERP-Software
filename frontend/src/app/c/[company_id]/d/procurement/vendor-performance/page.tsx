@@ -110,7 +110,7 @@ export default function VendorPerformancePage() {
                 title="No project selected"
                 description='No active projects. Click "+ New Project" to create one.'
                 action={{
-                  label: "+ New Project",
+                  label: "New Project",
                   href: `/c/${companyId}/projects`,
                   icon: "add",
                 }}

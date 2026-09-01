@@ -168,7 +168,7 @@ export default function TowersPage() {
                 title="No project selected"
                 description='No active projects. Click "+ New Project" to create one.'
                 action={{
-                  label: "+ New Project",
+                  label: "New Project",
                   href: `/c/${companyId}/projects`,
                   icon: "add",
                 }}
@@ -193,7 +193,7 @@ export default function TowersPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[10px]">
                         <div><span className="text-muted block">Budget</span><span className="text-foreground font-sans font-bold">₹{fmt(t.budget)}</span></div>
                         <div><span className="text-muted block">Start</span><span className="text-foreground font-sans">{formatDate(t.start_date)}</span></div>
-                        <div><span className="text-muted block">End</span><span className="text-foreground font-sans">{t.end_date ? t.end_date.split("T")[0] : "-"}</span></div>
+                        <div><span className="text-muted block">End</span><span className="text-foreground font-sans">{formatDate(t.end_date, "-")}</span></div>
                       </div>
                     </div>
                   ))}

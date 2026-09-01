@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import { getApi, authHeaders, resolveCompanyId, fmtINR, formatLabel, toLocalISODate, todayLocalISO } from "@/lib/siteflow";
+import { getApi, authHeaders, resolveCompanyId, fmtINR, formatLabel, toLocalISODate, todayLocalISO, formatDate } from "@/lib/siteflow";
 import { useProject } from "@/context/ProjectContext";
 import { useCompanySettings } from "@/context/CompanySettingsContext";
 import PageShell from "@/components/layout/PageShell";
@@ -1360,10 +1360,10 @@ function TeamLeavesTab({ companyId }: { companyId: string }) {
               <tr key={l.id} className="border-t border-border-custom">
                 <td className="px-3 py-2 font-medium text-foreground">{l.employee_name}</td>
                 <td className="px-3 py-2 text-muted">{formatLabel(l.leave_type)}</td>
-                <td className="px-3 py-2 text-muted">{l.start_date.slice(0, 10)}</td>
-                <td className="px-3 py-2 text-muted">{l.end_date.slice(0, 10)}</td>
+                <td className="px-3 py-2 text-muted">{formatDate(l.start_date)}</td>
+                <td className="px-3 py-2 text-muted">{formatDate(l.end_date)}</td>
                 <td className="px-3 py-2 text-muted">{l.days_count}</td>
-                <td className="px-3 py-2 text-muted">{l.applied_on.slice(0, 10)}</td>
+                <td className="px-3 py-2 text-muted">{formatDate(l.applied_on)}</td>
                 <td className="px-3 py-2 text-muted">{formatLabel(l.status)}</td>
                 <td className="px-3 py-2">
                   {l.status === "Pending" && (
@@ -1501,8 +1501,8 @@ function MyLeavesTab({
             {myLeaves.map((l) => (
               <tr key={l.id} className="border-t border-border-custom">
                 <td className="px-3 py-2 text-foreground">{formatLabel(l.leave_type)}</td>
-                <td className="px-3 py-2 text-muted">{l.start_date.slice(0, 10)}</td>
-                <td className="px-3 py-2 text-muted">{l.end_date.slice(0, 10)}</td>
+                <td className="px-3 py-2 text-muted">{formatDate(l.start_date)}</td>
+                <td className="px-3 py-2 text-muted">{formatDate(l.end_date)}</td>
                 <td className="px-3 py-2 text-muted">{l.days_count}</td>
                 <td className="px-3 py-2 text-muted">{formatLabel(l.status)}</td>
               </tr>
@@ -1581,7 +1581,7 @@ function HolidaysTab({ companyId }: { companyId: string }) {
             {holidays.map((h) => (
               <tr key={h.id} className="border-t border-border-custom">
                 <td className="px-3 py-2 font-medium text-foreground">{h.name}</td>
-                <td className="px-3 py-2 text-muted">{h.date.slice(0, 10)}</td>
+                <td className="px-3 py-2 text-muted">{formatDate(h.date)}</td>
                 <td className="px-3 py-2 text-muted">{dayName(h.date.slice(0, 10))}</td>
               </tr>
             ))}

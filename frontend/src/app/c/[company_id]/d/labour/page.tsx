@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
 import {  getApiHost , readErrorDetail } from "@/lib/api";
-import { authHeaders, todayLocalISO } from "@/lib/siteflow";
+import { authHeaders, todayLocalISO, formatDate } from "@/lib/siteflow";
 import SegmentedTabs from "@/components/ui/Tabs";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
@@ -193,7 +193,7 @@ export default function LabourPage() {
                     <div className="flex items-start justify-between">
                       <div>
                         <h3 className="text-sm font-bold text-foreground">{r.contractor_name}</h3>
-                        <p className="text-[10px] text-muted">{r.period_start?.split("T")[0]} – {r.period_end?.split("T")[0]}</p>
+                        <p className="text-[10px] text-muted">{formatDate(r.period_start)} – {formatDate(r.period_end)}</p>
                       </div>
                       <div className="text-right">
                         <span className={`text-3xl font-extrabold ${scoreColor}`}>{reliabilityScore}%</span>

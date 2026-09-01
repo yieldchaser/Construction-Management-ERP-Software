@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import { getApi, authHeaders, formatLabel } from "@/lib/siteflow";
+import { getApi, authHeaders, formatLabel, formatDate } from "@/lib/siteflow";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import { TableSkeleton } from "@/components/ui/Skeleton";
@@ -22,8 +22,6 @@ type Task = {
 const DAY = 86400000;
 const daysBetween = (a: Date, b: Date) => Math.floor((b.getTime() - a.getTime()) / DAY);
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
-const fmtDate = (d: Date) =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
 // Real schedule math — no faked values.
 function compute(task: Task, today: Date) {
@@ -43,7 +41,7 @@ function compute(task: Task, today: Date) {
   // Forecast End: extrapolate remaining % at the realized progress rate.
   let forecast: string;
   if (task.status === "completed") {
-    forecast = fmtDate(end);
+    forecast = formatDate(end);
   } else if (actualPct <= 0 || elapsed <= 0) {
     forecast = "Insufficient data";
   } else {
@@ -52,7 +50,7 @@ function compute(task: Task, today: Date) {
       forecast = "Insufficient data";
     } else {
       const remainingDays = (100 - actualPct) / ratePerDay;
-      forecast = fmtDate(new Date(today.getTime() + remainingDays * DAY));
+      forecast = formatDate(new Date(today.getTime() + remainingDays * DAY));
     }
   }
 
@@ -215,7 +213,7 @@ export default function TaskPage() {
             {!loading && rows.map((r) => (
               <tr key={r.task.id} className="border-t border-border-custom hover:bg-elevated/50">
                 <td className="px-4 py-3 text-foreground font-medium">{r.task.name}</td>
-                <td className="px-4 py-3 text-muted whitespace-nowrap">{fmtDate(r.start)} → {fmtDate(r.end)}</td>
+                <td className="px-4 py-3 text-muted whitespace-nowrap">{formatDate(r.start)} → {formatDate(r.end)}</td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     <input

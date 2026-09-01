@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
 import {  getApiHost , readErrorDetail } from "@/lib/api";
-import { authHeaders } from "@/lib/siteflow";
+import { authHeaders, formatDate } from "@/lib/siteflow";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -117,7 +117,7 @@ export default function WOAmendmentsPage({ params }: { params: { wo_id: string }
                   <div className="flex items-start justify-between">
                     <div>
                       <span className="text-xs font-bold text-secondary">Amendment #{am.amendment_number}</span>
-                      <span className="text-[10px] text-muted ml-2">{am.amended_at?.split("T")[0]}</span>
+                      <span className="text-[10px] text-muted ml-2">{formatDate(am.amended_at)}</span>
                     </div>
                     <span className="text-[10px] text-muted">{am.amended_by || "—"}</span>
                   </div>

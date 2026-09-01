@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
 import { getApiHost } from "@/lib/api";
-import { authHeaders } from "@/lib/siteflow";
+import { authHeaders, formatDate } from "@/lib/siteflow";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -108,7 +108,7 @@ export default function SubconScorecardsPage() {
                 title="No project selected"
                 description='No active projects. Click "+ New Project" to create one.'
                 action={{
-                  label: "+ New Project",
+                  label: "New Project",
                   href: `/c/${companyId}/projects`,
                   icon: "add",
                 }}
@@ -189,7 +189,7 @@ export default function SubconScorecardsPage() {
                     return (
                       <tr key={sc.id} className="border-b border-border-custom hover:bg-elevated transition-all">
                         <td className="px-5 py-3.5 text-foreground font-semibold">{sc.subcontractor_name}</td>
-                        <td className="px-5 py-3.5 text-muted">{sc.period_start?.split("T")[0]} to {sc.period_end?.split("T")[0]}</td>
+                        <td className="px-5 py-3.5 text-muted">{formatDate(sc.period_start)} to {formatDate(sc.period_end)}</td>
                         <td className="px-5 py-3.5 text-right font-sans font-bold text-success">{fmt(sc.on_time_pct)}</td>
                         <td className="px-5 py-3.5 text-right font-sans font-bold text-info">{fmt(sc.billing_accuracy_pct)}</td>
                         <td className="px-5 py-3.5 text-right font-sans font-bold text-secondary">{fmt(sc.quality_score)}</td>

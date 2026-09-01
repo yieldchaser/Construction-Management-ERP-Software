@@ -325,11 +325,13 @@ export default function BOQPage() {
     <div className="flex-1 flex flex-col overflow-hidden">
       <PageHeader
         title={tab === "boq" ? "Bill of Quantities (BOQ)" : tab === "variance" ? "Budget vs Actual Variance" : "Budget Revisions"}
-        subtitle={`Total Budget: ${fmt(totalBudget)} · Spent: ${fmt(totalActual)}`}
+        subtitle={!projectId || boqItems.length === 0 ? "Track itemized quantities, unit rates, and budget variances." : `Total Budget: ${fmt(totalBudget)} · Spent: ${fmt(totalActual)}`}
       >
         <div className="flex items-center gap-3">
           {/* KPI pill */}
-          <Badge tone={overallPct > 10 ? "danger" : overallPct > 0 ? "warning" : "success"} className="font-bold">{overallPct > 0 ? "+" : ""}{overallPct.toFixed(1)}% overall variance</Badge>
+          {projectId && boqItems.length > 0 && (
+            <Badge tone={overallPct > 10 ? "danger" : overallPct > 0 ? "warning" : "success"} className="font-bold">{overallPct > 0 ? "+" : ""}{overallPct.toFixed(1)}% overall variance</Badge>
+          )}
           {/* Import trigger */}
           <label className="px-3.5 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:opacity-90 cursor-pointer transition-all inline-flex items-center gap-1.5">
             <Icon name="arrow_up" className="w-3.5 h-3.5" /> Import Excel
@@ -448,63 +450,85 @@ export default function BOQPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {Object.entries(groupedFiltered).map(([section, items]) => {
-                      const secBudget = items.reduce((s, i) => s + i.amount, 0);
-                      const secActual = items.reduce((s, i) => s + i.actual_spent, 0);
-                      const sColor = SECTION_COLORS[section] ?? "bg-elevated text-muted border-border-custom";
-                      return (
-                        <React.Fragment key={section}>
-                          {/* Section header */}
-                          <tr className="border-b border-border-custom">
-                            <td colSpan={9} className="py-2 pl-5 bg-elevated">
-                              <div className="flex items-center gap-3">
-                                <span className={`text-[9px] font-bold px-2 py-0.5 rounded border ${sColor}`}>{section}</span>
-                                <span className="text-[10px] text-muted">Budget: {fmt(secBudget)} · Actual: {fmt(secActual)}</span>
-                              </div>
-                            </td>
-                          </tr>
-                          {/* Items */}
-                          {items.map(item => {
-                            const vPct = varPct(item.amount, item.actual_spent);
-                            const vAmt = item.actual_spent - item.amount;
-                            const sb = statusBadge(vPct);
-                            return (
-                              <tr key={item.id} className="border-b border-border-custom hover:bg-elevated transition-colors">
-                                <td className="py-3 pl-5 pr-3 font-sans text-muted">{item.costCode}</td>
-                                <td className="py-3 pr-4 text-foreground font-medium">{item.item_name}</td>
-                                <td className="py-3 px-3 text-center text-muted">{item.unit}</td>
-                                <td className="py-3 px-3 text-right font-sans text-muted">{fmtN(item.quantity)}</td>
-                                <td className="py-3 px-3 text-right font-sans text-muted">{fmtN(item.rate)}</td>
-                                <td className="py-3 px-3 text-right font-sans font-semibold text-foreground">{fmt(item.amount)}</td>
-                                <td className="py-3 px-3 text-right font-sans font-semibold text-foreground">{fmt(item.actual_spent)}</td>
-                                <td className={`py-3 px-3 text-right font-sans font-bold ${varColor(vPct)}`}>
-                                  {vAmt >= 0 ? "+" : ""}{fmt(vAmt)}
-                                  <span className="text-[9px] ml-1 opacity-70">({vPct > 0 ? "+" : ""}{vPct.toFixed(1)}%)</span>
-                                </td>
-                                <td className="py-3 pr-5 text-center">
-                                  <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border ${sb.cls}`}>{sb.label}</span>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </React.Fragment>
-                      );
-                    })}
+                    {Object.keys(groupedFiltered).length === 0 ? (
+                      <tr>
+                        <td colSpan={9} className="p-8">
+                          <EmptyState
+                            title={!projectId ? "No active project selected" : "No BOQ items uploaded"}
+                            description={!projectId ? "Select or create a project to manage its bill of quantities." : "Upload your BOQ spreadsheet (.xlsx or .csv) or add line items manually."}
+                            action={!projectId ? {
+                              label: "View Projects",
+                              href: `/c/${companyId}/projects`,
+                              icon: "building",
+                            } : {
+                              label: "Add Item",
+                              onClick: () => setShowInlineD(true),
+                              icon: "add",
+                            }}
+                          />
+                        </td>
+                      </tr>
+                    ) : (
+                      Object.entries(groupedFiltered).map(([section, items]) => {
+                        const secBudget = items.reduce((s, i) => s + i.amount, 0);
+                        const secActual = items.reduce((s, i) => s + i.actual_spent, 0);
+                        const sColor = SECTION_COLORS[section] ?? "bg-elevated text-muted border-border-custom";
+                        return (
+                          <React.Fragment key={section}>
+                            {/* Section header */}
+                            <tr className="border-b border-border-custom">
+                              <td colSpan={9} className="py-2 pl-5 bg-elevated">
+                                <div className="flex items-center gap-3">
+                                  <span className={`text-[9px] font-bold px-2 py-0.5 rounded border ${sColor}`}>{section}</span>
+                                  <span className="text-[10px] text-muted">Budget: {fmt(secBudget)} · Actual: {fmt(secActual)}</span>
+                                </div>
+                              </td>
+                            </tr>
+                            {/* Items */}
+                            {items.map(item => {
+                              const vPct = varPct(item.amount, item.actual_spent);
+                              const vAmt = item.actual_spent - item.amount;
+                              const sb = statusBadge(vPct);
+                              return (
+                                <tr key={item.id} className="border-b border-border-custom hover:bg-elevated transition-colors">
+                                  <td className="py-3 pl-5 pr-3 font-sans text-muted">{item.costCode}</td>
+                                  <td className="py-3 pr-4 text-foreground font-medium">{item.item_name}</td>
+                                  <td className="py-3 px-3 text-center text-muted">{item.unit}</td>
+                                  <td className="py-3 px-3 text-right font-sans text-muted">{fmtN(item.quantity)}</td>
+                                  <td className="py-3 px-3 text-right font-sans text-muted">{fmtN(item.rate)}</td>
+                                  <td className="py-3 px-3 text-right font-sans font-semibold text-foreground">{fmt(item.amount)}</td>
+                                  <td className="py-3 px-3 text-right font-sans font-semibold text-foreground">{fmt(item.actual_spent)}</td>
+                                  <td className={`py-3 px-3 text-right font-sans font-bold ${varColor(vPct)}`}>
+                                    {vAmt >= 0 ? "+" : ""}{fmt(vAmt)}
+                                    <span className="text-[9px] ml-1 opacity-70">({vPct > 0 ? "+" : ""}{vPct.toFixed(1)}%)</span>
+                                  </td>
+                                  <td className="py-3 pr-5 text-center">
+                                    <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border ${sb.cls}`}>{sb.label}</span>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </React.Fragment>
+                        );
+                      })
+                    )}
                   </tbody>
-                  <tfoot className="border-t-2 border-border-custom">
-                    <tr className="bg-input">
-                      <td colSpan={5} className="py-3 pl-5 font-bold text-foreground text-xs">PROJECT TOTAL</td>
-                      <td className="py-3 px-3 text-right font-bold text-foreground font-sans">{fmt(totalBudget)}</td>
-                      <td className="py-3 px-3 text-right font-bold text-foreground font-sans">{fmt(totalActual)}</td>
-                      <td className={`py-3 px-3 text-right font-bold font-sans ${varColor(overallPct)}`}>
-                        {totalVariance >= 0 ? "+" : ""}{fmt(totalVariance)}
-                        <span className="text-[9px] ml-1 opacity-70">({overallPct > 0 ? "+" : ""}{overallPct.toFixed(1)}%)</span>
-                      </td>
-                      <td className="py-3 pr-5 text-center">
-                        <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border ${statusBadge(overallPct).cls}`}>{statusBadge(overallPct).label}</span>
-                      </td>
-                    </tr>
-                  </tfoot>
+                  {boqItems.length > 0 && (
+                    <tfoot className="border-t-2 border-border-custom">
+                      <tr className="bg-input">
+                        <td colSpan={5} className="py-3 pl-5 font-bold text-foreground text-xs">PROJECT TOTAL</td>
+                        <td className="py-3 px-3 text-right font-bold text-foreground font-sans">{fmt(totalBudget)}</td>
+                        <td className="py-3 px-3 text-right font-bold text-foreground font-sans">{fmt(totalActual)}</td>
+                        <td className={`py-3 px-3 text-right font-bold font-sans ${varColor(overallPct)}`}>
+                          {totalVariance >= 0 ? "+" : ""}{fmt(totalVariance)}
+                          <span className="text-[9px] ml-1 opacity-70">({overallPct > 0 ? "+" : ""}{overallPct.toFixed(1)}%)</span>
+                        </td>
+                        <td className="py-3 pr-5 text-center">
+                          <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border ${statusBadge(overallPct).cls}`}>{statusBadge(overallPct).label}</span>
+                        </td>
+                      </tr>
+                    </tfoot>
+                  )}
                 </table>
               </div>
             </div>
@@ -513,8 +537,24 @@ export default function BOQPage() {
           {/* ── VARIANCE TAB ── */}
           {tab === "variance" && (
             <div className="h-full overflow-y-auto p-5 space-y-4">
-              {/* KPI strip */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {!projectId || boqItems.length === 0 ? (
+                <EmptyState
+                  title={!projectId ? "No active project selected" : "No variance data available"}
+                  description={!projectId ? "Select or create a project to view budget vs actual variance analysis." : "Upload your BOQ or log project expenditures to view budget variance and cost projections."}
+                  action={!projectId ? {
+                    label: "View Projects",
+                    href: `/c/${companyId}/projects`,
+                    icon: "building",
+                  } : {
+                    label: "Add BOQ Item",
+                    onClick: () => { setTab("boq"); setShowInlineD(true); },
+                    icon: "add",
+                  }}
+                />
+              ) : (
+                <>
+                  {/* KPI strip */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 {[
                   { label: "Total Budget", value: fmt(totalBudget), sub: selectedDoc?.revised_amount != null ? "Latest applied revision" : "Original contract value", color: "text-info" },
                   { label: "Total Actual Spent", value: fmt(totalActual), sub: "As of today", color: "text-foreground" },
@@ -599,8 +639,10 @@ export default function BOQPage() {
                 </table>
                 <div className="px-5 py-2 border-t border-border-custom text-[9px] text-muted">* EAC = Estimate at Completion (extrapolated from actual spend). Assumes proportional burn rate.</div>
               </div>
-            </div>
+            </>
           )}
+        </div>
+      )}
 
           {/* ── REVISIONS TAB ── */}
           {tab === "revisions" && (

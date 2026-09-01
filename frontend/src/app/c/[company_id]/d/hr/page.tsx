@@ -1041,7 +1041,22 @@ export default function HRPayrollPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border-custom">
-                    {employees.map(emp => (
+                    {employees.length === 0 ? (
+                      <tr>
+                        <td colSpan={12} className="p-8">
+                          <EmptyState
+                            title="No employees registered"
+                            description="Add staff members and configure their salary structures, allowances, and statutory benefits."
+                            action={{
+                              label: "Add Employee",
+                              onClick: () => setShowAddEmp(true),
+                              icon: "add",
+                            }}
+                          />
+                        </td>
+                      </tr>
+                    ) : (
+                      employees.map(emp => (
                       <tr key={emp.id} className="hover:bg-elevated transition-colors cursor-pointer" onClick={() => { setSelectedEmpDetail(emp); setShowDetailsDrawer(true); }}>
                         <td className="px-3 py-2.5 font-sans text-muted">{emp.code}</td>
                         <td className="px-3 py-2.5 font-semibold text-foreground">{emp.name}</td>
@@ -1062,7 +1077,7 @@ export default function HRPayrollPage() {
                           <span className={statusBadge(emp.status)}>{formatLabel(emp.status)}</span>
                         </td>
                       </tr>
-                    ))}
+                    )))}
                   </tbody>
                 </table>
               </div>
@@ -1204,7 +1219,7 @@ export default function HRPayrollPage() {
                         {companyTimesheetEntries.map((entry) => (
                           <tr key={entry.id} className="hover:bg-elevated transition-colors">
                             <td className="px-4 py-3 font-semibold text-primary">{entry.project_name || "—"}</td>
-                            <td className="px-4 py-3 text-muted">{entry.entry_date ? entry.entry_date.split("T")[0] : "—"}</td>
+                            <td className="px-4 py-3 text-muted">{entry.entry_date ? formatDate(entry.entry_date) : "—"}</td>
                             <td className="px-4 py-3 font-semibold text-foreground">{entry.employee_name || "—"}</td>
                             <td className="px-4 py-3 font-bold font-sans text-info">{entry.hours}h</td>
                             <td className="px-4 py-3 text-muted">{entry.activity_description || "—"}</td>
