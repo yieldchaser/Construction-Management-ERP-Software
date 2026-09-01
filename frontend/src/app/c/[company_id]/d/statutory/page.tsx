@@ -164,6 +164,15 @@ function downloadCSV(filename: string, headers: string[], rows: (string | number
   URL.revokeObjectURL(url);
 }
 
+function getClosedTdsQuarterAndFy(now = new Date()): { quarter: string; fy: number } {
+  const m = now.getMonth(); // 0-indexed: 0 is Jan, 11 is Dec
+  const y = now.getFullYear();
+  if (m < 3) return { quarter: "Q3", fy: y - 1 };
+  if (m < 6) return { quarter: "Q4", fy: y - 1 };
+  if (m < 9) return { quarter: "Q1", fy: y };
+  return { quarter: "Q2", fy: y };
+}
+
 export default function StatutoryPage() {
   const params = useParams();
   const companyId = (params?.company_id as string) || "demo-company";
@@ -194,17 +203,8 @@ export default function StatutoryPage() {
     const now = new Date();
     return now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
   });
-  const [genFinancialYear, setGenFinancialYear] = useState<number>(() => {
-    const now = new Date();
-    return now.getMonth() < 3 ? now.getFullYear() - 1 : now.getFullYear();
-  });
-  const [genQuarter, setGenQuarter] = useState<string>(() => {
-    const m = new Date().getMonth();
-    if (m >= 3 && m <= 5) return "Q1";
-    if (m >= 6 && m <= 8) return "Q2";
-    if (m >= 9 && m <= 11) return "Q3";
-    return "Q4";
-  });
+  const [genFinancialYear, setGenFinancialYear] = useState<number>(() => getClosedTdsQuarterAndFy().fy);
+  const [genQuarter, setGenQuarter] = useState<string>(() => getClosedTdsQuarterAndFy().quarter);
   const [isGenerating, setIsGenerating] = useState(false);
 
   // Return Data State
