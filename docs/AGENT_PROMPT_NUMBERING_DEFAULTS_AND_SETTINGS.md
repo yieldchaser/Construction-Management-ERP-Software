@@ -373,7 +373,14 @@ a rule that only misbehaves in January will pass every check you run now. For
 anything you derive from the date, report what it produces in January and in
 December. The month picker in Group A is the one that matters.
 
-**Self test the settings sweep before you believe it.** Feed it
+**The settings sweep, so you can re-run it.** Parse the `Company` model for its
+columns. For each column, search the backend excluding `models.py`,
+`settings.py` and `schemas.py`, and search the frontend excluding the settings
+page itself and `CompanySettingsContext`. Check both the snake_case name and its
+camelCase form, because the frontend renames them. A column with no hit on
+either side is inert.
+
+**Self test it before you believe it.** Feed it
 `po_restriction`, `negative_stock_lock` and `restrict_entry_creation_days`,
 which must come back wired, and a column name that does not exist, which must
 come back inert. I built that sweep and got the wrong answer on the first pass
