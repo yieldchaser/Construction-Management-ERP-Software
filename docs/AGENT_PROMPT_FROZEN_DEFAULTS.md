@@ -1,11 +1,13 @@
 # AGENT PROMPT: defaults frozen to 2026
 
 A sweep for the same class of defect as the statutory year list: a value that
-should follow the calendar, written down as a literal instead. Nine sites in
-eight files. The backend is clean, every one of these is frontend.
+should follow the calendar, written down as a literal instead. Eleven sites in
+nine files. The backend is clean, every one of these is frontend.
 
-Two of them are worse than a stale year and are listed first. Do those two even
-if you do nothing else.
+Three of them are worse than a stale year and are listed first. Do those three
+even if you do nothing else: each is a document number that a user cannot edit
+and that the backend rejects as a duplicate, so the screen becomes a dead end
+with no way forward.
 
 Report as before: command, exit code, one sentence. No pasted output.
 "Not run" is acceptable.
@@ -80,7 +82,34 @@ own, since the error message promises they can.
 
 ---
 
-# PART 3: the report month picker only knows 2026
+# PART 3: subcontractor work order numbers collide every 16 minutes
+
+Same shape as Part 2, found by sweeping for it deliberately. In
+`d/subcon/page.tsx` and `p/[project_id]/subcon/page.tsx`:
+
+```js
+:438   woNumber: `WO-${Date.now().toString().slice(-6)}`,
+:508   wo_number: woForm.woNumber || `WO-${Date.now().toString().slice(-6)}`,
+```
+
+`woForm.woNumber` is set when the modal opens and posted to
+`billing/work-orders`, which rejects duplicates at `billing.py:413` with "Work
+Order number already exists for this company".
+
+**There is no input bound to `woForm.woNumber`.** Grep it: every reference is a
+read, a reset, or a display. The user cannot edit the number they are told to
+change.
+
+The last six digits of an epoch millisecond wrap every 1,000,000 ms, which is
+16 minutes 40 seconds. So two work orders created any multiple of roughly
+sixteen minutes apart collide. That is an ordinary afternoon, not an edge case.
+
+Worth knowing before you fix it: `d/billing/page.tsx` creates work orders
+against the **same endpoint** and does it correctly, with an editable field at
+`:1097`. Two pages, one resource, two behaviours. Make subcon match billing, and
+number them from a sequence rather than a clock, as in Part 2.
+
+# PART 4: the report month picker only knows 2026
 
 `reports/page.tsx:139` and `:143`:
 
@@ -98,7 +127,7 @@ window that reaches back far enough for late reporting and includes the current
 month. Default the selection to the month that closed, matching the statutory
 page so the two agree.
 
-# PART 4: a hardcoded date range presented as a filter
+# PART 5: a hardcoded date range presented as a filter
 
 `dashboard/page.tsx:1009`:
 
@@ -119,7 +148,7 @@ figures do not respect it.
 Either bind it to the real range the dashboard is showing, or remove it. Decide
 which and say why. Do not leave a plausible-looking range sitting there.
 
-# PART 5: new projects are created with 2026 dates
+# PART 6: new projects are created with 2026 dates
 
 Two project creation paths write frozen dates:
 
@@ -137,7 +166,7 @@ Default the start to today and leave the end **empty** rather than inventing one
 unless the field is required, in which case say so and pick a sensible relative
 default. A wrong end date on a project skews every schedule view that reads it.
 
-# PART 6: two smaller ones
+# PART 7: two smaller ones
 
 **Work order numbers.** `d/billing/page.tsx:485` resets the field to a template
 built from a literal `WO-2026-` prefix and a random four digit suffix. The field
@@ -191,6 +220,8 @@ December, since those are the rollover edges.
 - [ ] NCR numbers are sequential per project, not random. State how you generate
       them and confirm thirty consecutive creates in one project do not collide.
 - [ ] The NCR form has a number field, so the conflict message is actionable.
+- [ ] Subcontractor work order numbers come from a sequence, have an editable
+      field, and match how `d/billing` already does it.
 - [ ] Report month list derived from the current date. State what it produces in
       January and December.
 - [ ] The dashboard transaction date range is either bound to real data or gone.
