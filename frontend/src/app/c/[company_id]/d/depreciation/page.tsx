@@ -1,7 +1,7 @@
 "use client";
 import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import { getApiHost } from "@/lib/api";
-import { authHeaders, formatLabel } from "@/lib/siteflow";
+import { authHeaders, formatDate, formatLabel } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
@@ -220,7 +220,7 @@ export default function DepreciationPage() {
                       <td className="px-6 py-4">{s.useful_life_years}</td>
                       <td className="px-6 py-4">₹{Number(s.salvage_value).toLocaleString()}</td>
                       <td className="px-6 py-4">{s.depreciation_pct}%</td>
-                      <td className="px-6 py-4">{new Date(s.start_date).toLocaleDateString()}</td>
+                      <td className="px-6 py-4">{formatDate(s.start_date)}</td>
                       <td className="px-6 py-4">
                         <Badge tone={s.is_active ? "success" : "neutral"}>{s.is_active ? "Active" : "Inactive"}</Badge>
                       </td>
@@ -263,7 +263,7 @@ export default function DepreciationPage() {
                 ) : (
                   entries.map((e) => (
                     <tr key={e.id} className="hover:bg-elevated transition-colors">
-                      <td className="px-6 py-4">{new Date(e.entry_date).toLocaleDateString()}</td>
+                      <td className="px-6 py-4">{formatDate(e.entry_date)}</td>
                       <td className="px-6 py-4">₹{Number(e.depreciation_amount).toLocaleString()}</td>
                       <td className="px-6 py-4">₹{Number(e.accumulated_depreciation).toLocaleString()}</td>
                       <td className="px-6 py-4">₹{Number(e.book_value).toLocaleString()}</td>

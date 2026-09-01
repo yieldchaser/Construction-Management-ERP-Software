@@ -4,7 +4,7 @@ import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getApiHost, readErrorDetail } from "@/lib/api";
-import { authHeaders } from "@/lib/siteflow";
+import { authHeaders, formatLabel } from "@/lib/siteflow";
 import Icon from "@/components/marketing/Icon";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { TableSkeleton } from "@/components/ui/Skeleton";
@@ -469,7 +469,7 @@ export default function SubconPage() {
                       <td className="px-4 py-3 text-muted">{fmt(wo.billedValue)}</td>
                       <td className="px-4 py-3">
                         <Badge tone={wo.status === "Approved" || wo.status === "active" ? "success" : wo.status === "Pending Approval" ? "warning" : wo.status === "cancelled" ? "danger" : "neutral"} className="font-bold">
-                          {wo.status}
+                          {formatLabel(wo.status)}
                         </Badge>
                       </td>
                       <td className="px-4 py-3 text-right">

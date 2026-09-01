@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
-import { authHeaders } from "@/lib/siteflow";
+import { authHeaders, formatDate, formatLabel } from "@/lib/siteflow";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import SegmentedTabs from "@/components/ui/Tabs";
@@ -317,13 +317,13 @@ export default function ToDoPage() {
                     {t.title}
                   </td>
                   <td className="px-5 py-3 text-muted">
-                    {t.due_date ? new Date(t.due_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                    {formatDate(t.due_date)}
                   </td>
                   <td className="px-5 py-3 text-muted font-medium">{t.assigned_to}</td>
                   <td className="px-5 py-3 text-muted font-semibold">{t.project_name || "—"}</td>
                   <td className="px-5 py-3">
                     <span className="bg-white/5 border border-border-custom text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded text-foreground">
-                      {t.type}
+                      {formatLabel(t.type)}
                     </span>
                   </td>
                   <td className="px-5 py-3 text-center">

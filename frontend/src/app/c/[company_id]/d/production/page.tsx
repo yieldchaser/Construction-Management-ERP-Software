@@ -1,6 +1,6 @@
 "use client";
 import { getApiHost, readErrorDetail } from "@/lib/api";
-import { authHeaders } from "@/lib/siteflow";
+import { authHeaders, formatLabel } from "@/lib/siteflow";
 import Icon from "@/components/marketing/Icon";
 import SegmentedTabs from "@/components/ui/Tabs";
 import { Badge } from "@/components/ui/Badge";
@@ -427,7 +427,7 @@ export default function ProductionPage() {
                           <div className="mt-1 text-xs text-muted">{batch.product_name}</div>
                         </div>
                         <Badge tone="neutral">
-                          {batch.status}
+                          {formatLabel(batch.status)}
                         </Badge>
                       </div>
                       <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 text-center text-xs">
@@ -541,7 +541,7 @@ export default function ProductionPage() {
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             <Badge tone={batch.status === "completed" ? "success" : batch.status === "running" ? "primary" : "neutral"}>
-                              {batch.status}
+                              {formatLabel(batch.status)}
                             </Badge>
                             {batch.status === "running" && (
                               <button

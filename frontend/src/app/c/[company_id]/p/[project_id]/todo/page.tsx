@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { getApi, authHeaders, resolveCompanyId, initials } from "@/lib/siteflow";
+import { getApi, authHeaders, resolveCompanyId, initials, formatDate, formatLabel } from "@/lib/siteflow";
 import { readErrorDetail } from "@/lib/api";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
@@ -160,7 +160,7 @@ export default function TodoPage() {
                     <span className={t.status === "done" ? "line-through text-muted" : "text-foreground"}>{t.title}</span>
                   </div>
                 </td>
-                <td className="px-4 py-3 text-muted">{t.due_date ? new Date(t.due_date).toLocaleDateString() : "—"}</td>
+                <td className="px-4 py-3 text-muted">{formatDate(t.due_date)}</td>
                 <td className="px-4 py-3">
                   <div className="flex -space-x-2">
                     {t.assignee_ids.slice(0, 3).map((id) => (
@@ -172,7 +172,7 @@ export default function TodoPage() {
                   </div>
                 </td>
                 <td className="px-4 py-3 text-muted">{t.task_name || "—"}</td>
-                <td className="px-4 py-3 text-muted">{t.type || "—"}</td>
+                <td className="px-4 py-3 text-muted">{t.type ? formatLabel(t.type) : "—"}</td>
                 <td className="px-4 py-3">
                   <button onClick={() => remove(t.id)} className="text-xs text-muted hover:text-danger">Delete</button>
                 </td>

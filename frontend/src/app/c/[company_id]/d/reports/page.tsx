@@ -1,6 +1,6 @@
 "use client";
 import {  getApiHost , readErrorDetail } from "@/lib/api";
-import { authHeaders } from "@/lib/siteflow";
+import { authHeaders, formatDate } from "@/lib/siteflow";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
@@ -194,9 +194,7 @@ export default function ClientReportsPage() {
                     </Badge>
                   </div>
                   <div className="text-[10px] text-muted mt-2">
-                    {new Date(report.report_date).toLocaleDateString(undefined, {
-                      dateStyle: "medium",
-                    })}
+                    {formatDate(report.report_date)}
                   </div>
                 </div>
               ))

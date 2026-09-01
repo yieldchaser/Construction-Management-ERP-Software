@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { getApi, authHeaders, resolveCompanyId, fmtINR } from "@/lib/siteflow";
+import { getApi, authHeaders, resolveCompanyId, fmtINR, formatDate } from "@/lib/siteflow";
 import { readErrorDetail } from "@/lib/api";
 import { useCompanySettings } from "@/context/CompanySettingsContext";
 import PageShell from "@/components/layout/PageShell";
@@ -253,8 +253,7 @@ const toDateInput = (s: string | null): string =>
   s ? new Date(s).toISOString().slice(0, 10) : "";
 const fromDateInput = (s: string): string | null =>
   s ? (s.includes("T") ? s : `${s}T00:00:00Z`) : null;
-const fmtDate = (s: string | null): string =>
-  s ? new Date(s).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—";
+const fmtDate = (s: string | null): string => formatDate(s);
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
 const PRIORITY_OPTS = ["High", "Medium", "Low"];

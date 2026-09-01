@@ -1,7 +1,7 @@
 'use client';
 import { useProject } from '@/context/ProjectContext';
 import { getApiHost, readErrorDetail } from '@/lib/api';
-import { authHeaders } from '@/lib/siteflow';
+import { authHeaders, formatDate } from '@/lib/siteflow';
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
@@ -102,8 +102,7 @@ function getSeverityColor(sev?: string): string {
 }
 
 function fmtDate(iso?: string) {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  return formatDate(iso);
 }
 
 // ─── Donut Chart ─────────────────────────────────────────────────────────────

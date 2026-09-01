@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import {  getApiHost , readErrorDetail } from "@/lib/api";
+import { getApiHost, readErrorDetail } from "@/lib/api";
+import { formatDate } from "@/lib/siteflow";
 import { useProject } from "@/context/ProjectContext";
 import Icon from "@/components/marketing/Icon";
 import PageShell from "@/components/layout/PageShell";
@@ -816,7 +817,7 @@ export default function ProjectsHomePage() {
                                 <div className="text-sm font-medium text-foreground">{projects.find((p) => p.id === ind.project_id)?.name || 'Unknown Project'}</div>
                               </td>
                               <td className="px-6 py-4 text-muted">
-                                {new Date(ind.created_at).toLocaleDateString()}
+                                {formatDate(ind.created_at)}
                               </td>
                               <td className="px-6 py-4">
                                 {ind.items.length > 0 ? (

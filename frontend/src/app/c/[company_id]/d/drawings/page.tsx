@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
 import { getApiHost, readErrorDetail } from "@/lib/api";
-import { authHeaders } from "@/lib/siteflow";
+import { authHeaders, formatDate } from "@/lib/siteflow";
 import Icon, { type IconName } from "@/components/marketing/Icon";
 
 import PageShell from "@/components/layout/PageShell";
@@ -231,7 +231,7 @@ export default function DrawingsPage() {
         x: tempXY.x, y: tempXY.y,
         category: newPinCat, comment: newPinComment,
         photoAttached: newPinPhoto,
-        user: "Current User", date: new Date().toLocaleDateString("en-IN"),
+        user: "Current User", date: formatDate(new Date()),
         resolved: false,
       };
       setDrawings(prev => prev.map(d => d.id !== activeDrawingId ? d : {

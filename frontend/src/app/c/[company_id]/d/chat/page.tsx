@@ -2,7 +2,7 @@
 import Badge, { type BadgeTone } from "@/components/ui/Badge";
 
 import {  getApiHost , readErrorDetail } from "@/lib/api";
-import { authHeaders } from "@/lib/siteflow";
+import { authHeaders, formatDate, formatDateTime } from "@/lib/siteflow";
 import React, { useState, useEffect, useRef } from "react";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
@@ -621,7 +621,7 @@ export default function ChatPage() {
                           {/* MOM Date details */}
                           {msg.mom_date && (
                             <div className="text-[10px] text-muted mt-2 font-medium flex items-center justify-center gap-1">
-                              <Icon name="calendar" className="w-3 h-3" /> MOM Date: {new Date(msg.mom_date).toLocaleDateString()}
+                              <Icon name="calendar" className="w-3 h-3" /> MOM Date: {formatDate(msg.mom_date)}
                             </div>
                           )}
 
@@ -841,7 +841,7 @@ export default function ChatPage() {
                 <div>
                   <h4 className="text-[9px] font-extrabold text-muted uppercase tracking-wider">Created At</h4>
                   <p className="text-xs text-foreground mt-0.5">
-                    {new Date(activeGroup.created_at).toLocaleDateString()} at {new Date(activeGroup.created_at).toLocaleTimeString()}
+                    {formatDateTime(activeGroup.created_at)}
                   </p>
                 </div>
                 <div>

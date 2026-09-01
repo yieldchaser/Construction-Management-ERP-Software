@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
 import { getApiHost, readErrorDetail } from "@/lib/api";
+import { formatDate } from "@/lib/siteflow";
 import { UNITS } from "@/lib/units";
 import Badge from "@/components/ui/Badge";
 import Icon, { type IconName } from "@/components/marketing/Icon";
@@ -662,7 +663,7 @@ export default function LibraryHubPage() {
     if (value === null || value === undefined || value === "") return "-";
     const parsedDate = new Date(String(value));
     if (Number.isNaN(parsedDate.getTime()) || parsedDate.getFullYear() <= 1) return "-";
-    return parsedDate.toLocaleDateString();
+    return formatDate(parsedDate, "-");
   };
 
   return (
@@ -879,7 +880,7 @@ export default function LibraryHubPage() {
                     <tr key={item.id} className="hover:bg-elevated/20 transition-colors border-b border-border-custom last:border-b-0">
                       <td className="px-6 py-4 font-semibold text-foreground">{item.name}</td>
                       <td className="px-6 py-4 text-muted">
-                        {new Date(item.created_at).toLocaleDateString()}
+                        {formatDate(item.created_at)}
                       </td>
                       <td className="px-6 py-4 text-center">
                         <div className="flex items-center justify-center gap-1.5">
@@ -1037,7 +1038,7 @@ export default function LibraryHubPage() {
                       <td className="px-6 py-4 text-muted">{formatLibraryCell(item.alternate_unit)}</td>
                       <td className="px-6 py-4 text-muted">{formatLibraryCell(item.category)}</td>
                       <td className="px-6 py-4 text-muted">
-                        {item.created_at ? new Date(item.created_at).toLocaleDateString() : "-"}
+                        {formatDate(item.created_at, "-")}
                       </td>
                       <td className="px-6 py-4 text-muted">
                         {formatLibraryCell(
@@ -1132,7 +1133,7 @@ export default function LibraryHubPage() {
                             : floatVal(item.unit_sale_price).toLocaleString()}
                         </td>
                         <td className="px-6 py-4 text-muted">
-                          {item.created_at ? new Date(item.created_at).toLocaleDateString() : "-"}
+                          {formatDate(item.created_at, "-")}
                         </td>
                         <td className="px-6 py-4 text-center text-muted">{formatLibraryCell(item.component_count)}</td>
                         <td className="px-6 py-4 text-muted">{formatLibraryCell(item.hsn_sac)}</td>

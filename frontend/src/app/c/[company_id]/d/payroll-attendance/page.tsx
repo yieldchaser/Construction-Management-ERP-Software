@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import { getApi, authHeaders, resolveCompanyId, fmtINR } from "@/lib/siteflow";
+import { getApi, authHeaders, resolveCompanyId, fmtINR, formatLabel } from "@/lib/siteflow";
 import { useProject } from "@/context/ProjectContext";
 import { useCompanySettings } from "@/context/CompanySettingsContext";
 import PageShell from "@/components/layout/PageShell";
@@ -1359,12 +1359,12 @@ function TeamLeavesTab({ companyId }: { companyId: string }) {
             {yearLeaves.map((l) => (
               <tr key={l.id} className="border-t border-border-custom">
                 <td className="px-3 py-2 font-medium text-foreground">{l.employee_name}</td>
-                <td className="px-3 py-2 text-muted">{l.leave_type}</td>
+                <td className="px-3 py-2 text-muted">{formatLabel(l.leave_type)}</td>
                 <td className="px-3 py-2 text-muted">{l.start_date.slice(0, 10)}</td>
                 <td className="px-3 py-2 text-muted">{l.end_date.slice(0, 10)}</td>
                 <td className="px-3 py-2 text-muted">{l.days_count}</td>
                 <td className="px-3 py-2 text-muted">{l.applied_on.slice(0, 10)}</td>
-                <td className="px-3 py-2 text-muted">{l.status}</td>
+                <td className="px-3 py-2 text-muted">{formatLabel(l.status)}</td>
                 <td className="px-3 py-2">
                   {l.status === "Pending" && (
                     <div className="flex gap-1">
@@ -1500,11 +1500,11 @@ function MyLeavesTab({
           <tbody>
             {myLeaves.map((l) => (
               <tr key={l.id} className="border-t border-border-custom">
-                <td className="px-3 py-2 text-foreground">{l.leave_type}</td>
+                <td className="px-3 py-2 text-foreground">{formatLabel(l.leave_type)}</td>
                 <td className="px-3 py-2 text-muted">{l.start_date.slice(0, 10)}</td>
                 <td className="px-3 py-2 text-muted">{l.end_date.slice(0, 10)}</td>
                 <td className="px-3 py-2 text-muted">{l.days_count}</td>
-                <td className="px-3 py-2 text-muted">{l.status}</td>
+                <td className="px-3 py-2 text-muted">{formatLabel(l.status)}</td>
               </tr>
             ))}
             {myLeaves.length === 0 && (

@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { getApi, authHeaders, fmtINR } from "@/lib/siteflow";
+import { getApi, authHeaders, fmtINR, formatDate, formatLabel } from "@/lib/siteflow";
 import { useCompanySettings } from "@/context/CompanySettingsContext";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
@@ -324,9 +324,9 @@ export default function ProjectDashboardPage() {
   const billRows = (list: Bill[]) =>
     list.map((b) => ({
       "Invoice #": b.invoice_number,
-      Date: b.invoice_date ? new Date(b.invoice_date).toLocaleDateString() : "—",
-      Type: b.invoice_type,
-      Status: b.status,
+      Date: formatDate(b.invoice_date),
+      Type: formatLabel(b.invoice_type),
+      Status: formatLabel(b.status),
       Total: fmtINR(b.total_payable, currencyDecimalPlaces),
       Paid: fmtINR(b.paid_amount, currencyDecimalPlaces),
       Balance: fmtINR((b.total_payable || 0) - (b.paid_amount || 0), currencyDecimalPlaces),
@@ -511,7 +511,7 @@ export default function ProjectDashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card label="Pending To-Dos" value={`${project.todo_pending ?? 0}`} />
         <Card label="Project Value" value={fmtINR(project.project_value, currencyDecimalPlaces)} />
-        <Card label="Status" value={project.status} />
+        <Card label="Status" value={formatLabel(project.status)} />
       </div>
 
       <div className="rounded-lg border border-border-custom bg-card p-4 text-sm">
@@ -520,25 +520,25 @@ export default function ProjectDashboardPage() {
           <div>
             <div className="text-muted">Planned Start</div>
             <div className="text-foreground">
-              {project.planned_start_date ? new Date(project.planned_start_date).toLocaleDateString() : "—"}
+              {formatDate(project.planned_start_date)}
             </div>
           </div>
           <div>
             <div className="text-muted">Planned End</div>
             <div className="text-foreground">
-              {project.planned_end_date ? new Date(project.planned_end_date).toLocaleDateString() : "—"}
+              {formatDate(project.planned_end_date)}
             </div>
           </div>
           <div>
             <div className="text-muted">Actual Start</div>
             <div className="text-foreground">
-              {project.actual_start_date ? new Date(project.actual_start_date).toLocaleDateString() : "—"}
+              {formatDate(project.actual_start_date)}
             </div>
           </div>
           <div>
             <div className="text-muted">Actual End</div>
             <div className="text-foreground">
-              {project.actual_end_date ? new Date(project.actual_end_date).toLocaleDateString() : "—"}
+              {formatDate(project.actual_end_date)}
             </div>
           </div>
         </div>

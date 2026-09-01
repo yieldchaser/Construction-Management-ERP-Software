@@ -95,6 +95,36 @@ export const initials = (name: string): string =>
     .map((w) => w[0]?.toUpperCase() || "")
     .join("");
 
+export const formatDate = (
+  date: string | number | Date | null | undefined,
+  fallback: string = "—"
+): string => {
+  if (!date) return fallback;
+  const d = typeof date === "object" && date instanceof Date ? date : new Date(date);
+  if (isNaN(d.getTime())) return fallback;
+  return d.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
+
+export const formatDateTime = (
+  date: string | number | Date | null | undefined,
+  fallback: string = "—"
+): string => {
+  if (!date) return fallback;
+  const d = typeof date === "object" && date instanceof Date ? date : new Date(date);
+  if (isNaN(d.getTime())) return fallback;
+  return `${formatDate(d, fallback)} at ${d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+};
+
+const ACRONYMS = new Set([
+  "slm", "wdv", "gst", "igst", "cgst", "sgst", "tds", "pf", "esi", "bocw", "hsn", "sac",
+  "po", "wo", "grn", "rfq", "boq", "ncr", "dpr", "ra", "mom", "lti", "ppe", "wbs", "cpm",
+  "crm", "gstin", "pan", "tan", "cin", "llpin", "msme", "epf", "esic"
+]);
+
 export const formatLabel = (value: string | undefined | null): string => {
   if (!value) return "—";
   const map: Record<string, string> = {
@@ -124,6 +154,11 @@ export const formatLabel = (value: string | undefined | null): string => {
   if (map[key]) return map[key];
   return String(value)
     .split("_")
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .map((w) => {
+      const lower = w.toLowerCase();
+      if (ACRONYMS.has(lower)) return lower.toUpperCase();
+      return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+    })
     .join(" ");
 };
+

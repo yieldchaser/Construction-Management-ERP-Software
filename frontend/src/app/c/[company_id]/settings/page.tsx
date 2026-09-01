@@ -1,7 +1,7 @@
 "use client";
 import Badge, { type BadgeTone } from "@/components/ui/Badge";
-import {  getApiHost , readErrorDetail } from "@/lib/api";
-import { authHeaders } from "@/lib/siteflow";
+import { getApiHost, readErrorDetail } from "@/lib/api";
+import { authHeaders, formatDate, formatLabel } from "@/lib/siteflow";
 
 import { useParams } from "next/navigation";
 import { useEffect, useState, useRef, useCallback } from "react";
@@ -171,10 +171,11 @@ const DEFAULT_ROLES = [
 ];
 
 type SectionId =
-  | "company" | "roles" | "team" | "payroll" | "holiday" | "workflow"
+  | "profile" | "company" | "roles" | "team" | "payroll" | "holiday" | "workflow"
   | "docfields" | "approval" | "integrations" | "subscription";
 
 const SECTIONS: { id: SectionId; label: string }[] = [
+  { id: "profile", label: "My Profile" },
   { id: "company", label: "Company" },
   { id: "roles", label: "Roles & Access" },
   { id: "team", label: "Team" },
@@ -229,10 +230,79 @@ export default function CompanySettingsPage() {
 
   useEffect(() => { loadSettings(); }, [loadSettings]);
 
-  // ─── Company Details draft + save ──────────────────────────────────────────
   const [cDraft, setCDraft] = useState<{ name: string; legal_business_name: string; gstin: string; phone: string; billing_address: string }>({
     name: "", legal_business_name: "", gstin: "", phone: "", billing_address: "",
   });
+
+  // ─── User Profile (A6) ─────────────────────────────────────────────────────
+  const [profileData, setProfileData] = useState<{ id: string; name: string; email: string; mobile: string }>({
+    id: "",
+    name: typeof window !== "undefined" ? localStorage.getItem("user_name") || "" : "",
+    email: "",
+    mobile: "",
+  });
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileMsg, setProfileMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+
+  const fetchProfile = async () => {
+    try {
+      const res = await fetch(`${apiHost}/apis/v3/profile/me`, { headers: authHeaders() });
+      if (res.ok) {
+        const d = await res.json();
+        setProfileData({
+          id: d.id || "",
+          name: d.name || "",
+          email: d.email || "",
+          mobile: d.mobile || "",
+        });
+        if (d.name) {
+          localStorage.setItem("user_name", d.name);
+          localStorage.setItem("creator_name", d.name);
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+  };
+
+  useEffect(() => {
+    if (activeSection === "profile") {
+      fetchProfile();
+    }
+  }, [activeSection]);
+
+  const saveProfile = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!profileData.name.trim()) {
+      setProfileMsg({ type: "err", text: "Display name cannot be empty" });
+      return;
+    }
+    setProfileSaving(true);
+    setProfileMsg(null);
+    try {
+      const res = await fetch(`${apiHost}/apis/v3/profile`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+        body: JSON.stringify({ name: profileData.name.trim() }),
+      });
+      if (res.ok) {
+        const d = await res.json();
+        setProfileMsg({ type: "ok", text: "Profile display name updated successfully" });
+        if (d.user?.name) {
+          localStorage.setItem("user_name", d.user.name);
+          localStorage.setItem("creator_name", d.user.name);
+        }
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setProfileMsg({ type: "err", text: err.detail || "Failed to update profile" });
+      }
+    } catch {
+      setProfileMsg({ type: "err", text: "Failed to update profile" });
+    } finally {
+      setProfileSaving(false);
+    }
+  };
+
   useEffect(() => {
     if (settings) {
       setCDraft({
@@ -748,7 +818,7 @@ export default function CompanySettingsPage() {
   };
 
   // ─── Subscription (display-only; no billing UI) ──────────────────────────────
-  const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString("en-IN", { year: "numeric", month: "short", day: "numeric" }) : "—");
+  const fmtDate = (d?: string | null) => formatDate(d);
 
   const validateGSTIN = (g: string) => /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(g.toUpperCase());
   const [gstinError, setGstinError] = useState(false);
@@ -1217,6 +1287,64 @@ export default function CompanySettingsPage() {
           )}
 
           <div className="mt-8">
+            {/* ════════════════════════════ USER PROFILE ════════════════════════════ */}
+            {activeSection === "profile" && (
+              <div className="bg-card border border-border-custom rounded-lg p-6 space-y-6 max-w-2xl">
+                <div>
+                  <h2 className="text-sm font-bold text-foreground uppercase tracking-wider text-muted border-b border-border-custom pb-3">User Profile</h2>
+                  <p className="text-xs text-muted mt-2">Update your personal display name shown across assignments, audit logs, and reports.</p>
+                </div>
+
+                {profileMsg && (
+                  <div className={`p-4 rounded-lg text-xs font-semibold ${profileMsg.type === "ok" ? "bg-success/10 border border-success/20 text-success" : "bg-danger/10 border border-danger/20 text-danger"}`}>
+                    {profileMsg.text}
+                  </div>
+                )}
+
+                <form onSubmit={saveProfile} className="space-y-4">
+                  <Field label="Display Name">
+                    <input
+                      type="text"
+                      value={profileData.name}
+                      onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
+                      placeholder="Your full name"
+                      className="w-full bg-elevated border border-border-custom focus:border-primary rounded-md px-4 py-2.5 text-xs text-foreground outline-none font-medium"
+                    />
+                  </Field>
+
+                  <Field label="Email Address">
+                    <input
+                      type="email"
+                      value={profileData.email || "—"}
+                      disabled
+                      className="w-full bg-elevated/50 border border-border-custom text-muted rounded-md px-4 py-2.5 text-xs outline-none cursor-not-allowed"
+                    />
+                  </Field>
+
+                  {profileData.mobile && (
+                    <Field label="Phone Number">
+                      <input
+                        type="text"
+                        value={profileData.mobile}
+                        disabled
+                        className="w-full bg-elevated/50 border border-border-custom text-muted rounded-md px-4 py-2.5 text-xs outline-none cursor-not-allowed"
+                      />
+                    </Field>
+                  )}
+
+                  <div className="pt-2">
+                    <button
+                      type="submit"
+                      disabled={profileSaving}
+                      className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-md text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
+                    >
+                      {profileSaving ? "Saving..." : "Save Display Name"}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
             {/* ════════════════════════════ COMPANY ════════════════════════════ */}
             {activeSection === "company" && settings && (
               <div className="space-y-6">
@@ -1619,7 +1747,7 @@ export default function CompanySettingsPage() {
                         <div key={h.id} className="bg-card border border-border-custom rounded-lg p-5 flex items-center justify-between">
                           <div>
                             <div className="font-bold text-foreground text-sm">{h.name}</div>
-                            <div className="text-xs text-muted">{new Date(h.date).toLocaleDateString("en-IN")}</div>
+                            <div className="text-xs text-muted">{formatDate(h.date)}</div>
                           </div>
                           <button onClick={() => deleteHoliday(h.id)} className="text-[10px] text-muted hover:text-danger">Delete</button>
                         </div>
@@ -1746,7 +1874,7 @@ export default function CompanySettingsPage() {
                         <div key={t.id} className="bg-card border border-border-custom rounded-lg p-5 grid grid-cols-[2fr_3fr_1fr_auto] gap-4 items-center">
                           <div className="font-bold text-foreground text-sm">{t.name}</div>
                           <div className="text-xs text-muted truncate">{t.description || "—"}</div>
-                          <div><Badge tone="success" className="font-bold">{t.status}</Badge></div>
+                          <div><Badge tone="success" className="font-bold">{formatLabel(t.status)}</Badge></div>
                           <button onClick={() => deleteSalaryTemplate(t.id)} className="text-[10px] text-muted hover:text-danger justify-self-end">Delete</button>
                         </div>
                       ))}
@@ -1941,7 +2069,7 @@ export default function CompanySettingsPage() {
                       <div key={h.id} className="bg-card border border-border-custom rounded-lg p-5 flex items-center justify-between">
                         <div>
                           <div className="font-bold text-foreground text-sm">{h.name}</div>
-                          <div className="text-xs text-muted">{new Date(h.date).toLocaleDateString("en-IN")}</div>
+                          <div className="text-xs text-muted">{formatDate(h.date)}</div>
                         </div>
                         <button onClick={() => deleteHoliday(h.id)} className="text-[10px] text-muted hover:text-danger">Delete</button>
                       </div>
@@ -2297,7 +2425,7 @@ export default function CompanySettingsPage() {
                       cfList.map((f) => (
                         <div key={f.id} className="grid grid-cols-[2fr_1.5fr_1fr_2fr] gap-4 px-5 py-3 items-center border-b border-border-custom last:border-0">
                           <div className="font-bold text-foreground text-sm">{f.field_name}</div>
-                          <div className="text-xs text-muted">{f.field_type}</div>
+                          <div className="text-xs text-muted">{formatLabel(f.field_type)}</div>
                           <div>{f.set_default ? <Badge tone="success" className="font-bold">Yes</Badge> : <span className="text-[10px] text-muted">—</span>}</div>
                           <div className="text-xs text-muted truncate">{f.default_value || "—"}</div>
                         </div>

@@ -1,7 +1,7 @@
 "use client";
 import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import { getApiHost } from "@/lib/api";
-import { authHeaders } from "@/lib/siteflow";
+import { authHeaders, formatDate } from "@/lib/siteflow";
 
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
@@ -655,7 +655,7 @@ export default function BOQPage() {
                         </span>
                         <span className="text-sm font-bold text-foreground">Revision {rev.revision_no}</span>
                       </div>
-                      <span className="text-[10px] text-muted">{rev.created_at ? new Date(rev.created_at).toLocaleDateString("en-IN") : ""}</span>
+                      <span className="text-[10px] text-muted">{formatDate(rev.created_at, "")}</span>
                     </div>
                     <div className="text-xs text-muted">{rev.reason || "—"}</div>
                     <div className="mt-2 flex items-center justify-between">

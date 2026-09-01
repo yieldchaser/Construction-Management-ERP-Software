@@ -1,7 +1,7 @@
 "use client";
 import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import { getApiHost } from "@/lib/api";
-import { authHeaders, formatLabel } from "@/lib/siteflow";
+import { authHeaders, formatDate, formatLabel } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
@@ -88,7 +88,7 @@ export default function CustomFieldsPage() {
     const v = values.find((row) => row.field_id === f.id);
     if (!v) return "Not set";
     if (f.field_type === "number") return v.value_number === null || v.value_number === undefined ? "Not set" : String(v.value_number);
-    if (f.field_type === "date") return v.value_date ? new Date(v.value_date).toLocaleDateString() : "Not set";
+    if (f.field_type === "date") return v.value_date ? formatDate(v.value_date) : "Not set";
     if (v.value_json !== null && v.value_json !== undefined) {
       if (Array.isArray(v.value_json)) return v.value_json.length ? v.value_json.join(", ") : "Not set";
       return String(v.value_json);

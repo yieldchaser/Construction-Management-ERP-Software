@@ -4,7 +4,7 @@ import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
-import { authHeaders } from "@/lib/siteflow";
+import { authHeaders, formatDate, formatLabel } from "@/lib/siteflow";
 import Icon from "@/components/marketing/Icon";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
@@ -806,7 +806,7 @@ export default function DashboardPage() {
                                     const dateObj = new Date(day.date);
                                     const formattedDate = isNaN(dateObj.getTime()) 
                                       ? day.date 
-                                      : dateObj.toLocaleDateString("en-US", { day: "numeric", month: "short" });
+                                      : dateObj.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
 
                                     return (
                                       <g key={idx}>
@@ -887,7 +887,7 @@ export default function DashboardPage() {
                                     const dateObj = new Date(day.date);
                                     const formattedDate = isNaN(dateObj.getTime()) 
                                       ? day.date 
-                                      : dateObj.toLocaleDateString("en-US", { day: "numeric", month: "short" });
+                                      : dateObj.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
 
                                     return (
                                       <g key={idx}>
@@ -960,7 +960,7 @@ export default function DashboardPage() {
                                       p.status === "Completed" ? "bg-elevated text-muted border-border-custom" :
                                       "bg-danger/10 text-danger border-danger/20"
                                     }`}>
-                                      {p.status}
+                                      {formatLabel(p.status)}
                                     </span>
                                   </td>
                                   <td className="px-4 py-3 text-center border-r border-border-custom">

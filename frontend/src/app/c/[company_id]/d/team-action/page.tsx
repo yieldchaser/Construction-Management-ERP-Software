@@ -3,7 +3,7 @@ import { readErrorDetail } from "@/lib/api";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import { getApi, authHeaders } from "@/lib/siteflow";
+import { getApi, authHeaders, formatDate } from "@/lib/siteflow";
 import Icon from "@/components/marketing/Icon";
 import SegmentedTabs from "@/components/ui/Tabs";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -78,10 +78,7 @@ const safeHref = (url: string | null): string | null => {
 
 const fmtDate = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-const fmtDateNice = (iso: string) => {
-  const d = new Date(iso);
-  return d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
-};
+const fmtDateNice = (iso: string) => formatDate(iso);
 const fmtTime = (iso: string | null) => {
   if (!iso) return "—";
   const d = new Date(iso);

@@ -1,6 +1,6 @@
 "use client";
 import { getApiHost, readErrorDetail } from "@/lib/api";
-import { authHeaders } from "@/lib/siteflow";
+import { authHeaders, formatDate } from "@/lib/siteflow";
 
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
@@ -290,7 +290,7 @@ export default function DPRPage() {
                   <div key={log.id} className="p-4 rounded-md border border-border-custom bg-input space-y-2 text-xs">
                     <div className="flex justify-between items-center text-[10px] text-muted">
                       <span className="font-bold text-foreground">Reported By: {log.reported_by}</span>
-                      <span>Weather: <strong className="text-muted">{log.weather}</strong> · {new Date(log.dpr_date).toLocaleDateString()}</span>
+                      <span>Weather: <strong className="text-muted">{log.weather}</strong> · {formatDate(log.dpr_date)}</span>
                     </div>
                     <div className="border-l-2 border-border-custom pl-3 my-2 space-y-1">
                       <p className="text-foreground text-xs font-semibold">Qty Executed: {log.executed_qty}</p>

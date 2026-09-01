@@ -3,7 +3,7 @@ import Badge, { type BadgeTone } from "@/components/ui/Badge";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import { getApi, authHeaders, fmtINR } from "@/lib/siteflow";
+import { getApi, authHeaders, fmtINR, formatLabel } from "@/lib/siteflow";
 import { readErrorDetail } from "@/lib/api";
 import { useCompanySettings } from "@/context/CompanySettingsContext";
 import ZatcaInvoicePanel from "@/components/ZatcaInvoicePanel";
@@ -433,7 +433,7 @@ export default function TransactionPage() {
                   {r.direction === "in" ? "+" : "−"}
                   {fmtINR(r.amount, currencyDecimalPlaces)}
                 </td>
-                <td className="px-4 py-3 text-muted">{r.status}</td>
+                <td className="px-4 py-3 text-muted">{formatLabel(r.status)}</td>
                 {zatcaEnabled && (
                   <td className="px-4 py-3">
                     {r.kind === "Bill" && r.type === "sale" ? (

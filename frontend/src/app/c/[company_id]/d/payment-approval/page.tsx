@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { getApiHost } from "@/lib/api";
+import { formatDate } from "@/lib/siteflow";
 import Icon from "@/components/marketing/Icon";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
@@ -225,9 +226,9 @@ export default function PaymentApprovalPage() {
                 <p className="text-muted text-xs max-w-xl">{r.details || "—"}</p>
                 
                 <div className="flex gap-4 text-[10px] text-muted">
-                  <span className="inline-flex items-center gap-1"><Icon name="calendar" className="w-3 h-3" /> Submitted: {new Date(r.created_at).toLocaleDateString()}</span>
+                  <span className="inline-flex items-center gap-1"><Icon name="calendar" className="w-3 h-3" /> Submitted: {formatDate(r.created_at)}</span>
                   {r.due_date && (
-                    <span className="inline-flex items-center gap-1"><Icon name="schedule" className="w-3 h-3" /> Due: {new Date(r.due_date).toLocaleDateString()}</span>
+                    <span className="inline-flex items-center gap-1"><Icon name="schedule" className="w-3 h-3" /> Due: {formatDate(r.due_date)}</span>
                   )}
                 </div>
               </div>

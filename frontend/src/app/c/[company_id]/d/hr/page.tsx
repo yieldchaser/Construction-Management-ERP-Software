@@ -1,7 +1,7 @@
 "use client";
 import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import {  getApiHost , readErrorDetail } from "@/lib/api";
-import { getApi, authHeaders, resolveCompanyId } from "@/lib/siteflow";
+import { getApi, authHeaders, resolveCompanyId, formatDate } from "@/lib/siteflow";
 
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
@@ -344,7 +344,7 @@ export default function HRPayrollPage() {
           id: h.id,
           holidayName: h.name,
           date: h.date ? h.date.split("T")[0] : "",
-          day: h.date ? new Date(h.date).toLocaleDateString("en-US", { weekday: "long" }) : "",
+          day: h.date ? new Date(h.date).toLocaleDateString("en-IN", { weekday: "long" }) : "",
         })));
       }
     } catch (e) {
@@ -576,7 +576,7 @@ export default function HRPayrollPage() {
       if (res.ok) {
         const h = await res.json();
         const d = new Date(h.date);
-        setHolidays((prev) => [...prev, { id: h.id, holidayName: h.name, date: h.date.split("T")[0], day: d.toLocaleDateString("en-US", { weekday: "long" }) }]);
+        setHolidays((prev) => [...prev, { id: h.id, holidayName: h.name, date: h.date.split("T")[0], day: d.toLocaleDateString("en-IN", { weekday: "long" }) }]);
         setShowAddHolidayModal(false);
         setHolidayForm({ name: "", date: "" });
         triggerLocalToast("Holiday added successfully");
@@ -1294,7 +1294,7 @@ export default function HRPayrollPage() {
                     <tbody className="divide-y divide-border-custom">
                       {timesheetLogs.map((log: any) => {
                         const taskName = projectTasks.find(t => t.id === log.task_id)?.name || "—";
-                        const formattedDate = new Date(log.entry_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+                        const formattedDate = formatDate(log.entry_date);
                         
                         let durationStr = "—";
                         if (log.duration) {

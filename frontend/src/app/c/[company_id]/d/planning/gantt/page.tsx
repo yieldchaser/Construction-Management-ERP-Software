@@ -1188,7 +1188,7 @@ export default function GanttSchedulerPage() {
                                 )}
                                 <span className={`text-[9px] px-2 py-0.5 rounded font-bold uppercase ${
                                   node.priority === "high" ? "bg-danger/10 text-danger" : "bg-elevated text-muted"
-                                }`}>{node.priority}</span>
+                                }`}>{formatLabel(node.priority)}</span>
                                 <span className={`text-[8px] px-1.5 py-0.5 rounded border font-bold uppercase ${
                                   node.status === "completed"
                                     ? "bg-success/10 border-success/20 text-success"
@@ -1256,7 +1256,7 @@ export default function GanttSchedulerPage() {
                         )}
                         <span className={`text-[9px] px-2 py-0.5 rounded font-bold uppercase ${
                           task.priority === "high" ? "bg-danger/10 text-danger" : "bg-elevated text-muted"
-                        }`}>{task.priority}</span>
+                        }`}>{formatLabel(task.priority)}</span>
                         <span className={`text-[8px] px-1.5 py-0.5 rounded border font-bold uppercase ${
                           task.status === "completed"
                             ? "bg-success/10 border-success/20 text-success"

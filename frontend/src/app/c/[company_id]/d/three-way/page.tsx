@@ -1,7 +1,7 @@
 "use client";
 import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import { getApiHost } from "@/lib/api";
-import { authHeaders, fmtINR } from "@/lib/siteflow";
+import { authHeaders, fmtINR, formatLabel } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
@@ -238,7 +238,7 @@ export default function ThreeWayPage() {
                       {fmtINR(m.variance_amount)}
                     </td>
                     <td className="px-6 py-4">
-                      <Badge tone={statusTones[m.match_status] || "neutral"}>{m.match_status}</Badge>
+                      <Badge tone={statusTones[m.match_status] || "neutral"}>{formatLabel(m.match_status)}</Badge>
                     </td>
                     <td className="px-6 py-4 flex gap-2">
                       {m.match_status === "pending" && (

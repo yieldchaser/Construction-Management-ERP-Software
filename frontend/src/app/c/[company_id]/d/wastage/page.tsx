@@ -1,7 +1,7 @@
 "use client";
 import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import {  getApiHost , readErrorDetail } from "@/lib/api";
-import { authHeaders } from "@/lib/siteflow";
+import { authHeaders, formatLabel } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
@@ -153,7 +153,7 @@ export default function WastagePage() {
                     <h3 className="text-foreground font-semibold">{r.material_name}</h3>
                     <p className="text-muted text-xs mt-1">{typeLabels[r.wastage_type] || r.wastage_type} • {r.unit}</p>
                   </div>
-                  <Badge tone={statusTones[r.status] || "neutral"}>{r.status}</Badge>
+                  <Badge tone={statusTones[r.status] || "neutral"}>{formatLabel(r.status)}</Badge>
                 </div>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">

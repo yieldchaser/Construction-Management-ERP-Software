@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
 import {  getApiHost , readErrorDetail } from "@/lib/api";
-import { authHeaders } from "@/lib/siteflow";
+import { authHeaders, formatDate, formatLabel } from "@/lib/siteflow";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import { CardSkeleton } from "@/components/ui/Skeleton";
@@ -183,7 +183,7 @@ export default function TowersPage() {
                       <div className="flex items-center justify-between">
                         <div>
                           <h3 className="text-xs font-extrabold text-foreground uppercase tracking-wider">{t.tower_name}</h3>
-                          <p className="text-[10px] text-muted">Code: {t.tower_code} · {t.status}</p>
+                          <p className="text-[10px] text-muted">Code: {t.tower_code} · {formatLabel(t.status)}</p>
                         </div>
                         <div className="flex gap-1">
                           <button onClick={() => startEdit(t)} className="px-2 py-1 rounded-lg border border-border-custom text-[10px] font-bold text-muted hover:text-foreground hover:bg-elevated cursor-pointer">Edit</button>
@@ -192,7 +192,7 @@ export default function TowersPage() {
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[10px]">
                         <div><span className="text-muted block">Budget</span><span className="text-foreground font-sans font-bold">₹{fmt(t.budget)}</span></div>
-                        <div><span className="text-muted block">Start</span><span className="text-foreground font-sans">{t.start_date ? t.start_date.split("T")[0] : "-"}</span></div>
+                        <div><span className="text-muted block">Start</span><span className="text-foreground font-sans">{formatDate(t.start_date)}</span></div>
                         <div><span className="text-muted block">End</span><span className="text-foreground font-sans">{t.end_date ? t.end_date.split("T")[0] : "-"}</span></div>
                       </div>
                     </div>

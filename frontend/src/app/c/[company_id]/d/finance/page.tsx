@@ -1,7 +1,7 @@
 "use client";
 import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import {  getApiHost , readErrorDetail } from "@/lib/api";
-import { authHeaders } from "@/lib/siteflow";
+import { authHeaders, formatDate } from "@/lib/siteflow";
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -2175,7 +2175,7 @@ export default function FinancePage() {
                         <tr key={req.id} onClick={() => setSelectedPR(req)} className="border-t border-border-custom hover:bg-elevated cursor-pointer transition-colors">
                           <td className="px-5 py-3 text-foreground font-sans font-bold">{req.request_no || "—"}</td>
                           <td className="px-5 py-3 text-muted font-sans">
-                            {new Date(req.created_at).toLocaleDateString("en-IN")}
+                            {formatDate(req.created_at)}
                           </td>
                           <td className="px-5 py-3 font-semibold text-foreground">{req.party_name}</td>
                           <td className="px-5 py-3 text-muted">{req.request_type || "—"}</td>
@@ -2193,7 +2193,7 @@ export default function FinancePage() {
                             </span>
                           </td>
                           <td className="px-5 py-3 text-muted font-sans">
-                            {req.due_date ? new Date(req.due_date).toLocaleDateString("en-IN") : "Immediate"}
+                            {req.due_date ? formatDate(req.due_date) : "Immediate"}
                           </td>
                         </tr>
                       ))
@@ -4514,13 +4514,13 @@ export default function FinancePage() {
               <div className="bg-background border border-border-custom rounded-lg p-3">
                 <p className="text-[9px] text-muted uppercase font-bold mb-1">Particulars</p>
                 <p className="text-muted">{selectedPR.details || "—"}</p>
-                <p className="text-[9px] text-muted mt-2">Due: {selectedPR.due_date ? new Date(selectedPR.due_date).toLocaleDateString("en-IN") : "Immediate"}</p>
+                <p className="text-[9px] text-muted mt-2">Due: {selectedPR.due_date ? formatDate(selectedPR.due_date) : "Immediate"}</p>
               </div>
 
               {selectedPR.payment && (
                 <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
                   <p className="text-[9px] text-primary uppercase font-bold mb-1">Payment Recorded</p>
-                  <p className="text-foreground font-sans">₹{selectedPR.payment.paid_amount.toLocaleString("en-IN")} via {selectedPR.payment.payment_mode} on {new Date(selectedPR.payment.payment_date).toLocaleDateString("en-IN")}</p>
+                  <p className="text-foreground font-sans">₹{selectedPR.payment.paid_amount.toLocaleString("en-IN")} via {selectedPR.payment.payment_mode} on {formatDate(selectedPR.payment.payment_date)}</p>
                   <p className="text-[9px] text-muted mt-1">Deduction ₹{selectedPR.payment.deduction} · TDS ₹{selectedPR.payment.tds} · Balance Due ₹{selectedPR.payment.balance_due}</p>
                   {selectedPR.payment.reference_no && <p className="text-[9px] text-muted mt-1">Ref: {selectedPR.payment.reference_no}</p>}
                   {selectedPR.payment.remarks && <p className="text-[9px] text-muted mt-1">Remarks: {selectedPR.payment.remarks}</p>}

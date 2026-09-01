@@ -5,8 +5,8 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
-import {  getApiHost , readErrorDetail } from "@/lib/api";
-import { authHeaders, downloadWithAuth } from "@/lib/siteflow";
+import { getApiHost, readErrorDetail } from "@/lib/api";
+import { authHeaders, downloadWithAuth, formatDate, formatLabel } from "@/lib/siteflow";
 import Icon, { type IconName } from "@/components/marketing/Icon";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
@@ -905,7 +905,7 @@ export default function ProcurementPage() {
                           </span>
                         )}
                       </div>
-                      <Badge tone={ind.status === "approved" ? "success" : (ind.status === "cancelled" || ind.status === "rejected") ? "neutral" : "warning"} className="uppercase font-bold">{ind.status}</Badge>
+                      <Badge tone={ind.status === "approved" ? "success" : (ind.status === "cancelled" || ind.status === "rejected") ? "neutral" : "warning"} className="uppercase font-bold">{formatLabel(ind.status)}</Badge>
                     </div>
 
                     <div className="space-y-2 border-t border-border-custom pt-3">
@@ -917,11 +917,15 @@ export default function ProcurementPage() {
                             <span className="font-semibold text-foreground">{item.name}</span>
                             <div className="flex items-center gap-3">
                               <span className="text-muted font-sans font-bold">{item.qty} {item.unit}</span>
-                              {stock && (
-                                <span className="text-[10px] bg-elevated px-2 py-0.5 rounded text-muted font-sans">
-                                  avail: <span className="font-bold text-foreground">{Math.max(0, stock.onHand - stock.reserved)}</span>
-                                </span>
-                              )}
+                              {stock && (() => {
+                                const avail = stock.onHand - stock.reserved;
+                                return (
+                                  <span className={`text-[10px] px-2 py-0.5 rounded font-sans ${avail < 0 ? "bg-danger/10 text-danger border border-danger/20 font-bold" : "bg-elevated text-muted"}`}>
+                                    avail: <span className={`font-bold ${avail < 0 ? "text-danger" : "text-foreground"}`}>{avail}</span>
+                                    {avail < 0 && <span className="ml-1 text-[9px] font-normal">(needs reconciling)</span>}
+                                  </span>
+                                );
+                              })()}
                             </div>
                           </div>
                         );
@@ -929,7 +933,7 @@ export default function ProcurementPage() {
                     </div>
 
                     <div className="flex justify-between items-center pt-2 border-t border-border-custom text-[11px] text-muted">
-                      <span>By {ind.requestedBy} on {ind.date}</span>
+                      <span>By {ind.requestedBy} on {formatDate(ind.date)}</span>
                       {ind.status === "pending" && (
                         <div className="flex gap-2">
                           <button onClick={() => handleApproveIndent(ind.id)} className="px-3 py-1 bg-success/10 text-success border border-success/20 rounded font-bold hover:bg-success/20">Approve</button>
@@ -1006,10 +1010,10 @@ export default function ProcurementPage() {
                               ))}
                             </td>
                             <td className="px-5 py-3">
-                              <Badge tone={po.approvalFlag === "approved" ? "success" : po.approvalFlag === "rejected" ? "danger" : "warning"} className="uppercase font-bold">{po.approvalFlag}</Badge>
+                              <Badge tone={po.approvalFlag === "approved" ? "success" : po.approvalFlag === "rejected" ? "danger" : "warning"} className="uppercase font-bold">{formatLabel(po.approvalFlag)}</Badge>
                             </td>
                             <td className="px-5 py-3">
-                              <Badge tone={(po.status === "received" || po.status === "closed") ? "success" : "primary"} className="uppercase font-bold">{po.status}</Badge>
+                              <Badge tone={(po.status === "received" || po.status === "closed") ? "success" : "primary"} className="uppercase font-bold">{formatLabel(po.status)}</Badge>
                             </td>
                             <td className="px-5 py-3 text-right font-sans whitespace-nowrap">
                               <div className="font-bold text-foreground">₹{po.totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
@@ -1114,29 +1118,35 @@ export default function ProcurementPage() {
                         </td>
                       </tr>
                     ) : (
-                    inventory.map((inv, idx) => (
-                      <tr key={idx} className="border-b border-border-custom hover:bg-elevated transition-all">
-                        <td className="px-5 py-3 font-bold text-foreground">{inv.name}</td>
-                        <td className="px-5 py-3 text-muted font-sans uppercase">{inv.unit}</td>
-                        <td className={`px-5 py-3 font-sans font-bold ${inv.onHand < 0 ? "text-danger font-extrabold" : "text-foreground"}`}>
-                          {inv.onHand} {inv.unit}
-                        </td>
-                        <td className="px-5 py-3 text-muted font-sans">{inv.reserved} {inv.unit}</td>
-                        <td className="px-5 py-3 text-foreground font-sans font-semibold">
-                          {Math.max(0, inv.onHand - inv.reserved).toFixed(2)} {inv.unit}
-                        </td>
-                        <td className="px-5 py-3 text-muted font-sans">{inv.minAlertThreshold} {inv.unit}</td>
-                        <td className="px-5 py-3">
-                          {inv.onHand < 0 ? (
-                            <span className="px-2 py-0.5 rounded bg-danger/10 border border-danger/20 text-danger font-bold uppercase text-[9px]">Negative stock context</span>
-                          ) : inv.onHand < inv.minAlertThreshold ? (
-                            <span className="px-2 py-0.5 rounded bg-warning/10 border border-warning/20 text-warning font-bold uppercase text-[9px]">Reorder Alert</span>
-                          ) : (
-                            <span className="px-2 py-0.5 rounded bg-success/10 border border-success/20 text-success font-bold uppercase text-[9px]">Healthy</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))
+                    inventory.map((inv, idx) => {
+                      const netAvail = inv.onHand - inv.reserved;
+                      return (
+                        <tr key={idx} className="border-b border-border-custom hover:bg-elevated transition-all">
+                          <td className="px-5 py-3 font-bold text-foreground">{inv.name}</td>
+                          <td className="px-5 py-3 text-muted font-sans uppercase">{inv.unit}</td>
+                          <td className={`px-5 py-3 font-sans font-bold ${inv.onHand < 0 ? "text-danger font-extrabold" : "text-foreground"}`}>
+                            {inv.onHand} {inv.unit}
+                          </td>
+                          <td className="px-5 py-3 text-muted font-sans">{inv.reserved} {inv.unit}</td>
+                          <td className={`px-5 py-3 font-sans font-semibold ${netAvail < 0 ? "text-danger font-extrabold" : "text-foreground"}`}>
+                            {netAvail.toFixed(2)} {inv.unit}
+                            {netAvail < 0 && (
+                              <span className="block text-[10px] text-danger font-normal">Negative stock (needs reconciling)</span>
+                            )}
+                          </td>
+                          <td className="px-5 py-3 text-muted font-sans">{inv.minAlertThreshold} {inv.unit}</td>
+                          <td className="px-5 py-3">
+                            {inv.onHand < 0 || netAvail < 0 ? (
+                              <span className="px-2 py-0.5 rounded bg-danger/10 border border-danger/20 text-danger font-bold uppercase text-[9px]">Negative stock</span>
+                            ) : inv.onHand < inv.minAlertThreshold ? (
+                              <span className="px-2 py-0.5 rounded bg-warning/10 border border-warning/20 text-warning font-bold uppercase text-[9px]">Reorder Alert</span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded bg-success/10 border border-success/20 text-success font-bold uppercase text-[9px]">Healthy</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })
                     )}
                   </tbody>
                 </table>

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
 import { getApiHost, readErrorDetail } from "@/lib/api";
-import { authHeaders } from "@/lib/siteflow";
+import { authHeaders, formatDate, formatLabel } from "@/lib/siteflow";
 import { UNITS } from "@/lib/units";
 import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import FieldHint from "@/components/ui/FieldHint";
@@ -443,14 +443,14 @@ export default function RFQPage() {
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-bold text-foreground">{rfq.rfq_number}</span>
                           <Badge tone={getStatusTone(rfq.status)} className="uppercase font-bold text-[9px]">
-                            {rfq.status}
+                            {formatLabel(rfq.status)}
                           </Badge>
                         </div>
                         <div className="text-[11px] text-muted flex flex-wrap gap-x-4 gap-y-1">
                           <span>{rfq.items?.length || 0} line items</span>
                           {rfq.valid_until && (
                             <span>
-                              Valid until: {new Date(rfq.valid_until).toLocaleDateString()}
+                              Valid until: {formatDate(rfq.valid_until)}
                             </span>
                           )}
                           {rfq.notes && <span className="italic truncate max-w-xs">{rfq.notes}</span>}
@@ -521,7 +521,7 @@ export default function RFQPage() {
                           Side-by-Side Analysis
                         </span>
                         <Badge tone={getStatusTone(selectedRfqForView.status)} className="uppercase text-[9px]">
-                          {selectedRfqForView.status}
+                          {formatLabel(selectedRfqForView.status)}
                         </Badge>
                       </div>
                       <h2 className="text-sm font-bold text-foreground mt-0.5">

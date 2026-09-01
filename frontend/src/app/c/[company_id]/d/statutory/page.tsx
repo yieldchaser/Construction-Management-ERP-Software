@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
 import { usePermissions } from "@/context/PermissionsContext";
 import { getApiHost, readErrorDetail } from "@/lib/api";
-import { authHeaders } from "@/lib/siteflow";
+import { authHeaders, formatDate, formatLabel } from "@/lib/siteflow";
 import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
@@ -137,7 +137,8 @@ const QUARTERS = [
   { value: "Q4", label: "Q4 (Jan - Mar)" },
 ];
 
-const YEARS = [2024, 2025, 2026, 2027];
+const currentCalendarYear = new Date().getFullYear();
+const YEARS = Array.from({ length: 6 }, (_, i) => currentCalendarYear - 3 + i);
 
 function downloadCSV(filename: string, headers: string[], rows: (string | number | null | undefined)[][]) {
   const csvContent = [
@@ -185,7 +186,7 @@ export default function StatutoryPage() {
   const [activeGeneratorTab, setActiveGeneratorTab] = useState<GeneratorTab>(defaultTab);
 
   const [genMonth, setGenMonth] = useState<number>(new Date().getMonth() + 1);
-  const [genYear, setGenYear] = useState<number>(2026);
+  const [genYear, setGenYear] = useState<number>(() => new Date().getFullYear());
   const [genQuarter, setGenQuarter] = useState<string>("Q1");
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -968,7 +969,7 @@ export default function StatutoryPage() {
                           </td>
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-1.5">
-                              <Badge tone={statusTones[r.status] || "neutral"}>{r.status}</Badge>
+                              <Badge tone={statusTones[r.status] || "neutral"}>{formatLabel(r.status)}</Badge>
                               {r.days_overdue > 0 && (
                                 <span className="text-[10px] text-danger font-semibold">{r.days_overdue}d overdue</span>
                               )}
@@ -1011,7 +1012,7 @@ export default function StatutoryPage() {
                   <div>
                     <span className="text-muted">Due Date:</span>{" "}
                     <span className="text-foreground font-semibold">
-                      {penaltyData.due_date ? new Date(penaltyData.due_date as string).toLocaleDateString() : "-"}
+                      {formatDate(penaltyData.due_date)}
                     </span>
                   </div>
                   <div>

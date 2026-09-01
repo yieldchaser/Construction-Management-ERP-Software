@@ -54,3 +54,44 @@ def update_onboarding(
             "categories": company.onboarding_categories,
         }
     }
+
+class UpdateProfileRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=255, example="Jane Doe")
+
+@router.get("/me")
+@router.get("")
+def get_my_profile(
+    current_user: models.User = Depends(get_current_user),
+):
+    return {
+        "id": str(current_user.id),
+        "name": current_user.name,
+        "email": current_user.email,
+        "mobile": current_user.mobile,
+    }
+
+@router.patch("/me")
+@router.put("/me")
+@router.patch("")
+@router.put("")
+def update_my_profile(
+    request: UpdateProfileRequest,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    clean_name = request.name.strip()
+    if not clean_name:
+        raise HTTPException(status_code=400, detail="Name cannot be empty")
+    current_user.name = clean_name
+    db.commit()
+    db.refresh(current_user)
+    return {
+        "success": True,
+        "message": "Profile updated successfully",
+        "user": {
+            "id": str(current_user.id),
+            "name": current_user.name,
+            "email": current_user.email,
+            "mobile": current_user.mobile,
+        }
+    }

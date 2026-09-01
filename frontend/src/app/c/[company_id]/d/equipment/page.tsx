@@ -1,7 +1,7 @@
 "use client";
 import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import {  getApiHost , readErrorDetail } from "@/lib/api";
-import { authHeaders, downloadWithAuth } from "@/lib/siteflow";
+import { authHeaders, downloadWithAuth, formatDate } from "@/lib/siteflow";
 
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
@@ -538,7 +538,7 @@ export default function EquipmentTrackingPage() {
                           <p className="text-muted mt-1">{evt.display}</p>
                         </div>
                         <div className="text-right text-[10px] text-muted">
-                          {new Date(evt.date).toLocaleDateString()} · {new Date(evt.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                          {formatDate(evt.date)} · {new Date(evt.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                         </div>
                       </div>
                     )))}
@@ -636,7 +636,7 @@ export default function EquipmentTrackingPage() {
                                 <span className="block text-[9px] text-muted">{run.eq?.code} · {run.eq?.category}</span>
                               </td>
                               <td className="px-5 py-3 text-muted">
-                                {new Date(run.d.start_date).toLocaleDateString()}
+                                {formatDate(run.d.start_date)}
                                 <span className="block text-[9px] text-muted">
                                   {new Date(run.d.start_date).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})} → {new Date(run.d.end_date!).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}
                                 </span>
@@ -708,9 +708,9 @@ export default function EquipmentTrackingPage() {
                                 <span className="block text-[9px] text-muted">{eq?.code} · {eq?.category}</span>
                               </td>
                               <td className="px-5 py-3 text-muted font-medium">{log.service_type}</td>
-                              <td className="px-5 py-3 text-muted">{new Date(log.scheduled_date).toLocaleDateString()}</td>
+                              <td className="px-5 py-3 text-muted">{formatDate(log.scheduled_date)}</td>
                               <td className="px-5 py-3 text-muted">
-                                {log.completed_date ? new Date(log.completed_date).toLocaleDateString() : <span className="text-muted">—</span>}
+                                {formatDate(log.completed_date)}
                               </td>
                               <td className="px-5 py-3 text-right font-sans font-bold text-foreground">
                                 {log.cost > 0 ? `₹${log.cost.toLocaleString()}` : <span className="text-muted">—</span>}
@@ -775,7 +775,7 @@ export default function EquipmentTrackingPage() {
                               {bill.terms && <span className="block text-[9px] text-muted truncate max-w-xs">{bill.terms}</span>}
                             </td>
                             <td className="px-5 py-3 text-muted">
-                              {bill.invoice_date ? new Date(bill.invoice_date).toLocaleDateString() : "—"}
+                              {formatDate(bill.invoice_date)}
                             </td>
                             <td className="px-5 py-3 text-right font-sans text-muted">
                               ₹{(bill.subtotal || 0).toLocaleString("en-IN")}
