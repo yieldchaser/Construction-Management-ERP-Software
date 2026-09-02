@@ -1,3 +1,18 @@
+> **DONE, not by an agent. Do not run this file.** Every part was fixed directly
+> on 2026-09-02 across `956d2f8`, `427ec00` and `29aedf7`, and covered by
+> `backend/tests/coverage/test_e2e_workflow_breaks.py`, which fails against
+> `041c6d4` on each defect it names.
+>
+> Verified live on AK Construction after deploy: material wastage records
+> end to end, and a safety incident posts an absolute instant and returns 200.
+>
+> Two corrections to what this file claims. Part 9's a11y item is **retracted**:
+> the Reports hub controls are real `<button>` and `<Link>` elements with title
+> attributes, not bare svgs; my DOM probe never reached the sibling holding them.
+> And the PO vendor fix in Part 6a needed a second pass, because
+> `PurchaseOrder.vendor_id` is a foreign key to `company_team`, so the create
+> endpoint takes `vendor_party_id` and resolves the link itself.
+>
 # AGENT PROMPT: eight workflows that do not complete, found by driving the app
 
 I drove SiteFlow end to end on AK Construction as a real site team would:

@@ -1,3 +1,7 @@
+> **DONE, not by an agent. Do not run this file.** Fixed at `ed1ac2c` and
+> verified live: the leave tab shows the warning inline and still renders the
+> history table below it.
+>
 # AGENT PROMPT: the leave tab now hides history behind a name match
 
 Group B is otherwise correct and verified. One regression came with it.
