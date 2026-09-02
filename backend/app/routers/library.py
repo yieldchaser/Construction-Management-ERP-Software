@@ -769,16 +769,9 @@ def update_library_workforce(item_id: uuid.UUID, payload: WorkforceUpdate, db: S
         raise HTTPException(status_code=404, detail="Workforce not found")
     get_company_membership(db, current_user, item.company_id)
     require_permission(db, current_user, item.company_id, "library:edit")
-    if payload.name is not None:
-        item.name = payload.name
-    if payload.rate_type is not None:
-        item.rate_type = payload.rate_type
-    if payload.salary_per_shift is not None:
-        item.salary_per_shift = payload.salary_per_shift
-    if payload.shift_hours is not None:
-        item.shift_hours = payload.shift_hours
-    if payload.cost_code is not None:
-        item.cost_code = payload.cost_code
+    update_data = payload.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(item, field, value)
     db.commit()
     db.refresh(item)
     return item

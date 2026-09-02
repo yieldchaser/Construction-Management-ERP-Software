@@ -1457,53 +1457,49 @@ function MyLeavesTab({
     load();
   };
 
-  if (!me) {
-    return (
-      <div className="rounded-md border border-warning/40 bg-warning/10 p-4 text-sm text-warning">
-        No employee staff record linked to your user account ({userName || "current user"}). Please register in Employee Directory first.
-      </div>
-    );
-  }
-
-  if (!assignedTemplate) {
-    return (
-      <div className="rounded-md border border-warning/40 bg-warning/10 p-4 text-sm text-warning">
-        No leave template assigned for your account this year.
-      </div>
-    );
-  }
-
   return (
     <div>
       <h3 className="mb-1 text-base font-semibold text-foreground">My Leaves</h3>
-      <p className="mb-4 text-sm text-muted">
-        Template: {assignedTemplate.name} · Casual {assignedTemplate.casual_leave_days} · Sick{" "}
-        {assignedTemplate.sick_leave_days} · Earned {assignedTemplate.earned_leave_days}
-      </p>
-      <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2 rounded-md border border-border-custom p-3">
-        <Field label="Leave Type">
-          <select className={inputCls} value={type} onChange={(e) => setType(e.target.value)}>
-            <option>Casual</option>
-            <option>Sick</option>
-            <option>Earned</option>
-          </select>
-        </Field>
-        <Field label="From">
-          <input type="date" className={inputCls} value={from} onChange={(e) => setFrom(e.target.value)} />
-        </Field>
-        <Field label="To">
-          <input type="date" className={inputCls} value={to} onChange={(e) => setTo(e.target.value)} />
-        </Field>
-        <Field label="Days">
-          <input type="number" className={inputCls} value={days} onChange={(e) => setDays(parseFloat(e.target.value) || 0)} />
-        </Field>
-        <Field label="Reason">
-          <input type="text" placeholder="Reason for leave" className={inputCls} value={reason} onChange={(e) => setReason(e.target.value)} />
-        </Field>
-      </div>
-      <button className={btnPrimary} onClick={apply}>
-        Apply for Leave
-      </button>
+      {!me ? (
+        <div className="mb-4 rounded-md border border-warning/40 bg-warning/10 p-4 text-sm text-warning">
+          No employee staff record linked to your user account ({userName || "current user"}). Please register in Employee Directory first.
+        </div>
+      ) : !assignedTemplate ? (
+        <div className="mb-4 rounded-md border border-warning/40 bg-warning/10 p-4 text-sm text-warning">
+          No leave template assigned for your account this year.
+        </div>
+      ) : (
+        <>
+          <p className="mb-4 text-sm text-muted">
+            Template: {assignedTemplate.name} · Casual {assignedTemplate.casual_leave_days} · Sick{" "}
+            {assignedTemplate.sick_leave_days} · Earned {assignedTemplate.earned_leave_days}
+          </p>
+          <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2 rounded-md border border-border-custom p-3">
+            <Field label="Leave Type">
+              <select className={inputCls} value={type} onChange={(e) => setType(e.target.value)}>
+                <option>Casual</option>
+                <option>Sick</option>
+                <option>Earned</option>
+              </select>
+            </Field>
+            <Field label="From">
+              <input type="date" className={inputCls} value={from} onChange={(e) => setFrom(e.target.value)} />
+            </Field>
+            <Field label="To">
+              <input type="date" className={inputCls} value={to} onChange={(e) => setTo(e.target.value)} />
+            </Field>
+            <Field label="Days">
+              <input type="number" className={inputCls} value={days} onChange={(e) => setDays(parseFloat(e.target.value) || 0)} />
+            </Field>
+            <Field label="Reason">
+              <input type="text" placeholder="Reason for leave" className={inputCls} value={reason} onChange={(e) => setReason(e.target.value)} />
+            </Field>
+          </div>
+          <button className={btnPrimary} onClick={apply}>
+            Apply for Leave
+          </button>
+        </>
+      )}
 
       <div className="mt-6 overflow-x-auto rounded-md border border-border-custom">
         <table className="w-full text-sm">
@@ -1532,10 +1528,6 @@ function MyLeavesTab({
                   <EmptyState
                     title="No leave requests yet"
                     description="Submit a leave application using the form above to track time-off approvals."
-                    action={{
-                      label: "Apply for Leave",
-                      onClick: apply,
-                    }}
                   />
                 </td>
               </tr>
