@@ -791,6 +791,11 @@ class AttendanceLog(Base):
     shift_multiplier = Column(Numeric(5, 2), default=1.0, nullable=False)
     location_verified = Column(Boolean, default=True, nullable=False)
     photo_verified = Column(Boolean, default=False, nullable=False)
+    # Set when a supervisor marks the muster by hand instead of the worker
+    # punching with GPS. Attendance feeds payroll, so a hand-marked day has to be
+    # distinguishable from a verified punch and attributable to whoever marked it.
+    marked_manually = Column(Boolean, default=False, nullable=False)
+    marked_by = Column(String(255), nullable=True)
     notes = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
@@ -2147,6 +2152,10 @@ class LibraryMaterial(Base):
     hsn_sac = Column(String(50), nullable=True)
     item_code = Column(String(100), nullable=True)
     specifications = Column(String, nullable=True)
+    # The Material Library table has always had a CREATOR NAME column and the
+    # model had no field to fill it, so it rendered "-" forever. LibraryParty
+    # records this already; mirror it rather than drop a useful column.
+    creator_name = Column(String(255), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 class LibraryRate(Base):

@@ -976,7 +976,7 @@ export default function HRPayrollPage() {
         <PageHeader
           title={
             (tab === "employees" && "Staff Directory") ||
-            (tab === "attendance" && `Daily Attendance: ${selectedDate}`) ||
+            (tab === "attendance" && `Daily Attendance: ${formatDate(selectedDate)}`) ||
             (tab === "timesheets" && "Weekly Timesheets") ||
             (tab === "payroll" && "Payroll Engine") ||
             (tab === "leaves" && "Leave Management") ||

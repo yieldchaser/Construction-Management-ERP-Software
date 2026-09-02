@@ -274,3 +274,135 @@ def test_a_purchase_order_can_name_a_supplier_from_the_party_library(
         "E2E-15: a Supplier chosen from the party library must resolve to a real "
         f"vendor on the PO; got {body.get('vendor_name')!r}"
     )
+
+
+# ── Part 9: smaller things, all observed on the same pass ──
+
+def test_attendance_can_be_marked_without_gps(client, db, make_tenant, auth_headers):
+    """Observed: the muster offered Present / Absent / Paid Leave / Week Off as
+    filters and the only write path was a GPS punch, so a crew with no
+    smartphones could not be marked at all and payroll had nothing to read."""
+    import uuid as _uuid
+
+    from app import models
+
+    sfx = _uuid.uuid4().hex[:8]
+    comp, user, _team = make_tenant(
+        company_name=f"Muster-{sfx}", user_name=f"UMuster-{sfx}",
+        mobile=f"+9197{sfx}", email=f"muster-{sfx}@test.com",
+    )
+    hdr = auth_headers(user, comp)
+    project = models.Project(id=_uuid.uuid4(), company_id=comp.id, name="Muster Site", state="Karnataka")
+    emp = models.StaffEmployee(
+        id=_uuid.uuid4(), company_id=comp.id, project_id=None, name="Ramesh Kumar", status="active"
+    )
+    db.add_all([project, emp])
+    db.commit()
+
+    res = client.post(
+        "/apis/v3/hr/attendance/manual",
+        json={
+            "employee_id": str(emp.id),
+            "project_id": str(project.id),
+            "attendance_date": "2026-09-02",
+            "status": "Present",
+        },
+        headers=hdr,
+    )
+    assert res.status_code == 200, res.text
+    body = res.json()
+    assert body["status"] == "Present"
+    assert body["marked_manually"] is True, "a hand-marked day must be flagged as such"
+    assert body["location_verified"] is False, (
+        "a hand-marked day is somebody's word, not a measured punch, and the "
+        "muster shown to whoever signs off payroll has to say which is which"
+    )
+
+    # Re-marking the same day must update, never stack a second attendance row,
+    # which would double-count payroll days.
+    again = client.post(
+        "/apis/v3/hr/attendance/manual",
+        json={
+            "employee_id": str(emp.id),
+            "project_id": str(project.id),
+            "attendance_date": "2026-09-02",
+            "status": "Absent",
+        },
+        headers=hdr,
+    )
+    assert again.status_code == 200, again.text
+    assert again.json()["id"] == body["id"], "re-marking created a duplicate attendance row"
+
+
+def test_a_duplicate_party_id_is_rejected(client, db, make_tenant, auth_headers):
+    """Observed: the library showed PID-1, PID-2, PID-2, PID-4, PID-5. The
+    generator has a collision loop; a SUPPLIED id was stored unchecked."""
+    import uuid as _uuid
+
+    sfx = _uuid.uuid4().hex[:8]
+    comp, user, _team = make_tenant(
+        company_name=f"PID-{sfx}", user_name=f"UPID-{sfx}",
+        mobile=f"+9198{sfx}", email=f"pid-{sfx}@test.com",
+    )
+    hdr = auth_headers(user, comp)
+
+    first = client.post(
+        "/apis/v3/library/parties",
+        json={"company_id": str(comp.id), "party_id_custom": "PID-99", "name": "First Vendor"},
+        headers=hdr,
+    )
+    assert first.status_code in (200, 201), first.text
+
+    clash = client.post(
+        "/apis/v3/library/parties",
+        json={"company_id": str(comp.id), "party_id_custom": "PID-99", "name": "Second Vendor"},
+        headers=hdr,
+    )
+    assert clash.status_code == 409, (
+        "a supplied party id that is already taken must be refused, not stored "
+        f"as a duplicate; got {clash.status_code}"
+    )
+
+
+def test_an_employee_cannot_be_saved_without_a_name():
+    """Observed: POST /hr/employees with name "" returned 201 and the row
+    rendered with a blank NAME cell."""
+    import uuid as _uuid
+
+    import pytest as _pytest
+
+    from app.routers.hr import EmployeeCreate
+
+    for blank in ("", "   "):
+        with _pytest.raises(Exception):
+            EmployeeCreate(company_id=_uuid.uuid4(), name=blank)
+
+    ok = EmployeeCreate(company_id=_uuid.uuid4(), name="  Ramesh Kumar  ")
+    assert ok.name == "Ramesh Kumar", "name should be stored trimmed"
+
+    with _pytest.raises(Exception):
+        EmployeeCreate(company_id=_uuid.uuid4(), name="Ramesh", basic_salary=9_811_223_344)
+
+
+def test_indents_are_numbered():
+    """Observed: every indent raised through the UI stored indent_number "".
+    An unnumbered requisition cannot be quoted to a vendor."""
+    src = _be("app/routers/procurement.py")
+    assert "_generate_indent_number" in src, "E2E-11 regressed: indents are unnumbered again"
+    assert 'f"IND-{count + 1:04d}"' in src, "indent numbering format changed unexpectedly"
+
+
+def test_no_is_code_claims_in_billing_payroll_or_quality_copy():
+    """IS 456 is the plain and reinforced concrete code. It has nothing to do
+    with GST, TDS or PF, and it was cited on all three screens."""
+    offenders = []
+    for rel in (
+        "src/app/c/[company_id]/d/billing/page.tsx",
+        "src/app/c/[company_id]/d/attendance/page.tsx",
+        "src/app/c/[company_id]/p/[project_id]/attendance/page.tsx",
+        "src/app/c/[company_id]/d/quality/page.tsx",
+    ):
+        text = _fe(rel)
+        if "IS-456" in text or "per IS code" in text or "Compliant with IS code" in text:
+            offenders.append(rel)
+    assert not offenders, f"IS-code claims reintroduced in: {offenders}"

@@ -1531,12 +1531,15 @@ export default function FinancePage() {
                       <tr key={i} className="hover:bg-elevated/40 transition-all cursor-pointer" onClick={() => setSelectedVoucher(t)}>
                         <td className="p-3">
                           <div className="font-bold text-foreground">{t.party}</div>
-                          <div className="text-[10px] text-muted">{t.type}</div>
+                          {/* Some rows carry the raw enum ("expense", "payment_in")
+                              and others a human label, so the same column mixed
+                              both. formatLabel leaves an already-spaced label alone. */}
+                          <div className="text-[10px] text-muted">{formatLabel(t.type)}</div>
                         </td>
                         <td className="p-3 text-foreground">
                           {t.details}
                           {t.project_id ? <span className="text-[10px] text-muted block">Project: {t.project_name || String(t.project_id).slice(0, 8)}</span> : null}
-                          {t.due_date ? <span className="text-[10px] text-warning block font-medium">Due: {t.due_date}</span> : null}
+                          {t.due_date ? <span className="text-[10px] text-warning block font-medium">Due: {formatDate(t.due_date)}</span> : null}
                         </td>
                         <td className="p-3 text-right font-bold text-foreground">₹{(t.amount || 0).toLocaleString("en-IN")}</td>
                         <td className="p-3">

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
 import { getApiHost, readErrorDetail } from "@/lib/api";
-import { formatDate } from "@/lib/siteflow";
+import { formatDate, fmtINR } from "@/lib/siteflow";
 import { UNITS } from "@/lib/units";
 import Badge from "@/components/ui/Badge";
 import Icon, { type IconName } from "@/components/marketing/Icon";
@@ -46,6 +46,18 @@ const TAB_TITLES: Record<LibraryType, string> = {
   "material-category": "Material Category",
   todo: "To Do",
 };
+
+/** One vocabulary for both the filter and the create form. They used to
+ *  disagree, so four filter values could never match anything. */
+const PARTY_TYPES = [
+  "Supplier",
+  "Subcontractor",
+  "Client",
+  "Contractor",
+  "Material Supplier",
+  "Equipment Supplier",
+  "Labour Contractor",
+] as const;
 
 export default function LibraryHubPage() {
   const params = useParams();
@@ -772,13 +784,9 @@ export default function LibraryHubPage() {
               title="Filter by Party Type"
             >
               <option value="">All Party Types</option>
-              <option value="Supplier">Supplier</option>
-              <option value="Subcontractor">Subcontractor</option>
-              <option value="Client">Client</option>
-              <option value="Contractor">Contractor</option>
-              <option value="Material Supplier">Material Supplier</option>
-              <option value="Equipment Supplier">Equipment Supplier</option>
-              <option value="Labour Contractor">Labour Contractor</option>
+              {PARTY_TYPES.map((t) => (
+                <option key={t} value={t}>{t}</option>
+              ))}
             </select>
           )}
         </div>
@@ -1078,6 +1086,10 @@ export default function LibraryHubPage() {
                   <th className="px-5 py-3">Unit</th>
                   <th className="px-5 py-3">Alternate UOM</th>
                   <th className="px-5 py-3">Material Category</th>
+                  <th className="px-5 py-3">HSN/SAC</th>
+                  <th className="px-5 py-3 text-right">GST %</th>
+                  <th className="px-5 py-3 text-right">Std. Cost</th>
+                  <th className="px-5 py-3 text-right">Lead Time</th>
                   <th className="px-5 py-3">Created Date</th>
                   <th className="px-5 py-3">Creator Name</th>
                   <th className="px-6 py-4 text-center">Action</th>
@@ -1106,20 +1118,20 @@ export default function LibraryHubPage() {
                       <td className="px-6 py-4 text-muted">{formatLibraryCell(item.unit)}</td>
                       <td className="px-6 py-4 text-muted">{formatLibraryCell(item.alternate_unit)}</td>
                       <td className="px-6 py-4 text-muted">{formatLibraryCell(item.category)}</td>
+                      <td className="px-6 py-4 text-muted">{formatLibraryCell(item.hsn_sac)}</td>
+                      <td className="px-6 py-4 text-muted text-right">
+                        {item.gst_rate != null ? `${item.gst_rate}%` : "-"}
+                      </td>
+                      <td className="px-6 py-4 text-muted text-right">
+                        {item.unit_cost != null ? fmtINR(Number(item.unit_cost)) : "-"}
+                      </td>
+                      <td className="px-6 py-4 text-muted text-right">
+                        {item.lead_time_days != null ? `${item.lead_time_days}d` : "-"}
+                      </td>
                       <td className="px-6 py-4 text-muted">
                         {formatDate(item.created_at, "-")}
                       </td>
-                      <td className="px-6 py-4 text-muted">
-                        {formatLibraryCell(
-                          item.creator_name ||
-                            item.creatorName ||
-                            item.created_by_name ||
-                            item.createdByName ||
-                            item.creator ||
-                            item.created_by_user_name ||
-                            item.createdByUserName
-                        )}
-                      </td>
+                      <td className="px-6 py-4 text-muted">{formatLibraryCell(item.creator_name)}</td>
                       <td className="px-6 py-4 text-center">
                         <div className="flex items-center justify-center gap-1.5">
                           <button
@@ -1432,9 +1444,13 @@ export default function LibraryHubPage() {
                     onChange={(e) => setPartyType(e.target.value)}
                     className="input-field w-full px-3 py-2 text-xs focus:outline-none"
                   >
-                    <option value="Supplier">Supplier</option>
-                    <option value="Subcontractor">Subcontractor</option>
-                    <option value="Client">Client</option>
+                    {/* Must match the filter above. The create form offered three
+                        of the seven values the filter can select, so Contractor,
+                        Material Supplier, Equipment Supplier and Labour Contractor
+                        were filter options nothing could ever match. */}
+                    {PARTY_TYPES.map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
                   </select>
                 </div>
 
@@ -1773,7 +1789,21 @@ export default function LibraryHubPage() {
                     {UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
                   </select>
                 </div>
-                <div className="space-y-1 col-span-2">
+                <div className="space-y-1">
+                  {/* matAltUnit was in state and in the submit payload, and the
+                      table has an Alternate UOM column, but there was no input
+                      anywhere so the column could only ever read "-". */}
+                  <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">Alternate UOM</label>
+                  <select
+                    value={matAltUnit}
+                    onChange={(e) => setMatAltUnit(e.target.value)}
+                    className="input-field w-full px-3 py-2 text-xs focus:outline-none"
+                  >
+                    <option value="">— None —</option>
+                    {UNITS.filter((u) => u !== matUnit).map((u) => <option key={u} value={u}>{u}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-1">
                   <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1.5">GST Rate (%)</label>
                   <input
                     type="number"

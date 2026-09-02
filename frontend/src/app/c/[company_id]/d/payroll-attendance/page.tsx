@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
+import { getApiHost, readErrorDetail } from "@/lib/api";
 import { getApi, authHeaders, resolveCompanyId, fmtINR, formatLabel, toLocalISODate, todayLocalISO, formatDate } from "@/lib/siteflow";
 import { useProject } from "@/context/ProjectContext";
 import { useCompanySettings } from "@/context/CompanySettingsContext";
@@ -84,6 +85,8 @@ type Att = {
   hours_worked: number | null;
   overtime_hours: number;
   is_within_geofence: boolean;
+  marked_manually?: boolean;
+  marked_by?: string | null;
 };
 
 type Breakup = {
@@ -1144,6 +1147,7 @@ function AttendanceTab({
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [leaves, setLeaves] = useState<Leave[]>([]);
+  const [savingId, setSavingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -1166,6 +1170,33 @@ function AttendanceTab({
   useEffect(() => {
     load();
   }, [load]);
+
+  const markAttendance = async (emp: Emp, status: string) => {
+    if (!emp.project_id) {
+      alert(`${emp.name} is not assigned to a project. Assign them first, since attendance is recorded against a project.`);
+      return;
+    }
+    setSavingId(emp.id);
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/hr/attendance/manual`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+        body: JSON.stringify({
+          employee_id: emp.id,
+          project_id: emp.project_id,
+          attendance_date: date,
+          status,
+        }),
+      });
+      if (!res.ok) {
+        alert(`Could not mark attendance: ${await readErrorDetail(res)}`);
+        return;
+      }
+      await load();
+    } finally {
+      setSavingId(null);
+    }
+  };
 
   const presentMap = useMemo(() => {
     const m: Record<string, Att> = {};
@@ -1263,12 +1294,13 @@ function AttendanceTab({
             <tr>
               <th className="px-3 py-2">Name</th>
               <th className="px-3 py-2">Attendance Status</th>
+              <th className="px-3 py-2">Mark</th>
             </tr>
           </thead>
           <tbody>
             {loadError ? (
               <tr>
-                <td colSpan={2} className="px-3 py-6 text-center text-danger">
+                <td colSpan={3} className="px-3 py-6 text-center text-danger">
                   Attendance could not be loaded for this day: no statuses are shown rather than marking everyone absent.
                 </td>
               </tr>
@@ -1291,12 +1323,36 @@ function AttendanceTab({
                       >
                         {formatLabel(r.status)}
                       </span>
+                      {r.log?.marked_manually && (
+                        <span className="ml-2 text-[10px] text-muted" title={`Marked by ${r.log.marked_by || "a supervisor"}, not GPS verified`}>
+                          (marked{r.log.marked_by ? ` by ${r.log.marked_by}` : ""})
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2">
+                      {/* The status column is derived from punches, leaves and
+                          holidays. Without this control the filter chips promised
+                          statuses nothing could set, and a crew with no
+                          smartphones could not be marked present at all. */}
+                      <select
+                        className={inputCls + " max-w-[150px]"}
+                        value=""
+                        disabled={savingId === r.emp.id}
+                        onChange={(e) => e.target.value && markAttendance(r.emp, e.target.value)}
+                      >
+                        <option value="">{savingId === r.emp.id ? "Saving…" : "Mark…"}</option>
+                        <option value="Present">Present</option>
+                        <option value="Half Day">Half Day</option>
+                        <option value="Absent">Absent</option>
+                        <option value="Paid Leave">Paid Leave</option>
+                        <option value="Week Off">Week Off</option>
+                      </select>
                     </td>
                   </tr>
                 ))}
                 {!loading && filtered.length === 0 && (
                   <tr>
-                    <td colSpan={2} className="px-3 py-6 text-center text-muted">
+                    <td colSpan={3} className="px-3 py-6 text-center text-muted">
                       No records for this day.
                     </td>
                   </tr>

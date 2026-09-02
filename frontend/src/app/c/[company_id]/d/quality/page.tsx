@@ -1,6 +1,6 @@
 "use client";
 import {  getApiHost , readErrorDetail } from "@/lib/api";
-import { authHeaders, formatLabel, toLocalISODate } from "@/lib/siteflow";
+import { authHeaders, formatDate, formatLabel, toLocalISODate } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
@@ -234,7 +234,7 @@ isCode: cl.is_code_reference || "—",
             checklistId: insp.checklist_id,
             zone: insp.zone || "—",
             checklist: foundCl ? foundCl.title : "Unknown checklist",
-            date: insp.inspection_date ? insp.inspection_date.split("T")[0] : "",
+            date: insp.inspection_date || "",
             status: insp.status,
             passCount: insp.pass_count,
             failCount: insp.fail_count,
@@ -266,8 +266,8 @@ isCode: cl.is_code_reference || "—",
           status: n.status,
           zone: (n.inspection_id && zoneByInspection[String(n.inspection_id)]) || "Unspecified zone",
           raisedBy: "Inspector",
-          date: n.created_at ? n.created_at.split("T")[0] : "",
-          dueDate: n.due_date ? n.due_date.split("T")[0] : "",
+          date: n.created_at || "",
+          dueDate: n.due_date || "",
           resolution: n.resolution_notes || undefined
         }));
         setNcrs(mapped);
@@ -689,7 +689,7 @@ isCode: cl.is_code_reference || "—",
                           <tr key={insp.id} className="border-b border-border-custom hover:bg-elevated transition-all">
                             <td className="px-5 py-3 font-bold text-foreground">{insp.zone}</td>
                             <td className="px-5 py-3 text-foreground">{insp.checklist}</td>
-                            <td className="px-5 py-3 text-muted">{insp.date}</td>
+                            <td className="px-5 py-3 text-muted">{formatDate(insp.date)}</td>
                             <td className="px-5 py-3 text-muted">{insp.inspector}</td>
                             <td className="px-5 py-3">
                               <div className="flex items-center gap-3">
@@ -820,7 +820,7 @@ isCode: cl.is_code_reference || "—",
                       <span className="text-[10px] text-muted font-sans">{ncr.number}</span>
                     </div>
                     <p className="text-xs font-semibold text-foreground leading-snug">{ncr.title}</p>
-                    <p className="text-[10px] text-muted">{ncr.zone} · Due {ncr.dueDate}</p>
+                    <p className="text-[10px] text-muted">{ncr.zone} · Due {formatDate(ncr.dueDate)}</p>
                     <button onClick={() => moveNCR(ncr.id, "under_review")}
                       className="w-full text-[10px] py-1 rounded bg-info/10 text-info border border-info/20 hover:bg-info/20 font-bold transition-all cursor-pointer inline-flex items-center justify-center gap-1">
                       <Icon name="arrow_forward" className="w-3 h-3" /> Move to Review
@@ -843,7 +843,7 @@ isCode: cl.is_code_reference || "—",
                       <span className="text-[10px] text-muted font-sans">{ncr.number}</span>
                     </div>
                     <p className="text-xs font-semibold text-foreground leading-snug">{ncr.title}</p>
-                    <p className="text-[10px] text-muted">{ncr.zone} · Due {ncr.dueDate}</p>
+                    <p className="text-[10px] text-muted">{ncr.zone} · Due {formatDate(ncr.dueDate)}</p>
                     <button onClick={() => moveNCR(ncr.id, "closed")}
                       className="w-full text-[10px] py-1 rounded bg-success/10 text-success border border-success/20 hover:bg-success/20 font-bold transition-all cursor-pointer inline-flex items-center justify-center gap-1">
                       <Icon name="check" className="w-3 h-3" /> Close NCR
@@ -1147,7 +1147,7 @@ isCode: cl.is_code_reference || "—",
                   <option value="">General NCR / Not Linked to Inspection</option>
                   {inspections.map((insp) => (
                     <option key={insp.id} value={insp.id}>
-                      {insp.checklist || insp.category} ({insp.zone || "No Zone"}) - {insp.status.toUpperCase()} ({insp.date})
+                      {insp.checklist || insp.category} ({insp.zone || "No Zone"}) - {insp.status.toUpperCase()} ({formatDate(insp.date)})
                     </option>
                   ))}
                 </select>

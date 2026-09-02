@@ -201,12 +201,16 @@ def self_test():
     return True
 
 
+from _callsite_check import check_callsites, callsite_self_test  # noqa: E402
+
 DEPLOY_CHECK_FAIL = 1
 DEPLOY_CHECK_OK = 0
 
 
 def main():
     if not self_test():
+        sys.exit(DEPLOY_CHECK_FAIL)
+    if not callsite_self_test():
         sys.exit(DEPLOY_CHECK_FAIL)
 
     routes = scan_backend_routes()
@@ -225,7 +229,14 @@ def main():
         for u in unreachable:
             print(f"{u['method']:<7} {u['path']:<55} ({u['file']}:{u['line']})")
 
-    return len(unreachable)
+    unknown = check_callsites(routes, frontend_contents)
+    print(f"[reachability] Frontend calls hitting no backend route: {len(unknown)}")
+    if unknown:
+        print("\n--- FRONTEND CALLS WITH NO BACKEND ROUTE ---")
+        for path, fname, line in unknown:
+            print(f"{path:<70} ({fname}:{line})")
+
+    return len(unreachable) + len(unknown)
 
 
 if __name__ == "__main__":

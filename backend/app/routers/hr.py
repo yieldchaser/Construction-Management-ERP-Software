@@ -198,10 +198,28 @@ class AttendanceResponse(BaseModel):
     overtime_hours: float
     shift_multiplier: float
     location_verified: bool
+    marked_manually: bool = False
+    marked_by: Optional[str] = None
     created_at: datetime
 
     class Config:
         from_attributes = True
+
+
+class ManualAttendanceRequest(BaseModel):
+    """Mark the muster by hand, for a crew with no smartphone or GPS.
+
+    The attendance sheet offered Present / Absent / Paid Leave / Week Off as
+    filters and had no way to set any of them: the only write path was a GPS
+    punch. A site without smartphones could not record attendance at all, and
+    payroll had nothing to consume.
+    """
+    employee_id: uuid.UUID
+    project_id: uuid.UUID
+    attendance_date: str  # YYYY-MM-DD
+    status: str = Field(..., pattern="^(Present|Absent|Paid Leave|Week Off|Half Day)$")
+    shift_multiplier: float = Field(1.0, ge=0, le=3)
+    notes: Optional[str] = None
 
 
 class TimesheetCreate(BaseModel):
@@ -497,6 +515,68 @@ def punch(payload: PunchRequest, db: Session = Depends(get_db), current_user: Us
         db.commit()
         db.refresh(log)
         return log
+
+
+@router.post("/attendance/manual", response_model=AttendanceResponse)
+def mark_attendance_manually(
+    payload: ManualAttendanceRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Supervisor marks a day for one employee, with no GPS.
+
+    Deliberately NOT location_verified: this is somebody's word, not a measured
+    punch, and the muster shown to whoever signs off payroll has to say which is
+    which. Re-marking the same day updates the existing row rather than stacking
+    duplicate attendance, which would double-count payroll days.
+    """
+    project = db.query(Project).filter(Project.id == payload.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    get_company_membership(db, current_user, project.company_id)
+    require_permission(db, current_user, project.company_id, "attendance:edit")
+
+    employee = db.query(StaffEmployee).filter(StaffEmployee.id == payload.employee_id).first()
+    if not employee:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    if employee.company_id != project.company_id:
+        raise HTTPException(status_code=403, detail="Employee does not belong to this project's company")
+
+    try:
+        target = datetime.strptime(payload.attendance_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="attendance_date must be YYYY-MM-DD")
+    if target > datetime.now(timezone.utc) + timedelta(days=1):
+        raise HTTPException(status_code=400, detail="attendance_date cannot be in the future")
+
+    next_day = target + timedelta(days=1)
+    log = db.query(AttendanceLog).filter(
+        AttendanceLog.employee_id == payload.employee_id,
+        AttendanceLog.project_id == payload.project_id,
+        AttendanceLog.attendance_date >= target,
+        AttendanceLog.attendance_date < next_day,
+    ).first()
+
+    if log is None:
+        log = AttendanceLog(
+            employee_id=payload.employee_id,
+            project_id=payload.project_id,
+            attendance_date=target,
+        )
+        db.add(log)
+
+    log.status = payload.status
+    log.shift_multiplier = Decimal(str(payload.shift_multiplier))
+    log.is_within_geofence = False
+    log.location_verified = False
+    log.marked_manually = True
+    log.marked_by = current_user.name
+    if payload.notes:
+        log.notes = payload.notes
+
+    db.commit()
+    db.refresh(log)
+    return log
 
 
 @router.get("/attendance/{project_id}/{date_str}", response_model=List[AttendanceResponse])
@@ -1920,6 +2000,9 @@ class CompanyAttendanceResponse(BaseModel):
     hours_worked: Optional[float]
     overtime_hours: float
     is_within_geofence: bool
+    # So the muster can show which days were hand-marked rather than punched.
+    marked_manually: bool = False
+    marked_by: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -1960,6 +2043,8 @@ def company_attendance(company_id: uuid.UUID, date_str: str, db: Session = Depen
             hours_worked=float(log.hours_worked) if log.hours_worked is not None else None,
             overtime_hours=float(log.overtime_hours),
             is_within_geofence=bool(log.is_within_geofence),
+            marked_manually=bool(getattr(log, "marked_manually", False)),
+            marked_by=getattr(log, "marked_by", None),
         ))
     return response
 

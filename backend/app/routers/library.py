@@ -128,6 +128,7 @@ class MaterialCreate(BaseModel):
     hsn_sac: Optional[str] = Field(None, max_length=50)
     item_code: Optional[str] = Field(None, max_length=100)
     specifications: Optional[str] = None
+    creator_name: Optional[str] = Field(None, max_length=255)
 
     @model_validator(mode="after")
     def validate_dual_units(self):
@@ -272,7 +273,10 @@ def get_library_units(
 def next_party_id_custom(db: Session, company_id: uuid.UUID) -> str:
     """Company-scoped party ID generator (COUNT + 1 with collision loop), shared by
     every LibraryParty creation site so no party is stored without an identifier.
-    Uniqueness hardening of this scheme is R2-439 and stays out of scope here."""
+
+    The loop makes this safe against gaps but not against two concurrent creates
+    picking the same candidate, which is why migration 20260902_000002 adds a
+    unique index on (company_id, party_id_custom) as the real guarantee."""
     count = db.query(models.LibraryParty).filter(models.LibraryParty.company_id == company_id).count()
     candidate = f"PID-{count + 1}"
     while db.query(models.LibraryParty).filter(
@@ -329,7 +333,23 @@ def create_library_party(payload: PartyCreate, db: Session = Depends(get_db), cu
     # Automatically generate custom PID if not supplied
     # R2-440: a supplied ID is stored trimmed; blank or whitespace-only falls through
     # to the generator so no party is ever stored without a visible identifier.
-    payload.party_id_custom = (payload.party_id_custom or "").strip() or next_party_id_custom(db, payload.company_id)
+    supplied = (payload.party_id_custom or "").strip()
+    if supplied:
+        # A supplied ID used to be stored unchecked, which is how this company
+        # ended up with two parties both called PID-2. The generator has a
+        # collision loop; the supplied path had none.
+        clash = db.query(models.LibraryParty).filter(
+            models.LibraryParty.company_id == payload.company_id,
+            models.LibraryParty.party_id_custom == supplied,
+        ).first()
+        if clash:
+            raise HTTPException(
+                status_code=409,
+                detail=f"Party ID {supplied} is already used by {clash.name}",
+            )
+        payload.party_id_custom = supplied
+    else:
+        payload.party_id_custom = next_party_id_custom(db, payload.company_id)
     
     party = models.LibraryParty(
         company_id=payload.company_id,
@@ -855,7 +875,11 @@ def create_library_material(payload: MaterialCreate, db: Session = Depends(get_d
         lead_time_days=payload.lead_time_days,
         hsn_sac=payload.hsn_sac,
         item_code=payload.item_code,
-        specifications=payload.specifications
+        specifications=payload.specifications,
+        # Resolve server-side rather than trusting the client, the same way the
+        # DPR author is resolved. The client may still send a display name; the
+        # authenticated user wins.
+        creator_name=(current_user.name or payload.creator_name),
     )
     db.add(item)
     db.commit()
