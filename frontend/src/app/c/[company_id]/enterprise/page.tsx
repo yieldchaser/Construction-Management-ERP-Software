@@ -7,6 +7,7 @@ import { useCompanySettings } from "@/context/CompanySettingsContext";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import { TableSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
+import { detailToMessage } from "@/lib/api";
 
 type RollupCompany = {
   id: string;
@@ -58,7 +59,7 @@ export default function EnterpriseRollupPage() {
       .then(async (r) => {
         if (!r.ok) {
           const d = await r.json().catch(() => ({}));
-          throw new Error(d.detail || "Failed to load enterprise rollup");
+          throw new Error(detailToMessage(d.detail, "Failed to load enterprise rollup"));
         }
         return r.json();
       })

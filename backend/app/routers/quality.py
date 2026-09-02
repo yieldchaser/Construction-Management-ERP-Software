@@ -148,6 +148,10 @@ class NCRCreate(BaseModel):
 class NCRResponse(BaseModel):
     id: uuid.UUID
     project_id: uuid.UUID
+    # The NCR already stores which inspection it came from; the response used to
+    # omit it, so the tracker could not show the zone and printed the literal
+    # string "Site Zone" on every card.
+    inspection_id: Optional[uuid.UUID] = None
     ncr_number: str
     title: str
     severity: str

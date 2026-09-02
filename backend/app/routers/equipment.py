@@ -64,6 +64,20 @@ class DeploymentCreate(BaseModel):
     project_id: uuid.UUID
     start_date: datetime
     hours_used: Optional[float] = Field(None, ge=0)
+    start_meter: Optional[float] = Field(None, ge=0)
+    remarks: Optional[str] = None
+
+
+class DeploymentReturn(BaseModel):
+    """Body for PATCH /deployments/{id}/return.
+
+    This endpoint used to take no body at all, so the closing meter reading the
+    UI collected was discarded and hours_used stayed 0 for every completed
+    deployment. An asset with an hourly rate therefore never produced any cost.
+    """
+    end_date: Optional[datetime] = None
+    end_meter: Optional[float] = Field(None, ge=0)
+    hours_used: Optional[float] = Field(None, ge=0)
     remarks: Optional[str] = None
 
 
@@ -74,6 +88,8 @@ class DeploymentResponse(BaseModel):
     start_date: datetime
     end_date: Optional[datetime]
     hours_used: Optional[float]
+    start_meter: Optional[float] = None
+    end_meter: Optional[float] = None
     remarks: Optional[str]
 
     class Config:
@@ -240,6 +256,7 @@ def deploy_equipment(
         project_id=payload.project_id,
         start_date=payload.start_date,
         hours_used=Decimal(str(payload.hours_used)) if payload.hours_used is not None else None,
+        start_meter=Decimal(str(payload.start_meter)) if payload.start_meter is not None else None,
         remarks=payload.remarks
     )
     eq.status = "deployed"
@@ -257,7 +274,12 @@ def list_deployments(project_id: uuid.UUID, db: Session = Depends(get_db), _: No
 
 
 @router.patch("/deployments/{deployment_id}/return", response_model=DeploymentResponse)
-def return_deployment(deployment_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def return_deployment(
+    deployment_id: uuid.UUID,
+    payload: Optional[DeploymentReturn] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     dep = db.query(EquipmentDeployment).filter(EquipmentDeployment.id == deployment_id).first()
     if not dep:
         raise HTTPException(status_code=404, detail="Deployment not found")
@@ -267,7 +289,31 @@ def return_deployment(deployment_id: uuid.UUID, db: Session = Depends(get_db), c
     get_company_membership(db, current_user, eq.company_id)
     require_permission(db, current_user, eq.company_id, "equipment:edit")
 
-    dep.end_date = datetime.utcnow()
+    payload = payload or DeploymentReturn()
+    dep.end_date = payload.end_date or datetime.now(timezone.utc)
+
+    if payload.end_meter is not None:
+        dep.end_meter = Decimal(str(payload.end_meter))
+    if payload.remarks:
+        # Append rather than overwrite: the start remarks are the only record of
+        # how the deployment opened.
+        dep.remarks = f"{dep.remarks}. {payload.remarks}" if dep.remarks else payload.remarks
+
+    # hours_used drives every cost calculation against Equipment.hourly_rate. An
+    # explicit reading wins; otherwise fall back to wall-clock elapsed time so a
+    # completed deployment is never silently free.
+    if payload.hours_used is not None:
+        dep.hours_used = Decimal(str(payload.hours_used))
+    elif dep.hours_used in (None, 0) and dep.start_date and dep.end_date:
+        start = dep.start_date
+        end = dep.end_date
+        if start.tzinfo is None:
+            start = start.replace(tzinfo=timezone.utc)
+        if end.tzinfo is None:
+            end = end.replace(tzinfo=timezone.utc)
+        elapsed_hours = max(0.0, (end - start).total_seconds() / 3600.0)
+        dep.hours_used = Decimal(str(round(elapsed_hours, 2)))
+
     eq.status = "available"
     db.commit()
     db.refresh(dep)

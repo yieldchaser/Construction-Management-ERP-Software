@@ -1,6 +1,6 @@
 "use client";
 import Badge, { type BadgeTone } from "@/components/ui/Badge";
-import { getApiHost } from "@/lib/api";
+import { getApiHost, detailToMessage} from "@/lib/api";
 import { authHeaders, todayLocalISO } from "@/lib/siteflow";
 
 import React, { useEffect, useState, useCallback } from "react";
@@ -141,7 +141,7 @@ export default function AttendancePage() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        showExportMsg(err.detail || "Export failed");
+        showExportMsg(detailToMessage(err.detail, "Export failed"));
         return;
       }
       const blob = await res.blob();
@@ -344,7 +344,7 @@ export default function AttendancePage() {
         fetchProjectMembers();
       } else {
         const err = await res.json().catch(() => ({ detail: "Failed to add member" }));
-        alert(err.detail || "Failed to add member");
+        alert(detailToMessage(err.detail, "Failed to add member"));
       }
     } catch (e) {
       alert("Failed to add member");
@@ -530,7 +530,7 @@ export default function AttendancePage() {
         fetchEmpsAndLogs();
       } else {
         const errorData = await res.json();
-        setSyncMessage(`Punch rejected: ${errorData.detail || "Error"}`);
+        setSyncMessage(`Punch rejected: ${detailToMessage(errorData.detail, "Error")}`);
       }
     } catch (e) {
       setSyncMessage("Server connection lost. Saved offline.");
@@ -1113,7 +1113,7 @@ export default function AttendancePage() {
                 <div className="px-5 py-3 border-b border-border-custom flex items-center justify-between">
                   <div>
                     <h2 className="text-xs font-bold text-foreground uppercase tracking-wider">Monthly Payroll Compilation{formatPayrollMonth(payrollRun.payroll_month)}</h2>
-                    <p className="text-[10px] text-muted mt-0.5">Salary + PF + ESI statutory deductions per IS code. Download payslip per employee.</p>
+                    <p className="text-[10px] text-muted mt-0.5">Salary with PF, ESI and TDS deductions. Download a payslip for any employee.</p>
                   </div>
                   <button onClick={handleExportPayslips} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white text-[10px] font-bold rounded-lg hover:bg-primary/90 transition-all"><Icon name="outbox" className="w-3.5 h-3.5" />Export All Payslips</button>
                 </div>

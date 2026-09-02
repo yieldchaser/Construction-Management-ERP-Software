@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { getApi, authHeaders } from "@/lib/siteflow";
 import { Badge } from "@/components/ui/Badge";
+import { detailToMessage } from "@/lib/api";
 
 type ZatcaPayload = {
   is_zatca_enabled: boolean;
@@ -37,7 +38,7 @@ export default function ZatcaInvoicePanel({
       .then(async (res) => {
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
-          throw new Error(body.detail || "Failed to load ZATCA payload");
+          throw new Error(detailToMessage(body.detail, "Failed to load ZATCA payload"));
         }
         return res.json();
       })

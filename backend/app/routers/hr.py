@@ -101,15 +101,20 @@ def _parse_site_coords(location_str: Optional[str]):
 class EmployeeCreate(BaseModel):
     company_id: uuid.UUID
     project_id: Optional[uuid.UUID] = None
-    name: str
+    # An employee saved with an empty name renders as a blank row that nobody can
+    # identify, and it used to be accepted with a 201. min_length alone would let
+    # a run of spaces through, hence the strip validator below.
+    name: str = Field(..., min_length=1, max_length=255)
     employee_code: Optional[str] = None
     uan: Optional[str] = None
     designation: Optional[str] = None
     department: Optional[str] = None
     mobile: Optional[str] = None
-    basic_salary: float = Field(0.0, ge=0)
-    hra: float = Field(0.0, ge=0)
-    other_allowances: float = Field(0.0, ge=0)
+    # Upper bounds so a mistyped or mis-mapped field cannot store a salary of
+    # 9,81,12,23,344 and blow up every payroll total that reads it.
+    basic_salary: float = Field(0.0, ge=0, le=1e9)
+    hra: float = Field(0.0, ge=0, le=1e9)
+    other_allowances: float = Field(0.0, ge=0, le=1e9)
     pf_employee_pct: float = Field(12.0, ge=0, le=100)
     pf_employer_pct: float = Field(12.0, ge=0, le=100)
     esi_employee_pct: float = Field(0.75, ge=0, le=100)
@@ -117,6 +122,13 @@ class EmployeeCreate(BaseModel):
     tds_monthly: float = Field(0.0, ge=0)
     is_esi_applicable: bool = True
     date_of_joining: Optional[datetime] = None
+
+    @field_validator("name")
+    @classmethod
+    def _name_is_not_blank(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("name is required")
+        return v.strip()
 
     @field_validator("uan", mode="before")
     @classmethod

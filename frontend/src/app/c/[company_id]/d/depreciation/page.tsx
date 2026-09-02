@@ -1,6 +1,6 @@
 "use client";
 import Badge, { type BadgeTone } from "@/components/ui/Badge";
-import { getApiHost } from "@/lib/api";
+import { getApiHost, detailToMessage} from "@/lib/api";
 import { authHeaders, formatDate, formatLabel } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
 import { useProject } from "@/context/ProjectContext";
@@ -112,7 +112,7 @@ export default function DepreciationPage() {
         fetchSchedules();
       } else {
         const err = await res.json();
-        setMessage(err.detail || "Failed to create schedule");
+        setMessage(detailToMessage(err.detail, "Failed to create schedule"));
       }
     } catch (_e) {
       void _e;
@@ -135,7 +135,7 @@ export default function DepreciationPage() {
         fetchEntries();
       } else {
         const err = await res.json();
-        setMessage(err.detail || "Failed to create entry");
+        setMessage(detailToMessage(err.detail, "Failed to create entry"));
       }
     } catch (_e) {
       void _e;

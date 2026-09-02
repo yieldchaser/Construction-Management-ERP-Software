@@ -926,6 +926,11 @@ class ProjectCreateSchema(BaseModel):
     code: Optional[str] = None
     address: Optional[str] = None
     city: Optional[str] = None
+    # Required for the same reason as on POST /projects/: place of supply for
+    # every invoice raised against this project derives from the site state.
+    # This route used to accept and drop it, which was a back door that produced
+    # projects that could never be billed.
+    state: Optional[str] = None
     location: Optional[str] = None
     attendance_radius_meters: Optional[int] = 500
     health: Optional[str] = "Good"
@@ -981,6 +986,22 @@ def create_project_v3(payload: ProjectCreateSchema, db: Session = Depends(get_db
     import uuid
     get_company_membership(db, current_user, payload.company_id)
     require_permission(db, current_user, payload.company_id, "planning:edit")
+    # Mirror the guard on POST /projects/ (projects.py). Without it this route
+    # is a back door that creates projects which billing.py and crm.py will
+    # later refuse to invoice, with no way to tell from this screen.
+    if not payload.state or not str(payload.state).strip():
+        raise HTTPException(
+            status_code=422,
+            detail="Project.state is required for invoicing - set the site state (GST state code or name); place of supply derives from the site per IGST Act s.12(3)",
+        )
+    try:
+        from app.gst_utils import project_state_code as _psc
+        if _psc(payload.state) is None:
+            raise HTTPException(status_code=422, detail="Project.state must be a valid GST state code or name (e.g. 27, Maharashtra, KA)")
+    except HTTPException:
+        raise
+    except Exception:
+        pass
     proj = Project(
         id=uuid.uuid4(),
         company_id=payload.company_id,
@@ -988,6 +1009,7 @@ def create_project_v3(payload: ProjectCreateSchema, db: Session = Depends(get_db
         code=payload.code,
         address=payload.address,
         city=payload.city,
+        state=payload.state,
         # R2-750: no invented default. This used to fall back to a Mumbai
         # coordinate, so a Gujarat or Kerala site created through this route got
         # a geofence that was confidently wrong rather than absent -- worse than

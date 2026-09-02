@@ -4,7 +4,7 @@ import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { getApiHost } from "@/lib/api";
+import { getApiHost, detailToMessage} from "@/lib/api";
 import { authHeaders, toLocalISODate } from "@/lib/siteflow";
 import Icon from "@/components/marketing/Icon";
 import { isMissingOrDemoTenant, redirectToLogin } from "@/lib/company-guard";
@@ -83,7 +83,7 @@ export default function DPRReportPage() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        showToast(err.detail || "Export failed");
+        showToast(detailToMessage(err.detail, "Export failed"));
         return;
       }
       const blob = await res.blob();

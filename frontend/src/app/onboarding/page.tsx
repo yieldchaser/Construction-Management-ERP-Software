@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { getApi, persistAuth, authHeaders } from "@/lib/siteflow";
 import Icon from "@/components/marketing/Icon";
+import { detailToMessage } from "@/lib/api";
 
 export default function CreateCompanyOnboardingPage() {
   const [name, setName] = useState("");
@@ -48,7 +49,7 @@ export default function CreateCompanyOnboardingPage() {
       } else if (res.status === 401) {
         window.location.href = "/login";
       } else {
-        setError(data.detail || "Could not create the company. Please try again.");
+        setError(detailToMessage(data.detail, "Could not create the company. Please try again."));
       }
     } catch {
       setError("Could not reach the server.");

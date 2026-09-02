@@ -1,6 +1,6 @@
 "use client";
 import Badge, { type BadgeTone } from "@/components/ui/Badge";
-import { getApiHost } from "@/lib/api";
+import { getApiHost, detailToMessage} from "@/lib/api";
 import { authHeaders, formatDate, formatLabel } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
 import { useProject } from "@/context/ProjectContext";
@@ -134,7 +134,7 @@ export default function CustomFieldsPage() {
         fetchFields();
       } else {
         const err = await res.json();
-        setMessage(err.detail || "Failed");
+        setMessage(detailToMessage(err.detail, "Failed"));
       }
     } catch (_e) { void _e; setMessage("Error"); }
   };
@@ -167,7 +167,7 @@ export default function CustomFieldsPage() {
         if (selectedField) fetchValues(selectedField.entity_type);
       } else {
         const err = await res.json();
-        setMessage(err.detail || "Failed");
+        setMessage(detailToMessage(err.detail, "Failed"));
       }
     } catch (_e) { void _e; setMessage("Error"); }
   };
@@ -184,7 +184,7 @@ export default function CustomFieldsPage() {
         setMessage("Custom field deleted successfully");
       } else {
         const err = await res.json().catch(() => ({}));
-        setMessage(err.detail || "Failed to delete field");
+        setMessage(detailToMessage(err.detail, "Failed to delete field"));
       }
     } catch (_e) {
       void _e;
@@ -212,6 +212,12 @@ export default function CustomFieldsPage() {
             title="Filter fields by entity type"
           >
             <option value="project">Project fields</option>
+            <option value="task">Task fields</option>
+            {/* bill and invoice are separate entity types in the backend and
+                enforce_required_custom_fields runs on both. Omitting bill here
+                meant a required field on it was invisible and unmanageable,
+                and it silently blocked every subcontractor RA bill. */}
+            <option value="bill">Bill fields</option>
             <option value="invoice">Invoice fields</option>
             <option value="lead">Lead fields</option>
             <option value="vendor">Vendor fields</option>
@@ -287,6 +293,8 @@ export default function CustomFieldsPage() {
                 <label className="block text-xs font-medium text-muted mb-1">Entity Type</label>
                 <select className="w-full bg-input border border-border-custom rounded-md px-4 py-2 text-foreground" value={fieldForm.entity_type} onChange={(e) => setFieldForm({...fieldForm, entity_type: e.target.value})}>
                   <option value="project">Project</option>
+                  <option value="task">Task</option>
+                  <option value="bill">Bill</option>
                   <option value="invoice">Invoice</option>
                   <option value="lead">Lead</option>
                   <option value="vendor">Vendor</option>

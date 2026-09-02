@@ -1,5 +1,5 @@
 "use client";
-import { readErrorDetail } from "@/lib/api";
+import { readErrorDetail, detailToMessage} from "@/lib/api";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
@@ -362,7 +362,7 @@ export default function BoqTab() {
         );
       } else {
         const err = await res.json().catch(() => ({}));
-        setImportNotice({ tone: "warn", text: err.detail || "BOQ import failed. Please check the file format." });
+        setImportNotice({ tone: "warn", text: detailToMessage(err.detail, "BOQ import failed. Please check the file format.") });
       }
       setDocFile(null);
       await loadDocItems(docId);

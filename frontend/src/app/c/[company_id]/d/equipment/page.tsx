@@ -1,6 +1,6 @@
 "use client";
 import Badge, { type BadgeTone } from "@/components/ui/Badge";
-import {  getApiHost , readErrorDetail } from "@/lib/api";
+import {  getApiHost , readErrorDetail, detailToMessage} from "@/lib/api";
 import { authHeaders, downloadWithAuth, formatDate, formatLabel, toLocalISODate } from "@/lib/siteflow";
 
 import React, { useState, useEffect } from "react";
@@ -221,7 +221,7 @@ export default function EquipmentTrackingPage() {
         loadData();
       } else {
         const data = await res.json().catch(() => ({}));
-        setError(data.detail || "Failed to add equipment");
+        setError(detailToMessage(data.detail, "Failed to add equipment"));
       }
     } catch (err) {
       console.error(err);
@@ -242,7 +242,10 @@ export default function EquipmentTrackingPage() {
           project_id: projectId,
           start_date: new Date().toISOString(),
           hours_used: hoursNum >= 0 ? hoursNum : 0,
-          remarks: `Start reading: ${startMeterVal}. Photo Proof: ${isStartPhotoCaptured}`
+          // The meter reading is a number, not prose. It used to live only
+          // inside `remarks`, so nothing downstream could compute mileage.
+          start_meter: parseFloat(startMeterVal) || null,
+          remarks: `Photo proof captured: ${isStartPhotoCaptured}`
         }),
       });
       if (res.ok) {
@@ -272,7 +275,11 @@ export default function EquipmentTrackingPage() {
         headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
         body: JSON.stringify({
           end_date: new Date().toISOString(),
-          remarks: `Stop reading: ${stopMeterVal}. Photo Proof: ${isStopPhotoCaptured}. GPS Lock: ${isGpsLocked}`
+          // The return endpoint now stores these. Previously it accepted no body
+          // at all, so the closing reading was discarded and hours_used stayed
+          // 0 for every completed deployment.
+          end_meter: parseFloat(stopMeterVal) || null,
+          remarks: `Stop photo proof: ${isStopPhotoCaptured}. GPS lock: ${isGpsLocked}`
         }),
       });
       if (res.ok) {

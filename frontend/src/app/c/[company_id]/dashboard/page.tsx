@@ -3,12 +3,13 @@ import Badge, { type BadgeTone } from "@/components/ui/Badge";
 
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { getApiHost } from "@/lib/api";
+import { getApiHost, readErrorDetail } from "@/lib/api";
 import { authHeaders, formatDate, formatLabel, todayLocalISO } from "@/lib/siteflow";
 import Icon from "@/components/marketing/Icon";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { GST_STATES } from "@/lib/gstStates";
 
 export default function DashboardPage() {
   const params = useParams();
@@ -156,6 +157,8 @@ export default function DashboardPage() {
     code: "",
     address: "",
     city: "",
+    // Required by the create route. A project without it can never be invoiced.
+    state: "",
     attendance_radius_meters: 500,
     teamMember: ""
   });
@@ -1802,6 +1805,19 @@ export default function DashboardPage() {
                       />
                     </div>
                     <div className="space-y-1">
+                      <label className="text-[11px] text-muted font-medium">State *</label>
+                      <select
+                        value={wizardData.state}
+                        onChange={(e) => setWizardData({ ...wizardData, state: e.target.value })}
+                        className="w-full bg-input border border-border-custom rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary text-foreground"
+                      >
+                        <option value="">Select state</option>
+                        {GST_STATES.map((st) => (
+                          <option key={st.code} value={st.name}>{st.code} - {st.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1">
                       <label className="text-[11px] text-muted font-medium">Attendance Radius (meters)</label>
                       <input
                         type="number"
@@ -1851,6 +1867,7 @@ export default function DashboardPage() {
                 onClick={async () => {
                   if (wizardStep === 1) {
                     if (!wizardData.name) return alert("Project name is required!");
+                    if (!wizardData.state) return alert("State is required. Place of supply for every invoice on this project derives from the site state.");
                     setWizardStep(2);
                   } else {
                     const newProjId = "p-" + Math.random().toString(36).substr(2, 9);
@@ -1878,11 +1895,15 @@ export default function DashboardPage() {
                            code: newProj.code,
                            address: newProj.address,
                            city: newProj.city,
+                           state: wizardData.state,
                            attendance_radius_meters: newProj.attendance_radius_meters
                          })
                        });
                        if (!res.ok) {
-                         console.error("Failed to create project", res.status);
+                         // Tell the user. Logging to the console and carrying on
+                         // is how a failed create used to look like a success.
+                         alert(`Could not create the project: ${await readErrorDetail(res)}`);
+                         return;
                        }
                      } catch (e) {
                        console.error("Project creation error", e);

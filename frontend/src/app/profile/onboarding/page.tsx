@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { getApiHost } from "@/lib/api";
+import { getApiHost, detailToMessage} from "@/lib/api";
 import { authHeaders } from "@/lib/siteflow";
 import Icon from "@/components/marketing/Icon";
 
@@ -119,7 +119,7 @@ export default function OnboardingPage() {
       if (response.ok && data.success) {
         window.location.href = `/c/${companyId}/reports`;
       } else {
-        setError(data.detail || "Onboarding failed. Please try again.");
+        setError(detailToMessage(data.detail, "Onboarding failed. Please try again."));
       }
     } catch {
       setError("Verification failed. Could not connect to API server.");

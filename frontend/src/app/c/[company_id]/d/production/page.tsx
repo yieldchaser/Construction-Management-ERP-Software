@@ -1,5 +1,5 @@
 "use client";
-import { getApiHost, readErrorDetail } from "@/lib/api";
+import { getApiHost, readErrorDetail, detailToMessage} from "@/lib/api";
 import { authHeaders, formatLabel } from "@/lib/siteflow";
 import Icon from "@/components/marketing/Icon";
 import SegmentedTabs from "@/components/ui/Tabs";
@@ -190,7 +190,7 @@ export default function ProductionPage() {
         void fetchSummary();
       } else {
         const err = await res.json();
-        alert(err.detail || "Failed to complete batch");
+        alert(detailToMessage(err.detail, "Failed to complete batch"));
       }
     } catch (e) {
       console.error("Failed to complete batch", e);
@@ -295,7 +295,7 @@ export default function ProductionPage() {
         void fetchSummary();
       } else {
         const err = await res.json();
-        setSubmitError(err.detail || "Failed to log batch");
+        setSubmitError(detailToMessage(err.detail, "Failed to log batch"));
       }
     } catch (err) {
       console.error(err);

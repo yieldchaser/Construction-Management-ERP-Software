@@ -1,7 +1,7 @@
 'use client';
 import { useProject } from '@/context/ProjectContext';
 import { getApiHost, readErrorDetail } from '@/lib/api';
-import { authHeaders, formatDate, todayLocalISO, nowLocalISO } from '@/lib/siteflow';
+import { authHeaders, formatDate, todayLocalISO, nowLocalISO, localInputToInstantISO } from '@/lib/siteflow';
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
@@ -211,10 +211,18 @@ export default function SafetyPage() {
   const submitIncident = async () => {
     const r = await fetch(`${API}/safety/incidents`, {
       method: 'POST', headers: { 'Content-Type': 'application/json', ...(authHeaders() || {}) },
-      body: JSON.stringify({ ...incidentForm, project_id }),
+      // reported_at is held as a datetime-local value for the input to display.
+      // It must go on the wire as an absolute instant: the backend attaches the
+      // SERVER timezone to a naive datetime, so an IST wall-clock time arrived
+      // as UTC and every incident was rejected as being in the future.
+      body: JSON.stringify({
+        ...incidentForm,
+        reported_at: localInputToInstantISO(incidentForm.reported_at),
+        project_id,
+      }),
     });
     if (r.ok) { flash('Incident reported.'); setShowIncidentModal(false); fetchAll(); }
-    else flash(`Error: ${(await r.json()).detail}`);
+    else flash(`Error: ${await readErrorDetail(r)}`);
   };
 
   // Close incident
@@ -225,17 +233,24 @@ export default function SafetyPage() {
       body: JSON.stringify(closeForm),
     });
     if (r.ok) { flash('Incident closed.'); setShowCloseModal(null); fetchAll(); }
-    else flash(`Error: ${(await r.json()).detail}`);
+    else flash(`Error: ${await readErrorDetail(r)}`);
   };
 
   // Submit toolbox talk
   const submitTalk = async () => {
     const r = await fetch(`${API}/safety/toolbox-talks`, {
       method: 'POST', headers: { 'Content-Type': 'application/json', ...(authHeaders() || {}) },
-      body: JSON.stringify({ ...talkForm, project_id }),
+      // Same instant conversion as the incident form. Toolbox talks have no
+      // not-future validator, so the naive local value saved successfully but
+      // stored a time offset by the server-to-local difference.
+      body: JSON.stringify({
+        ...talkForm,
+        conducted_at: localInputToInstantISO(talkForm.conducted_at),
+        project_id,
+      }),
     });
     if (r.ok) { flash('Talk logged.'); setShowTalkModal(false); fetchAll(); }
-    else flash(`Error: ${(await r.json()).detail}`);
+    else flash(`Error: ${await readErrorDetail(r)}`);
   };
 
   // Submit PPE check

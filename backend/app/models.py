@@ -1070,6 +1070,12 @@ class EquipmentDeployment(Base):
     start_date = Column(DateTime(timezone=True), nullable=False)
     end_date = Column(DateTime(timezone=True), nullable=True)
     hours_used = Column(Numeric(12, 2), nullable=True)  # recorded engine/shift hours on site; NULL falls back to wall-clock billing
+    # Odometer / hour-meter readings as real columns. These used to be stuffed
+    # into the free-text `remarks` string ("Start reading: 4350."), which meant
+    # the Odometer Run Logs tab could not compute mileage from them and the stop
+    # reading was thrown away entirely by the return endpoint.
+    start_meter = Column(Numeric(12, 2), nullable=True)
+    end_meter = Column(Numeric(12, 2), nullable=True)
     remarks = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 

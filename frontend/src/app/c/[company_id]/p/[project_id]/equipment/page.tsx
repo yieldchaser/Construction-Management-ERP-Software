@@ -1,6 +1,6 @@
 "use client";
 import Badge, { type BadgeTone } from "@/components/ui/Badge";
-import {  getApiHost , readErrorDetail } from "@/lib/api";
+import {  getApiHost , readErrorDetail, detailToMessage} from "@/lib/api";
 import { authHeaders, downloadWithAuth, formatDate, formatLabel, toLocalISODate } from "@/lib/siteflow";
 
 import React, { useState, useEffect } from "react";
@@ -203,7 +203,7 @@ export default function EquipmentTrackingPage() {
         loadData();
       } else {
         const data = await res.json().catch(() => ({}));
-        setError(data.detail || "Failed to add equipment");
+        setError(detailToMessage(data.detail, "Failed to add equipment"));
       }
     } catch (err) {
       console.error(err);

@@ -127,6 +127,9 @@ export default function QualityPage() {
   
   const [checklists, setChecklists] = useState<Checklist[]>([]);
   const [inspections, setInspections] = useState<Inspection[]>([]);
+  // The inspection register used to print inspected_by as a raw UUID, in the
+  // table and in the "Inspected By" filter. Resolve it to a person.
+  const [teamNameById, setTeamNameById] = useState<Record<string, string>>({});
   const [ncrs, setNcrs] = useState<NCR[]>([]);
   const [labTests, setLabTests] = useState<LabTest[]>([]);
   const [isOffline, setIsOffline] = useState(false);
@@ -208,6 +211,18 @@ isCode: cl.is_code_reference || "—",
       setIsOffline(true);
     }
 
+    let teamById: Record<string, string> = teamNameById;
+    try {
+      const tmRes = await fetch(`${getApiHost()}/apis/v3/crm/team-members/${companyId}`, { headers: authHeaders() });
+      if (tmRes.ok) {
+        const rows = await tmRes.json();
+        teamById = Object.fromEntries((rows || []).map((r: any) => [String(r.id), r.name]));
+        setTeamNameById(teamById);
+      }
+    } catch (e) {
+      console.error("Failed to fetch team members", e);
+    }
+
     try {
       const inspRes = await fetch(`${getApiHost()}/apis/v3/quality/inspections/${projectId}`, { headers: authHeaders() });
       if (inspRes.ok) {
@@ -224,7 +239,7 @@ isCode: cl.is_code_reference || "—",
             passCount: insp.pass_count,
             failCount: insp.fail_count,
             naCount: insp.na_count,
-            inspector: insp.inspected_by ? String(insp.inspected_by) : "—"
+            inspector: insp.inspected_by ? (teamById[String(insp.inspected_by)] || "Team member") : "—"
           };
         });
         setInspections(mapped);
@@ -239,13 +254,17 @@ isCode: cl.is_code_reference || "—",
       const res = await fetch(`${getApiHost()}/apis/v3/quality/ncr/${projectId}`, { headers: authHeaders() });
       if (res.ok) {
         const data = await res.json();
+        // Resolve the zone from the inspection the NCR was raised against.
+        // This used to be the hardcoded literal "Site Zone" on every card.
+        const zoneByInspection: Record<string, string> = {};
+        inspections.forEach((i) => { zoneByInspection[String(i.id)] = i.zone; });
         const mapped = data.map((n: any) => ({
           id: n.id,
           number: n.ncr_number,
           title: n.title,
           severity: n.severity,
           status: n.status,
-          zone: "Site Zone",
+          zone: (n.inspection_id && zoneByInspection[String(n.inspection_id)]) || "Unspecified zone",
           raisedBy: "Inspector",
           date: n.created_at ? n.created_at.split("T")[0] : "",
           dueDate: n.due_date ? n.due_date.split("T")[0] : "",
@@ -868,7 +887,7 @@ isCode: cl.is_code_reference || "—",
                 <div className="bg-card border border-border-custom rounded-lg p-4">
                   <p className="text-[10px] text-success uppercase font-bold tracking-wider">Passed</p>
                   <p className="text-2xl font-bold text-success mt-1">{labTests.filter(t => t.pass === true).length}</p>
-                  <p className="text-[10px] text-muted mt-0.5">Compliant with IS code</p>
+                  <p className="text-[10px] text-muted mt-0.5">Against the selected checklist</p>
                 </div>
                 <div className="bg-card border border-border-custom rounded-lg p-4">
                   <p className="text-[10px] text-danger uppercase font-bold tracking-wider">Failed</p>

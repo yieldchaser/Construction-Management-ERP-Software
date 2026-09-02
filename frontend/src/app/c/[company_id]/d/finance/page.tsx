@@ -1,6 +1,6 @@
 "use client";
 import Badge, { type BadgeTone } from "@/components/ui/Badge";
-import {  getApiHost , readErrorDetail } from "@/lib/api";
+import {  getApiHost , readErrorDetail, detailToMessage} from "@/lib/api";
 import { authHeaders, formatDate, formatLabel, todayLocalISO } from "@/lib/siteflow";
 
 import React, { useState, useEffect, useMemo } from "react";
@@ -162,7 +162,7 @@ export default function FinancePage() {
       if (res.ok) {
         setZohoMsg({ type: "ok", text: `Pushed to Zoho Books (bill ${body.zoho_bill_id || "created"}).` });
       } else {
-        setZohoMsg({ type: "err", text: body.detail || "Zoho Books push failed." });
+        setZohoMsg({ type: "err", text: detailToMessage(body.detail, "Zoho Books push failed.") });
       }
     } catch (e: any) {
       setZohoMsg({ type: "err", text: e?.message || "Zoho Books push failed." });
@@ -262,6 +262,10 @@ export default function FinancePage() {
   const [showRecordPaymentModal, setShowRecordPaymentModal] = useState(false);
   const [prPayment, setPrPayment] = useState({ date: "", mode: "Cash", paidAmount: "", deduction: "0", tds: "0", remarks: "", referenceNo: "", attachmentName: "" });
   const [usersList, setUsersList] = useState<any[]>([]);
+  // Real references for the "Advance against ..." request types, so the ref is a
+  // link to a document rather than a typed string nobody can resolve later.
+  const [refWorkOrders, setRefWorkOrders] = useState<Array<{ id: string; wo_number: string; subcontractor_name?: string }>>([]);
+  const [refPOs, setRefPOs] = useState<Array<{ id: string; po_number: string; vendor_name?: string }>>([]);
 
   const PR_TYPES: { key: string; icon: IconName; label: string; extraLabel: string; extraPlaceholder: string }[] = [
     { key: "Advance against PO", icon: "description", label: "Advance against PO", extraLabel: "PO Reference", extraPlaceholder: "PO-204" },
@@ -422,14 +426,35 @@ export default function FinancePage() {
         }
       } catch {}
 
-      // Fetch Employees for party dropdown (only when a real project is active;
-      // firing with an empty/placeholder project id just 403s).
+      // Parties for the payment dropdowns. This used to read
+      // /hr/employees/{projectId}, the employee directory, so a payment request
+      // could only ever name an employee of the active project. On a project
+      // with no employees the drawer said "No parties registered yet" while the
+      // company had a full party master, and there was no way to raise a
+      // payment to the subcontractor you actually owed.
+      try {
+        const partyRes = await fetch(`${getApiHost()}/apis/v3/finance/parties/${companyId}`, { headers: authHeaders() });
+        if (partyRes.ok) {
+          const parties = await partyRes.json();
+          setUsersList(
+            (parties || []).map((pt: any) => ({
+              id: pt.id,
+              name: pt.name,
+              role: pt.party_type || pt.contractor_role || null,
+            }))
+          );
+        }
+      } catch {}
       if (projectId) {
         try {
-          const empRes = await fetch(`${getApiHost()}/apis/v3/hr/employees/${projectId}`, { headers: authHeaders() });
-          if (empRes.ok) {
-            setUsersList(await empRes.json());
-          }
+          const [woRes, poRes] = await Promise.all([
+            fetch(`${getApiHost()}/apis/v3/billing/work-orders?project_id=${projectId}`, { headers: authHeaders() }),
+            fetch(`${getApiHost()}/apis/v3/procurement/pos?project_id=${projectId}`, { headers: authHeaders() }),
+          ]);
+          if (woRes.ok) setRefWorkOrders(await woRes.json());
+          if (poRes.ok) setRefPOs(await poRes.json());
+        } catch {}
+        try {
           await fetchGeneralLedger();
         } catch {}
       }
@@ -546,7 +571,7 @@ export default function FinancePage() {
         }
       } else {
         const err = await res.json();
-        alert(`Failed to import: ${err.detail || "Unknown error"}`);
+        alert(`Failed to import: ${detailToMessage(err.detail, "Unknown error")}`);
       }
     } catch (err) {
       console.error(err);
@@ -643,7 +668,7 @@ export default function FinancePage() {
           alert("Party to Party transfer recorded successfully!");
         } else {
           const err = await res.json();
-          alert(`Failed: ${err.detail || "Server error"}`);
+          alert(`Failed: ${detailToMessage(err.detail, "Server error")}`);
         }
         setShowAddModal(false);
         setAmount("");
@@ -969,7 +994,7 @@ export default function FinancePage() {
         setTallyMsg({ type: "ok", text: "Tally connection saved." });
       } else {
         const err = await res.json().catch(() => ({}));
-        setTallyMsg({ type: "err", text: err.detail || "Failed to save Tally connection." });
+        setTallyMsg({ type: "err", text: detailToMessage(err.detail, "Failed to save Tally connection.") });
       }
     } catch (e: any) {
       setTallyMsg({ type: "err", text: e?.message || "Failed to save Tally connection." });
@@ -1029,7 +1054,7 @@ export default function FinancePage() {
         await fetchTallyData();
       } else {
         const err = await res.json().catch(() => ({}));
-        setTallyMsg({ type: "err", text: err.detail || "Failed to mark as synced." });
+        setTallyMsg({ type: "err", text: detailToMessage(err.detail, "Failed to mark as synced.") });
       }
     } catch (e: any) {
       setTallyMsg({ type: "err", text: e?.message || "Failed to mark as synced." });
@@ -1299,7 +1324,7 @@ export default function FinancePage() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || "Failed to create party");
+        throw new Error(detailToMessage(err.detail, "Failed to create party"));
       }
       const created = await res.json();
       // Refresh party list
@@ -4412,13 +4437,44 @@ export default function FinancePage() {
                   {prType?.extraLabel && (
                     <div>
                       <label className="text-[10px] text-muted uppercase font-bold block mb-1">{prType.extraLabel}</label>
-                      <input
-                        type="text"
-                        value={newRequest.extra}
-                        onChange={e => setNewRequest({ ...newRequest, extra: e.target.value })}
-                        placeholder={prType.extraPlaceholder}
-                        className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
-                      />
+                      {prType.key === "Advance against Subcon Work Order" ? (
+                        <select
+                          value={newRequest.extra}
+                          onChange={e => setNewRequest({ ...newRequest, extra: e.target.value })}
+                          className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
+                        >
+                          <option value="">Select work order...</option>
+                          {refWorkOrders.map((w) => (
+                            <option key={w.id} value={w.wo_number}>
+                              {w.wo_number}{w.subcontractor_name ? ` - ${w.subcontractor_name}` : ""}
+                            </option>
+                          ))}
+                        </select>
+                      ) : prType.key === "Advance against PO" ? (
+                        <select
+                          value={newRequest.extra}
+                          onChange={e => setNewRequest({ ...newRequest, extra: e.target.value })}
+                          className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
+                        >
+                          <option value="">Select purchase order...</option>
+                          {refPOs.map((o) => (
+                            <option key={o.id} value={o.po_number}>
+                              {o.po_number}{o.vendor_name ? ` - ${o.vendor_name}` : ""}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          type="text"
+                          value={newRequest.extra}
+                          onChange={e => setNewRequest({ ...newRequest, extra: e.target.value })}
+                          placeholder={prType.extraPlaceholder}
+                          className="w-full bg-background border border-border-custom rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary text-xs"
+                        />
+                      )}
+                      {prType.key === "Advance against Subcon Work Order" && refWorkOrders.length === 0 && (
+                        <p className="mt-1 text-[10px] text-muted">No work orders on this project yet.</p>
+                      )}
                     </div>
                   )}
 
@@ -4543,7 +4599,7 @@ export default function FinancePage() {
                         setPaymentRequests(paymentRequests.map(p => p.id === u.id ? u : p));
                       } else {
                         const err = await res.json().catch(() => ({}));
-                        alert(err.detail || "Failed to update approval status");
+                        alert(detailToMessage(err.detail, "Failed to update approval status"));
                       }
                     } catch (e: any) {
                       alert(e?.message || "Network error updating approval status");
@@ -4565,7 +4621,7 @@ export default function FinancePage() {
                         setPaymentRequests(paymentRequests.map(p => p.id === u.id ? u : p));
                       } else {
                         const err = await res.json().catch(() => ({}));
-                        alert(err.detail || "Failed to mark payment request as paid");
+                        alert(detailToMessage(err.detail, "Failed to mark payment request as paid"));
                       }
                     } catch (e: any) {
                       alert(e?.message || "Network error marking payment request as paid");

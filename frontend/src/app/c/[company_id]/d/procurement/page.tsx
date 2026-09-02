@@ -166,7 +166,7 @@ export default function ProcurementPage() {
         fetch(`${apiHost}/apis/v3/procurement/pos?project_id=${projectId}`, { headers: authHeaders() }),
         fetch(`${apiHost}/apis/v3/procurement/grns?project_id=${projectId}`, { headers: authHeaders() }),
         fetch(`${apiHost}/apis/v3/procurement/inventory?project_id=${projectId}`, { headers: authHeaders() }),
-        fetch(`${apiHost}/apis/v3/billing/subcontractors?company_id=${companyId}`, { headers: authHeaders() }),
+        fetch(`${apiHost}/apis/v3/library/parties/${companyId}`, { headers: authHeaders() }),
         fetch(`${apiHost}/apis/v3/library/materials/${companyId}`, { headers: authHeaders() }),
         fetch(`${apiHost}/apis/v3/three-way/${companyId}`, { headers: authHeaders() }),
         fetch(`${apiHost}/apis/v3/procurement/transactions?project_id=${projectId}`, { headers: authHeaders() }),
@@ -213,13 +213,20 @@ export default function ProcurementPage() {
 
       if (materialsRes.ok) {
         const mdata = await materialsRes.json();
-        setMaterials(mdata.map((m: any) => ({ id: m.id, name: m.name })));
+        setMaterials(mdata.map((m: any) => ({ id: m.id, name: m.name, unit: m.unit || "", gst_rate: typeof m.gst_rate === "number" ? m.gst_rate : null })));
       }
 
       const vendorOptionsArr: Array<{ id: string; name: string }> = [];
       if (vendorsRes.ok) {
         const vdata = await vendorsRes.json();
-        vdata.forEach((v: any) => vendorOptionsArr.push({ id: String(v.company_team_id), name: v.name }));
+        // Purchase orders buy materials, so the vendor comes from the party
+        // master. This used to read /billing/subcontractors, which meant the
+        // "Supplier Vendor" picker offered only subcontractors and a registered
+        // Supplier could never be selected on a PO.
+        const buyable = new Set(["supplier", "material supplier", "equipment supplier", "contractor", "subcontractor", "labour contractor"]);
+        (vdata || [])
+          .filter((v: any) => !v.party_type || buyable.has(String(v.party_type).toLowerCase()))
+          .forEach((v: any) => vendorOptionsArr.push({ id: String(v.id), name: v.name }));
         setVendorOptions(vendorOptionsArr);
       }
       const vendorById: Record<string, string> = {};
@@ -259,7 +266,7 @@ export default function ProcurementPage() {
           status: po.status,
           approvalFlag: po.approval_flag,
           date: po.po_date ? po.po_date.split("T")[0] : "",
-          expectedDeliveryDate: po.expected_delivery_date ? po.expected_delivery_date.split("T")[0] : null,
+          expectedDeliveryDate: po.expected_delivery_date || null,
         }));
         setPos(mapped);
       }
@@ -329,7 +336,7 @@ export default function ProcurementPage() {
   const [newIndentNum, setNewIndentNum] = useState("");
   const [newIndentMaterial, setNewIndentMaterial] = useState("");
   const [newIndentQty, setNewIndentQty] = useState(50);
-  const [newIndentUnit, setNewIndentUnit] = useState("bags");
+  const [newIndentUnit, setNewIndentUnit] = useState("");
   const [newIndentSpec, setNewIndentSpec] = useState("");
   const [newIndentRequestedBy, setNewIndentRequestedBy] = useState("");
 
@@ -338,7 +345,7 @@ export default function ProcurementPage() {
   const [newPOVendor, setNewPOVendor] = useState("");
   const [newPOExpectedDeliveryDate, setNewPOExpectedDeliveryDate] = useState("");
   const [vendorOptions, setVendorOptions] = useState<Array<{ id: string; name: string }>>([]);
-  const [materials, setMaterials] = useState<Array<{ id: string; name: string }>>([]);
+  const [materials, setMaterials] = useState<Array<{ id: string; name: string; unit: string; gst_rate: number | null }>>([]);
   const [poFormItems, setPoFormItems] = useState<POItem[]>([
     { name: "", qty: 0, unit: "", rate: 0, tax_pct: 18 }
   ]);
@@ -1000,9 +1007,9 @@ export default function ProcurementPage() {
                           <tr key={po.id} className="border-b border-border-custom hover:bg-elevated transition-all align-top">
                             <td className="px-5 py-3 font-sans text-foreground whitespace-nowrap">
                               <div className="font-bold text-foreground">{po.poNumber}</div>
-                              <div className="text-[10px] text-muted font-normal">Date: {po.date || "—"}</div>
+                              <div className="text-[10px] text-muted font-normal">Date: {formatDate(po.date)}</div>
                               {po.expectedDeliveryDate && (
-                                <div className="text-[10px] text-primary font-medium mt-0.5">Exp: {po.expectedDeliveryDate}</div>
+                                <div className="text-[10px] text-primary font-medium mt-0.5">Exp: {formatDate(po.expectedDeliveryDate)}</div>
                               )}
                             </td>
                             <td className="px-5 py-3 text-foreground whitespace-nowrap">{po.vendor}</td>
@@ -1062,7 +1069,7 @@ export default function ProcurementPage() {
                                       </button>
                                     </>
                                   )}
-                                  {po.status === "sent" && po.approvalFlag === "approved" && (
+                                  {(po.status === "sent" || po.status === "partial") && po.approvalFlag === "approved" && (
                                     <button
                                       onClick={() => handleOpenGRNModal(po)}
                                       className="px-2.5 py-1.5 bg-success/10 hover:bg-success/20 border border-success/20 text-success rounded-lg text-[10px] font-bold inline-flex items-center gap-1.5 cursor-pointer"
@@ -1386,7 +1393,18 @@ export default function ProcurementPage() {
               
               <div className="space-y-1">
                 <label className="text-muted">Material Item</label>
-                <select value={newIndentMaterial} onChange={(e) => setNewIndentMaterial(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground">
+                <select
+                  value={newIndentMaterial}
+                  onChange={(e) => {
+                    setNewIndentMaterial(e.target.value);
+                    // Take the UOM from the library instead of leaving the
+                    // hardcoded "bags", which produced indents and POs reading
+                    // "500 bags" for a material measured in MT.
+                    const picked = materials.find((m) => m.name === e.target.value);
+                    if (picked?.unit) setNewIndentUnit(picked.unit);
+                  }}
+                  className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground"
+                >
                   <option value="">Select Material</option>
                   {materials.map((m) => (
                     <option key={m.id} value={m.name}>{m.name}</option>
@@ -1592,7 +1610,14 @@ export default function ProcurementPage() {
                         onChange={e => {
                           const next = [...poFormItems];
                           next[idx].name = e.target.value;
-                          next[idx].unit = e.target.value.includes("Cement") ? "bags" : "tons";
+                          // The unit and the tax rate belong to the material in
+                          // the library. This used to guess from the name:
+                          // anything containing "Cement" became bags, everything
+                          // else became tons, so a PO for 12mm TMT read "tons"
+                          // and a PO for sand read "tons" too.
+                          const picked = materials.find((m) => m.name === e.target.value);
+                          next[idx].unit = picked?.unit || "";
+                          if (picked?.gst_rate != null) next[idx].tax_pct = picked.gst_rate;
                           setPoFormItems(next);
                         }}
                         className="w-full bg-input border border-border-custom rounded p-1 text-foreground text-[11px]">

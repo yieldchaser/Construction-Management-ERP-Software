@@ -1,6 +1,6 @@
 "use client";
 import Badge, { type BadgeTone } from "@/components/ui/Badge";
-import { getApiHost } from "@/lib/api";
+import { getApiHost, detailToMessage} from "@/lib/api";
 import { authHeaders, fmtINR, formatLabel } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
 import { useProject } from "@/context/ProjectContext";
@@ -128,7 +128,7 @@ export default function ThreeWayPage() {
         setForm({ po_id: "", grn_id: "", invoice_id: "", variance_reason: "" });
         fetchMatches();
       } else {
-        setMessage(data.detail || "Failed to create match");
+        setMessage(detailToMessage(data.detail, "Failed to create match"));
       }
     } catch (_e) {
       void _e;
@@ -144,7 +144,7 @@ export default function ThreeWayPage() {
         setMessage("Match approved");
         fetchMatches();
       } else {
-        setMessage(data.detail || "Failed to approve match");
+        setMessage(detailToMessage(data.detail, "Failed to approve match"));
       }
     } catch (e) { console.error("Failed to approve", e); }
   };
@@ -159,7 +159,7 @@ export default function ThreeWayPage() {
         setMessage("Match rejected");
         fetchMatches();
       } else {
-        setMessage(data.detail || "Failed to reject match");
+        setMessage(detailToMessage(data.detail, "Failed to reject match"));
       }
     } catch (e) { console.error("Failed to reject", e); }
   };

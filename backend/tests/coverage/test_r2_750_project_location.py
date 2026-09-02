@@ -136,7 +136,15 @@ def test_planning_create_no_longer_invents_a_mumbai_coordinate(
 
     r = client.post(
         "/apis/v3/planning/projects",
-        json={"company_id": str(comp.id), "name": "R750H Gujarat Site", "city": "Vadodara"},
+        # state is required on this route as of the E2E fixes: it used to accept
+        # and drop the field, which produced projects that could never be
+        # invoiced. This test is about the location default, so supply one.
+        json={
+            "company_id": str(comp.id),
+            "name": "R750H Gujarat Site",
+            "city": "Vadodara",
+            "state": "Gujarat",
+        },
         headers=hdr,
     )
     assert r.status_code == 201, r.text

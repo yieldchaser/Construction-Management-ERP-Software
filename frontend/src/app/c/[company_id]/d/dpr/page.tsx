@@ -108,7 +108,11 @@ export default function DPRPage() {
   const [weather, setWeather] = useState("Clear");
   const [notes, setNotes] = useState("");
   const [issues, setIssues] = useState("");
-  const [reportedBy, setReportedBy] = useState("");
+  // Seeded from the signed-in user purely so the read-only field shows who the
+  // backend will record as the author.
+  const [reportedBy, setReportedBy] = useState(
+    typeof window !== "undefined" ? localStorage.getItem("user_name") || "Signed-in user" : "Signed-in user"
+  );
   const [materialsConsumed, setMaterialsConsumed] = useState<ConsumedMaterialItem[]>([]);
   
   // Measurement Book (M.B.) takeoff items state
@@ -353,6 +357,9 @@ export default function DPRPage() {
                   onChange={(e) => setSelectedTaskId(e.target.value)}
                   className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground"
                 >
+                  {/* A select with zero options renders as an empty box and the
+                      user cannot tell whether it is loading, broken or empty. */}
+                  <option value="">{tasks.length ? "Select a task (optional)" : "No tasks planned on this project yet"}</option>
                   {tasks.map(t => (
                     <option key={t.id} value={t.id}>{t.name} ({formatLabel(t.status)})</option>
                   ))}
@@ -361,7 +368,17 @@ export default function DPRPage() {
 
               <div className="space-y-1">
                 <label className="text-muted">Reported By</label>
-                <input type="text" value={reportedBy} onChange={(e) => setReportedBy(e.target.value)} className="w-full bg-input border border-border-custom rounded-lg p-2 text-foreground" placeholder="e.g. Er. Suresh R (PM)" />
+                {/* Not editable by design. The DPR is the primary contemporaneous
+                    site record, so the backend stamps the authenticated user as
+                    the author (R2-408) and ignores anything sent here. This used
+                    to be a free-text box whose contents were silently discarded. */}
+                <input
+                  type="text"
+                  value={reportedBy}
+                  readOnly
+                  title="Recorded automatically as the signed-in user"
+                  className="w-full bg-elevated border border-border-custom rounded-lg p-2 text-muted cursor-not-allowed"
+                />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

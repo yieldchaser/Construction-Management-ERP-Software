@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { getApiHost } from "@/lib/api";
+import { getApiHost, detailToMessage} from "@/lib/api";
 import { getApi, persistAuth } from "@/lib/siteflow";
 import { getFirebaseAuth, isFirebaseConfigured } from "@/lib/firebase";
 import {
@@ -176,7 +176,7 @@ export default function LoginPage() {
         setStage("otp");
         setTimer(30);
         setMessage(data.demo_mode ? `Demo code: ${data.mock_code}` : "Code sent to your phone.");
-      } else setError(data.detail || "Failed to send code.");
+      } else setError(detailToMessage(data.detail, "Failed to send code."));
     } catch (err: any) {
       console.error("login failed", err?.code, err?.message, err);
       setError("Could not reach the server. Is the backend running?");
@@ -242,7 +242,7 @@ export default function LoginPage() {
         setStage("otp");
         setTimer(30);
         setMessage(data.demo_mode ? `Demo code: ${data.mock_code}` : "Code sent to your email.");
-      } else setError(data.detail || "Failed to send code.");
+      } else setError(detailToMessage(data.detail, "Failed to send code."));
     } catch (err: any) {
       console.error("login failed", err?.code, err?.message, err);
       setError("Could not reach the server.");
@@ -270,7 +270,7 @@ export default function LoginPage() {
         setMessage("Success. Redirecting...");
         await finishLogin(data);
       } else {
-        setError(data.detail || "Invalid code.");
+        setError(detailToMessage(data.detail, "Invalid code."));
       }
     } catch (err: any) {
       console.error("login failed", err?.code, err?.message, err);
@@ -300,7 +300,7 @@ export default function LoginPage() {
         setMessage("Success. Redirecting...");
         await finishLogin(data);
       } else {
-        setError(data.detail || "Could not complete sign-in.");
+        setError(detailToMessage(data.detail, "Could not complete sign-in."));
       }
     } catch (err: any) {
       console.error("login failed", err?.code, err?.message, err);
@@ -333,7 +333,7 @@ export default function LoginPage() {
         setMessage("Verify your email to continue. We can send you a code.");
         setStage("verify");
       } else {
-        setError(data.detail || "Invalid email or password.");
+        setError(detailToMessage(data.detail, "Invalid email or password."));
       }
     } catch (err: any) {
       console.error("login failed", err?.code, err?.message, err);
@@ -360,7 +360,7 @@ export default function LoginPage() {
         setMessage("Invitation accepted. Redirecting...");
         await finishLogin(data);
       } else {
-        setError(data.detail || "Could not accept invitation.");
+        setError(detailToMessage(data.detail, "Could not accept invitation."));
       }
     } catch (err: any) {
       console.error("accept invite failed", err);
@@ -388,7 +388,7 @@ export default function LoginPage() {
             : "Account created. Enter the code we emailed you."
         );
       } else {
-        setError(data.detail || "Could not create the account.");
+        setError(detailToMessage(data.detail, "Could not create the account."));
       }
     } catch (err: any) {
       console.error("login failed", err?.code, err?.message, err);
@@ -412,7 +412,7 @@ export default function LoginPage() {
         setMessage("Verified. Redirecting...");
         await finishLogin(data);
       } else {
-        setError(data.detail || "Invalid code.");
+        setError(detailToMessage(data.detail, "Invalid code."));
       }
     } catch (err: any) {
       console.error("login failed", err?.code, err?.message, err);
@@ -429,7 +429,7 @@ export default function LoginPage() {
       if (res.ok) {
         setTimer(30);
         setMessage(data.demo_mode ? `Demo code: ${data.mock_code}` : "Code sent to your email.");
-      } else setError(data.detail || "Failed to send code.");
+      } else setError(detailToMessage(data.detail, "Failed to send code."));
     } catch (err: any) {
       console.error("login failed", err?.code, err?.message, err);
       setError("Could not reach the server.");
@@ -451,7 +451,7 @@ export default function LoginPage() {
         setStage("reset");
         setTimer(30);
         setMessage("If an account exists, a reset code has been sent to your email.");
-      } else setError(data.detail || "Could not send a reset code.");
+      } else setError(detailToMessage(data.detail, "Could not send a reset code."));
     } catch (err: any) {
       console.error("login failed", err?.code, err?.message, err);
       setError("Could not reach the server.");
@@ -475,7 +475,7 @@ export default function LoginPage() {
         setPassword("");
         setMessage("Password updated. Please log in.");
       } else {
-        setError(data.detail || "Could not reset the password.");
+        setError(detailToMessage(data.detail, "Could not reset the password."));
       }
     } catch (err: any) {
       console.error("login failed", err?.code, err?.message, err);

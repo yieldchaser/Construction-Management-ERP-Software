@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { getApiHost, readErrorDetail } from "@/lib/api";
+import { getApiHost, readErrorDetail, detailToMessage} from "@/lib/api";
 import { formatDate, formatLabel } from "@/lib/siteflow";
 import { useProject } from "@/context/ProjectContext";
 import Icon from "@/components/marketing/Icon";
@@ -232,7 +232,7 @@ export default function ProjectsHomePage() {
         fetchData();
       } else {
         const errData = await res.json();
-        showToast(`Failed: ${errData.detail || "Unknown error"}`);
+        showToast(`Failed: ${detailToMessage(errData.detail, "Unknown error")}`);
       }
     } catch (err) {
       console.error(err);
@@ -578,7 +578,7 @@ export default function ProjectsHomePage() {
                                 showToast("Task quick-added to WBS backlog!");
                               } else {
                                 const err = await res.json().catch(() => ({}));
-                                showToast(err.detail || "Failed to add task");
+                                showToast(detailToMessage(err.detail, "Failed to add task"));
                               }
                             } catch (e) {
                               showToast("Failed to add task");

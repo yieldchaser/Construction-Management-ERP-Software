@@ -5,7 +5,7 @@ import React, { useState, useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
-import { getApiHost, readErrorDetail } from "@/lib/api";
+import { getApiHost, readErrorDetail, detailToMessage} from "@/lib/api";
 import { authHeaders, formatDate, formatLabel, todayLocalISO } from "@/lib/siteflow";
 import Icon, { type IconName } from "@/components/marketing/Icon";
 
@@ -331,7 +331,7 @@ export default function DrawingsPage() {
         });
         if (!dRes.ok) {
           const err = await dRes.json().catch(() => ({}));
-          alert(`Failed to create drawing: ${err.detail || "Failed to publish revision"}`);
+          alert(`Failed to create drawing: ${detailToMessage(err.detail, "Failed to publish revision")}`);
           return;
         }
         const savedD = await dRes.json();
@@ -355,7 +355,7 @@ export default function DrawingsPage() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        alert(`Failed to publish revision: ${err.detail || "Failed to publish revision"}`);
+        alert(`Failed to publish revision: ${detailToMessage(err.detail, "Failed to publish revision")}`);
         return;
       }
 

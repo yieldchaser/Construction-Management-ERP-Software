@@ -1,6 +1,6 @@
 "use client";
 import Badge, { type BadgeTone } from "@/components/ui/Badge";
-import { getApiHost, readErrorDetail } from "@/lib/api";
+import { getApiHost, readErrorDetail, detailToMessage} from "@/lib/api";
 import { authHeaders, formatDate, formatLabel } from "@/lib/siteflow";
 
 import { useParams } from "next/navigation";
@@ -294,7 +294,7 @@ export default function CompanySettingsPage() {
         }
       } else {
         const err = await res.json().catch(() => ({}));
-        setProfileMsg({ type: "err", text: err.detail || "Failed to update profile" });
+        setProfileMsg({ type: "err", text: detailToMessage(err.detail, "Failed to update profile") });
       }
     } catch {
       setProfileMsg({ type: "err", text: "Failed to update profile" });
@@ -1110,7 +1110,7 @@ export default function CompanySettingsPage() {
         setShowAddLeave(false);
       } else {
         const err = await res.json().catch(() => ({}));
-        alert(err.detail || "Failed to create leave template");
+        alert(detailToMessage(err.detail, "Failed to create leave template"));
       }
     } catch (e: any) {
       alert(e?.message || "Network error creating leave template");
@@ -1125,7 +1125,7 @@ export default function CompanySettingsPage() {
         setLeaveTemplates(leaveTemplates.filter((t) => t.id !== id));
       } else {
         const err = await res.json().catch(() => ({}));
-        alert(err.detail || "Failed to delete leave template");
+        alert(detailToMessage(err.detail, "Failed to delete leave template"));
       }
     } catch (e: any) {
       alert(e?.message || "Network error deleting leave template");

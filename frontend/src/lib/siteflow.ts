@@ -119,6 +119,29 @@ export const toLocalISODateTime = (date: string | number | Date = new Date()): s
 
 export const nowLocalISO = (): string => toLocalISODateTime(new Date());
 
+/**
+ * Convert a `datetime-local` input value ("2026-09-02T11:55", no zone) into an
+ * absolute ISO instant for the wire.
+ *
+ * toLocalISODateTime / nowLocalISO are for DISPLAY: they answer "what does the
+ * clock on this wall say", which is what a date or datetime-local input must be
+ * given. Sending that naive string to the API is a different question, and
+ * getting the two confused broke safety incident reporting: the backend attaches
+ * the SERVER timezone to a naive datetime (safety.py reported_at_not_future),
+ * Render runs UTC, so 11:55 IST arrived as 11:55 UTC and every incident was
+ * rejected as 5.5 hours in the future.
+ *
+ * Always pass a datetime-local value through this before putting it in a body.
+ */
+export const localInputToInstantISO = (value: string): string | null => {
+  if (!value) return null;
+  // new Date("YYYY-MM-DDTHH:mm") is parsed as LOCAL time by spec, which is what
+  // the input meant. toISOString then yields the correct absolute instant.
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return null;
+  return d.toISOString();
+};
+
 export const formatDate = (
   date: string | number | Date | null | undefined,
   fallback: string = "—"

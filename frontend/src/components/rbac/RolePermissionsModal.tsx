@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Icon from "@/components/marketing/Icon";
 import { getApi, authHeaders } from "@/lib/siteflow";
+import { detailToMessage } from "@/lib/api";
 import {
   MODULES,
   MODULE_LABELS,
@@ -105,7 +106,7 @@ export default function RolePermissionsModal({ role, onClose, onSaved }: Props) 
         const err = await res.json().catch(() => ({}));
         setMsg({
           type: "err",
-          text: err.detail || "Failed to save permissions",
+          text: detailToMessage(err.detail, "Failed to save permissions"),
         });
       }
     } catch {

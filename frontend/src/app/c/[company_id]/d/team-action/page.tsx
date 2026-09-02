@@ -1,5 +1,5 @@
 "use client";
-import { readErrorDetail } from "@/lib/api";
+import { readErrorDetail, detailToMessage} from "@/lib/api";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
@@ -651,7 +651,7 @@ ${tasksXml}
       } else {
         try {
           const err = await res.json();
-          setTsFormError(err?.detail || "Could not save the timesheet. Please try again.");
+          setTsFormError(detailToMessage(err?.detail, "Could not save the timesheet. Please try again."));
         } catch {
           setTsFormError("Could not save the timesheet. Please try again.");
         }
@@ -673,7 +673,7 @@ ${tasksXml}
         setTimesheets((prev) => prev.filter((t) => t.id !== id));
       } else {
         const err = await res.json().catch(() => ({}));
-        alert(err.detail || "Failed to delete timesheet");
+        alert(detailToMessage(err.detail, "Failed to delete timesheet"));
       }
     } catch (e: any) {
       alert(e?.message || "Network error deleting timesheet");

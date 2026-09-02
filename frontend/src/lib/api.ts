@@ -16,11 +16,56 @@ export const getApiHost = (): string => {
   return "http://localhost:8000";
 };
 
+/**
+ * Always read an API error through this. Never put `body.detail` into state
+ * directly: FastAPI returns a plain string for HTTPException but an ARRAY OF
+ * OBJECTS for request validation errors, and rendering that array as a React
+ * child throws "Objects are not valid as a React child" and blanks the route.
+ * That is exactly how the wastage screen turned a 422 into a white page.
+ */
+/**
+ * Same normalisation as readErrorDetail, for the many call sites that have
+ * already parsed the body for other reasons and only hold `body.detail`.
+ */
+export function detailToMessage(detail: unknown, fallback: string): string {
+  if (typeof detail === "string" && detail) return detail;
+  if (Array.isArray(detail)) {
+    const parts = detail
+      .map((d: unknown) => {
+        if (typeof d === "string") return d;
+        if (!d || typeof d !== "object") return "";
+        const row = d as { loc?: unknown[]; msg?: string };
+        const field = Array.isArray(row.loc)
+          ? row.loc.filter((p) => p !== "body" && p !== "query").join(".")
+          : "";
+        return field && row.msg ? `${field}: ${row.msg}` : (row.msg || "");
+      })
+      .filter(Boolean);
+    if (parts.length) return parts.join("; ");
+  }
+  return fallback;
+}
+
 export async function readErrorDetail(res: Response): Promise<string> {
   try {
     const data = await res.json();
     if (typeof data?.detail === "string") return data.detail;
-    if (Array.isArray(data?.detail) && data.detail[0]?.msg) return data.detail[0].msg;
+    if (Array.isArray(data?.detail)) {
+      // Name the offending field, and list every error rather than only the
+      // first, so a multi-field 422 is actionable instead of cryptic.
+      const parts = data.detail
+        .map((d: unknown) => {
+          if (typeof d === "string") return d;
+          if (!d || typeof d !== "object") return "";
+          const row = d as { loc?: unknown[]; msg?: string };
+          const field = Array.isArray(row.loc)
+            ? row.loc.filter((p) => p !== "body" && p !== "query").join(".")
+            : "";
+          return field && row.msg ? `${field}: ${row.msg}` : (row.msg || "");
+        })
+        .filter(Boolean);
+      if (parts.length) return parts.join("; ");
+    }
     return res.statusText || `HTTP ${res.status}`;
   } catch {
     return res.statusText || `HTTP ${res.status}`;

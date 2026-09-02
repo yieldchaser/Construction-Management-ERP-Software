@@ -4,7 +4,7 @@ import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useProject } from "@/context/ProjectContext";
-import { getApiHost, readErrorDetail } from "@/lib/api";
+import { getApiHost, readErrorDetail, detailToMessage} from "@/lib/api";
 import { authHeaders, formatLabel, todayLocalISO, toLocalISODate, formatDate } from "@/lib/siteflow";
 import Icon from "@/components/marketing/Icon";
 import { isMissingOrDemoTenant, redirectToLogin } from "@/lib/company-guard";
@@ -573,7 +573,7 @@ export default function SubconPage() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || "Failed to create subcontractor");
+        throw new Error(detailToMessage(err.detail, "Failed to create subcontractor"));
       }
       await fetchSubconData();
       setShowAddPartyDrawer(false);

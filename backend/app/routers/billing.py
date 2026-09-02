@@ -304,9 +304,15 @@ def _compute_wo_billing(db: Session, wo_id: UUID, est_amount: float):
         Bill.status != "Cancelled"
     ).all()
     billed_amount = round(sum(float(b.total_payable or 0.0) for b in bills), 2)
+    # Progress against the contract must compare like with like. estimated_work_amount
+    # is the GST-exclusive contract value, so the numerator has to be the billed
+    # WORK value (subtotal), not total_payable, which is GST-inclusive and net of
+    # retention and TDS. Using total_payable overstated progress by roughly the
+    # GST rate: 420,000 of work on a 1,250,000 order read 37.3% instead of 33.6%.
+    billed_work_value = round(sum(float(b.subtotal or 0.0) for b in bills), 2)
     progress_pct = None
     if float(est_amount) > 0:
-        progress_pct = round((billed_amount / float(est_amount)) * 100.0, 1)
+        progress_pct = round((billed_work_value / float(est_amount)) * 100.0, 1)
     return billed_amount, progress_pct
 
 

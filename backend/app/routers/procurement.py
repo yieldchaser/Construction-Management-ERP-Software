@@ -46,7 +46,11 @@ class IndentCreateRequest(BaseModel):
     company_id: UUID
     project_id: UUID
     requested_by: Optional[UUID] = None
-    indent_number: str
+    # Optional so the server can number it. The form leaves this blank and every
+    # indent used to be stored with indent_number "", which cannot be quoted to a
+    # vendor or referenced on a PO. GRNs, NCRs and RA bills all self-number;
+    # indents were the one document that did not.
+    indent_number: Optional[str] = None
     items: List[IndentItemSchema]
 
 class IndentResponse(BaseModel):
@@ -335,15 +339,35 @@ def get_company_indents(
         )
     return res
 
+def _generate_indent_number(db: Session, company_id: UUID, project_id: UUID) -> str:
+    """Running IND-#### sequence, mirroring _generate_grn_number.
+
+    The indent form leaves the number blank and nothing filled it in, so every
+    indent raised through the UI was stored with indent_number "". An unnumbered
+    requisition cannot be quoted to a vendor or referenced from a PO.
+    """
+    count = db.query(MaterialIndent).filter(MaterialIndent.company_id == company_id).count()
+    candidate = f"IND-{count + 1:04d}"
+    while db.query(MaterialIndent).filter(
+        MaterialIndent.company_id == company_id, MaterialIndent.indent_number == candidate
+    ).first():
+        count += 1
+        candidate = f"IND-{count + 1:04d}"
+    return candidate
+
+
 @router.post("/indents", response_model=IndentResponse, status_code=201)
 def create_indent(req: IndentCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     get_company_membership(db, current_user, req.company_id)
     verify_project_in_company(db, req.project_id, req.company_id)
     require_permission(db, current_user, req.company_id, "procurement:edit")
+    indent_number = (req.indent_number or "").strip() or _generate_indent_number(
+        db, req.company_id, req.project_id
+    )
     # Check if indent number already exists for the company
     existing = db.query(MaterialIndent).filter(
         MaterialIndent.company_id == req.company_id,
-        MaterialIndent.indent_number == req.indent_number
+        MaterialIndent.indent_number == indent_number
     ).first()
     if existing:
         raise HTTPException(status_code=400, detail="Indent number already exists for this company")
@@ -353,7 +377,7 @@ def create_indent(req: IndentCreateRequest, db: Session = Depends(get_db), curre
         company_id=req.company_id,
         project_id=req.project_id,
         requested_by=req.requested_by,
-        indent_number=req.indent_number,
+        indent_number=indent_number,
         status="pending",
         created_at=now,
     )

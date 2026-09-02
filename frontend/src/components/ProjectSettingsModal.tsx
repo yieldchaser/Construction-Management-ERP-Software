@@ -4,12 +4,15 @@ import React, { useCallback, useEffect, useState } from "react";
 import { getApi, authHeaders, fmtINR, initials } from "@/lib/siteflow";
 import Icon from "@/components/marketing/Icon";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { GST_STATES, PROJECT_STAGES, PROJECT_CATEGORIES } from "@/lib/gstStates";
 
 export type ProjectSettingsData = {
   id: string;
   name: string;
   address?: string | null;
   city?: string | null;
+  state?: string | null;
+  location?: string | null;
   stage?: string | null;
   category?: string | null;
   project_value?: number;
@@ -64,6 +67,12 @@ export default function ProjectSettingsModal({
     name: project.name,
     address: project.address || "",
     city: project.city || "",
+    // Without state the project cannot be invoiced at all: billing and
+    // quotation conversion both refuse, because place of supply derives from
+    // the site. Projects created before this field existed have state null and
+    // this modal is how they get corrected.
+    state: project.state || "",
+    location: project.location || "",
     stage: project.stage || "",
     category: project.category || "",
     project_value: String(project.project_value || 0),
@@ -122,6 +131,8 @@ export default function ProjectSettingsModal({
           name: form.name,
           address: form.address,
           city: form.city,
+          state: form.state || null,
+          location: form.location.trim() || null,
           stage: form.stage,
           category: form.category,
           project_value: parseFloat(form.project_value) || 0,
@@ -215,10 +226,22 @@ export default function ProjectSettingsModal({
               </Field>
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Stage">
-                  <input value={form.stage} onChange={(e) => setForm({ ...form, stage: e.target.value })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
+                  <select value={form.stage} onChange={(e) => setForm({ ...form, stage: e.target.value })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground">
+                    <option value="">Select stage</option>
+                    {PROJECT_STAGES.map((st) => (<option key={st} value={st}>{st}</option>))}
+                    {form.stage && !PROJECT_STAGES.includes(form.stage as (typeof PROJECT_STAGES)[number]) && (
+                      <option value={form.stage}>{form.stage}</option>
+                    )}
+                  </select>
                 </Field>
                 <Field label="Category">
-                  <input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
+                  <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground">
+                    <option value="">Select category</option>
+                    {PROJECT_CATEGORIES.map((c) => (<option key={c} value={c}>{c}</option>))}
+                    {form.category && !PROJECT_CATEGORIES.includes(form.category as (typeof PROJECT_CATEGORIES)[number]) && (
+                      <option value={form.category}>{form.category}</option>
+                    )}
+                  </select>
                 </Field>
               </div>
               <Field label="Address">
@@ -227,6 +250,19 @@ export default function ProjectSettingsModal({
               <div className="grid grid-cols-2 gap-3">
                 <Field label="City">
                   <input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
+                </Field>
+                <Field label="State (required for invoicing)">
+                  <select value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground">
+                    <option value="">Select state</option>
+                    {GST_STATES.map((st) => (
+                      <option key={st.code} value={st.name}>{st.code} - {st.name}</option>
+                    ))}
+                  </select>
+                </Field>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Site Coordinates">
+                  <input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="28.6280, 77.3649" className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />
                 </Field>
                 <Field label="Project Value">
                   <input type="number" value={form.project_value} onChange={(e) => setForm({ ...form, project_value: e.target.value })} className="w-full rounded-md border border-border-custom bg-background px-3 py-2 text-sm text-foreground" />

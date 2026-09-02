@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { getApi, authHeaders } from "@/lib/siteflow";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { detailToMessage } from "@/lib/api";
 
 interface TeamMember {
   id: string;
@@ -84,7 +85,7 @@ export default function TeamSection({ companyId }: Props) {
         setTimeout(() => setMsg(null), 2000);
       } else {
         const err = await res.json().catch(() => ({}));
-        setMsg({ type: "err", text: err.detail || "Failed to assign role" });
+        setMsg({ type: "err", text: detailToMessage(err.detail, "Failed to assign role") });
       }
     } catch {
       setMsg({ type: "err", text: "Failed to assign role" });

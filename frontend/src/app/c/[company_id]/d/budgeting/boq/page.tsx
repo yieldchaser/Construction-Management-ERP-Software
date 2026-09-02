@@ -1,6 +1,6 @@
 "use client";
 import Badge, { type BadgeTone } from "@/components/ui/Badge";
-import { getApiHost } from "@/lib/api";
+import { getApiHost, detailToMessage} from "@/lib/api";
 import { authHeaders, formatDate } from "@/lib/siteflow";
 
 import React, { useState, useEffect, useMemo } from "react";
@@ -162,7 +162,7 @@ export default function BOQPage() {
         setFile(null);
         await loadBoq();
       } else {
-        setImportMsg(data.detail || "Import failed.");
+        setImportMsg(detailToMessage(data.detail, "Import failed."));
       }
     } catch {
       setImportMsg("Import failed: backend not reachable. The BOQ was not modified.");

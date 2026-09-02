@@ -1,6 +1,6 @@
 "use client";
 import Badge, { type BadgeTone } from "@/components/ui/Badge";
-import {  getApiHost , readErrorDetail } from "@/lib/api";
+import {  getApiHost , readErrorDetail, detailToMessage} from "@/lib/api";
 import { authHeaders, formatLabel } from "@/lib/siteflow";
 import React, { useState, useEffect } from "react";
 import { useProject } from "@/context/ProjectContext";
@@ -32,6 +32,10 @@ export default function WastagePage() {
   const [records, setRecords] = useState<Wastage[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [message, setMessage] = useState("");
+  // Wastage has to name a material that actually exists on site, otherwise the
+  // record can never be reconciled against stock. The DPR modal already scopes
+  // its material picker to on-hand inventory; this mirrors it.
+  const [inventory, setInventory] = useState<Array<{ material_name: string; unit: string; on_hand_qty: number }>>([]);
 
   const [form, setForm] = useState({
     material_name: "",
@@ -41,7 +45,6 @@ export default function WastagePage() {
     estimated_value: 0,
     reason: "",
     photo_urls: [] as string[],
-    task_id: "",
   });
 
   const fetchRecords = async () => {
@@ -56,8 +59,18 @@ export default function WastagePage() {
     }
   };
 
+  const fetchInventory = async () => {
+    if (!projectId) { setInventory([]); return; }
+    try {
+      const res = await fetch(`${getApiHost()}/apis/v3/procurement/inventory?project_id=${projectId}`, { headers: authHeaders() });
+      if (res.ok) setInventory(await res.json());
+    } catch (e) {
+      console.error("Failed to load inventory", e);
+    }
+  };
+
   useEffect(() => {
-    const id = setTimeout(() => fetchRecords(), 0);
+    const id = setTimeout(() => { fetchRecords(); fetchInventory(); }, 0);
     return () => clearTimeout(id);
   }, [projectId]);
 
@@ -68,16 +81,19 @@ export default function WastagePage() {
       const res = await fetch(`${getApiHost()}/apis/v3/wastage`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(authHeaders() || {}) },
+        // task_id is deliberately absent rather than "". The backend declares it
+        // Optional[uuid.UUID] and an empty string fails UUID parsing, which used
+        // to 422 every single submission.
         body: JSON.stringify({ ...form, company_id: companyId, project_id: projectId, estimated_value_override: form.estimated_value > 0 }),
       });
       if (res.ok) {
         setMessage("Wastage recorded successfully");
         setShowModal(false);
-        setForm({ material_name: "", wastage_type: "scrap", quantity: 0, unit: "kg", estimated_value: 0, reason: "", photo_urls: [], task_id: "" });
+        setForm({ material_name: "", wastage_type: "scrap", quantity: 0, unit: "kg", estimated_value: 0, reason: "", photo_urls: [] });
         fetchRecords();
       } else {
         const err = await res.json();
-        setMessage(err.detail || "Failed to record wastage");
+        setMessage(detailToMessage(err.detail, "Failed to record wastage"));
       }
     } catch (_e) {
       void _e;
@@ -201,7 +217,27 @@ export default function WastagePage() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-xs font-medium text-muted mb-1">Material Name</label>
-                  <input type="text" required className="w-full bg-input border border-border-custom rounded-md px-4 py-2 text-foreground" value={form.material_name} onChange={(e) => setForm({...form, material_name: e.target.value})} />
+                  <select
+                    required
+                    className="w-full bg-input border border-border-custom rounded-md px-4 py-2 text-foreground"
+                    value={form.material_name}
+                    onChange={(e) => {
+                      const picked = inventory.find((i) => i.material_name === e.target.value);
+                      setForm({ ...form, material_name: e.target.value, unit: picked?.unit || form.unit });
+                    }}
+                  >
+                    <option value="">Select material...</option>
+                    {inventory.map((i) => (
+                      <option key={i.material_name} value={i.material_name}>
+                        {i.material_name} ({i.on_hand_qty} {i.unit} on hand)
+                      </option>
+                    ))}
+                  </select>
+                  {inventory.length === 0 && (
+                    <p className="mt-1 text-[10px] text-muted">
+                      No material has been received on this project yet. Record a goods receipt first.
+                    </p>
+                  )}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>

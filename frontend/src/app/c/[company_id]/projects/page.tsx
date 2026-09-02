@@ -3,7 +3,7 @@ import Badge, { type BadgeTone } from "@/components/ui/Badge";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getApiHost } from "@/lib/api";
+import { getApiHost, detailToMessage } from "@/lib/api";
 import { CustomFieldsSection, useCustomFields } from "@/components/CustomFieldsSection";
 import Icon from "@/components/marketing/Icon";
 // R2-755: shared CSV guard — quote-doubling protects the delimiter, not the
@@ -15,6 +15,7 @@ import PageHeader from "@/components/PageHeader";
 import SegmentedTabs from "@/components/ui/Tabs";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { TableSkeleton } from "@/components/ui/Skeleton";
+import { GST_STATES, PROJECT_STAGES, PROJECT_CATEGORIES } from "@/lib/gstStates";
 
 type Project = {
   id: string;
@@ -68,7 +69,11 @@ function initials(name: string) {
 async function readErrorDetail(res: Response): Promise<string> {
   try {
     const body = await res.json();
-    if (typeof body?.detail === "string" && body.detail) return body.detail;
+    // detailToMessage handles the validation-error array as well as the plain
+    // string. The create wizard now shows this to the user, so it has to be
+    // readable rather than "[object Object]".
+    const msg = detailToMessage(body?.detail, "");
+    if (msg) return msg;
   } catch {}
   return `HTTP ${res.status}`;
 }
@@ -550,6 +555,13 @@ function CreateProjectModal({
   const [code, setCode] = useState("");
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
+  // Required by POST /projects/. Place of supply for every invoice on this
+  // project derives from the site state, so the backend refuses to create a
+  // project without it. Nothing collected it, so nothing could be created.
+  const [stateName, setStateName] = useState("");
+  // Site coordinates. The attendance radius below is meaningless without a
+  // centre, and this endpoint is the only supported way to place a site.
+  const [location, setLocation] = useState("");
   const [stage, setStage] = useState("");
   const [category, setCategory] = useState("");
   const [projectValue, setProjectValue] = useState("");
@@ -568,9 +580,14 @@ function CreateProjectModal({
   const TOTAL_STEPS = 3;
 
   useEffect(() => {
-    fetch(api(`/projects/company/${companyId}/members`), { headers: authHeaders() })
+    // /projects/company/{id}/members does not exist and 404s, which is why this
+    // step used to show "No members found" for every company. The company team
+    // roster lives here, the same source the procurement screen reads.
+    fetch(api(`/crm/team-members/${companyId}`), { headers: authHeaders() })
       .then((r) => (r.ok ? r.json() : []))
-      .then(setMembers)
+      .then((rows: Array<{ id: string; name: string }>) =>
+        setMembers((rows || []).map((r) => ({ company_team_id: r.id, name: r.name })))
+      )
       .catch(() => setMembers([]));
   }, [companyId]);
 
@@ -612,6 +629,8 @@ function CreateProjectModal({
           code: code || null,
           address,
           city,
+          state: stateName || null,
+          location: location.trim() || null,
           stage: stage || null,
           category: category || null,
           project_value: parseFloat(projectValue) || 0,
@@ -625,8 +644,13 @@ function CreateProjectModal({
           custom_fields: customFields.toPayload(),
         }),
       });
-      if (res.ok) onCreated();
-      else onClose();
+      if (res.ok) {
+        onCreated();
+      } else {
+        // Never close on failure. This used to call onClose(), which threw away
+        // everything the user had typed and told them nothing at all.
+        setFormError(await readErrorDetail(res));
+      }
     } finally {
       setSaving(false);
     }
@@ -684,12 +708,36 @@ function CreateProjectModal({
               <Field label="Address">
                 <input value={address} onChange={(e) => setAddress(e.target.value)} className={inputCls} />
               </Field>
-              <Field label="City">
-                <input value={city} onChange={(e) => setCity(e.target.value)} className={inputCls} />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <Field label="City">
+                  <input value={city} onChange={(e) => setCity(e.target.value)} className={inputCls} />
+                </Field>
+                <Field label="State *">
+                  <select value={stateName} onChange={(e) => setStateName(e.target.value)} className={inputCls}>
+                    <option value="">Select state</option>
+                    {GST_STATES.map((st) => (
+                      <option key={st.code} value={st.name}>{st.code} - {st.name}</option>
+                    ))}
+                  </select>
+                </Field>
+              </div>
+              <Field label="Site Coordinates">
+                <input
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="latitude, longitude - e.g. 28.6280, 77.3649"
+                  className={inputCls}
+                />
+                <p className="mt-1 text-[10px] text-muted">
+                  Used as the centre of the attendance geofence. Leave blank if the site is not geofenced.
+                </p>
               </Field>
+              {formError && (
+                <p className="rounded-md border border-danger/40 bg-danger/10 px-3 py-2 text-xs text-danger">{formError}</p>
+              )}
               <div className="flex justify-end pt-2">
                 <button
-                  disabled={!name}
+                  disabled={!name || !stateName}
                   onClick={() => setStep(2)}
                   className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white disabled:opacity-40"
                 >
@@ -703,10 +751,20 @@ function CreateProjectModal({
             <div className="space-y-3">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <Field label="Stage">
-                  <input value={stage} onChange={(e) => setStage(e.target.value)} className={inputCls} />
+                  <select value={stage} onChange={(e) => setStage(e.target.value)} className={inputCls}>
+                    <option value="">Select stage</option>
+                    {PROJECT_STAGES.map((st) => (
+                      <option key={st} value={st}>{st}</option>
+                    ))}
+                  </select>
                 </Field>
                 <Field label="Category">
-                  <input value={category} onChange={(e) => setCategory(e.target.value)} className={inputCls} />
+                  <select value={category} onChange={(e) => setCategory(e.target.value)} className={inputCls}>
+                    <option value="">Select category</option>
+                    {PROJECT_CATEGORIES.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
                 </Field>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

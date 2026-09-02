@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { getApi, persistAuth } from "@/lib/siteflow";
-import { getApiHost } from "@/lib/api";
+import { getApiHost, detailToMessage} from "@/lib/api";
 
 const ERROR_MESSAGES: Record<string, string> = {
   google_denied: "Google sign-in was cancelled.",
@@ -41,7 +41,7 @@ export default function AuthCallbackPage() {
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok || !data.access_token) {
-          setError(data.detail || "Sign-in link is invalid or has expired.");
+          setError(detailToMessage(data.detail, "Sign-in link is invalid or has expired."));
           return;
         }
         persistAuth(data);

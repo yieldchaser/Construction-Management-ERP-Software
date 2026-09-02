@@ -1,11 +1,11 @@
 "use client";
-import {  getApiHost , readErrorDetail } from "@/lib/api";
+import {  getApiHost , readErrorDetail, detailToMessage} from "@/lib/api";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useProject } from "@/context/ProjectContext";
 import { useParams } from "next/navigation";
-import { authHeaders, downloadWithAuth, formatLabel } from "@/lib/siteflow";
+import { authHeaders, downloadWithAuth, formatLabel, formatDate, fmtINR as fmtAmount } from "@/lib/siteflow";
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/PageHeader";
 import SegmentedTabs from "@/components/ui/Tabs";
@@ -13,6 +13,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import Icon from "@/components/marketing/Icon";
 import Badge from "@/components/ui/Badge";
 import FieldHint from "@/components/ui/FieldHint";
+import { useCustomFields, CustomFieldsSection } from "@/components/CustomFieldsSection";
 
 // Types
 interface Deduction {
@@ -132,7 +133,7 @@ export default function SubcontractorBillingPage() {
           item: wo.items && wo.items.length > 0 ? wo.items[0].description || wo.terms : wo.terms || "—",
           value: wo.estimated_work_amount,
           status: wo.status === "active" ? "Active" : wo.status,
-          date: wo.wo_date ? wo.wo_date.split("T")[0] : "",
+          date: wo.wo_date || "",
         }));
         setWorkOrders(mapped);
       } else {
@@ -175,7 +176,7 @@ export default function SubcontractorBillingPage() {
           return {
             id: bill.id,
             invoiceNumber: bill.invoice_number,
-            invoiceDate: bill.invoice_date ? bill.invoice_date.split("T")[0] : "",
+            invoiceDate: bill.invoice_date || "",
             subcontractor: nameMap[bill.party_company_user_id] || "Unassigned",
             subtotal: parseFloat(bill.subtotal || 0),
             gstAmount: gstTotal,
@@ -293,6 +294,19 @@ export default function SubcontractorBillingPage() {
       } catch {
         /* ignore: terms are optional */
       }
+      try {
+        // Settings -> Workflow Controls -> Finance Controls -> Pre-Tax
+        // Deduction/Retention. The backend applies deductions in this order and
+        // the preview has to use the same flag, or it shows a number the system
+        // will not store.
+        const cs = await fetch(`${getApiHost()}/apis/v3/settings/company/${companyId}`, { headers: authHeaders() });
+        if (cs.ok) {
+          const d = await cs.json();
+          setPretaxDeductionOrder(Boolean(d.pretax_deduction_retention));
+        }
+      } catch {
+        /* ignore: default order applies */
+      }
     })();
   }, [companyId]);
 
@@ -315,6 +329,14 @@ export default function SubcontractorBillingPage() {
   const [newBillPreTax, setNewBillPreTax] = useState(false);
   const [newBillTerms, setNewBillTerms] = useState("");
   const [invoiceDefaultTerms, setInvoiceDefaultTerms] = useState("");
+  // Company setting, not a per-bill choice: which deduction group is computed
+  // first. The backend reads Company.pretax_deduction_retention; false (the
+  // default) means retention is computed on the subtotal and TDS on what remains.
+  const [pretaxDeductionOrder, setPretaxDeductionOrder] = useState(false);
+  // enforce_required_custom_fields runs on "bill" in the backend, but this form
+  // rendered no custom-field inputs at all, so a single required field on that
+  // entity type made every RA bill impossible to submit.
+  const billCustomFields = useCustomFields(String(companyId), "bill");
 
   const fetchNextInvoiceNumber = async (docType: string = "subcon") => {
     if (!companyId || companyId === "demo-company") return;
@@ -404,35 +426,54 @@ export default function SubcontractorBillingPage() {
     }
   };
 
-  // Live Bill Calculation Preview
+  // Live Bill Calculation Preview.
+  //
+  // This MUST agree with _sequential_deduction_calc + create_bill in
+  // backend/app/routers/billing.py. It did not, and the difference was silent
+  // money: for 200,000 at 18% GST with 2% TDS and 5% retention the panel showed
+  // a net payable of 2,20,200 while the backend stored 2,22,200.
+  //
+  // Two rules, both taken from the backend:
+  //   1. Every deduction is computed on the GST-EXCLUSIVE subtotal. The old
+  //      code took retention off the GST-inclusive gross. TDS under the Income
+  //      Tax Act is on the value of work, not on the GST component, and
+  //      retention follows the same base.
+  //   2. Deductions cascade. One group is computed on the subtotal, the rest on
+  //      what is left. Which group goes first is the company's
+  //      pretax_deduction_retention setting, not the per-bill checkbox.
+  //
+  // The per-bill "Pre-Tax Deductions Order" checkbox only moves the GST base.
   const calculateBillPreview = (
     subtotal: number,
     gstPct: number,
     tdsPct: number,
     retentionPct: number,
     advRecovery: number,
-    preTax: boolean
+    preTax: boolean,
+    retentionFirst: boolean
   ) => {
-    let tdsAmt = 0;
-    let retentionAmt = 0;
-    let gstAmt = 0;
-    let totalPayable = 0;
+    // Mirrors _sequential_deduction_calc(deductions, base=subtotal, pretax_order).
+    const retentionOf = (base: number) => base * (retentionPct / 100);
+    // "other" is everything that is not Retention: TDS, plus any advance
+    // recovery entered as a flat amount.
+    const otherOf = (base: number) => base * (tdsPct / 100) + advRecovery;
 
-    tdsAmt = subtotal * (tdsPct / 100);
-
-    if (preTax) {
-      // Pre-Tax Deduction Order
-      retentionAmt = subtotal * (retentionPct / 100);
-      const taxable = subtotal - tdsAmt - retentionAmt - advRecovery;
-      gstAmt = taxable * (gstPct / 100);
-      totalPayable = taxable + gstAmt;
+    let retentionAmt: number;
+    let otherAmt: number;
+    if (retentionFirst) {
+      retentionAmt = retentionOf(subtotal);
+      otherAmt = otherOf(Math.max(0, subtotal - retentionAmt));
     } else {
-      // Post-Tax Deduction Order (Default)
-      gstAmt = subtotal * (gstPct / 100);
-      const gross = subtotal + gstAmt;
-      retentionAmt = gross * (retentionPct / 100);
-      totalPayable = gross - tdsAmt - retentionAmt - advRecovery;
+      otherAmt = otherOf(subtotal);
+      retentionAmt = retentionOf(Math.max(0, subtotal - otherAmt));
     }
+    const tdsAmt = Math.max(0, otherAmt - advRecovery);
+    const dedTotal = retentionAmt + otherAmt;
+
+    const gstAmt = preTax
+      ? (subtotal - dedTotal) * (gstPct / 100)
+      : subtotal * (gstPct / 100);
+    const totalPayable = subtotal - dedTotal + gstAmt;
 
     return {
       gstAmt: Math.round(gstAmt),
@@ -448,7 +489,8 @@ export default function SubcontractorBillingPage() {
     newBillTdsPct,
     newBillRetentionPct,
     newBillAdvanceRecovery,
-    newBillPreTax
+    newBillPreTax,
+    !pretaxDeductionOrder
   );
 
   const handleCreateWO = async () => {
@@ -498,9 +540,14 @@ export default function SubcontractorBillingPage() {
       return;
     }
     const subconId = newBillSub;
+    const cfError = billCustomFields.validate();
+    if (cfError) {
+      alert(cfError);
+      return;
+    }
     const deductions: Array<{ deduction_type: string; amount: number; percentage: number | null; notes: string }> = [
       { deduction_type: "TDS", amount: preview.tdsAmt, percentage: newBillTdsPct, notes: `${newBillTdsPct}% TDS (Sec 194C)` },
-      { deduction_type: "Retention", amount: preview.retentionAmt, percentage: newBillRetentionPct, notes: `${newBillRetentionPct}% ${newBillPreTax ? 'Pre' : 'Post'}-tax retention` }
+      { deduction_type: "Retention", amount: preview.retentionAmt, percentage: newBillRetentionPct, notes: `${newBillRetentionPct}% retention on the GST-exclusive work value` }
     ];
 
     if (newBillAdvanceRecovery > 0) {
@@ -522,7 +569,8 @@ export default function SubcontractorBillingPage() {
           gst_pct: newBillGstPct,
           deductions: deductions,
           pre_tax_deductions: newBillPreTax,
-          terms: newBillTerms || null
+          terms: newBillTerms || null,
+          custom_fields: billCustomFields.toPayload()
         })
       });
       if (res.ok) {
@@ -551,7 +599,7 @@ export default function SubcontractorBillingPage() {
           : b));
       } else {
         const err = await res.json().catch(() => ({}));
-        alert(err.detail || "Failed to approve bill");
+        alert(detailToMessage(err.detail, "Failed to approve bill"));
       }
     } catch (e) {
       console.error("Failed to approve bill", e);
@@ -595,7 +643,7 @@ export default function SubcontractorBillingPage() {
           : b));
       } else {
         const err = await res.json().catch(() => ({}));
-        alert(err.detail || "Failed to link match");
+        alert(detailToMessage(err.detail, "Failed to link match"));
       }
     } catch (e) {
       console.error("Failed to link match", e);
@@ -936,11 +984,11 @@ export default function SubcontractorBillingPage() {
                         {pnlData.map((p) => (
                           <tr key={p.tower_id} className="border-b border-border-custom hover:bg-elevated transition-all">
                             <td className="px-5 py-3.5 text-foreground font-semibold">{p.tower_name}</td>
-                            <td className="px-5 py-3.5 text-right font-sans text-muted">₹{(p.budget || 0).toLocaleString()}</td>
-                            <td className="px-5 py-3.5 text-right font-sans text-warning">₹{(p.total_po_value || 0).toLocaleString()}</td>
-                            <td className="px-5 py-3.5 text-right font-sans">₹{(p.total_wo_value || 0).toLocaleString()}</td>
-                            <td className="px-5 py-3.5 text-right font-sans text-primary">₹{(p.total_billed || 0).toLocaleString()}</td>
-                            <td className="px-5 py-3.5 text-right font-sans text-muted">₹{((p.budget || 0) - (p.total_billed || 0)).toLocaleString()}</td>
+                            <td className="px-5 py-3.5 text-right font-sans text-muted">{fmtAmount(p.budget || 0)}</td>
+                            <td className="px-5 py-3.5 text-right font-sans text-warning">{fmtAmount(p.total_po_value || 0)}</td>
+                            <td className="px-5 py-3.5 text-right font-sans">{fmtAmount(p.total_wo_value || 0)}</td>
+                            <td className="px-5 py-3.5 text-right font-sans text-primary">{fmtAmount(p.total_billed || 0)}</td>
+                            <td className="px-5 py-3.5 text-right font-sans text-muted">{fmtAmount((p.budget || 0) - (p.total_billed || 0))}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -977,8 +1025,8 @@ export default function SubcontractorBillingPage() {
                           <td className="px-5 py-3.5 font-sans text-secondary font-bold">{wo.woNumber}</td>
                           <td className="px-5 py-3.5 text-foreground font-semibold">{wo.subcontractor}</td>
                           <td className="px-5 py-3.5 text-muted">{wo.item}</td>
-                          <td className="px-5 py-3.5 font-bold text-foreground">₹{wo.value.toLocaleString()}</td>
-                          <td className="px-5 py-3.5 text-muted">{wo.date}</td>
+                          <td className="px-5 py-3.5 font-bold text-foreground">{fmtAmount(wo.value)}</td>
+                          <td className="px-5 py-3.5 text-muted">{formatDate(wo.date)}</td>
                           <td className="px-5 py-3.5">
                             <Badge tone={wo.status === "Completed" ? "success" : "info"} className="uppercase font-bold">
                               {formatLabel(wo.status)}
@@ -1034,7 +1082,7 @@ export default function SubcontractorBillingPage() {
                           <td className="px-5 py-3.5 font-sans text-muted">{note.id}</td>
                           <td className="px-5 py-3.5 text-foreground font-semibold">{note.subcontractor}</td>
                           <td className={`px-5 py-3.5 font-sans font-bold ${note.type === "credit" ? "text-success" : "text-danger"}`}>
-                            {note.type === "credit" ? "+" : "-"}${(note.amount).toLocaleString()}
+                            {note.type === "credit" ? "+" : "-"}{fmtAmount(note.amount)}
                           </td>
                           <td className="px-5 py-3.5 text-muted">{note.notes}</td>
                           <td className="px-5 py-3.5">
@@ -1340,11 +1388,20 @@ export default function SubcontractorBillingPage() {
                   />
                 </div>
 
-                {/* Pre-tax toggle */}
+                {billCustomFields.fields.length > 0 && (
+                  <CustomFieldsSection
+                    fields={billCustomFields.fields}
+                    values={billCustomFields.values}
+                    setValue={billCustomFields.setValue}
+                  />
+                )}
+
+                {/* GST base toggle. This does NOT change which deduction is
+                    computed first; that is a company setting. */}
                 <div className="flex items-center justify-between p-3 rounded-md bg-elevated border border-border-custom">
                   <div>
-                    <span className="text-xs font-bold text-foreground block">Pre-Tax Deductions Order</span>
-                    <span className="text-[9px] text-muted">Calculate retentions and TDS before applying GST.</span>
+                    <span className="text-xs font-bold text-foreground block">Charge GST after deductions</span>
+                    <span className="text-[9px] text-muted">GST is charged on the work value net of retention and TDS.</span>
                   </div>
                   <input
                     type="checkbox"
@@ -1365,23 +1422,23 @@ export default function SubcontractorBillingPage() {
             <div className="col-span-12 md:col-span-5 bg-elevated border border-border-custom rounded-lg p-5 space-y-4 flex flex-col justify-between">
               <div>
                 <h4 className="text-xs font-bold uppercase tracking-wider text-secondary">Billing Engine Preview</h4>
-                <p className="text-[9px] text-muted mt-1 leading-snug">Calculated live according to IS-456 standards and audited pre/post tax priorities.</p>
+                <p className="text-[9px] text-muted mt-1 leading-snug">Matches the deduction order configured for this company. TDS and retention are computed on the work value, before GST.</p>
               </div>
 
               <div className="space-y-2.5 text-xs">
                 <div className="flex justify-between text-muted">
                   <span>Gross Subtotal:</span>
-                  <span className="font-sans font-bold text-foreground">₹{newBillSubtotal.toLocaleString()}</span>
+                  <span className="font-sans font-bold text-foreground">{fmtAmount(newBillSubtotal)}</span>
                 </div>
                 
                 <div className="flex justify-between text-muted">
                   <span>TDS ({newBillTdsPct}%):</span>
-                  <span className="font-sans text-danger">-₹{preview.tdsAmt.toLocaleString()}</span>
+                  <span className="font-sans text-danger">-{fmtAmount(preview.tdsAmt)}</span>
                 </div>
 
                 <div className="flex justify-between text-muted">
                   <span>Retention ({newBillRetentionPct}%):</span>
-                  <span className="font-sans text-danger">-₹{preview.retentionAmt.toLocaleString()}</span>
+                  <span className="font-sans text-danger">-{fmtAmount(preview.retentionAmt)}</span>
                 </div>
 
                 {newBillAdvanceRecovery > 0 && (
@@ -1393,13 +1450,13 @@ export default function SubcontractorBillingPage() {
 
                 <div className="flex justify-between text-muted border-t border-border-custom pt-2">
                   <span>GST ({newBillGstPct}%):</span>
-                  <span className="font-sans text-success">+₹{preview.gstAmt.toLocaleString()}</span>
+                  <span className="font-sans text-success">+{fmtAmount(preview.gstAmt)}</span>
                 </div>
 
                 <div className="flex justify-between items-center text-foreground border-t border-border-custom pt-3 mt-1 font-extrabold text-sm">
                   <span>Net Payable:</span>
                   <span className="font-sans text-primary bg-primary/10 border border-primary/20 px-2 py-1 rounded-lg">
-                    ₹{preview.totalPayable.toLocaleString()}
+                    {fmtAmount(preview.totalPayable)}
                   </span>
                 </div>
               </div>
@@ -1407,9 +1464,9 @@ export default function SubcontractorBillingPage() {
               {/* Information alert details */}
               <div className="p-3 bg-secondary/10 border border-secondary/20 rounded-md text-[9px] text-muted leading-normal">
                 {newBillPreTax ? (
-                  <span><strong>Pre-tax Mode ON:</strong> Deductions are subtracted from the subtotal first. GST is applied on the remaining taxable amount.</span>
+                  <span><strong>Pre-tax Mode ON:</strong> GST is charged on the work value after deductions. TDS and retention are still computed on the work value, never on the GST.</span>
                 ) : (
-                  <span><strong>Post-tax Mode ON (Default):</strong> GST is applied on the subtotal first. TDS is computed on the subtotal, while Retention is computed on the GST-inclusive total.</span>
+                  <span><strong>Post-tax Mode ON (Default):</strong> GST is charged on the full work value. TDS and retention are computed on the work value, not on the GST, and apply in the order set in Settings.</span>
                 )}
               </div>
             </div>
@@ -1434,7 +1491,7 @@ export default function SubcontractorBillingPage() {
                     </Badge>
                   </div>
                   <p className="text-xs text-muted mt-0.5 font-sans">
-                    {selectedBillForDetail.subcontractor} · {selectedBillForDetail.invoiceDate}
+                    {selectedBillForDetail.subcontractor} · {formatDate(selectedBillForDetail.invoiceDate)}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">

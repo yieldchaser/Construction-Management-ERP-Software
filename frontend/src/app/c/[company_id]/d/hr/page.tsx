@@ -1,6 +1,6 @@
 "use client";
 import Badge, { type BadgeTone } from "@/components/ui/Badge";
-import {  getApiHost , readErrorDetail } from "@/lib/api";
+import {  getApiHost , readErrorDetail, detailToMessage} from "@/lib/api";
 import { getApi, authHeaders, resolveCompanyId, formatDate, formatLabel, todayLocalISO, toLocalISODate } from "@/lib/siteflow";
 
 import React, { useState, useEffect } from "react";
@@ -374,7 +374,7 @@ export default function HRPayrollPage() {
         setHolidays((prev) => prev.filter((x) => x.id !== holidayId));
       } else {
         const err = await res.json().catch(() => ({}));
-        alert(`Failed to delete holiday: ${err.detail || "Server error"}`);
+        alert(`Failed to delete holiday: ${detailToMessage(err.detail, "Server error")}`);
       }
     } catch (e) {
       console.error("Failed to delete holiday", e);
@@ -582,7 +582,7 @@ export default function HRPayrollPage() {
         triggerLocalToast("Holiday added successfully");
       } else {
         const err = await res.json().catch(() => ({}));
-        alert(`Failed to add holiday: ${err.detail || "Server error"}`);
+        alert(`Failed to add holiday: ${detailToMessage(err.detail, "Server error")}`);
       }
     } catch (e) {
       console.error("Failed to add holiday", e);
@@ -610,7 +610,7 @@ export default function HRPayrollPage() {
         triggerLocalToast("Workforce added successfully");
       } else {
         const err = await res.json().catch(() => ({}));
-        alert(`Failed to add workforce: ${err.detail || "Server error"}`);
+        alert(`Failed to add workforce: ${detailToMessage(err.detail, "Server error")}`);
       }
     } catch (e) {
       console.error("Failed to add workforce", e);
@@ -643,7 +643,7 @@ export default function HRPayrollPage() {
         triggerLocalToast("Details updated successfully");
       } else {
         const err = await profRes.json().catch(() => ({}));
-        alert(`Failed to save details: ${err.detail || "Server error"}`);
+        alert(`Failed to save details: ${detailToMessage(err.detail, "Server error")}`);
       }
     } catch (e) {
       console.error("Failed to save employee details", e);
@@ -806,7 +806,7 @@ export default function HRPayrollPage() {
         }
       } else {
         const err = await res.json();
-        alert(`Failed to upload payroll CSV: ${err.detail || "Unknown error"}`);
+        alert(`Failed to upload payroll CSV: ${detailToMessage(err.detail, "Unknown error")}`);
       }
     } catch (err) {
       console.error(err);
