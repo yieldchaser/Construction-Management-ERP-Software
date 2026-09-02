@@ -79,6 +79,12 @@ class POCreateRequest(BaseModel):
     company_id: UUID
     project_id: UUID
     vendor_id: Optional[UUID] = None
+    # A vendor chosen from the Party Library. PurchaseOrder.vendor_id is a
+    # foreign key to company_team, and a party registered through the library has
+    # no company_team row, so a supplier could not be named on a PO at all: the
+    # picker was fed by /billing/subcontractors and offered subcontractors only.
+    # Supplying the party id here resolves (or creates) the company_team link.
+    vendor_party_id: Optional[UUID] = None
     po_number: str
     po_date: datetime
     expected_delivery_date: Optional[datetime] = None
@@ -338,6 +344,39 @@ def get_company_indents(
             )
         )
     return res
+
+def _company_team_id_for_party(db: Session, company_id: UUID, party_id: UUID) -> UUID:
+    """Resolve a Party Library entry to the company_team row a PO can point at.
+
+    PurchaseOrder.vendor_id is FK -> company_team.id, so an external vendor needs
+    a company_team row with no login, linked back to the party. Subcontractors
+    created through /billing/subcontractors already get one; parties registered
+    directly in the library do not. Create it on first use rather than making the
+    user register the same vendor twice.
+    """
+    party = db.query(LibraryParty).filter(
+        LibraryParty.id == party_id, LibraryParty.company_id == company_id
+    ).first()
+    if not party:
+        raise HTTPException(status_code=404, detail="Vendor not found in the party library")
+
+    team = db.query(CompanyTeam).filter(
+        CompanyTeam.company_id == company_id,
+        CompanyTeam.library_party_id == party_id,
+    ).first()
+    if team:
+        return team.id
+
+    team = CompanyTeam(
+        company_id=company_id,
+        user_id=None,
+        priority_type=(party.party_type or "vendor").strip().lower() or "vendor",
+        library_party_id=party.id,
+    )
+    db.add(team)
+    db.flush()
+    return team.id
+
 
 def _generate_indent_number(db: Session, company_id: UUID, project_id: UUID) -> str:
     """Running IND-#### sequence, mirroring _generate_grn_number.
@@ -708,10 +747,14 @@ def create_po(req: POCreateRequest, db: Session = Depends(get_db), current_user:
     total_amount = gross_amount + tax_amount
     matched_rule = find_matching_rule(db, req.company_id, PO_FEATURE_TYPE, total_amount)
 
+    vendor_id = req.vendor_id
+    if vendor_id is None and req.vendor_party_id is not None:
+        vendor_id = _company_team_id_for_party(db, req.company_id, req.vendor_party_id)
+
     po = PurchaseOrder(
         company_id=req.company_id,
         project_id=req.project_id,
-        vendor_id=req.vendor_id,
+        vendor_id=vendor_id,
         indent_id=indent.id if indent is not None else None,
         po_number=req.po_number,
         po_date=req.po_date,

@@ -220,3 +220,57 @@ def test_custom_field_admin_exposes_every_entity_type_the_backend_allows():
         "E2E-21 regressed: the custom-field admin page cannot manage these entity "
         f"types, so a required field on one of them blocks its form forever: {missing}"
     )
+
+
+def test_a_purchase_order_can_name_a_supplier_from_the_party_library(
+    client, db, make_tenant, auth_headers
+):
+    """Observed: the Supplier Vendor picker offered only subcontractors.
+
+    PurchaseOrder.vendor_id is FK -> company_team.id, and a party registered
+    through the Party Library has no company_team row, so simply listing parties
+    in the picker would have violated the foreign key. The create endpoint takes
+    vendor_party_id and resolves the link itself.
+    """
+    import uuid as _uuid
+
+    from app import models
+
+    sfx = _uuid.uuid4().hex[:8]
+    comp, user, _team = make_tenant(
+        company_name=f"POVendor-{sfx}", user_name=f"UPOVendor-{sfx}",
+        mobile=f"+9196{sfx}", email=f"povendor-{sfx}@test.com",
+    )
+    hdr = auth_headers(user, comp)
+
+    project = models.Project(
+        id=_uuid.uuid4(), company_id=comp.id, name="PO Vendor Site", state="Maharashtra"
+    )
+    supplier = models.LibraryParty(
+        id=_uuid.uuid4(), company_id=comp.id, name="Shakti Steel Traders",
+        party_type="Supplier",
+    )
+    db.add_all([project, supplier])
+    db.commit()
+
+    res = client.post(
+        "/apis/v3/procurement/pos",
+        json={
+            "company_id": str(comp.id),
+            "project_id": str(project.id),
+            "vendor_party_id": str(supplier.id),
+            "po_number": f"PO-{sfx}",
+            "po_date": "2026-09-02T00:00:00Z",
+            "items": [
+                {"material_name": "OPC 53 Grade Cement", "quantity": 100,
+                 "unit": "Bag", "rate": 410, "tax_pct": 28, "total_amount": 52480}
+            ],
+        },
+        headers=hdr,
+    )
+    assert res.status_code == 201, res.text
+    body = res.json()
+    assert body["vendor_name"] == "Shakti Steel Traders", (
+        "E2E-15: a Supplier chosen from the party library must resolve to a real "
+        f"vendor on the PO; got {body.get('vendor_name')!r}"
+    )

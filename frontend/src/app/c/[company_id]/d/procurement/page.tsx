@@ -528,7 +528,10 @@ export default function ProcurementPage() {
           po_number: newPONum,
           po_date: new Date().toISOString(),
           expected_delivery_date: newPOExpectedDeliveryDate ? new Date(newPOExpectedDeliveryDate).toISOString() : null,
-          vendor_id: newPOVendor || null,
+          // The picker lists Party Library entries, so send the party id and
+          // let the backend resolve the company_team row that vendor_id must
+          // point at. Sending a party id as vendor_id would violate that FK.
+          vendor_party_id: newPOVendor || null,
           items: poFormItems.map(item => ({
             material_name: item.name,
             quantity: item.qty,
