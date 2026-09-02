@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Query, UploadFile, File
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from sqlalchemy.orm import Session
 from sqlalchemy import Numeric
 from datetime import datetime
@@ -93,11 +93,28 @@ class WorkforceCreate(BaseModel):
     cost_code: Optional[str] = Field(None, max_length=100)
 
 class WorkforceUpdate(BaseModel):
+    # name is Optional so a partial update can omit it, but the column is
+    # NOT NULL. update_library_workforce applies model_dump(exclude_unset=True),
+    # so an explicit {"name": null} would reach the database and surface as a
+    # 500 IntegrityError instead of a 422. Reject it at the schema.
     name: Optional[str] = Field(None, max_length=255)
     rate_type: Optional[str] = Field(None, max_length=50)
     salary_per_shift: Optional[float] = Field(None, ge=0)
     shift_hours: Optional[float] = Field(None, ge=0)
     cost_code: Optional[str] = Field(None, max_length=100)
+
+    @field_validator("name")
+    @classmethod
+    def _name_not_cleared(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and not v.strip():
+            raise ValueError("name cannot be blank")
+        return v
+
+    @model_validator(mode="after")
+    def _name_not_explicitly_null(self):
+        if "name" in self.model_fields_set and self.name is None:
+            raise ValueError("name cannot be cleared")
+        return self
 
 class MaterialCreate(BaseModel):
     company_id: uuid.UUID

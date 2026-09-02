@@ -1423,17 +1423,26 @@ function MyLeavesTab({
   }, [load]);
 
   // Resolve this user's assigned leave template via their payroll profile.
+  // templateLoading starts true so the "no template assigned" warning is not
+  // shown while the profile fetch is still in flight. Without it a user who
+  // does have a template sees that warning first, then the form.
   const [assignedTemplate, setAssignedTemplate] = useState<LeaveTemplate | null>(null);
+  const [templateLoading, setTemplateLoading] = useState(true);
   useEffect(() => {
     let active = true;
-    if (!me) return;
+    if (!me) {
+      setTemplateLoading(false);
+      return;
+    }
+    setTemplateLoading(true);
     jget(`/hr/payroll-profiles/${me.id}`)
       .then((p) => {
         if (!active) return;
         const t = leaveTemplates.find((x) => x.id === p.leave_template_id);
         setAssignedTemplate(t || null);
       })
-      .catch(() => active && setAssignedTemplate(null));
+      .catch(() => active && setAssignedTemplate(null))
+      .finally(() => active && setTemplateLoading(false));
     return () => {
       active = false;
     };
@@ -1464,6 +1473,8 @@ function MyLeavesTab({
         <div className="mb-4 rounded-md border border-warning/40 bg-warning/10 p-4 text-sm text-warning">
           No employee staff record linked to your user account ({userName || "current user"}). Please register in Employee Directory first.
         </div>
+      ) : templateLoading ? (
+        <div className="mb-4 h-24 animate-pulse rounded-md border border-border-custom bg-elevated" />
       ) : !assignedTemplate ? (
         <div className="mb-4 rounded-md border border-warning/40 bg-warning/10 p-4 text-sm text-warning">
           No leave template assigned for your account this year.
